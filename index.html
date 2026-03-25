@@ -20,8 +20,6 @@
     --text-dim: #8b8d97;
     --text-muted: #555660;
     --border: #27282e;
-    --danger: #ff4d6a;
-    --danger-soft: rgba(255,77,106,.12);
     --radius: 10px;
     --transition: .2s cubic-bezier(.4,0,.2,1);
   }
@@ -48,7 +46,7 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    transition: transform var(--transition);
+    transition: width var(--transition), min-width var(--transition);
     z-index: 10;
   }
 
@@ -58,7 +56,7 @@
   }
 
   .sidebar-logo {
-    height: 28px;
+    height: 42px;
     width: auto;
     margin-bottom: 14px;
     filter: brightness(0) invert(1);
@@ -162,7 +160,6 @@
   }
 
   .proto-item:hover { background: var(--bg-card-hover); }
-
   .proto-item.active { background: var(--accent-soft); }
 
   .proto-item.active::before {
@@ -236,37 +233,6 @@
   }
 
   .item-btn:hover { color: var(--accent); background: var(--accent-soft); }
-  .item-btn.delete:hover { color: var(--danger); background: var(--danger-soft); }
-
-  /* ── SIDEBAR DROP ZONE ── */
-  .sidebar-drop {
-    margin: 10px 10px 12px;
-    padding: 14px;
-    border: 1.5px dashed var(--border);
-    border-radius: var(--radius);
-    text-align: center;
-    font-size: 12px;
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: all var(--transition);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .sidebar-drop:hover,
-  .sidebar-drop.drag-over {
-    border-color: var(--accent);
-    background: var(--accent-soft);
-    color: var(--text-dim);
-  }
-
-  .sidebar-drop svg { opacity: .5; }
-  .sidebar-drop:hover svg,
-  .sidebar-drop.drag-over svg { opacity: 1; }
-
-  .sidebar-drop input { display: none; }
 
   /* ── MAIN VIEWER ── */
   .viewer {
@@ -331,7 +297,7 @@
     display: block;
   }
 
-  /* ── EMPTY STATE / DROP ZONE ── */
+  /* ── EMPTY STATE ── */
   .empty-state {
     display: flex;
     flex-direction: column;
@@ -339,61 +305,35 @@
     justify-content: center;
     height: 100%;
     color: var(--text-muted);
-    gap: 20px;
+    gap: 16px;
     background: var(--bg);
     padding: 40px;
-    transition: all var(--transition);
   }
 
-  .empty-state.drag-over {
-    background: rgba(99,107,255,.05);
-  }
+  .empty-state svg { opacity: .25; }
 
-  .empty-state.drag-over .drop-area {
-    border-color: var(--accent);
-    background: var(--accent-soft);
-    transform: scale(1.02);
-  }
-
-  .drop-area {
-    border: 2px dashed var(--border);
-    border-radius: 16px;
-    padding: 48px 60px;
-    text-align: center;
-    cursor: pointer;
-    transition: all .3s ease;
-    max-width: 480px;
-    width: 100%;
-  }
-
-  .drop-area:hover {
-    border-color: var(--accent);
-    background: var(--accent-soft);
-  }
-
-  .drop-area svg {
-    opacity: .25;
-    margin-bottom: 16px;
-  }
-
-  .drop-area:hover svg { opacity: .6; }
-
-  .drop-area h2 {
+  .empty-state h2 {
     font-size: 16px;
     font-weight: 600;
     color: var(--text-dim);
-    margin-bottom: 8px;
   }
 
-  .drop-area p {
+  .empty-state p {
     font-size: 13px;
     color: var(--text-muted);
-    line-height: 1.5;
+    line-height: 1.6;
+    text-align: center;
+    max-width: 400px;
   }
 
-  .drop-area .accent { color: var(--accent); }
-
-  .drop-area input { display: none; }
+  .empty-state code {
+    background: var(--bg-card);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+  }
 
   /* ── DEVICE FRAMES ── */
   .viewer-frame.device-desktop iframe { width: 100%; }
@@ -462,174 +402,49 @@
   }
   .toast.show { opacity: 1; transform: translateY(0); }
 
-  /* ── FULL-PAGE DRAG OVERLAY ── */
-  .drag-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(14,15,17,.85);
-    z-index: 999;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none;
+  /* ── SIDEBAR COLLAPSE (desktop) ── */
+  .sidebar.collapsed {
+    width: 0;
+    min-width: 0;
+    overflow: hidden;
+    border-right: none;
   }
 
-  .drag-overlay.visible {
-    display: flex;
-  }
+  #btnToggleSidebar { flex-shrink: 0; }
 
-  .drag-overlay-inner {
-    border: 2px dashed var(--accent);
-    border-radius: 24px;
-    padding: 60px 80px;
-    text-align: center;
-    background: var(--accent-soft);
-    animation: breathe 1.5s ease-in-out infinite;
-  }
-
-  @keyframes breathe {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.02); }
-  }
-
-  .drag-overlay h2 {
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--text);
-    margin-bottom: 8px;
-  }
-
-  .drag-overlay p {
-    font-size: 14px;
-    color: var(--text-dim);
-  }
-
-  /* ── TOKEN MODAL ── */
-  .modal-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,.6);
-    z-index: 1000;
-    display: none;
-    align-items: center;
-    justify-content: center;
-  }
-  .modal-backdrop.visible { display: flex; }
-
-  .modal {
-    background: var(--bg-sidebar);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 32px;
-    max-width: 440px;
-    width: 90%;
-  }
-
-  .modal h3 {
-    font-size: 16px;
-    font-weight: 600;
-    margin-bottom: 12px;
-  }
-
-  .modal p {
-    font-size: 13px;
-    color: var(--text-dim);
-    line-height: 1.6;
-    margin-bottom: 16px;
-  }
-
-  .modal a { color: var(--accent); text-decoration: none; }
-  .modal a:hover { text-decoration: underline; }
-
-  .modal input[type="password"] {
-    width: 100%;
-    padding: 10px 14px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    outline: none;
-    margin-bottom: 16px;
-  }
-
-  .modal input:focus { border-color: var(--accent); }
-
-  .modal-actions {
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
-  }
-
-  .btn {
-    padding: 8px 18px;
-    border-radius: 8px;
-    font-size: 13px;
-    font-family: inherit;
-    cursor: pointer;
-    border: 1px solid var(--border);
-    transition: all var(--transition);
-  }
-
-  .btn-primary {
-    background: var(--accent);
-    color: #fff;
-    border-color: var(--accent);
-  }
-
-  .btn-primary:hover { opacity: .9; }
-
-  .btn-ghost {
-    background: none;
-    color: var(--text-dim);
-  }
-
-  .btn-ghost:hover { color: var(--text); }
-
-  /* ── STATUS INDICATOR ── */
-  .github-status {
+  /* ── LOADING SPINNER ── */
+  .loading-indicator {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 8px 16px;
-    font-size: 11px;
+    gap: 8px;
+    padding: 12px 16px;
+    font-size: 12px;
     color: var(--text-muted);
     border-top: 1px solid var(--border);
-    cursor: pointer;
-    transition: all var(--transition);
   }
-  .github-status:hover { color: var(--text-dim); }
-  .github-status .status-dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--danger);
-  }
-  .github-status.connected .status-dot { background: #34d399; }
-
-  /* ── UPLOAD PROGRESS ── */
-  .upload-progress {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 14px 20px;
-    border-radius: 10px;
-    font-size: 13px;
-    z-index: 100;
-    display: none;
-  }
-  .upload-progress.visible { display: flex; align-items: center; gap: 10px; }
   .spinner {
-    width: 16px; height: 16px;
+    width: 14px; height: 14px;
     border: 2px solid var(--border);
     border-top-color: var(--accent);
     border-radius: 50%;
     animation: spin .6s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
+
+  .sidebar-footer {
+    padding: 10px 16px;
+    font-size: 11px;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .sidebar-footer .dot-green {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #34d399;
+  }
 </style>
 </head>
 <body>
@@ -637,14 +452,6 @@
 <button class="menu-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">
   <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h14M3 10h14M3 14h14"/></svg>
 </button>
-
-<!-- FULL PAGE DRAG OVERLAY -->
-<div class="drag-overlay" id="dragOverlay">
-  <div class="drag-overlay-inner">
-    <h2>Deposez vos fichiers HTML</h2>
-    <p>Ils apparaitront dans la sidebar</p>
-  </div>
-</div>
 
 <div class="app">
   <!-- SIDEBAR -->
@@ -664,43 +471,19 @@
 
     <div class="proto-list" id="list"></div>
 
-    <!-- SIDEBAR DROP ZONE -->
-    <div class="sidebar-drop" id="sidebarDrop">
-      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 4v12M4 10h12"/></svg>
-      <span>Glisser-deposer ou <strong>cliquer</strong></span>
-      <input type="file" id="sidebarFileInput" accept=".html,.htm" multiple>
-    </div>
-
-    <!-- GITHUB STATUS -->
-    <div class="github-status" id="ghStatus" onclick="showTokenModal()">
-      <span class="status-dot"></span>
-      <span id="ghStatusText">GitHub non connecte</span>
+    <!-- FOOTER -->
+    <div class="sidebar-footer" id="sidebarFooter">
+      <span class="dot-green"></span>
+      <span id="footerText">Chargement...</span>
     </div>
   </aside>
-
-  <!-- TOKEN MODAL -->
-  <div class="modal-backdrop" id="tokenModal">
-    <div class="modal">
-      <h3>Connecter GitHub</h3>
-      <p>Pour publier vos prototypes directement depuis cette page, collez un token GitHub.<br><br>
-      <a href="https://github.com/settings/tokens/new?scopes=repo&description=Proto+Viewer" target="_blank">Creer un token ici</a> (cochez <strong>repo</strong>, puis cliquez "Generate token" et copiez-le)</p>
-      <input type="password" id="tokenInput" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
-      <div class="modal-actions">
-        <button class="btn btn-ghost" onclick="closeTokenModal()">Annuler</button>
-        <button class="btn btn-primary" onclick="saveToken()">Connecter</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- UPLOAD PROGRESS -->
-  <div class="upload-progress" id="uploadProgress">
-    <div class="spinner"></div>
-    <span id="uploadProgressText">Publication en cours...</span>
-  </div>
 
   <!-- VIEWER -->
   <main class="viewer">
     <div class="viewer-toolbar">
+      <button class="toolbar-btn" id="btnToggleSidebar" title="Masquer/Afficher la sidebar" onclick="toggleSidebar()">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2v12M7 4h6M7 8h6M7 12h4"/></svg>
+      </button>
       <div class="url-bar" id="urlBar">Selectionnez un prototype</div>
 
       <button class="toolbar-btn" id="btnDesktop" title="Desktop" onclick="setDevice('desktop')">
@@ -724,12 +507,9 @@
 
     <div class="viewer-frame" id="viewerFrame">
       <div class="empty-state" id="emptyState">
-        <div class="drop-area" id="mainDropArea">
-          <svg width="56" height="56" fill="none" stroke="currentColor" stroke-width="1"><rect x="6" y="6" width="44" height="44" rx="6"/><path d="M28 20v16M20 28h16"/></svg>
-          <h2>Glissez vos prototypes HTML ici</h2>
-          <p>Ou <span class="accent">cliquez pour parcourir</span> vos fichiers<br>Formats acceptes : <strong>.html, .htm</strong></p>
-          <input type="file" id="mainFileInput" accept=".html,.htm" multiple>
-        </div>
+        <svg width="56" height="56" fill="none" stroke="currentColor" stroke-width="1"><rect x="6" y="6" width="44" height="44" rx="6"/><path d="M20 22h16M20 28h12M20 34h8"/></svg>
+        <h2>Selectionnez un prototype</h2>
+        <p>Les fichiers HTML dans le dossier <code>protos/</code> du repo GitHub sont detectes automatiquement.</p>
       </div>
     </div>
   </main>
@@ -739,23 +519,20 @@
 
 <script>
 // ╔══════════════════════════════════════════════════════════╗
-//   PROTO VIEWER — Drag & Drop HTML Prototype Viewer
+//   PROTO VIEWER — Read-only HTML Prototype Viewer
+//   Files are managed directly on GitHub in protos/
 // ╚══════════════════════════════════════════════════════════╝
 
 // ── STATE ──
-const uploadedProtos = [];
+const protos = [];
 let currentId = null;
 let currentDevice = 'desktop';
 let idCounter = 0;
-let ghToken = null;
 let ghOwner = null;
 let ghRepo = null;
 
 // ── INIT ──
 async function init() {
-  setupDragAndDrop();
-  setupFileInputs();
-
   // Detect GitHub Pages context
   const match = location.hostname.match(/^(.+)\.github\.io$/);
   if (match) {
@@ -763,40 +540,39 @@ async function init() {
     ghRepo = location.pathname.split('/')[1] || null;
   }
 
-  // Check for saved token (sessionStorage only — never persisted long-term)
-  const saved = sessionStorage.getItem('gh_token');
-  if (saved) { ghToken = saved; updateGhStatus(); }
-
   // Auto-discover HTML files from GitHub API
   await autoDiscoverProtos();
 
   renderList();
   updateCount();
 
+  // Update footer
+  const footer = document.getElementById('footerText');
+  footer.textContent = protos.length > 0
+    ? `${protos.length} prototype${protos.length > 1 ? 's' : ''} depuis GitHub`
+    : 'Aucun prototype dans protos/';
+
   // Auto-select from URL hash
   if (location.hash) {
     const target = decodeURIComponent(location.hash.slice(1));
-    const proto = uploadedProtos.find(p => p.file === target || p.fileName === target);
+    const proto = protos.find(p => p.file === target || p.fileName === target);
     if (proto) loadProto(proto);
+  } else if (protos.length > 0) {
+    // Auto-select first prototype
+    loadProto(protos[0]);
   }
-
-  // Hide empty state if we have repo protos
-  if (uploadedProtos.length > 0) hideEmptyState();
 }
 
 // ── AUTO-DISCOVERY ──
 async function autoDiscoverProtos() {
-  // Detect GitHub Pages owner/repo from URL
-  // Format: https://<owner>.github.io/<repo>/
   const match = location.hostname.match(/^(.+)\.github\.io$/);
-  if (!match) return; // Not on GitHub Pages, skip
+  if (!match) return;
 
   const owner = match[1];
   const repo = location.pathname.split('/')[1];
   if (!repo) return;
 
   try {
-    // Use GitHub Contents API to list all files in protos/ folder
     const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/protos`);
     if (!res.ok) return;
 
@@ -806,106 +582,21 @@ async function autoDiscoverProtos() {
       .sort((a, b) => a.name.localeCompare(b.name));
 
     for (const f of htmlFiles) {
-      // Extract a nice name from filename
       const name = f.name
         .replace(/\.(html|htm)$/i, '')
         .replace(/[-_]/g, ' ')
         .replace(/\b\w/g, c => c.toUpperCase());
 
-      uploadedProtos.push({
+      protos.push({
         id: ++idCounter,
         name: name,
         fileName: f.name,
         file: `protos/${f.name}`,
-        icon: '📄',
-        category: null,
-        source: 'repo',
-        html: null,
-        size: formatSize(f.size),
-        date: ''
+        icon: '\u{1F4C4}',
+        size: formatSize(f.size)
       });
     }
   } catch { /* API error — silent fallback */ }
-}
-
-// ── FILE HANDLING ──
-function handleFiles(fileList) {
-  const files = Array.from(fileList).filter(f =>
-    f.name.endsWith('.html') || f.name.endsWith('.htm')
-  );
-
-  if (files.length === 0) {
-    showToast('Aucun fichier .html detecte');
-    return;
-  }
-
-  // If no GitHub token, prompt to connect
-  if (!ghToken && ghOwner) {
-    showTokenModal();
-    // Store files to process after token is set
-    window._pendingFiles = fileList;
-    return;
-  }
-
-  let loaded = 0;
-  files.forEach(file => {
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const html = e.target.result;
-      const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-      const name = titleMatch ? titleMatch[1].trim() : file.name.replace(/\.(html|htm)$/, '');
-
-      // Commit to GitHub if connected
-      if (ghToken && ghOwner && ghRepo) {
-        showUploadProgress(`Publication de ${file.name}...`);
-        const success = await commitFileToGithub(file.name, html);
-        hideUploadProgress();
-
-        if (success) {
-          const proto = {
-            id: ++idCounter,
-            name: name,
-            fileName: file.name,
-            file: `protos/${file.name}`,
-            icon: '📄',
-            source: 'repo',
-            html: html,
-            size: formatSize(file.size),
-            date: ''
-          };
-          uploadedProtos.push(proto);
-          loaded++;
-        } else {
-          showToast('Erreur lors de la publication');
-          loaded++;
-        }
-      } else {
-        // Local only (no GitHub)
-        const proto = {
-          id: ++idCounter,
-          name: name,
-          fileName: file.name,
-          html: html,
-          size: formatSize(file.size),
-          date: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-        };
-        uploadedProtos.push(proto);
-        loaded++;
-      }
-
-      if (loaded === files.length) {
-        renderList();
-        updateCount();
-        if (!currentId) {
-          loadProto(uploadedProtos[uploadedProtos.length - 1]);
-        }
-        const pubText = ghToken ? 'publie' : 'ajoute';
-        showToast(`${files.length} fichier${files.length > 1 ? 's' : ''} ${pubText}${files.length > 1 ? 's' : ''}`);
-        hideEmptyState();
-      }
-    };
-    reader.readAsText(file);
-  });
 }
 
 function formatSize(bytes) {
@@ -914,89 +605,18 @@ function formatSize(bytes) {
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
 
-// ── DRAG & DROP ──
-function setupDragAndDrop() {
-  let dragCounter = 0;
-
-  // Full page drag events
-  document.addEventListener('dragenter', (e) => {
-    e.preventDefault();
-    dragCounter++;
-    document.getElementById('dragOverlay').classList.add('visible');
-  });
-
-  document.addEventListener('dragleave', (e) => {
-    e.preventDefault();
-    dragCounter--;
-    if (dragCounter <= 0) {
-      dragCounter = 0;
-      document.getElementById('dragOverlay').classList.remove('visible');
-    }
-  });
-
-  document.addEventListener('dragover', (e) => {
-    e.preventDefault();
-  });
-
-  document.addEventListener('drop', (e) => {
-    e.preventDefault();
-    dragCounter = 0;
-    document.getElementById('dragOverlay').classList.remove('visible');
-    if (e.dataTransfer.files.length > 0) {
-      handleFiles(e.dataTransfer.files);
-    }
-  });
-
-  // Sidebar drop zone visual feedback
-  const sidebarDrop = document.getElementById('sidebarDrop');
-  sidebarDrop.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    sidebarDrop.classList.add('drag-over');
-  });
-  sidebarDrop.addEventListener('dragleave', () => {
-    sidebarDrop.classList.remove('drag-over');
-  });
-}
-
-function setupFileInputs() {
-  // Main drop area click
-  const mainDrop = document.getElementById('mainDropArea');
-  if (mainDrop) {
-    mainDrop.addEventListener('click', () => {
-      document.getElementById('mainFileInput').click();
-    });
-  }
-
-  document.getElementById('mainFileInput').addEventListener('change', (e) => {
-    handleFiles(e.target.files);
-    e.target.value = '';
-  });
-
-  // Sidebar drop click
-  const sidebarDrop = document.getElementById('sidebarDrop');
-  sidebarDrop.addEventListener('click', () => {
-    document.getElementById('sidebarFileInput').click();
-  });
-
-  document.getElementById('sidebarFileInput').addEventListener('change', (e) => {
-    handleFiles(e.target.files);
-    e.target.value = '';
-  });
-}
-
 // ── RENDER ──
 function renderList(filter = '') {
   const list = document.getElementById('list');
   list.innerHTML = '';
   const q = filter.toLowerCase().trim();
 
-  const filtered = uploadedProtos.filter(p =>
+  const filtered = protos.filter(p =>
     p.name.toLowerCase().includes(q) ||
-    p.fileName.toLowerCase().includes(q) ||
-    (p.category && p.category.toLowerCase().includes(q))
+    p.fileName.toLowerCase().includes(q)
   );
 
-  if (filtered.length === 0 && uploadedProtos.length > 0) {
+  if (filtered.length === 0 && protos.length > 0) {
     const empty = document.createElement('div');
     empty.style.cssText = 'padding:20px 10px;text-align:center;font-size:12px;color:var(--text-muted)';
     empty.textContent = 'Aucun resultat';
@@ -1005,26 +625,14 @@ function renderList(filter = '') {
     return;
   }
 
-  // Group by category
-  let lastCat = null;
   filtered.forEach(proto => {
-    if (proto.category && proto.category !== lastCat) {
-      lastCat = proto.category;
-      const label = document.createElement('div');
-      label.className = 'category-label';
-      label.textContent = proto.category;
-      list.appendChild(label);
-    }
-
     const item = document.createElement('div');
     item.className = 'proto-item' + (proto.id === currentId ? ' active' : '');
     item.onclick = () => loadProto(proto);
 
     const safeId = proto.id;
-    const icon = proto.icon || '📄';
-    const meta = proto.size
-      ? `${escapeHtml(proto.fileName)} · ${proto.size}`
-      : escapeHtml(proto.file || proto.fileName);
+    const icon = proto.icon || '\u{1F4C4}';
+    const meta = `${escapeHtml(proto.fileName)} \u00b7 ${proto.size}`;
 
     item.innerHTML = `
       <div class="proto-icon">${icon}</div>
@@ -1036,9 +644,6 @@ function renderList(filter = '') {
         <button class="item-btn" onclick="event.stopPropagation(); copyLink(${safeId})" title="Copier le lien">
           <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V8"/><path d="M6 9h5V4"/></svg>
         </button>
-        ${proto.source !== 'repo' ? `<button class="item-btn delete" onclick="event.stopPropagation(); removeProto(${safeId})" title="Supprimer">
-          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4h8M5 4V3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1M9.5 6.5l-.3 4.5M4.5 6.5l.3 4.5M4.5 4l.4 7a1 1 0 0 0 1 .9h2.2a1 1 0 0 0 1-.9l.4-7"/></svg>
-        </button>` : ''}
       </div>
     `;
 
@@ -1055,14 +660,14 @@ function escapeHtml(str) {
 }
 
 function updateCount(filter) {
-  const total = uploadedProtos.length;
+  const total = protos.length;
   if (total === 0) {
     document.getElementById('count').textContent = 'Aucun prototype';
     return;
   }
 
   if (filter) {
-    const shown = uploadedProtos.filter(p =>
+    const shown = protos.filter(p =>
       p.name.toLowerCase().includes(filter) ||
       p.fileName.toLowerCase().includes(filter)
     ).length;
@@ -1075,101 +680,25 @@ function updateCount(filter) {
 // ── ACTIONS ──
 async function loadProto(proto) {
   currentId = proto.id;
-
-  // Update sidebar
   renderList(document.getElementById('search').value);
 
-  // Update viewer
-  hideEmptyState();
+  // Hide empty state
+  const empty = document.getElementById('emptyState');
+  if (empty) empty.style.display = 'none';
 
   const frame = document.getElementById('viewerFrame');
   let iframe = frame.querySelector('iframe');
   if (iframe) iframe.remove();
 
   iframe = document.createElement('iframe');
+  iframe.src = proto.file;
   frame.appendChild(iframe);
 
-  if (proto.source === 'repo' && proto.file) {
-    // Repo-hosted file: load via src (works on GitHub Pages)
-    iframe.src = proto.file;
-    // Also cache the HTML for "open in new tab" feature
-    if (!proto.html) {
-      try {
-        const res = await fetch(proto.file);
-        if (res.ok) proto.html = await res.text();
-      } catch {}
-    }
-  } else {
-    // Local drag & drop file: use srcdoc
-    iframe.srcdoc = proto.html;
-  }
-
-  document.getElementById('urlBar').textContent = proto.file || proto.fileName;
-  location.hash = encodeURIComponent(proto.file || proto.fileName);
+  document.getElementById('urlBar').textContent = proto.file;
+  location.hash = encodeURIComponent(proto.file);
 
   // Close mobile sidebar
   document.querySelector('.sidebar').classList.remove('open');
-}
-
-function removeProto(id) {
-  const idx = uploadedProtos.findIndex(p => p.id === id);
-  if (idx === -1) return;
-
-  uploadedProtos.splice(idx, 1);
-
-  // If we removed the active one, clear viewer
-  if (currentId === id) {
-    currentId = null;
-    const frame = document.getElementById('viewerFrame');
-    const iframe = frame.querySelector('iframe');
-    if (iframe) iframe.remove();
-    document.getElementById('urlBar').textContent = 'Selectionnez un prototype';
-
-    if (uploadedProtos.length === 0) {
-      showEmptyState();
-    } else {
-      // Load the first remaining
-      loadProto(uploadedProtos[0]);
-    }
-  }
-
-  renderList(document.getElementById('search').value);
-  updateCount();
-  showToast('Prototype supprime');
-}
-
-function hideEmptyState() {
-  const empty = document.getElementById('emptyState');
-  if (empty) empty.style.display = 'none';
-}
-
-function showEmptyState() {
-  const frame = document.getElementById('viewerFrame');
-  let empty = document.getElementById('emptyState');
-  if (!empty) {
-    empty = document.createElement('div');
-    empty.className = 'empty-state';
-    empty.id = 'emptyState';
-    empty.innerHTML = `
-      <div class="drop-area" id="mainDropArea">
-        <svg width="56" height="56" fill="none" stroke="currentColor" stroke-width="1"><rect x="6" y="6" width="44" height="44" rx="6"/><path d="M28 20v16M20 28h16"/></svg>
-        <h2>Glissez vos prototypes HTML ici</h2>
-        <p>Ou <span class="accent">cliquez pour parcourir</span> vos fichiers<br>Formats acceptes : <strong>.html, .htm</strong></p>
-        <input type="file" id="mainFileInput" accept=".html,.htm" multiple>
-      </div>
-    `;
-    frame.appendChild(empty);
-
-    // Re-bind click
-    empty.querySelector('.drop-area').addEventListener('click', () => {
-      empty.querySelector('input').click();
-    });
-    empty.querySelector('input').addEventListener('change', (e) => {
-      handleFiles(e.target.files);
-      e.target.value = '';
-    });
-  }
-  empty.style.display = 'flex';
 }
 
 function setDevice(device) {
@@ -1184,28 +713,25 @@ function setDevice(device) {
 }
 
 function openExternal() {
-  const proto = uploadedProtos.find(p => p.id === currentId);
+  const proto = protos.find(p => p.id === currentId);
   if (!proto) return;
-
-  if (proto.source === 'repo' && proto.file) {
-    window.open(proto.file, '_blank');
-  } else if (proto.html) {
-    const w = window.open('', '_blank');
-    w.document.write(proto.html);
-    w.document.close();
-  }
+  window.open(proto.file, '_blank');
 }
 
 function reloadFrame() {
-  const proto = uploadedProtos.find(p => p.id === currentId);
+  const proto = protos.find(p => p.id === currentId);
   if (proto) loadProto(proto);
 }
 
+function toggleSidebar() {
+  document.querySelector('.sidebar').classList.toggle('collapsed');
+}
+
 function copyLink(id) {
-  const proto = uploadedProtos.find(p => p.id === id);
+  const proto = protos.find(p => p.id === id);
   if (!proto) return;
   const url = new URL(window.location.href);
-  url.hash = encodeURIComponent(proto.file || proto.fileName);
+  url.hash = encodeURIComponent(proto.file);
   navigator.clipboard.writeText(url.toString()).then(() => {
     showToast('Lien copie !');
   });
@@ -1216,96 +742,6 @@ function showToast(msg) {
   toast.textContent = msg;
   toast.classList.add('show');
   setTimeout(() => toast.classList.remove('show'), 2000);
-}
-
-// ── GITHUB API ──
-async function commitFileToGithub(fileName, content) {
-  if (!ghToken || !ghOwner || !ghRepo) return false;
-
-  const path = `protos/${fileName}`;
-  const url = `https://api.github.com/repos/${ghOwner}/${ghRepo}/contents/${path}`;
-  const b64 = btoa(unescape(encodeURIComponent(content)));
-
-  try {
-    // Check if file already exists (to get its sha for update)
-    let sha = null;
-    const check = await fetch(url, {
-      headers: { Authorization: `token ${ghToken}` }
-    });
-    if (check.ok) {
-      const existing = await check.json();
-      sha = existing.sha;
-    }
-
-    const body = {
-      message: `Add prototype: ${fileName}`,
-      content: b64
-    };
-    if (sha) body.sha = sha;
-
-    const res = await fetch(url, {
-      method: 'PUT',
-      headers: {
-        Authorization: `token ${ghToken}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(body)
-    });
-
-    return res.ok;
-  } catch {
-    return false;
-  }
-}
-
-// ── TOKEN MODAL ──
-function showTokenModal() {
-  document.getElementById('tokenModal').classList.add('visible');
-  document.getElementById('tokenInput').focus();
-}
-
-function closeTokenModal() {
-  document.getElementById('tokenModal').classList.remove('visible');
-}
-
-function saveToken() {
-  const input = document.getElementById('tokenInput');
-  const token = input.value.trim();
-  if (!token) return;
-
-  ghToken = token;
-  sessionStorage.setItem('gh_token', token);
-  updateGhStatus();
-  closeTokenModal();
-  showToast('GitHub connecte !');
-
-  // Process any pending files
-  if (window._pendingFiles) {
-    handleFiles(window._pendingFiles);
-    window._pendingFiles = null;
-  }
-}
-
-function updateGhStatus() {
-  const el = document.getElementById('ghStatus');
-  const text = document.getElementById('ghStatusText');
-  if (ghToken) {
-    el.classList.add('connected');
-    text.textContent = 'GitHub connecte';
-  } else {
-    el.classList.remove('connected');
-    text.textContent = 'GitHub non connecte';
-  }
-}
-
-function showUploadProgress(msg) {
-  const el = document.getElementById('uploadProgress');
-  document.getElementById('uploadProgressText').textContent = msg;
-  el.classList.add('visible');
-}
-
-function hideUploadProgress() {
-  document.getElementById('uploadProgress').classList.remove('visible');
 }
 
 // ── SEARCH ──
