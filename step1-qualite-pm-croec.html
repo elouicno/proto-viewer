@@ -1,0 +1,2421 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inscription Principale - Personne Morale</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body, #root { height: 100%; width: 100%; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F8FAFF; }
+    input, select, button { font-family: inherit; }
+    select { cursor: pointer; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #C6D1E2; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useCallback } = React;
+
+    // ============================================================
+    // DESIGN TOKENS (from Figma node 245-18743)
+    // ============================================================
+    const T = {
+      color: {
+        primaryBlue: '#1B324F',
+        primaryRed: '#FF2B44',
+        bg: '#F8FAFF',
+        white: '#FFFFFF',
+        border: '#E1E7F3',
+        borderMedium: '#C6D1E2',
+        gray: '#6E7991',
+        textDark: '#111928',
+        radioBg: '#F0F3FA',
+        redBg: '#FDF2F2',
+        red800: '#BB1730',
+        infoBg: '#EFF6FF',
+        infoBorder: '#BFDBFE',
+        infoText: '#1E40AF',
+      },
+      shadow: {
+        card: '0px 7px 13px -2px rgba(74,121,144,0.1)',
+        bottomBar: '0px -7px 13px 0px rgba(74,121,144,0.1)',
+      },
+      radius: '8px',
+      gradient: 'linear-gradient(90deg, #FF2B44 0.508%, #1B324F 100%)',
+      font: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    };
+
+    // ============================================================
+    // DATA
+    // ============================================================
+    const PROFILES = [
+      { id: 'SEC', title: "SEC", desc: "Société d'Expertise Comptable. Structure dédiée à l'exercice exclusif de la profession d'expert-comptable." },
+      { id: 'SPEC', title: "SPEC", desc: "Société Pluriprofessionnelle d'Exercice Comptable. Permet l'exercice en commun de plusieurs professions réglementées du droit et du chiffre." },
+      { id: 'SPE', title: "SPE", desc: "Société de Participations d'Expertise. Structure permettant la détention de titres et l'animation de sociétés d'expertise comptable." },
+      { id: 'SPFPL', title: "SPFPL", desc: "Société de Participations Financières de Professions Libérales. Holding ayant pour objet la détention de parts ou d'actions de sociétés d'exercice libéral." },
+    ];
+
+    const QUALITE_OPTIONS = [
+      { id: 'representant_legal', label: 'Représentant légal' },
+      { id: 'mandataire', label: 'Mandataire désigné par le(s) associés ou le représentant légal' },
+    ];
+
+    const CROEC_OPTIONS = [
+      "Île-de-France", "Auvergne-Rhône-Alpes", "Bourgogne-Franche-Comté", "Bretagne",
+      "Centre-Val de Loire", "Grand Est", "Hauts-de-France", "Normandie",
+      "Nouvelle-Aquitaine", "Occitanie", "Pays de la Loire", "Provence-Alpes-Côte d'Azur",
+      "Corse", "Guadeloupe", "Martinique", "Guyane", "La Réunion", "Mayotte"
+    ];
+
+    const PAYS_OPTIONS = ["France", "Belgique", "Luxembourg", "Suisse", "Allemagne", "Italie", "Espagne", "Portugal", "Royaume-Uni", "Pays-Bas", "Autre"];
+
+    const SESSIONS_DATA = [
+      { title: "Session 30 octobre 2025" },
+      { title: "Session 18 décembre 2025" },
+      { title: "Session 5 mars 2026" },
+    ];
+
+    const DATE_EFFET_OPTIONS = [
+      "Dès la décision du conseil régional",
+      "À une date ultérieure",
+    ];
+
+    const BASE_STEPS = [
+      "Qualité de la PM & CROEC",
+      "Dates de sessions",
+      "Caractéristiques de la société",
+      "Représentants Légaux",
+      "Personne de contact principal",
+      "Liste des associés",
+      "Liste des bénéficiaires effectifs",
+      "Responsable ordinal",
+      "Pièces justificatives",
+      "Consentement et RGPD",
+      "Confirmation et soumission",
+    ];
+
+    const EXTRA_STEP = "Représentant légal personne physique du représentant légal personne morale";
+
+    const buildSteps = (hasPM) => {
+      if (!hasPM) return BASE_STEPS;
+      const steps = [...BASE_STEPS];
+      steps.splice(4, 0, EXTRA_STEP); // insert after index 3 ("Représentants Légaux")
+      return steps;
+    };
+
+    // ============================================================
+    // NAVBAR
+    // ============================================================
+    const Navbar = () => (
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100 }}>
+        {/* Gradient bar */}
+        <div style={{ height: '4px', background: T.gradient }} />
+        {/* White bar */}
+        <div style={{
+          height: '76px',
+          background: T.color.white,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0 24px',
+          borderBottom: `1px solid ${T.color.border}`,
+        }}>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span style={{ fontSize: '16px', fontWeight: 700, color: T.color.primaryRed, lineHeight: '24px' }}>
+              Personne Morale
+            </span>
+            <span style={{ fontSize: '18px', fontWeight: 400, color: T.color.primaryBlue, lineHeight: '27px' }}>
+              Inscription Principale
+            </span>
+          </div>
+          <button style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: '6px',
+            fontSize: '14px', color: T.color.primaryBlue, fontFamily: T.font,
+          }}>
+            Abandonner
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={T.color.primaryBlue} strokeWidth="2.5">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    );
+
+    // ============================================================
+    // STEPPER SIDEBAR
+    // ============================================================
+    const Stepper = ({ currentStep, steps }) => (
+      <div style={{
+        width: '300px',
+        minWidth: '300px',
+        padding: '32px 24px',
+        background: T.color.white,
+        borderRight: `1px solid ${T.color.border}`,
+        minHeight: '100%',
+      }}>
+        {steps.map((label, idx) => {
+          const stepNum = idx + 1;
+          const isActive = stepNum === currentStep;
+          const isCompleted = stepNum < currentStep;
+          const isLast = idx === steps.length - 1;
+
+          return (
+            <div key={idx} style={{ display: 'flex', position: 'relative' }}>
+              {/* Connector line */}
+              {!isLast && (
+                <div style={{
+                  position: 'absolute',
+                  left: '11.5px',
+                  top: '28px',
+                  width: '2px',
+                  height: '40px',
+                  background: isCompleted ? T.color.primaryRed : T.color.border,
+                }} />
+              )}
+              {/* Circle + Label */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '16px',
+                paddingBottom: isLast ? 0 : '44px',
+                position: 'relative',
+                zIndex: 1,
+              }}>
+                {/* Circle */}
+                <div style={{
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  border: isActive || isCompleted ? 'none' : `2px solid ${T.color.gray}`,
+                  background: isActive ? T.color.primaryRed : isCompleted ? T.color.primaryRed : 'transparent',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}>
+                  {isCompleted && (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={T.color.white} strokeWidth="3">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  )}
+                  {isActive && (
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: T.color.white }} />
+                  )}
+                </div>
+                {/* Label */}
+                <span style={{
+                  fontSize: '14px',
+                  fontWeight: isActive ? 600 : 400,
+                  color: isActive ? T.color.textDark : T.color.gray,
+                  lineHeight: '20px',
+                }}>
+                  {label}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+
+    // ============================================================
+    // BOTTOM BAR
+    // ============================================================
+    const BottomBar = ({ canNext, onNext, onPrev, onSave, showPrev, showSave = true }) => (
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: '72px',
+        background: T.color.white,
+        boxShadow: T.shadow.bottomBar,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: showPrev && !showSave ? 'flex-end' : 'space-between',
+        padding: '0 32px',
+        zIndex: 100,
+      }}>
+        {showSave && (
+          <div style={{ display: 'flex', gap: '16px' }}>
+            <button onClick={onSave} style={{
+              height: '40px', padding: '0 24px',
+              border: `1px solid ${T.color.border}`, borderRadius: T.radius,
+              background: T.color.white, cursor: 'pointer',
+              fontSize: '14px', fontWeight: 500, color: T.color.primaryRed,
+              display: 'flex', alignItems: 'center', gap: '8px', fontFamily: T.font,
+            }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={T.color.primaryRed} strokeWidth="2">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                <polyline points="17 21 17 13 7 13 7 21" />
+                <polyline points="7 3 7 8 15 8" />
+              </svg>
+              Enregistrer pour plus tard
+            </button>
+          </div>
+        )}
+        <div style={{ display: 'flex', gap: '16px' }}>
+          {showPrev && (
+            <button onClick={onPrev} style={{
+              height: '40px', width: '237px',
+              border: 'none', borderRadius: T.radius,
+              background: T.color.primaryBlue, cursor: 'pointer',
+              fontSize: '14px', fontWeight: 400, color: T.color.white,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              gap: '8px', fontFamily: T.font,
+            }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+              Précédent
+            </button>
+          )}
+          <button
+            onClick={canNext ? onNext : undefined}
+            disabled={!canNext}
+            style={{
+              height: '40px',
+              width: '237px',
+              border: 'none',
+              borderRadius: T.radius,
+              background: canNext ? T.color.primaryBlue : T.color.gray,
+              cursor: canNext ? 'pointer' : 'not-allowed',
+              fontSize: '14px',
+              fontWeight: 400,
+              color: T.color.white,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              fontFamily: T.font,
+              transition: 'background 0.2s',
+            }}
+          >
+            Suivant
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    );
+
+    // ============================================================
+    // STEP 1: QUALITÉ DE LA PM & CROEC
+    // ============================================================
+    const Step1Content = ({ data, update }) => {
+      const canShowMandataire = data.qualite === 'mandataire';
+
+      return (
+        <div>
+          {/* Step header */}
+          <div style={{ marginBottom: '32px' }}>
+            <h1 style={{ fontSize: '24px', fontWeight: 700, color: T.color.textDark, margin: 0, lineHeight: '28.8px' }}>
+              {`Qualité de la PM & CROEC`}
+            </h1>
+          </div>
+
+          {/* ---- CARD 1: Profil de la société ---- */}
+          <div style={{
+            background: T.color.white,
+            border: `1px solid ${T.color.border}`,
+            borderRadius: T.radius,
+            boxShadow: T.shadow.card,
+            padding: '28px',
+            marginBottom: '32px',
+          }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {PROFILES.map((p) => {
+                const selected = data.profile === p.id;
+                return (
+                  <div
+                    key={p.id}
+                    onClick={() => update('profile', p.id)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '20px 24px',
+                      border: `${selected ? '2px' : '1px'} solid ${selected ? T.color.primaryBlue : T.color.border}`,
+                      borderRadius: T.radius,
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                      background: T.color.white,
+                    }}
+                  >
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: '14px', fontWeight: 700, color: T.color.textDark, marginBottom: '4px' }}>
+                        {p.title}
+                      </div>
+                      <div style={{ fontSize: '14px', fontWeight: 400, color: T.color.gray }}>
+                        {p.desc}
+                      </div>
+                    </div>
+                    {/* Toggle area */}
+                    <div style={{
+                      width: '52px',
+                      height: '52px',
+                      borderRadius: T.radius,
+                      background: T.color.radioBg,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginLeft: '20px',
+                      flexShrink: 0,
+                    }}>
+                      {selected && (
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                          <circle cx="12" cy="12" r="10" fill={T.color.primaryBlue} />
+                          <polyline points="8 12 11 15 16 9" fill="none" stroke={T.color.white} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      )}
+                      {!selected && (
+                        <div style={{
+                          width: '24px', height: '24px', borderRadius: '50%',
+                          border: `2px solid ${T.color.borderMedium}`, background: T.color.white,
+                        }} />
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ---- CARD 2: Qualité du demandeur ---- */}
+          <div style={{
+            background: T.color.white,
+            border: `1px solid ${T.color.border}`,
+            borderRadius: T.radius,
+            boxShadow: T.shadow.card,
+            padding: '28px',
+            marginBottom: '32px',
+          }}>
+            <h3 style={{ fontSize: '14px', fontWeight: 700, color: T.color.textDark, margin: '0 0 16px 0', lineHeight: '21px' }}>
+              Qualité de la personne établissant la demande
+            </h3>
+            <p style={{ fontSize: '14px', color: T.color.textDark, margin: '0 0 12px 0', lineHeight: '21px' }}>
+              <span style={{ color: '#C81E1E' }}>* </span>
+              Vous voulez inscrire cette société en qualité de :
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {QUALITE_OPTIONS.map((opt) => {
+                const selected = data.qualite === opt.id;
+                return (
+                  <label
+                    key={opt.id}
+                    onClick={() => update('qualite', opt.id)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {/* Radio circle */}
+                    <div style={{
+                      width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0,
+                      border: `2px solid ${selected ? T.color.primaryBlue : T.color.borderMedium}`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      transition: 'all 0.15s',
+                      background: T.color.white,
+                    }}>
+                      {selected && (
+                        <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: T.color.primaryBlue }} />
+                      )}
+                    </div>
+                    <span style={{ fontSize: '14px', fontWeight: 400, color: T.color.textDark, lineHeight: '14px' }}>
+                      {opt.label}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+
+            {/* Conditional Mandataire fields */}
+            {canShowMandataire && (
+              <div style={{
+                marginTop: '24px',
+                padding: '24px',
+                background: T.color.bg,
+                borderRadius: T.radius,
+                border: `1px solid ${T.color.border}`,
+              }}>
+                {/* Info banner */}
+                <div style={{
+                  padding: '12px 16px',
+                  background: T.color.infoBg,
+                  border: `1px solid ${T.color.infoBorder}`,
+                  borderRadius: T.radius,
+                  marginBottom: '24px',
+                  display: 'flex', alignItems: 'center', gap: '10px',
+                }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={T.color.infoText} strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" />
+                  </svg>
+                  <span style={{ fontSize: '14px', color: T.color.infoText }}>
+                    Complétez les informations du mandataire
+                  </span>
+                </div>
+
+                {/* Row: Nom / Prénom */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                  <FieldInput label="Nom" required value={data.mandataire?.nom} onChange={(v) => update('mandataire.nom', v)} />
+                  <FieldInput label="Prénom" required value={data.mandataire?.prenom} onChange={(v) => update('mandataire.prenom', v)} />
+                </div>
+                {/* Row: Fonction / Téléphone */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                  <FieldInput label="Fonction / Qualité" required value={data.mandataire?.fonction} onChange={(v) => update('mandataire.fonction', v)} />
+                  <FieldInput label="Numéro de téléphone" required value={data.mandataire?.telephone} onChange={(v) => update('mandataire.telephone', v)} type="tel" />
+                </div>
+                {/* Email full width */}
+                <div style={{ marginBottom: '24px' }}>
+                  <FieldInput label="Adresse mail" required value={data.mandataire?.email} onChange={(v) => update('mandataire.email', v)} type="email" />
+                </div>
+
+                {/* Sub-section: Adresse du domicile personnel */}
+                <h4 style={{ fontSize: '14px', fontWeight: 700, color: T.color.textDark, margin: '0 0 16px 0' }}>
+                  Adresse du domicile personnel
+                </h4>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px', marginBottom: '20px' }}>
+                  <FieldInput label="Rue" required value={data.mandataire?.rue} onChange={(v) => update('mandataire.rue', v)} />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px', marginBottom: '20px' }}>
+                  <FieldInput label="Complément d'adresse" value={data.mandataire?.complement} onChange={(v) => update('mandataire.complement', v)} />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px', marginBottom: '20px' }}>
+                  <FieldInput label="Lieu-dit" value={data.mandataire?.lieuDit} onChange={(v) => update('mandataire.lieuDit', v)} />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px' }}>
+                  <FieldInput label="Code postal" required value={data.mandataire?.codePostal} onChange={(v) => update('mandataire.codePostal', v)} />
+                  <FieldInput label="Ville" required value={data.mandataire?.ville} onChange={(v) => update('mandataire.ville', v)} />
+                  <FieldSelect label="Pays" required value={data.mandataire?.pays} onChange={(v) => update('mandataire.pays', v)} options={PAYS_OPTIONS} placeholder="Sélectionner" />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ---- CARD 3: Sélection du CROEC ---- */}
+          <div style={{
+            background: T.color.white,
+            border: `1px solid ${T.color.border}`,
+            borderRadius: T.radius,
+            boxShadow: T.shadow.card,
+            padding: '28px',
+            marginBottom: '32px',
+          }}>
+            <h3 style={{ fontSize: '14px', fontWeight: 700, color: T.color.textDark, margin: '0 0 16px 0', lineHeight: '21px' }}>
+              {`Sélection du Conseil Régional de l'Ordre des Experts-Comptables`}
+            </h3>
+            <FieldSelect
+              value={data.croec}
+              onChange={(v) => update('croec', v)}
+              options={CROEC_OPTIONS}
+              placeholder="Sélectionner votre CROEC de rattachement"
+            />
+          </div>
+        </div>
+      );
+    };
+
+    // ============================================================
+    // STEP 2: DATES DE SESSIONS
+    // ============================================================
+    const CalendarIcon = () => (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+        <path d="M5.333 1.333v1.334M10.667 1.333v1.334M2 6.667h12M3.333 2.667h9.334c.736 0 1.333.597 1.333 1.333v9.333c0 .737-.597 1.334-1.333 1.334H3.333A1.333 1.333 0 0 1 2 13.333V4c0-.736.597-1.333 1.333-1.333z" stroke={T.color.gray} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    );
+
+    const Step2Content = () => {
+      const [dateEffet, setDateEffet] = useState('');
+      return (
+        <div>
+          {/* Step header */}
+          <div style={{ marginBottom: '8px' }}>
+            <h1 style={{ fontSize: '24px', fontWeight: 700, color: T.color.textDark, margin: 0, lineHeight: '24px' }}>
+              Dates de session
+            </h1>
+          </div>
+          <p style={{ fontSize: '14px', fontWeight: 400, color: T.color.gray, margin: '0 0 8px 0', lineHeight: '21px' }}>
+            {`Les dates de tenue des sessions du Conseil régional vous sont communiquées à titre indicatif et ne préjugent pas de l'examen de votre demande lors de la prochaine session indiquée.`}
+          </p>
+          <p style={{ fontSize: '14px', fontWeight: 400, color: T.color.primaryRed, margin: '0 0 24px 0', lineHeight: '21px' }}>
+            *Champs obligatoires
+          </p>
+
+          {/* Main card — Prochaines dates de session */}
+          <div style={{
+            background: T.color.white,
+            border: `1px solid ${T.color.border}`,
+            borderRadius: T.radius,
+            boxShadow: T.shadow.card,
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <h2 style={{ fontSize: '16px', fontWeight: 700, color: T.color.textDark, margin: '0 0 16px 0', lineHeight: '24px' }}>
+              Prochaines dates de session
+            </h2>
+
+            {/* Session cards */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
+              {SESSIONS_DATA.map((s, idx) => (
+                <div key={idx} style={{
+                  border: `1px solid ${T.color.border}`,
+                  borderRadius: T.radius,
+                  padding: '20px 16px',
+                  background: T.color.white,
+                }}>
+                  <p style={{ fontSize: '14px', fontWeight: 400, color: T.color.primaryBlue, margin: 0, lineHeight: '24px' }}>
+                    {s.title}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* Footer text */}
+            <p style={{ fontSize: '14px', fontWeight: 400, color: T.color.gray, margin: 0, lineHeight: '21px' }}>
+              La décision du Conseil régional sera rendue dans un délai de trois mois à compter de la date du récépissé: récépissé qui vous sera adressé par le Conseil régional lorsque votre dossier sera complet.
+            </p>
+          </div>
+
+          {/* Date d'effet souhaitée card */}
+          <div style={{
+            background: T.color.white,
+            border: `1px solid ${T.color.border}`,
+            borderRadius: T.radius,
+            boxShadow: T.shadow.card,
+            padding: '24px',
+          }}>
+            <h2 style={{ fontSize: '16px', fontWeight: 700, color: T.color.textDark, margin: '0 0 4px 0', lineHeight: '24px' }}>
+              Date d'effet souhaitée
+            </h2>
+            <p style={{ fontSize: '14px', fontWeight: 400, color: T.color.gray, margin: '0 0 16px 0', lineHeight: '21px' }}>
+              A compter de quelle date ?
+            </p>
+            <FieldSelect
+              label=""
+              value={dateEffet}
+              onChange={setDateEffet}
+              options={DATE_EFFET_OPTIONS}
+              placeholder="Sélectionner une option"
+            />
+          </div>
+        </div>
+      );
+    };
+
+    // ============================================================
+    // STEP 3: CARACTÉRISTIQUES DE LA SOCIÉTÉ
+    // ============================================================
+    const OBJETS_SOCIAUX_SPE = [
+      "Expert-Comptable", "Commissaire aux comptes", "Avocat",
+      "Avocat au CE et à la CC", "Commissaire de justice", "Notaire",
+      "Administrateur Judiciaire", "Mandataire judiciaire", "Conseil en propriété intellectuelle"
+    ];
+
+    const OBJETS_SOCIAUX_SEC = [
+      "Expert-Comptable",
+      "Expert comptable et commissariat aux comptes",
+    ];
+
+    const CRCC_OPTIONS = [
+      "AIX-BASTIA", "BASSE-TERRE", "BESANÇON-DIJON", "COLMAR",
+      "DAUPHINÉ-SAVOIE", "EST", "FORT-DE-FRANCE", "GRANDE AQUITAINE",
+      "HAUTS-DE-FRANCE", "LYON-RIOM", "MONTPELLIER-NÎMES", "NORMANDIE",
+      "OUEST-ATLANTIQUE", "PARIS", "SAINT-DENIS DE LA RÉUNION",
+      "TOULOUSE", "VERSAILLES-CENTRE",
+    ];
+
+    const FORMES_JURIDIQUES_DEFAULT = [
+      "SARL", "EURL", "SAS", "SASU", "SA à conseil d'administration", "SA à directoire",
+      "Société civile", "SELARL", "SELURL", "SELAS", "SELASU", "SELAFA", "SELCA", "Autre"
+    ];
+
+    const FORMES_JURIDIQUES_SPFPL = [
+      "SA à conseil d'administration", "SA à directoire", "SARL", "SAS", "SASU", "SCA"
+    ];
+
+    const LOCAUX_OPTIONS = [
+      "Sa propriété", "Loués", "Pris en sous-location",
+      "La résidence d'un Représentant légal", "Une domiciliation"
+    ];
+
+    // OUI/NON Radio inline
+    const OuiNon = ({ value, onChange, label, required }) => (
+      <div style={{ marginBottom: '16px' }}>
+        {label && (
+          <p style={{ fontSize: '14px', color: T.color.textDark, margin: '0 0 8px 0', lineHeight: '21px' }}>
+            {required && <span style={{ color: '#C81E1E' }}>* </span>}
+            {label}
+          </p>
+        )}
+        <div style={{ display: 'flex', gap: '24px' }}>
+          {['Oui', 'Non'].map(opt => {
+            const selected = value === opt;
+            return (
+              <label key={opt} onClick={() => onChange(opt)} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <div style={{
+                  width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0,
+                  border: `2px solid ${selected ? T.color.primaryBlue : T.color.borderMedium}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: T.color.white,
+                }}>
+                  {selected && <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: T.color.primaryBlue }} />}
+                </div>
+                <span style={{ fontSize: '14px', color: T.color.textDark }}>{opt}</span>
+              </label>
+            );
+          })}
+        </div>
+      </div>
+    );
+
+    // Checkbox for objet social
+    const CheckboxItem = ({ label, checked, onChange }) => (
+      <label onClick={() => onChange(!checked)} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+        <div style={{
+          width: '18px', height: '18px', borderRadius: '4px', flexShrink: 0,
+          border: `2px solid ${checked ? T.color.primaryBlue : T.color.borderMedium}`,
+          background: checked ? T.color.primaryBlue : T.color.white,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          {checked && (
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={T.color.white} strokeWidth="3">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          )}
+        </div>
+        <span style={{ fontSize: '14px', color: T.color.textDark }}>{label}</span>
+      </label>
+    );
+
+    // Section card wrapper
+    const SectionCard = ({ children }) => (
+      <div style={{
+        background: T.color.white,
+        border: `1px solid ${T.color.border}`,
+        borderRadius: T.radius,
+        boxShadow: T.shadow.card,
+        padding: '28px',
+        marginBottom: '32px',
+      }}>
+        {children}
+      </div>
+    );
+
+    const SectionTitle = ({ children }) => (
+      <h3 style={{ fontSize: '16px', fontWeight: 700, color: T.color.primaryBlue, margin: '0 0 20px 0', lineHeight: '24px' }}>
+        {children}
+      </h3>
+    );
+
+    // ============================================================
+    // CAPITAL SOCIAL — avec validation de surface
+    // ============================================================
+    const CapitalSocialCard = ({ data, update }) => {
+      const d = data || {};
+      const errStyle = { fontSize: '13px', color: '#C81E1E', margin: '4px 0 0 0', lineHeight: '18px' };
+
+      // Helpers
+      const isInteger = (v) => /^\d+$/.test(v);
+      const isDecimal2 = (v) => /^\d+([.,]\d{1,2})?$/.test(v);
+      const parseNum = (v) => parseFloat((v || '').replace(',', '.')) || 0;
+
+      // Per-field errors (only show if field has a value)
+      const montant = d.capitalMontant || '';
+      const titres = d.capitalTitres || '';
+      const valeur = d.capitalValeurNominale || '';
+      const voix = d.capitalVoix || '';
+
+      const errMontant = montant && !isInteger(montant) ? 'Le montant doit être un nombre entier, sans décimales.' : '';
+      const errTitres = titres && !isInteger(titres) ? 'Le nombre de titres doit être un nombre entier.' : '';
+      const errValeur = valeur && !isDecimal2(valeur) ? 'La valeur nominale doit être un nombre avec 2 décimales maximum (ex : 10,50).' : '';
+      const errVoix = voix && !isInteger(voix) ? 'Le nombre total de voix doit être un nombre entier.' : '';
+
+      // Cross-field: Nb titres × Valeur nominale == Montant
+      const crossCheck = titres && valeur && montant && !errMontant && !errTitres && !errValeur;
+      const calcul = crossCheck ? parseNum(titres) * parseNum(valeur) : null;
+      const montantNum = crossCheck ? parseNum(montant) : null;
+      const errCross = crossCheck && Math.abs(calcul - montantNum) > 0.01
+        ? `Incohérence : Nombre de titres (${titres}) × Valeur nominale (${valeur}) = ${calcul.toFixed(2)} €, mais le montant saisi est ${montant} €.`
+        : '';
+
+      return (
+        <SectionCard>
+          <SectionTitle>Capital Social</SectionTitle>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+            <div>
+              <FieldInput label="Montant (en euros)" required value={montant} onChange={v => update('capitalMontant', v)} placeholder="0" />
+              {errMontant && <p style={errStyle}>{errMontant}</p>}
+            </div>
+            <div>
+              <FieldInput label="Nombre de titres" required value={titres} onChange={v => update('capitalTitres', v)} />
+              {errTitres && <p style={errStyle}>{errTitres}</p>}
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            <div>
+              <FieldInput label="Valeur nominale des titres (en euros)" required value={valeur} onChange={v => update('capitalValeurNominale', v)} />
+              {errValeur && <p style={errStyle}>{errValeur}</p>}
+            </div>
+            <div>
+              <FieldInput label="Nombre de voix (Total des droits de vote)" required value={voix} onChange={v => update('capitalVoix', v)} />
+              {errVoix && <p style={errStyle}>{errVoix}</p>}
+            </div>
+          </div>
+          {errCross && (
+            <div style={{
+              marginTop: '16px', padding: '12px 16px',
+              background: T.color.redBg, border: `1px solid #FECACA`,
+              borderRadius: T.radius,
+            }}>
+              <p style={{ fontSize: '13px', color: '#991B1B', margin: 0, lineHeight: '18px' }}>{errCross}</p>
+            </div>
+          )}
+        </SectionCard>
+      );
+    };
+
+    const Step3Content = ({ data, update, profile }) => {
+      const d = data || {};
+      const formesJuridiques = profile === 'SPFPL' ? FORMES_JURIDIQUES_SPFPL : FORMES_JURIDIQUES_DEFAULT;
+      const toggleObjet = (obj) => {
+        const current = d.objetsSociaux || [];
+        if (current.includes(obj)) {
+          update('objetsSociaux', current.filter(o => o !== obj));
+        } else {
+          update('objetsSociaux', [...current, obj]);
+        }
+      };
+
+      return (
+        <div>
+          {/* Step header */}
+          <div style={{ marginBottom: '48px' }}>
+            <h1 style={{ fontSize: '24px', fontWeight: 700, color: T.color.textDark, margin: 0, lineHeight: '24px' }}>
+              Caractéristiques de la société
+            </h1>
+          </div>
+
+          {/* ---- CARD 1: Identité & Objet social ---- */}
+          <SectionCard>
+            {/* Dénomination / Sigle */}
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px', marginBottom: '20px' }}>
+              <FieldInput label="Dénomination sociale" required value={d.denomination} onChange={v => update('denomination', v)} />
+              <FieldInput label="Sigle" value={d.sigle} onChange={v => update('sigle', v)} />
+            </div>
+
+            {/* Objet social — conditionnel selon le profil */}
+            {profile !== 'SPFPL' && (
+              <div style={{ marginBottom: '20px' }}>
+                <p style={{ fontSize: '14px', color: T.color.textDark, margin: '0 0 12px 0', fontWeight: 400 }}>
+                  Objet social de la société
+                </p>
+
+                {/* SEC = choix unique (radio) */}
+                {profile === 'SEC' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    {OBJETS_SOCIAUX_SEC.map(obj => (
+                      <label key={obj} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                        <div style={{
+                          width: '20px', height: '20px', borderRadius: '50%',
+                          border: `2px solid ${d.objetSocial === obj ? T.color.primaryBlue : T.color.borderMedium}`,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          background: T.color.white, flexShrink: 0,
+                        }} onClick={() => update('objetSocial', obj)}>
+                          {d.objetSocial === obj && (
+                            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: T.color.primaryBlue }} />
+                          )}
+                        </div>
+                        <span style={{ fontSize: '14px', color: T.color.textDark }}>{obj}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+
+                {/* SPEC = saisie libre */}
+                {profile === 'SPEC' && (
+                  <FieldInput label="" value={d.objetSocialLibre} onChange={v => update('objetSocialLibre', v)} placeholder="Précisez l'objet social" />
+                )}
+
+                {/* SPE = choix multiple (checkboxes) */}
+                {profile === 'SPE' && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+                    {OBJETS_SOCIAUX_SPE.map(obj => (
+                      <CheckboxItem key={obj} label={obj} checked={(d.objetsSociaux || []).includes(obj)} onChange={() => toggleObjet(obj)} />
+                    ))}
+                  </div>
+                )}
+
+                {/* Pas de profil sélectionné — affichage par défaut (checkboxes SPE) */}
+                {!profile && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+                    {OBJETS_SOCIAUX_SPE.map(obj => (
+                      <CheckboxItem key={obj} label={obj} checked={(d.objetsSociaux || []).includes(obj)} onChange={() => toggleObjet(obj)} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* CRCC — conditionnel si commissariat aux comptes sélectionné */}
+            {(d.objetSocial === 'Expert comptable et commissariat aux comptes' || (d.objetsSociaux || []).includes('Commissaire aux comptes')) && (
+              <div style={{ marginBottom: '20px' }}>
+                <FieldSelect label="Choisir la liste sur laquelle la société est inscrite ou va s'inscrire" required value={d.crcc} onChange={v => update('crcc', v)} options={CRCC_OPTIONS} placeholder="Sélectionner" />
+              </div>
+            )}
+
+            {/* Forme juridique */}
+            <div style={{ marginBottom: d.formeJuridique === 'Autre' ? '20px' : '0' }}>
+              <FieldSelect label="Forme juridique de la société" required value={d.formeJuridique} onChange={v => { update('formeJuridique', v); if (v !== 'Autre') update('formeJuridiqueAutre', ''); }} options={formesJuridiques} placeholder="Sélectionner" height="40px" />
+            </div>
+            {d.formeJuridique === 'Autre' && (
+              <FieldInput label="Autre - précisez" required value={d.formeJuridiqueAutre} onChange={v => update('formeJuridiqueAutre', v)} />
+            )}
+          </SectionCard>
+
+          {/* ---- CARD 2: Capital Social ---- */}
+          <CapitalSocialCard data={d} update={update} />
+
+          {/* ---- CARD 3: Siège social ---- */}
+          <SectionCard>
+            <SectionTitle>Siège social</SectionTitle>
+            <div style={{ marginBottom: '20px' }}>
+              <FieldInput label="Adresse" required value={d.siegeAdresse} onChange={v => update('siegeAdresse', v)} />
+            </div>
+            <div style={{ marginBottom: '20px' }}>
+              <FieldInput label="Complément d'adresse" value={d.siegeComplement} onChange={v => update('siegeComplement', v)} />
+            </div>
+            <div style={{ marginBottom: '20px' }}>
+              <FieldInput label="Lieu-dit" value={d.siegeLieuDit} onChange={v => update('siegeLieuDit', v)} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+              <FieldInput label="Code postal" required value={d.siegeCP} onChange={v => update('siegeCP', v)} />
+              <FieldInput label="Ville" required value={d.siegeVille} onChange={v => update('siegeVille', v)} />
+              <FieldSelect label="Pays" required value={d.siegePays} onChange={v => update('siegePays', v)} options={PAYS_OPTIONS} placeholder="Sélectionner" height="40px" />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px' }}>
+              <FieldInput label="Téléphone" required value={d.siegeTelephone} onChange={v => update('siegeTelephone', v)} />
+              <FieldInput label="Email de la société" value={d.siegeEmail} onChange={v => update('siegeEmail', v)} />
+              <FieldInput label="Adresse site internet" value={d.siegeWebsite} onChange={v => update('siegeWebsite', v)} />
+            </div>
+          </SectionCard>
+
+          {/* ---- CARD: Entreprise mère ---- */}
+          <SectionCard>
+            <SectionTitle>Entreprise mère</SectionTitle>
+            <OuiNon
+              label="Cette société est-elle liée à une entreprise mère (différente du siège social) ?"
+              required
+              value={d.entrepriseMere}
+              onChange={v => { update('entrepriseMere', v); if (v === 'Non') { update('emRecherche', ''); update('emFound', false); } }}
+            />
+            {d.entrepriseMere === 'Oui' && (
+              <div>
+                {/* Barre de recherche */}
+                <SearchBar placeholder="Recherchez la personne morale" value={d.emRecherche} onClear={() => { update('emRecherche', ''); update('emFound', false); }} />
+
+                {/* Résultat trouvé (simulation) */}
+                {d.emFound && (
+                  <div style={{
+                    padding: '16px', background: T.color.radioBg,
+                    border: `1px solid ${T.color.border}`, borderRadius: T.radius, marginBottom: '16px',
+                  }}>
+                    <div style={{ marginBottom: '12px' }}>
+                      <p style={{ fontSize: '12px', color: T.color.gray, margin: '0 0 4px 0' }}>Dénomination sociale</p>
+                      <p style={{ fontSize: '14px', color: T.color.textDark, margin: 0, fontWeight: 500 }}>{d.emDenomination || '—'}</p>
+                    </div>
+                    <div style={{ marginBottom: '12px' }}>
+                      <p style={{ fontSize: '12px', color: T.color.gray, margin: '0 0 4px 0' }}>SIREN</p>
+                      <p style={{ fontSize: '14px', color: T.color.textDark, margin: 0, fontWeight: 500 }}>{d.emSiren || '—'}</p>
+                    </div>
+                    <div>
+                      <p style={{ fontSize: '12px', color: T.color.gray, margin: '0 0 4px 0' }}>Adresse</p>
+                      <p style={{ fontSize: '14px', color: T.color.textDark, margin: 0, fontWeight: 500 }}>{d.emAdresseComplete || '—'}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Formulaire manuel (si recherche KO) */}
+                {!d.emFound && (
+                  <div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                      <FieldInput label="Dénomination sociale" required value={d.emDenomination} onChange={v => update('emDenomination', v)} />
+                      <FieldInput label="SIREN (ou équivalent européen)" required value={d.emSiren} onChange={v => update('emSiren', v)} />
+                    </div>
+                    <div style={{ marginBottom: '20px' }}>
+                      <FieldInput label="Rue" required value={d.emRue} onChange={v => update('emRue', v)} />
+                    </div>
+                    <div style={{ marginBottom: '20px' }}>
+                      <FieldInput label="Complément d'adresse" value={d.emComplement} onChange={v => update('emComplement', v)} />
+                    </div>
+                    <div style={{ marginBottom: '20px' }}>
+                      <FieldInput label="Lieu-dit" value={d.emLieuDit} onChange={v => update('emLieuDit', v)} />
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px' }}>
+                      <FieldInput label="Code postal" required value={d.emCP} onChange={v => update('emCP', v)} />
+                      <FieldInput label="Ville" required value={d.emVille} onChange={v => update('emVille', v)} />
+                      <FieldSelect label="Pays" required value={d.emPays} onChange={v => update('emPays', v)} options={PAYS_OPTIONS} placeholder="Sélectionner" />
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </SectionCard>
+
+          {/* ---- CARD 4: Tiers de confiance (SEC ou SPE uniquement) ---- */}
+          {(profile === 'SEC' || profile === 'SPE') && <SectionCard>
+            <SectionTitle>Tiers de confiance</SectionTitle>
+            <OuiNon
+              label="La société adoptera-t-elle le statut de tiers de confiance ?"
+              required
+              value={d.tiersConfiance}
+              onChange={v => update('tiersConfiance', v)}
+            />
+            {d.tiersConfiance === 'Oui' && (
+              <div style={{
+                padding: '16px',
+                background: T.color.infoBg,
+                border: `1px solid ${T.color.infoBorder}`,
+                borderRadius: T.radius,
+                marginTop: '8px',
+              }}>
+                <p style={{ fontSize: '14px', color: T.color.infoText, margin: 0, lineHeight: '21px' }}>
+                  {`Afin d'obtenir le statut de Tiers de confiance, vous devrez souscrire une convention avec l'administration fiscale (demande de convention individuelle à faire auprès de la DRFIP). Cette convention devra être déposée dès sa signature sur la PEP, pour que vous fassiez partie de la liste des Tiers de confiance publiée sur le site du Conseil national de l'Ordre.`}
+                </p>
+              </div>
+            )}
+          </SectionCard>}
+
+          {/* ---- SECTION: Renseignements divers ---- */}
+          <div style={{ marginBottom: '32px' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: 700, color: T.color.textDark, margin: '0 0 32px 0', lineHeight: '28.8px' }}>
+              Renseignements divers
+            </h2>
+
+            {/* Origine de la société */}
+            <SectionCard>
+              <SectionTitle>Origine de la société</SectionTitle>
+
+              <OuiNon
+                label={`S'agit-il d'une société déjà immatriculée au RNE ?`}
+                required
+                value={d.immatriculeeRNE}
+                onChange={v => update('immatriculeeRNE', v)}
+              />
+
+              {d.immatriculeeRNE === 'Oui' && (
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                    <FieldInput label="SIRET du siège social" required value={d.siret} onChange={v => update('siret', v)} />
+                    <FieldInput label="N° de TVA intracommunautaire" required value={d.tvaIntra} onChange={v => update('tvaIntra', v)} />
+                    <FieldInput label="Date de création de la société" required value={d.dateCreation} onChange={v => update('dateCreation', v)} />
+                  </div>
+
+                  <OuiNon
+                    label="A-t-elle changé d'appellation ?"
+                    required
+                    value={d.changementAppellation}
+                    onChange={v => update('changementAppellation', v)}
+                  />
+                  {d.changementAppellation === 'Oui' && (
+                    <div style={{ marginBottom: '20px' }}>
+                      <FieldInput label="Ancienne appellation" required value={d.ancienneAppellation} onChange={v => update('ancienneAppellation', v)} />
+                    </div>
+                  )}
+
+                  <div style={{ marginBottom: '20px' }}>
+                    <FieldInput label="Quel est ou était son objet social d'origine ?" required value={d.objetOrigine} onChange={v => update('objetOrigine', v)} />
+                  </div>
+
+                  <OuiNon
+                    label="A-t-elle exercé l'activité prévue dans son objet d'origine ?"
+                    required
+                    value={d.activiteOrigine}
+                    onChange={v => update('activiteOrigine', v)}
+                  />
+                  {d.activiteOrigine === 'Oui' && (
+                    <div style={{ marginBottom: '20px' }}>
+                      <FieldInput label="Si oui, qu'est devenue ou deviendra cette activité après son inscription?" required value={d.devenirActivite} onChange={v => update('devenirActivite', v)} />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {d.immatriculeeRNE === 'Non' && (
+                <div style={{ marginBottom: '20px' }}>
+                  <FieldInput label="Quel est ou était son objet social d'origine ?" required value={d.objetOrigine} onChange={v => update('objetOrigine', v)} />
+                </div>
+              )}
+            </SectionCard>
+
+            {/* Origine de la clientèle */}
+            <SectionCard>
+              <SectionTitle>Origine de la clientèle présente ou future</SectionTitle>
+              <OuiNon
+                label="La société est-elle constituée pour racheter une clientèle ou reprendre une activité dans l'année qui suit sa création ?"
+                required
+                value={d.rachatClientele}
+                onChange={v => update('rachatClientele', v)}
+              />
+              {d.rachatClientele === 'Oui' && (
+                <div style={{ marginBottom: '20px' }}>
+                  <FieldInput label="Identité du cédant" value={d.identiteCedant} onChange={v => update('identiteCedant', v)} />
+                </div>
+              )}
+            </SectionCard>
+
+            {/* Organisation - Effectif */}
+            <SectionCard>
+              <SectionTitle>Organisation - Effectif prévisionnel à 6 mois</SectionTitle>
+              <p style={{ fontSize: '14px', fontWeight: 600, color: T.color.textDark, margin: '0 0 8px 0' }}>
+                {`Experts-comptables inscrits ou en cours d'inscription`}
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                <FieldInput label="Nombre" value={d.ecInscritsNombre} onChange={v => update('ecInscritsNombre', v)} />
+                <FieldInput label="Équivalent temps plein" value={d.ecInscritsETP} onChange={v => update('ecInscritsETP', v)} />
+              </div>
+              <p style={{ fontSize: '14px', fontWeight: 600, color: T.color.textDark, margin: '0 0 8px 0' }}>
+                Experts-comptables stagiaires
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                <FieldInput label="Nombre" value={d.ecStagiairesNombre} onChange={v => update('ecStagiairesNombre', v)} />
+                <FieldInput label="Équivalent temps plein" value={d.ecStagiairesETP} onChange={v => update('ecStagiairesETP', v)} />
+              </div>
+              <p style={{ fontSize: '14px', fontWeight: 600, color: T.color.textDark, margin: '0 0 8px 0' }}>
+                Autres personnels
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                <FieldInput label="Nombre" value={d.autresNombre} onChange={v => update('autresNombre', v)} />
+                <FieldInput label="Équivalent temps plein" value={d.autresETP} onChange={v => update('autresETP', v)} />
+              </div>
+              <p style={{ fontSize: '14px', fontWeight: 700, color: T.color.textDark, margin: '0 0 8px 0' }}>
+                Total
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: T.color.textDark }}>Nombre</label>
+                  <div style={{
+                    width: '100%', height: '40px', border: `1px solid ${T.color.border}`, borderRadius: T.radius,
+                    padding: '0 14px', fontSize: '14px', color: T.color.primaryRed, background: T.color.bg,
+                    display: 'flex', alignItems: 'center',
+                  }}>
+                    {(parseInt(d.ecInscritsNombre||0) + parseInt(d.ecStagiairesNombre||0) + parseInt(d.autresNombre||0)) || 0}
+                  </div>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: T.color.textDark }}>Équivalent temps plein</label>
+                  <div style={{
+                    width: '100%', height: '40px', border: `1px solid ${T.color.border}`, borderRadius: T.radius,
+                    padding: '0 14px', fontSize: '14px', color: T.color.primaryRed, background: T.color.bg,
+                    display: 'flex', alignItems: 'center',
+                  }}>
+                    {(parseFloat(d.ecInscritsETP||0) + parseFloat(d.ecStagiairesETP||0) + parseFloat(d.autresETP||0)) || 0}
+                  </div>
+                </div>
+              </div>
+            </SectionCard>
+
+            {/* Organisation - Locaux professionnels */}
+            <SectionCard>
+              <SectionTitle>Organisation - Locaux professionnels</SectionTitle>
+              <FieldSelect
+                label="Les locaux utilisés par la personne morale sont ils"
+                required
+                value={d.locaux}
+                onChange={v => update('locaux', v)}
+                options={LOCAUX_OPTIONS}
+                placeholder="Sélectionner"
+                height="40px"
+              />
+            </SectionCard>
+          </div>
+        </div>
+      );
+    };
+
+    // ============================================================
+    // STEP 4: REPRÉSENTANTS LÉGAUX
+    // ============================================================
+    const CIVILITE_OPTIONS = ["Madame", "Monsieur"];
+
+    const STATUT_OPTIONS = [
+      "Gérant",
+      "Président",
+      "Président du conseil d'administration",
+      "Président du directoire",
+      "Président du conseil de surveillance",
+      "Directeur général",
+      "Directeur général délégué",
+    ];
+
+    // Search bar with tag result
+    const SearchBar = ({ placeholder, value, onClear }) => (
+      <div style={{ marginBottom: '16px' }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '8px',
+          border: `1px solid ${T.color.border}`, borderRadius: T.radius,
+          padding: '0 14px', height: '40px', background: T.color.white,
+        }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={T.color.gray} strokeWidth="2">
+            <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <input
+            placeholder={placeholder}
+            value={value || ''}
+            readOnly
+            style={{
+              flex: 1, border: 'none', outline: 'none', fontSize: '14px',
+              color: T.color.textDark, background: 'transparent', fontFamily: T.font,
+            }}
+          />
+        </div>
+        {value && (
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: '8px',
+            background: T.color.radioBg, border: `1px solid ${T.color.border}`,
+            borderRadius: T.radius, padding: '8px 14px', marginTop: '8px',
+            fontSize: '14px', color: T.color.textDark,
+          }}>
+            {value}
+            <span onClick={onClear} style={{ cursor: 'pointer', color: T.color.gray, fontWeight: 600 }}>✕</span>
+          </div>
+        )}
+      </div>
+    );
+
+    // Dropdown for Statut
+    const StatutSelect = ({ value, onChange }) => (
+      <div style={{ marginBottom: '16px' }}>
+        <FieldSelect
+          label="Statut au sein de la société en cours d'inscription"
+          required
+          value={value}
+          onChange={onChange}
+          options={STATUT_OPTIONS}
+          placeholder="Sélectionner"
+        />
+      </div>
+    );
+
+    // Single participation row
+    const ParticipationRow = ({ data, onChange, onRemove, index }) => {
+      const d = data || {};
+      const u = (k, v) => onChange({ ...d, [k]: v });
+      return (
+        <div style={{
+          border: `1px solid ${T.color.border}`, borderRadius: T.radius,
+          padding: '16px', marginBottom: '12px', background: T.color.white,
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: T.color.gray }}>Participation {index + 1}</span>
+            {onRemove && (
+              <button onClick={onRemove} style={{
+                background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: T.color.primaryRed, fontFamily: T.font,
+              }}>Supprimer</button>
+            )}
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <FieldSelect label="Nature des droits" required value={d.natureDroits} onChange={v => u('natureDroits', v)} options={["Pleine propriété", "Nue-propriété", "Usufruit"]} placeholder="Sélectionner" />
+            <FieldInput label="Capital détenu" required value={d.capitalDetenu} onChange={v => u('capitalDetenu', v)} placeholder="Capital détenu" />
+            <FieldInput label="Nombre de titres" required value={d.nombreTitres} onChange={v => u('nombreTitres', v)} placeholder="Nombre de titres" />
+            <FieldInput label="Droit de vote détenu" required value={d.droitVote} onChange={v => u('droitVote', v)} placeholder="Droit de vote détenu" />
+            <FieldInput label="Nombre de voix" required value={d.nombreVoix} onChange={v => u('nombreVoix', v)} placeholder="Nombre de voix" />
+          </div>
+        </div>
+      );
+    };
+
+    // Participation section with Ajouter
+    const ParticipationSection = ({ items, onAdd, onUpdate, onRemove }) => (
+      <div style={{ borderTop: `1px solid ${T.color.border}`, paddingTop: '24px', marginTop: '8px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+          <p style={{ fontSize: '14px', fontWeight: 600, color: T.color.textDark, margin: 0 }}>
+            <span style={{ color: '#C81E1E' }}>* </span>Participation
+          </p>
+          <button onClick={onAdd} style={{
+            background: 'none', border: `1px solid ${T.color.border}`, borderRadius: T.radius,
+            padding: '6px 16px', fontSize: '14px', color: T.color.primaryBlue,
+            cursor: 'pointer', fontFamily: T.font, fontWeight: 500,
+          }}>Ajouter</button>
+        </div>
+        <p style={{ fontSize: '14px', color: T.color.gray, margin: '0 0 16px 0' }}>
+          Complétez les informations suivantes
+        </p>
+        {items.map((item, idx) => (
+          <ParticipationRow
+            key={idx}
+            index={idx}
+            data={item}
+            onChange={newData => onUpdate(idx, newData)}
+            onRemove={items.length > 1 ? () => onRemove(idx) : null}
+          />
+        ))}
+      </div>
+    );
+
+    // Personne Physique sub-card
+    const PersonnePhysiqueCard = ({ data, update }) => {
+      const d = data || {};
+      const u = (k, v) => update(k, v);
+      const exerceOui = d.exerce === 'Oui';
+      const associeOui = d.associe === 'Oui';
+      const participations = d.participations || [{}];
+
+      return (
+        <SectionCard>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+            <SectionTitle>Représentant légal personne physique</SectionTitle>
+            <button style={{
+              background: 'none', border: `1px solid ${T.color.border}`, borderRadius: T.radius,
+              padding: '6px 16px', fontSize: '14px', color: T.color.primaryBlue,
+              cursor: 'pointer', fontFamily: T.font, fontWeight: 500,
+            }}>Ajouter</button>
+          </div>
+
+          <SearchBar placeholder="Recherchez la personne physique" value={d.search} onClear={() => u('search', '')} />
+
+          {/* Civilité */}
+          <div style={{ marginBottom: '16px' }}>
+            <p style={{ fontSize: '14px', fontWeight: 600, color: T.color.textDark, margin: '0 0 8px 0' }}>
+              <span style={{ color: '#C81E1E' }}>* </span>Civilité
+            </p>
+            <div style={{ display: 'flex', gap: '24px' }}>
+              {CIVILITE_OPTIONS.map(opt => {
+                const selected = d.civilite === opt;
+                return (
+                  <label key={opt} onClick={() => u('civilite', opt)} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                    <div style={{
+                      width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0,
+                      border: `2px solid ${selected ? T.color.primaryBlue : T.color.borderMedium}`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      background: T.color.white,
+                    }}>
+                      {selected && <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: T.color.primaryBlue }} />}
+                    </div>
+                    <span style={{ fontSize: '14px', color: T.color.textDark }}>{opt}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Name fields: 3 columns */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+            <FieldInput label="Nom patronymique" required value={d.nom} onChange={v => u('nom', v)} />
+            <FieldInput label="Prénom" required value={d.prenom} onChange={v => u('prenom', v)} />
+            <FieldInput label="Prénom 2" value={d.prenom2} onChange={v => u('prenom2', v)} />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+            <FieldInput label="Prénom 3" value={d.prenom3} onChange={v => u('prenom3', v)} />
+            <FieldInput label="Prénom 4" value={d.prenom4} onChange={v => u('prenom4', v)} />
+          </div>
+
+          {/* Conseil régional de l'Ordre (single field, before questions) */}
+          <div style={{ marginBottom: '16px' }}>
+            <FieldSelect label="Conseil régional de l'Ordre" required value={d.conseilRegional} onChange={v => u('conseilRegional', v)} options={CROEC_OPTIONS} placeholder="Sélectionner" />
+          </div>
+
+          {/* Q1: exerce la profession */}
+          <OuiNon
+            label="Ce représentant légal exerce-t-il la profession d'expert-comptable dans un pays de l'UE ou de l'EEE (voire en Suisse - possibilité uniquement pour les SEL) ?"
+            required
+            value={d.exerce}
+            onChange={v => u('exerce', v)}
+          />
+
+          {/* Conditional: Pays d'exercice (when exerce = Oui) */}
+          {exerceOui && (
+            <div style={{ marginBottom: '16px' }}>
+              <FieldSelect label="Pays d'exercice" required value={d.paysExercice} onChange={v => u('paysExercice', v)} options={PAYS_OPTIONS} placeholder="Sélectionner" />
+            </div>
+          )}
+
+          {/* Statut (visible only when exerce question is answered) */}
+          {d.exerce && (
+            <StatutSelect value={d.statut} onChange={v => u('statut', v)} />
+          )}
+
+          {/* Q2: exercera-t-il au sein */}
+          <OuiNon
+            label="Ce représentant légal exercera-t-il au sein de la société en cours d'inscription ?"
+            required
+            value={d.exerceAuSein}
+            onChange={v => u('exerceAuSein', v)}
+          />
+
+          {/* Q3: associé */}
+          <OuiNon
+            label="Ce représentant légal est-il ou sera t-il associé au sein de la société en cours d'inscription ?"
+            required
+            value={d.associe}
+            onChange={v => u('associe', v)}
+          />
+
+          {/* Conditional on associé = Oui: Participation + Bénéficiaire + Birth info */}
+          {associeOui && (
+            <>
+              {/* Participation section with Ajouter */}
+              <ParticipationSection
+                items={participations}
+                onAdd={() => u('participations', [...participations, {}])}
+                onUpdate={(idx, newData) => {
+                  const next = [...participations];
+                  next[idx] = newData;
+                  u('participations', next);
+                }}
+                onRemove={idx => {
+                  const next = participations.filter((_, i) => i !== idx);
+                  u('participations', next);
+                }}
+              />
+
+              {/* Q4: bénéficiaire effectif */}
+              <div style={{ marginTop: '16px' }}>
+                <OuiNon
+                  label="Ce représentant légal est-il un bénéficiaire effectif au sens de l'article R561-1 du code monétaire et financier de la société en cours d'inscription ?"
+                  required
+                  value={d.beneficiaire}
+                  onChange={v => u('beneficiaire', v)}
+                />
+              </div>
+
+              {/* Date de Naissance + Lieu de naissance (only when bénéficiaire = Oui) */}
+              {d.beneficiaire === 'Oui' && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                  <FieldInput label="Date de Naissance" required value={d.dateNaissance} onChange={v => u('dateNaissance', v)} type="date" />
+                  <FieldSelect label="Lieu de naissance" required value={d.lieuNaissance} onChange={v => u('lieuNaissance', v)} options={CROEC_OPTIONS} placeholder="Sélectionner" />
+                </div>
+              )}
+            </>
+          )}
+        </SectionCard>
+      );
+    };
+
+    // PM Radio options for "Cette société représentant légal:"
+    const PM_STATUT_OPTIONS = [
+      "Est en cours d'inscription au Tableau de l'ordre des experts-comptables",
+      "Exerce la profession d'expert-comptable dans un pays de l'UE ou de l'EEE (ou en Suisse)",
+      "N'exerce pas la profession d'expert-comptable",
+    ];
+
+    // Step 5 radio options: "Précisez la situation de ce représentant légal :"
+    const STEP5_SITUATION_OPTIONS = [
+      "Il est en cours d'inscription au Tableau de l'ordre des experts-comptables",
+      "Il exerce la profession d'expert-comptable dans un pays de l'UE ou de l'EEE (ou en Suisse)",
+      "Il n'exerce pas la profession d'expert-comptable",
+    ];
+
+    const NATIONALITE_OPTIONS = ["Française", "Belge", "Luxembourgeoise", "Suisse", "Allemande", "Italienne", "Espagnole", "Portugaise", "Britannique", "Néerlandaise", "Autre"];
+
+    // Personne Morale sub-card
+    const PersonneMoraleCard = ({ data, update }) => {
+      const d = data || {};
+      const u = (k, v) => update(k, v);
+      const associeeOui = d.associee === 'Oui';
+      const associeeNon = d.associee === 'Non';
+      const associeOrdreMereOui = d.associeOrdreMere === 'Oui';
+      const participationsPM = d.participations || [{}];
+
+      return (
+        <SectionCard>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+            <SectionTitle>Représentant légal personne morale</SectionTitle>
+            <button style={{
+              background: 'none', border: `1px solid ${T.color.border}`, borderRadius: T.radius,
+              padding: '6px 16px', fontSize: '14px', color: T.color.primaryBlue,
+              cursor: 'pointer', fontFamily: T.font, fontWeight: 500,
+            }}>Ajouter</button>
+          </div>
+
+          <SearchBar placeholder="Recherchez la personne morale" value={d.search} onClear={() => u('search', '')} />
+
+          {/* Fields */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+            <FieldInput label="Dénomination sociale" required value={d.denomination} onChange={v => u('denomination', v)} />
+            <FieldSelect label="Forme juridique" required value={d.formeJuridique} onChange={v => u('formeJuridique', v)} options={FORMES_JURIDIQUES_DEFAULT} placeholder="Sélectionner" />
+          </div>
+          <div style={{ marginBottom: '16px' }}>
+            <FieldInput label="SIREN" required value={d.siren} onChange={v => u('siren', v)} />
+          </div>
+
+          {/* Adresse du siège social */}
+          <p style={{ fontSize: '14px', fontWeight: 600, color: T.color.textDark, margin: '0 0 12px 0' }}>
+            Adresse du siège social
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '16px' }}>
+            <FieldInput label="Rue" required value={d.rue} onChange={v => u('rue', v)} />
+            <FieldInput label="Complément d'adresse" value={d.complement} onChange={v => u('complement', v)} />
+            <FieldInput label="Lieu-dit" value={d.lieuDit} onChange={v => u('lieuDit', v)} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+              <FieldInput label="Code postal" required value={d.codePostal} onChange={v => u('codePostal', v)} />
+              <FieldInput label="Ville" required value={d.ville} onChange={v => u('ville', v)} />
+              <FieldSelect label="Pays" required value={d.pays} onChange={v => u('pays', v)} options={PAYS_OPTIONS} placeholder="Sélectionner" />
+            </div>
+          </div>
+
+          {/* Cette société représentant légal: — 3 radio buttons */}
+          <div style={{ marginBottom: '16px' }}>
+            <p style={{ fontSize: '14px', fontWeight: 600, color: T.color.textDark, margin: '0 0 12px 0' }}>
+              <span style={{ color: '#C81E1E' }}>* </span>Cette société représentant légal:
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {PM_STATUT_OPTIONS.map(opt => {
+                const selected = d.statutPM === opt;
+                return (
+                  <label key={opt} onClick={() => u('statutPM', opt)} style={{
+                    display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer',
+                    background: selected ? T.color.radioBg : 'transparent',
+                    border: `1px solid ${selected ? T.color.primaryBlue : T.color.border}`,
+                    borderRadius: T.radius, padding: '12px 14px',
+                  }}>
+                    <div style={{
+                      width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0, marginTop: '1px',
+                      border: `2px solid ${selected ? T.color.primaryBlue : T.color.borderMedium}`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      background: T.color.white,
+                    }}>
+                      {selected && <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: T.color.primaryBlue }} />}
+                    </div>
+                    <span style={{ fontSize: '14px', color: T.color.textDark, lineHeight: '1.4' }}>{opt}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Conditional fields based on statutPM radio selection */}
+
+          {/* Option 1: "Est en cours d'inscription..." → Conseil régional dropdown */}
+          {d.statutPM === PM_STATUT_OPTIONS[0] && (
+            <div style={{ marginBottom: '16px' }}>
+              <FieldSelect label="Conseil régional de l'Ordre d'inscription en cours" required value={d.conseilRegionalEnCours} onChange={v => u('conseilRegionalEnCours', v)} options={CROEC_OPTIONS} placeholder="Sélectionner" />
+            </div>
+          )}
+
+          {/* Option 2: "Exerce la profession..." → Pays d'exercice + Organisation + Numéro */}
+          {d.statutPM === PM_STATUT_OPTIONS[1] && (
+            <>
+              <div style={{ marginBottom: '16px' }}>
+                <FieldSelect label="Pays d'exercice" required value={d.paysExercicePM} onChange={v => u('paysExercicePM', v)} options={PAYS_OPTIONS} placeholder="Sélectionner" />
+              </div>
+              <div style={{ marginBottom: '16px' }}>
+                <FieldInput label="A quelle organisation de la profession comptable adhère ce représentant légal Personne morale dans ce pays?" value={d.organisationProfession} onChange={v => u('organisationProfession', v)} />
+              </div>
+              <div style={{ marginBottom: '16px' }}>
+                <FieldInput label="Numéro d'immatriculation étranger" value={d.numeroImmatriculation} onChange={v => u('numeroImmatriculation', v)} />
+              </div>
+            </>
+          )}
+
+          {/* Option 3: "N'exerce pas..." → Activité de la société */}
+          {d.statutPM === PM_STATUT_OPTIONS[2] && (
+            <div style={{ marginBottom: '16px' }}>
+              <FieldInput label="Quelle est l'activité de la société représentant légal personne morale ?" required value={d.activiteSociete} onChange={v => u('activiteSociete', v)} />
+            </div>
+          )}
+
+          {/* Q1: Cette société est-elle associée */}
+          <OuiNon
+            label="Cette société est-elle associée de la société en cours d'inscription ?"
+            required
+            value={d.associee}
+            onChange={v => u('associee', v)}
+          />
+
+          {/* Conditional: associée = OUI → Participation section */}
+          {associeeOui && (
+            <ParticipationSection
+              items={participationsPM}
+              onAdd={() => u('participations', [...participationsPM, {}])}
+              onUpdate={(idx, newData) => {
+                const next = [...participationsPM];
+                next[idx] = newData;
+                u('participations', next);
+              }}
+              onRemove={idx => {
+                const next = participationsPM.filter((_, i) => i !== idx);
+                u('participations', next);
+              }}
+            />
+          )}
+
+          {/* Conditional: associée = NON → Q2: Ce représentant légal est-il associé */}
+          {associeeNon && (
+            <div style={{ borderTop: `1px solid ${T.color.border}`, paddingTop: '24px', marginTop: '8px' }}>
+              <OuiNon
+                label="Ce représentant légal est-il associé de la société, inscrite à l'Ordre, mère ou filiale de la société en cours d'inscription ?"
+                required
+                value={d.associeOrdreMere}
+                onChange={v => u('associeOrdreMere', v)}
+              />
+
+              {/* Conditional: associeOrdreMere = OUI → Search bar */}
+              {associeOrdreMereOui && (
+                <div style={{ marginTop: '8px' }}>
+                  <SearchBar placeholder="Recherchez la personne morale" value={d.searchAssocieMere} onClear={() => u('searchAssocieMere', '')} />
+                </div>
+              )}
+            </div>
+          )}
+        </SectionCard>
+      );
+    };
+
+    // Step 4 main component
+    const Step4Content = ({ data, update }) => {
+      const d = data || {};
+      const showPM = d.declarePersonneMorale;
+
+      const updatePP = (k, v) => {
+        update('pp', { ...(d.pp || {}), [k]: v });
+      };
+      const updatePM = (k, v) => {
+        update('pm', { ...(d.pm || {}), [k]: v });
+      };
+
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          {/* Personne Physique section */}
+          <PersonnePhysiqueCard data={d.pp} update={updatePP} />
+
+          {/* Checkbox to declare personne morale */}
+          <label onClick={() => update('declarePersonneMorale', !showPM)} style={{
+            display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer',
+          }}>
+            <div style={{
+              width: '16px', height: '16px', borderRadius: '4px', flexShrink: 0,
+              border: `2px solid ${showPM ? T.color.primaryBlue : T.color.borderMedium}`,
+              background: showPM ? T.color.primaryBlue : T.color.white,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              {showPM && (
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={T.color.white} strokeWidth="3">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              )}
+            </div>
+            <span style={{ fontSize: '14px', color: T.color.textDark }}>Déclarer un représentant légal personne morale</span>
+          </label>
+
+          {/* Personne Morale section (conditional) */}
+          {showPM && (
+            <PersonneMoraleCard data={d.pm} update={updatePM} />
+          )}
+        </div>
+      );
+    };
+
+    // ============================================================
+    // Step 5: Représentant légal PP du représentant légal PM
+    // ============================================================
+    const Step5Content = ({ data, update }) => {
+      const d = data || {};
+      const u = (k, v) => update(k, v);
+      return (
+        <SectionCard>
+          {/* Title + Ajouter */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+            <SectionTitle>Représentant légal personne physique du représentant légal personne morale</SectionTitle>
+            <button style={{
+              background: 'none', border: `1px solid ${T.color.border}`, borderRadius: T.radius,
+              padding: '6px 16px', fontSize: '14px', color: T.color.primaryBlue,
+              cursor: 'pointer', fontFamily: T.font, fontWeight: 500,
+            }}>Ajouter</button>
+          </div>
+
+          {/* Search */}
+          <SearchBar placeholder="Recherchez la personne physique" value={d.search} onClear={() => u('search', '')} />
+
+          {/* Civilité */}
+          <div style={{ marginBottom: '16px' }}>
+            <p style={{ fontSize: '14px', fontWeight: 600, color: T.color.textDark, margin: '0 0 8px 0' }}>
+              <span style={{ color: '#C81E1E' }}>* </span>Civilité
+            </p>
+            <div style={{ display: 'flex', gap: '24px' }}>
+              {CIVILITE_OPTIONS.map(opt => {
+                const selected = d.civilite === opt;
+                return (
+                  <label key={opt} onClick={() => u('civilite', opt)} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                    <div style={{
+                      width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0,
+                      border: `2px solid ${selected ? T.color.primaryBlue : T.color.borderMedium}`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      background: T.color.white,
+                    }}>
+                      {selected && <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: T.color.primaryBlue }} />}
+                    </div>
+                    <span style={{ fontSize: '14px', color: T.color.textDark }}>{opt}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Nom / Prénom / Prénom 2 (3 cols) */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+            <FieldInput label="Nom patronymique" required value={d.nom} onChange={v => u('nom', v)} />
+            <FieldInput label="Prénom" required value={d.prenom} onChange={v => u('prenom', v)} />
+            <FieldInput label="Prénom 2" value={d.prenom2} onChange={v => u('prenom2', v)} />
+          </div>
+
+          {/* Prénom 3 / Prénom 4 / Nationalité (3 cols) */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+            <FieldInput label="Prénom 3" value={d.prenom3} onChange={v => u('prenom3', v)} />
+            <FieldInput label="Prénom 4" value={d.prenom4} onChange={v => u('prenom4', v)} />
+            <FieldSelect label="Nationalité" required value={d.nationalite} onChange={v => u('nationalite', v)} options={NATIONALITE_OPTIONS} placeholder="Sélectionner" />
+          </div>
+
+          {/* Adresse du domicile personnel */}
+          <div style={{ marginBottom: '16px' }}>
+            <FieldInput label="Adresse du domicile personnel" required value={d.adresseDomicile} onChange={v => u('adresseDomicile', v)} />
+          </div>
+
+          {/* Rue */}
+          <div style={{ marginBottom: '16px' }}>
+            <FieldInput label="Rue" required value={d.rue} onChange={v => u('rue', v)} />
+          </div>
+
+          {/* Complément d'adresse */}
+          <div style={{ marginBottom: '16px' }}>
+            <FieldInput label="Complément d'adresse" value={d.complement} onChange={v => u('complement', v)} />
+          </div>
+
+          {/* Lieu-dit */}
+          <div style={{ marginBottom: '16px' }}>
+            <FieldInput label="Lieu-dit" value={d.lieuDit} onChange={v => u('lieuDit', v)} />
+          </div>
+
+          {/* Code postal / Ville / Pays (3 cols) */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+            <FieldInput label="Code postal" required value={d.codePostal} onChange={v => u('codePostal', v)} />
+            <FieldInput label="Ville" required value={d.ville} onChange={v => u('ville', v)} />
+            <FieldSelect label="Pays" required value={d.pays} onChange={v => u('pays', v)} options={PAYS_OPTIONS} placeholder="Sélectionner" />
+          </div>
+
+          {/* Sélectionnez le représentant légal PM */}
+          <div style={{ marginBottom: '16px' }}>
+            <FieldSelect
+              label="Sélectionnez le représentant légal personne morale auquel le représentant légal personne physique doit être rattaché"
+              required
+              value={d.rattachementPM}
+              onChange={v => u('rattachementPM', v)}
+              options={["Représentant légal PM 1"]}
+              placeholder="Sélectionner"
+            />
+          </div>
+
+          {/* Précisez la situation — 3 radio buttons (same card style as PM) */}
+          <div style={{ marginBottom: '16px' }}>
+            <p style={{ fontSize: '14px', fontWeight: 600, color: T.color.textDark, margin: '0 0 12px 0' }}>
+              <span style={{ color: '#C81E1E' }}>* </span>Précisez la situation de ce représentant légal :
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {STEP5_SITUATION_OPTIONS.map(opt => {
+                const selected = d.situation === opt;
+                return (
+                  <label key={opt} onClick={() => u('situation', opt)} style={{
+                    display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer',
+                    background: selected ? T.color.radioBg : 'transparent',
+                    border: `1px solid ${selected ? T.color.primaryBlue : T.color.border}`,
+                    borderRadius: T.radius, padding: '12px 14px',
+                  }}>
+                    <div style={{
+                      width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0, marginTop: '1px',
+                      border: `2px solid ${selected ? T.color.primaryBlue : T.color.borderMedium}`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      background: T.color.white,
+                    }}>
+                      {selected && <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: T.color.primaryBlue }} />}
+                    </div>
+                    <span style={{ fontSize: '14px', color: T.color.textDark, lineHeight: '1.4' }}>{opt}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Conditional fields based on situation radio selection */}
+
+          {/* Option 1: "Il est en cours d'inscription..." → Conseil régional dropdown */}
+          {d.situation === STEP5_SITUATION_OPTIONS[0] && (
+            <div style={{ marginBottom: '16px' }}>
+              <FieldSelect label="Conseil régional de l'Ordre d'inscription en cours" required value={d.conseilRegionalEnCours} onChange={v => u('conseilRegionalEnCours', v)} options={CROEC_OPTIONS} placeholder="Sélectionner" />
+            </div>
+          )}
+
+          {/* Option 2: "Il exerce la profession..." → Pays d'exercice + Organisation + Numéro */}
+          {d.situation === STEP5_SITUATION_OPTIONS[1] && (
+            <>
+              <div style={{ marginBottom: '16px' }}>
+                <FieldSelect label="Pays d'exercice" required value={d.paysExercice} onChange={v => u('paysExercice', v)} options={PAYS_OPTIONS} placeholder="Sélectionner" />
+              </div>
+              <div style={{ marginBottom: '16px' }}>
+                <FieldInput label="A quelle organisation de la profession comptable adhère ce représentant légal Personne morale dans ce pays?" value={d.organisationProfession} onChange={v => u('organisationProfession', v)} />
+              </div>
+              <div style={{ marginBottom: '16px' }}>
+                <FieldInput label="Numéro d'immatriculation étranger" value={d.numeroImmatriculation} onChange={v => u('numeroImmatriculation', v)} />
+              </div>
+            </>
+          )}
+
+          {/* Option 3: "Il n'exerce pas..." → Activité de la société */}
+          {d.situation === STEP5_SITUATION_OPTIONS[2] && (
+            <div style={{ marginBottom: '16px' }}>
+              <FieldInput label="Quelle est l'activité de la société représentant légal personne morale ?" required value={d.activiteSociete} onChange={v => u('activiteSociete', v)} />
+            </div>
+          )}
+
+          {/* Statut au sein de la société en cours d'inscription (dropdown) */}
+          <StatutSelect value={d.statut} onChange={v => u('statut', v)} />
+
+          {/* Ce représentant légal est-il ou sera t-il associé... */}
+          <OuiNon
+            label="Ce représentant légal est-il ou sera t-il associé au sein de la société en cours d'inscription ?"
+            required
+            value={d.associe}
+            onChange={v => u('associe', v)}
+          />
+        </SectionCard>
+      );
+    };
+
+    // ============================================================
+    // Step: Personne de contact principal
+    // ============================================================
+    const PCP_OPTIONS = ["Maude Dubois", "Une autre personne qu'un représentant légal"];
+
+    const FONCTION_PCP_OPTIONS = [
+      "Administrateur",
+      "Membre du directoire",
+      "Membre du conseil de surveillance",
+      "Aucune de ces fonctions",
+    ];
+
+    const StepPCPContent = ({ data, update }) => {
+      const d = data || {};
+      const u = (k, v) => update(k, v);
+      const isAutrePersonne = d.pcp === "Une autre personne qu'un représentant légal";
+
+      // Sub-state helpers for the PP form inside PCP
+      const pp = d.pp || {};
+      const updatePP = (k, v) => update('pp', { ...pp, [k]: v });
+      const exerceOui = pp.exerce === 'Oui';
+      const associeOui = pp.associe === 'Oui';
+      const ppParticipations = pp.participations || [{}];
+
+      // PCP-specific questions state
+      const pcpAssocieeOui = d.pcpAssociee === 'Oui';
+      const pcpParticipations = d.pcpParticipations || [{}];
+
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          {/* Title */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: 700, color: T.color.textDark, margin: 0, lineHeight: '36px' }}>
+              Personne de contact principal
+            </h2>
+            <p style={{ fontSize: '14px', color: T.color.textDark, lineHeight: '22.75px', margin: 0 }}>
+              La Personne de Contact Principal (PCP) est la seule personne qui sera autorisée à modifier sur la Plateforme d'Exercice Professionnel (PEP) des informations relatives à votre structure d'exercice professionnel. La PCP est désignée par le ou l'un des représentants légaux de votre structure. La PCP est nécessairement une personne identifiée par l'Ordre (un expert-comptable associé ou salarié de la structure et pour les AGC, un salarié autorisé ou le directeur de l'AGC). La PCP pourra déléguer une partie de ses tâches à d'autres membres de votre structure : remplissage des formulaires, gestion des cotisations, gestion des assurances...).
+            </p>
+          </div>
+
+          {/* Card with dropdown */}
+          <SectionCard>
+            <div style={{ padding: '0' }}>
+              <p style={{ fontSize: '14px', color: T.color.textDark, margin: '0 0 8px 0' }}>
+                <span style={{ color: '#C81E1E' }}>* </span>
+                Merci de sélectionner une personne de contact principal
+              </p>
+              <FieldSelect
+                value={d.pcp}
+                onChange={v => u('pcp', v)}
+                options={PCP_OPTIONS}
+                placeholder="Sélectionner"
+              />
+            </div>
+          </SectionCard>
+
+          {/* Conditional: "Une autre personne qu'un représentant légal" → full form */}
+          {isAutrePersonne && (
+            <>
+              {/* PP Identity Form */}
+              <SectionCard>
+                <SectionTitle>Personne de contact principal</SectionTitle>
+
+                <div style={{ marginTop: '16px' }}>
+                  <SearchBar placeholder="Recherchez la personne physique" value={pp.search} onClear={() => updatePP('search', '')} />
+                </div>
+
+                {/* Civilité */}
+                <div style={{ marginBottom: '16px' }}>
+                  <p style={{ fontSize: '14px', fontWeight: 600, color: T.color.textDark, margin: '0 0 8px 0' }}>
+                    <span style={{ color: '#C81E1E' }}>* </span>Civilité
+                  </p>
+                  <div style={{ display: 'flex', gap: '24px' }}>
+                    {CIVILITE_OPTIONS.map(opt => {
+                      const selected = pp.civilite === opt;
+                      return (
+                        <label key={opt} onClick={() => updatePP('civilite', opt)} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                          <div style={{
+                            width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0,
+                            border: `2px solid ${selected ? T.color.primaryBlue : T.color.borderMedium}`,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            background: T.color.white,
+                          }}>
+                            {selected && <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: T.color.primaryBlue }} />}
+                          </div>
+                          <span style={{ fontSize: '14px', color: T.color.textDark }}>{opt}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Nom / Prénom / Prénom 2 */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                  <FieldInput label="Nom patronymique" required value={pp.nom} onChange={v => updatePP('nom', v)} />
+                  <FieldInput label="Prénom" required value={pp.prenom} onChange={v => updatePP('prenom', v)} />
+                  <FieldInput label="Prénom 2" value={pp.prenom2} onChange={v => updatePP('prenom2', v)} />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                  <FieldInput label="Prénom 3" value={pp.prenom3} onChange={v => updatePP('prenom3', v)} />
+                  <FieldInput label="Prénom 4" value={pp.prenom4} onChange={v => updatePP('prenom4', v)} />
+                </div>
+
+                {/* Conseil régional */}
+                <div style={{ marginBottom: '16px' }}>
+                  <FieldSelect label="Conseil régional de l'Ordre" required value={pp.conseilRegional} onChange={v => updatePP('conseilRegional', v)} options={CROEC_OPTIONS} placeholder="Sélectionner" />
+                </div>
+
+                {/* Q1: exerce */}
+                <OuiNon
+                  label="Ce représentant légal exerce-t-il la profession d'expert-comptable dans un pays de l'UE ou de l'EEE (voire en Suisse - possibilité uniquement pour les SEL) ?"
+                  required
+                  value={pp.exerce}
+                  onChange={v => updatePP('exerce', v)}
+                />
+
+                {/* Conditional: Pays d'exercice */}
+                {exerceOui && (
+                  <div style={{ marginBottom: '16px' }}>
+                    <FieldSelect label="Pays d'exercice" required value={pp.paysExercice} onChange={v => updatePP('paysExercice', v)} options={PAYS_OPTIONS} placeholder="Sélectionner" />
+                  </div>
+                )}
+
+                {/* Statut */}
+                {pp.exerce && (
+                  <StatutSelect value={pp.statut} onChange={v => updatePP('statut', v)} />
+                )}
+
+                {/* Q2: exercera */}
+                <OuiNon
+                  label="Ce représentant légal exercera-t-il au sein de la société en cours d'inscription ?"
+                  required
+                  value={pp.exerceAuSein}
+                  onChange={v => updatePP('exerceAuSein', v)}
+                />
+
+                {/* Q3: associé */}
+                <OuiNon
+                  label="Ce représentant légal est-il ou sera t-il associé au sein de la société en cours d'inscription ?"
+                  required
+                  value={pp.associe}
+                  onChange={v => updatePP('associe', v)}
+                />
+
+                {/* Conditional: associé = Oui → Participation + Bénéficiaire */}
+                {associeOui && (
+                  <>
+                    <ParticipationSection
+                      items={ppParticipations}
+                      onAdd={() => updatePP('participations', [...ppParticipations, {}])}
+                      onUpdate={(idx, newData) => {
+                        const next = [...ppParticipations];
+                        next[idx] = newData;
+                        updatePP('participations', next);
+                      }}
+                      onRemove={idx => {
+                        const next = ppParticipations.filter((_, i) => i !== idx);
+                        updatePP('participations', next);
+                      }}
+                    />
+
+                    <div style={{ marginTop: '16px' }}>
+                      <OuiNon
+                        label="Ce représentant légal est-il un bénéficiaire effectif au sens de l'article R561-1 du code monétaire et financier de la société en cours d'inscription ?"
+                        required
+                        value={pp.beneficiaire}
+                        onChange={v => updatePP('beneficiaire', v)}
+                      />
+                    </div>
+
+                    {pp.beneficiaire === 'Oui' && (
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                        <FieldInput label="Date de Naissance" required value={pp.dateNaissance} onChange={v => updatePP('dateNaissance', v)} type="date" />
+                        <FieldSelect label="Lieu de naissance" required value={pp.lieuNaissance} onChange={v => updatePP('lieuNaissance', v)} options={CROEC_OPTIONS} placeholder="Sélectionner" />
+                      </div>
+                    )}
+                  </>
+                )}
+              </SectionCard>
+
+              {/* PCP-specific questions */}
+              <SectionCard>
+                {/* Fonction */}
+                <div style={{ marginBottom: '16px' }}>
+                  <FieldSelect
+                    label="Quelle est la fonction de cette personne au sein de la société en cours d'inscription ?"
+                    required
+                    value={d.fonctionPCP}
+                    onChange={v => u('fonctionPCP', v)}
+                    options={FONCTION_PCP_OPTIONS}
+                    placeholder="Sélectionner"
+                  />
+                </div>
+
+                {/* Associée PCP */}
+                <OuiNon
+                  label="Cette personne est-elle ou sera t-elle associée au sein de la société en cours d'inscription ?"
+                  required
+                  value={d.pcpAssociee}
+                  onChange={v => u('pcpAssociee', v)}
+                />
+
+                {/* Conditional: pcpAssociée = Oui → Participation */}
+                {pcpAssocieeOui && (
+                  <ParticipationSection
+                    items={pcpParticipations}
+                    onAdd={() => u('pcpParticipations', [...pcpParticipations, {}])}
+                    onUpdate={(idx, newData) => {
+                      const next = [...pcpParticipations];
+                      next[idx] = newData;
+                      u('pcpParticipations', next);
+                    }}
+                    onRemove={idx => {
+                      const next = pcpParticipations.filter((_, i) => i !== idx);
+                      u('pcpParticipations', next);
+                    }}
+                  />
+                )}
+
+                {/* Bénéficiaire PCP */}
+                <div style={{ marginTop: '16px' }}>
+                  <OuiNon
+                    label="Cette personne de contact principal est-elle un bénéficiaire effectif au sens de l'article R561-1 du code monétaire et financier de la société en cours d'inscription ?"
+                    required
+                    value={d.pcpBeneficiaire}
+                    onChange={v => u('pcpBeneficiaire', v)}
+                  />
+                </div>
+
+                {d.pcpBeneficiaire === 'Oui' && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                    <FieldInput label="Date de Naissance" required value={d.pcpDateNaissance} onChange={v => u('pcpDateNaissance', v)} type="date" placeholder="JJ/MM/AAAA" />
+                    <FieldSelect label="Lieu de naissance" required value={d.pcpLieuNaissance} onChange={v => u('pcpLieuNaissance', v)} options={CROEC_OPTIONS} placeholder="Sélectionner" />
+                  </div>
+                )}
+              </SectionCard>
+            </>
+          )}
+        </div>
+      );
+    };
+
+    // ============================================================
+    // Step: Liste des associés
+    // ============================================================
+    const ASSOCIES_DATA = [
+      { nom: 'A', capNombre: '4 000', capPct: '34,78%', voteNombre: '7 500', votePct: '40,54%', type: 'ec' },
+      { nom: 'B', capNombre: '2 500', capPct: '21,74%', voteNombre: '5 000', votePct: '27,03%', type: 'ec' },
+      { nom: 'PM1', capNombre: '700', capPct: '6,09%', voteNombre: '1 200', votePct: '6,49%', type: 'ec' },
+      { nom: 'D', capNombre: '400', capPct: '3,48%', voteNombre: '700', votePct: '3,78%', type: 'ec' },
+      { nom: 'PM2', capNombre: '200', capPct: '1,74%', voteNombre: '400', votePct: '2,16%', type: 'ec' },
+      { nom: 'E', capNombre: '2 200', capPct: '19,13%', voteNombre: '2 200', votePct: '11,89%', type: 'nonec' },
+      { nom: 'F', capNombre: '700', capPct: '6,09%', voteNombre: '700', votePct: '3,78%', type: 'nonec' },
+      { nom: 'G', capNombre: '200', capPct: '1,74%', voteNombre: '200', votePct: '1,08%', type: 'nonec' },
+      { nom: 'H', capNombre: '100', capPct: '0,87%', voteNombre: '100', votePct: '0,54%', type: 'nonec' },
+      { nom: 'PM3', capNombre: '500', capPct: '4,35%', voteNombre: '500', votePct: '2,70%', type: 'nonec' },
+    ];
+
+    const StepAssociesContent = () => {
+      const ecRows = ASSOCIES_DATA.filter(r => r.type === 'ec');
+      const nonEcRows = ASSOCIES_DATA.filter(r => r.type === 'nonec');
+
+      const bdr = `1px solid ${T.color.border}`;
+      const bdrV = `1px solid ${T.color.border}`;
+      const fs = '14px';
+
+      // Data cell
+      const cell = {
+        padding: '11px 16px', fontSize: fs, color: T.color.textDark,
+        borderBottom: bdr, fontFamily: T.font, lineHeight: '20px',
+      };
+      const cellR = { ...cell, textAlign: 'right', fontVariantNumeric: 'tabular-nums' };
+
+      // Header group (Participation / Droits de vote)
+      const hGroup = {
+        padding: '12px 16px', fontSize: fs, fontWeight: 700, textAlign: 'center',
+        lineHeight: '20px', fontFamily: T.font,
+        borderBottom: bdr, background: T.color.white,
+      };
+
+      // Sub-header (Nombre / %)
+      const hSub = {
+        padding: '9px 16px', fontSize: fs, fontWeight: 600, textAlign: 'center',
+        color: T.color.gray, borderBottom: bdr, background: T.color.white,
+        fontFamily: T.font, lineHeight: '20px',
+      };
+
+      // Sub-total row
+      const sub = {
+        padding: '11px 16px', fontSize: fs, fontWeight: 700, color: T.color.primaryRed,
+        background: T.color.redBg, borderBottom: bdr, fontFamily: T.font, lineHeight: '20px',
+      };
+      const subR = { ...sub, textAlign: 'right', fontVariantNumeric: 'tabular-nums' };
+
+      // Total row
+      const tot = {
+        padding: '11px 16px', fontSize: fs, fontWeight: 700, color: T.color.white,
+        background: T.color.primaryBlue, borderBottom: 'none', fontFamily: T.font, lineHeight: '20px',
+      };
+      const totR = { ...tot, textAlign: 'right', fontVariantNumeric: 'tabular-nums' };
+
+      // Empty/spacer row
+      const emp = {
+        padding: '9px 16px', fontSize: fs, color: T.color.gray,
+        borderBottom: bdr, fontFamily: T.font, background: T.color.white, lineHeight: '20px',
+      };
+      const empR = { ...emp, textAlign: 'right', fontVariantNumeric: 'tabular-nums' };
+
+      const renderRow = (r, idx) => (
+        <tr key={idx}>
+          <td style={{ ...cell, fontWeight: 500, borderRight: bdrV }}>{r.nom}</td>
+          <td style={cellR}>{r.capNombre}</td>
+          <td style={{ ...cellR, borderRight: bdrV }}>{r.capPct}</td>
+          <td style={cellR}>{r.voteNombre}</td>
+          <td style={cellR}>{r.votePct}</td>
+        </tr>
+      );
+
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <h2 style={{ fontSize: '24px', fontWeight: 700, color: T.color.textDark, margin: 0, lineHeight: '1.3' }}>
+            Liste des associés
+          </h2>
+          <p style={{ fontSize: '14px', fontWeight: 700, color: T.color.primaryRed, margin: 0 }}>
+            Détention en capital et en droits de vote
+          </p>
+
+          <div style={{
+            background: T.color.white, borderRadius: T.radius, overflow: 'hidden',
+            boxShadow: T.shadow.card, border: bdr,
+          }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ borderBottom: bdr }}>
+                  <th rowSpan="2" style={{ ...hGroup, textAlign: 'left', width: '28%', borderRight: bdrV, borderBottom: bdr, verticalAlign: 'bottom', paddingBottom: '9px' }}>
+                    <span style={{ fontSize: fs, color: T.color.textDark }}>Nom Prénom</span><br/>
+                    <span style={{ fontWeight: 400, fontSize: fs, color: T.color.gray }}>ou</span>
+                  </th>
+                  <th colSpan="2" style={{ ...hGroup, color: T.color.primaryBlue, borderRight: bdrV, borderBottom: bdr }}>
+                    Participation<br/>au capital
+                  </th>
+                  <th colSpan="2" style={{ ...hGroup, color: T.color.primaryRed, borderBottom: bdr }}>
+                    Droits de vote
+                  </th>
+                </tr>
+                <tr>
+                  <th style={{ ...hSub }}>Nombre</th>
+                  <th style={{ ...hSub, borderRight: bdrV }}>%</th>
+                  <th style={{ ...hSub }}>Nombre</th>
+                  <th style={{ ...hSub }}>%</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ecRows.map(renderRow)}
+                <tr>
+                  <td style={{ ...sub, borderRight: bdrV }}>Sous-total EC</td>
+                  <td style={subR}>7 800</td>
+                  <td style={{ ...subR, borderRight: bdrV }}>67,83%</td>
+                  <td style={subR}>14 800</td>
+                  <td style={subR}>80,00%</td>
+                </tr>
+                {nonEcRows.map(renderRow)}
+                <tr>
+                  <td style={{ ...sub, borderRight: bdrV }}>Sous-total non EC</td>
+                  <td style={subR}>3 700</td>
+                  <td style={{ ...subR, borderRight: bdrV }}>32,17%</td>
+                  <td style={subR}>3 700</td>
+                  <td style={subR}>20,00%</td>
+                </tr>
+                <tr>
+                  <td style={{ ...emp, borderRight: bdrV }}></td>
+                  <td style={empR}>0</td>
+                  <td style={{ ...empR, borderRight: bdrV }}>0,00%</td>
+                  <td style={empR}>0</td>
+                  <td style={empR}>0,00%</td>
+                </tr>
+                <tr>
+                  <td style={{ ...tot, borderRight: `1px solid rgba(255,255,255,0.2)` }}>Total</td>
+                  <td style={totR}>11 500</td>
+                  <td style={{ ...totR, borderRight: `1px solid rgba(255,255,255,0.2)` }}>100,00%</td>
+                  <td style={totR}>18 500</td>
+                  <td style={totR}>100,00%</td>
+                </tr>
+                <tr>
+                  <td style={{ ...emp, borderRight: bdrV, borderBottom: 'none' }}></td>
+                  <td style={{ ...empR, borderBottom: 'none' }}>0</td>
+                  <td style={{ ...empR, borderRight: bdrV, borderBottom: 'none' }}>0,00%</td>
+                  <td style={{ ...empR, borderBottom: 'none' }}>0</td>
+                  <td style={{ ...empR, borderBottom: 'none' }}>0,00%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <button style={{
+            background: 'none', border: `1px solid ${T.color.border}`, borderRadius: T.radius,
+            padding: '8px 20px', cursor: 'pointer', alignSelf: 'flex-start',
+            fontSize: '14px', fontWeight: 500, color: T.color.primaryBlue, fontFamily: T.font,
+          }}>
+            + Ajouter un associé
+          </button>
+        </div>
+      );
+    };
+
+    // ============================================================
+    // REUSABLE: Text Input
+    // ============================================================
+    const FieldInput = ({ label, required, value, onChange, type = 'text', placeholder }) => {
+      const [focused, setFocused] = useState(false);
+      return (
+        <div>
+          {label && (
+            <label style={{
+              display: 'block', fontSize: '14px', fontWeight: 500,
+              marginBottom: '6px', color: T.color.textDark,
+            }}>
+              {label}
+              {required && <span style={{ color: T.color.primaryRed, marginLeft: '3px' }}>*</span>}
+            </label>
+          )}
+          <input
+            type={type}
+            placeholder={placeholder || label}
+            value={value || ''}
+            onChange={(e) => onChange(e.target.value)}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            style={{
+              width: '100%',
+              height: '40px',
+              border: `1px solid ${focused ? T.color.primaryBlue : T.color.border}`,
+              borderRadius: T.radius,
+              padding: '0 14px',
+              fontSize: '14px',
+              color: T.color.textDark,
+              background: T.color.white,
+              outline: 'none',
+              transition: 'border-color 0.15s',
+            }}
+          />
+        </div>
+      );
+    };
+
+    // ============================================================
+    // REUSABLE: Select
+    // ============================================================
+    const FieldSelect = ({ label, required, value, onChange, options, placeholder, height = '36px' }) => {
+      const [focused, setFocused] = useState(false);
+      return (
+        <div>
+          {label && (
+            <label style={{
+              display: 'block', fontSize: '14px', fontWeight: 500,
+              marginBottom: '6px', color: T.color.textDark,
+            }}>
+              {label}
+              {required && <span style={{ color: T.color.primaryRed, marginLeft: '3px' }}>*</span>}
+            </label>
+          )}
+          <div style={{ position: 'relative' }}>
+            <select
+              value={value || ''}
+              onChange={(e) => onChange(e.target.value)}
+              onFocus={() => setFocused(true)}
+              onBlur={() => setFocused(false)}
+              style={{
+                width: '100%',
+                height: height,
+                border: `1px solid ${focused ? T.color.primaryBlue : T.color.border}`,
+                borderRadius: T.radius,
+                padding: '0 36px 0 14px',
+                fontSize: '14px',
+                color: value ? T.color.textDark : T.color.gray,
+                background: T.color.white,
+                appearance: 'none',
+                outline: 'none',
+                transition: 'border-color 0.15s',
+              }}
+            >
+              {placeholder && <option value="">{placeholder}</option>}
+              {options.map((opt, i) => (
+                <option key={i} value={opt}>{opt}</option>
+              ))}
+            </select>
+            <div style={{
+              position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+              pointerEvents: 'none',
+            }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={T.color.gray} strokeWidth="2.5">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // ============================================================
+    // APP
+    // ============================================================
+    const App = () => {
+      const [currentStep, setCurrentStep] = useState(1);
+      const [step1, setStep1] = useState({});
+      const [step3, setStep3] = useState({});
+      const [step4, setStep4] = useState({});
+      const [step5, setStep5] = useState({});
+      const [stepPCP, setStepPCP] = useState({});
+
+      const updateStep1 = useCallback((path, value) => {
+        setStep1(prev => {
+          const next = { ...prev };
+          const parts = path.split('.');
+          if (parts.length === 1) {
+            next[parts[0]] = value;
+          } else if (parts.length === 2) {
+            next[parts[0]] = { ...(next[parts[0]] || {}), [parts[1]]: value };
+          }
+          return next;
+        });
+      }, []);
+
+      // Dynamic steps based on checkbox PM in step 4
+      const hasPM = !!(step4 && step4.declarePersonneMorale);
+      const steps = buildSteps(hasPM);
+
+      // Validation: Step 1 requires profile + qualite + croec
+      const isStep1Valid = () => {
+        if (!step1.profile || !step1.qualite || !step1.croec) return false;
+        if (step1.qualite === 'mandataire') {
+          const m = step1.mandataire || {};
+          if (!m.nom || !m.prenom || !m.fonction || !m.telephone || !m.email || !m.rue || !m.codePostal || !m.ville || !m.pays) {
+            return false;
+          }
+        }
+        return true;
+      };
+
+      const goNext = () => {
+        window.scrollTo(0, 0);
+        setCurrentStep(prev => Math.min(prev + 1, steps.length));
+      };
+      const goPrev = () => {
+        window.scrollTo(0, 0);
+        setCurrentStep(prev => Math.max(prev - 1, 1));
+      };
+
+      const updateStep3 = useCallback((key, value) => {
+        setStep3(prev => ({ ...prev, [key]: value }));
+      }, []);
+
+      const updateStep4 = useCallback((key, value) => {
+        setStep4(prev => ({ ...prev, [key]: value }));
+      }, []);
+
+      const updateStep5 = useCallback((key, value) => {
+        setStep5(prev => ({ ...prev, [key]: value }));
+      }, []);
+
+      const updateStepPCP = useCallback((key, value) => {
+        setStepPCP(prev => ({ ...prev, [key]: value }));
+      }, []);
+
+      const renderStep = () => {
+        const stepName = steps[currentStep - 1];
+        switch (stepName) {
+          case "Qualité de la PM & CROEC": return <Step1Content data={step1} update={updateStep1} />;
+          case "Dates de sessions": return <Step2Content />;
+          case "Caractéristiques de la société": return <Step3Content data={step3} update={updateStep3} profile={step1.profile} />;
+          case "Représentants Légaux": return <Step4Content data={step4} update={updateStep4} />;
+          case EXTRA_STEP: return <Step5Content data={step5} update={updateStep5} />;
+          case "Personne de contact principal": return <StepPCPContent data={stepPCP} update={updateStepPCP} />;
+          case "Liste des associés": return <StepAssociesContent />;
+          default: return (
+            <div style={{ padding: '40px', textAlign: 'center', color: T.color.gray }}>
+              <h2 style={{ fontSize: '24px', fontWeight: 700, color: T.color.textDark, marginBottom: '16px' }}>
+                {stepName}
+              </h2>
+              <p>Étape à venir — construction étape par étape.</p>
+            </div>
+          );
+        }
+      };
+
+      const canNext = currentStep === 1 ? isStep1Valid() : true;
+
+      return (
+        <div style={{ minHeight: '100vh', background: T.color.bg }}>
+          <Navbar />
+
+          {/* Main layout */}
+          <div style={{
+            display: 'flex',
+            paddingTop: '80px',
+            paddingBottom: '72px',
+            minHeight: '100vh',
+          }}>
+            {/* Sidebar */}
+            <Stepper currentStep={currentStep} steps={steps} />
+
+            {/* Content area */}
+            <div style={{
+              flex: 1,
+              padding: '40px 48px',
+              maxWidth: '912px',
+            }}>
+              {renderStep()}
+            </div>
+          </div>
+
+          {/* Bottom bar */}
+          <BottomBar
+            canNext={canNext}
+            onNext={goNext}
+            onPrev={goPrev}
+            onSave={() => alert('Formulaire enregistré pour plus tard.')}
+            showPrev={currentStep > 1}
+            showSave={currentStep !== 2}
+          />
+        </div>
+      );
+    };
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
