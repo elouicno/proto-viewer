@@ -20,6 +20,7 @@
     --text-dim: #8b8d97;
     --text-muted: #555660;
     --border: #27282e;
+    --danger: #ff4d6a;
     --radius: 10px;
     --transition: .2s cubic-bezier(.4,0,.2,1);
   }
@@ -34,8 +35,101 @@
     overflow: hidden;
   }
 
+  /* ── LOGIN SCREEN ── */
+  .login-screen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background: var(--bg);
+  }
+
+  .login-box {
+    background: var(--bg-sidebar);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 48px 40px;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+  }
+
+  .login-box .login-logo {
+    height: 48px;
+    width: auto;
+    margin-bottom: 20px;
+    filter: brightness(0) invert(1);
+  }
+
+  .login-box h1 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .login-box p {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 28px;
+    line-height: 1.5;
+  }
+
+  .login-field {
+    position: relative;
+    margin-bottom: 16px;
+  }
+
+  .login-field input {
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+    transition: border-color var(--transition);
+  }
+
+  .login-field input:focus { border-color: var(--accent); }
+  .login-field input::placeholder { color: var(--text-muted); }
+
+  .login-error {
+    font-size: 12px;
+    color: var(--danger);
+    margin-bottom: 12px;
+    display: none;
+  }
+
+  .login-error.visible { display: block; }
+
+  .login-btn {
+    width: 100%;
+    padding: 12px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity var(--transition);
+  }
+
+  .login-btn:hover { opacity: .9; }
+  .login-btn:disabled { opacity: .5; cursor: wait; }
+
+  .login-hint {
+    margin-top: 20px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
   /* ── LAYOUT ── */
-  .app { display: flex; height: 100vh; }
+  .app { display: flex; height: 100vh; display: none; }
+  .app.visible { display: flex; }
 
   /* ── SIDEBAR ── */
   .sidebar {
@@ -137,15 +231,6 @@
   .proto-list::-webkit-scrollbar { width: 4px; }
   .proto-list::-webkit-scrollbar-track { background: transparent; }
   .proto-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-
-  .category-label {
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .08em;
-    color: var(--text-muted);
-    padding: 16px 10px 6px;
-  }
 
   .proto-item {
     display: flex;
@@ -402,7 +487,7 @@
   }
   .toast.show { opacity: 1; transform: translateY(0); }
 
-  /* ── SIDEBAR COLLAPSE (desktop) ── */
+  /* ── SIDEBAR COLLAPSE ── */
   .sidebar.collapsed {
     width: 0;
     min-width: 0;
@@ -411,25 +496,6 @@
   }
 
   #btnToggleSidebar { flex-shrink: 0; }
-
-  /* ── LOADING SPINNER ── */
-  .loading-indicator {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 16px;
-    font-size: 12px;
-    color: var(--text-muted);
-    border-top: 1px solid var(--border);
-  }
-  .spinner {
-    width: 14px; height: 14px;
-    border: 2px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin .6s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
 
   .sidebar-footer {
     padding: 10px 16px;
@@ -449,12 +515,29 @@
 </head>
 <body>
 
+<!-- ═══ LOGIN SCREEN ═══ -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <img src="logo.svg" alt="PEP" class="login-logo">
+    <h1>Proto Viewer</h1>
+    <p>Acces reserve a l'equipe.<br>Entrez le mot de passe pour continuer.</p>
+    <form id="loginForm" onsubmit="return handleLogin(event)">
+      <div class="login-field">
+        <input type="password" id="loginPassword" placeholder="Mot de passe" autocomplete="off" autofocus>
+      </div>
+      <div class="login-error" id="loginError">Mot de passe incorrect</div>
+      <button type="submit" class="login-btn" id="loginBtn">Acceder</button>
+    </form>
+    <div class="login-hint">Mot de passe configurable dans config.json sur GitHub</div>
+  </div>
+</div>
+
+<!-- ═══ MAIN APP (hidden until authenticated) ═══ -->
 <button class="menu-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">
   <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h14M3 10h14M3 14h14"/></svg>
 </button>
 
-<div class="app">
-  <!-- SIDEBAR -->
+<div class="app" id="mainApp">
   <aside class="sidebar">
     <div class="sidebar-header">
       <img src="logo.svg" alt="PEP" class="sidebar-logo">
@@ -468,17 +551,14 @@
     </div>
 
     <div class="proto-count" id="count"></div>
-
     <div class="proto-list" id="list"></div>
 
-    <!-- FOOTER -->
     <div class="sidebar-footer" id="sidebarFooter">
       <span class="dot-green"></span>
       <span id="footerText">Chargement...</span>
     </div>
   </aside>
 
-  <!-- VIEWER -->
   <main class="viewer">
     <div class="viewer-toolbar">
       <button class="toolbar-btn" id="btnToggleSidebar" title="Masquer/Afficher la sidebar" onclick="toggleSidebar()">
@@ -519,8 +599,8 @@
 
 <script>
 // ╔══════════════════════════════════════════════════════════╗
-//   PROTO VIEWER — Read-only HTML Prototype Viewer
-//   Files are managed directly on GitHub in protos/
+//   PROTO VIEWER — Password-protected HTML Prototype Viewer
+//   Password hash is stored in config.json (SHA-256)
 // ╚══════════════════════════════════════════════════════════╝
 
 // ── STATE ──
@@ -530,9 +610,90 @@ let currentDevice = 'desktop';
 let idCounter = 0;
 let ghOwner = null;
 let ghRepo = null;
+let passwordHash = null;
 
-// ── INIT ──
-async function init() {
+// ── SHA-256 HELPER ──
+async function sha256(text) {
+  const data = new TextEncoder().encode(text);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  returnhashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// ── AUTH ──
+async function loadConfig() {
+  // Try to load config.json from same directory
+  try {
+    const res = await fetch('config.json?t=' + Date.now());
+    if (res.ok) {
+      const config = await res.json();
+      passwordHash = config.passwordHash || null;
+    }
+  } catch { /* no config file — no password protection */ }
+}
+
+async function handleLogin(e) {
+  e.preventDefault();
+  const input = document.getElementById('loginPassword');
+  const error = document.getElementById('loginError');
+  const btn = document.getElementById('loginBtn');
+
+  const password = input.value.trim();
+  if (!password) return false;
+
+  btn.disabled = true;
+  btn.textContent = 'Verification...';
+
+  const hash = await sha256(password);
+
+  if (hash === passwordHash) {
+    // Store auth in sessionStorage (cleared when browser tab closes)
+    sessionStorage.setItem('pv_auth', hash);
+    showApp();
+  } else {
+    error.classList.add('visible');
+    input.value = '';
+    input.focus();
+    btn.disabled = false;
+    btn.textContent = 'Acceder';
+    // Shake animation
+    input.style.animation = 'none';
+    input.offsetHeight; // trigger reflow
+    input.style.animation = 'shake .4s ease';
+  }
+
+  return false;
+}
+
+function showApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('mainApp').classList.add('visible');
+  initApp();
+}
+
+// ── BOOT ──
+(async function boot() {
+  await loadConfig();
+
+  // No password configured → go straight to app
+  if (!passwordHash) {
+    showApp();
+    return;
+  }
+
+  // Check if already authenticated this session
+  const savedAuth = sessionStorage.getItem('pv_auth');
+  if (savedAuth === passwordHash) {
+    showApp();
+    return;
+  }
+
+  // Show login screen
+  document.getElementById('loginScreen').style.display = 'flex';
+})();
+
+// ── APP INIT ──
+async function initApp() {
   // Detect GitHub Pages context
   const match = location.hostname.match(/^(.+)\.github\.io$/);
   if (match) {
@@ -540,13 +701,11 @@ async function init() {
     ghRepo = location.pathname.split('/')[1] || null;
   }
 
-  // Auto-discover HTML files from GitHub API
   await autoDiscoverProtos();
 
   renderList();
   updateCount();
 
-  // Update footer
   const footer = document.getElementById('footerText');
   footer.textContent = protos.length > 0
     ? `${protos.length} prototype${protos.length > 1 ? 's' : ''} depuis GitHub`
@@ -558,7 +717,6 @@ async function init() {
     const proto = protos.find(p => p.file === target || p.fileName === target);
     if (proto) loadProto(proto);
   } else if (protos.length > 0) {
-    // Auto-select first prototype
     loadProto(protos[0]);
   }
 }
@@ -596,7 +754,7 @@ async function autoDiscoverProtos() {
         size: formatSize(f.size)
       });
     }
-  } catch { /* API error — silent fallback */ }
+  } catch { /* silent */ }
 }
 
 function formatSize(bytes) {
@@ -682,7 +840,6 @@ async function loadProto(proto) {
   currentId = proto.id;
   renderList(document.getElementById('search').value);
 
-  // Hide empty state
   const empty = document.getElementById('emptyState');
   if (empty) empty.style.display = 'none';
 
@@ -697,7 +854,6 @@ async function loadProto(proto) {
   document.getElementById('urlBar').textContent = proto.file;
   location.hash = encodeURIComponent(proto.file);
 
-  // Close mobile sidebar
   document.querySelector('.sidebar').classList.remove('open');
 }
 
@@ -761,9 +917,13 @@ document.addEventListener('keydown', e => {
     renderList();
   }
 });
-
-// ── BOOT ──
-init();
 </script>
+<style>
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-6px); }
+    40%, 80% { transform: translateX(6px); }
+  }
+</style>
 </body>
 </html>
