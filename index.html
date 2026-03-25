@@ -669,6 +669,7 @@ async function handleLogin(e) {
   if (hash === passwordHash) {
     // Store auth in sessionStorage (cleared when browser tab closes)
     sessionStorage.setItem('pv_auth', hash);
+    swMessage('pv-auth-login');
     showApp();
   } else {
     error.classList.add('visible');
@@ -691,12 +692,24 @@ function showApp() {
   initApp();
 }
 
+// ── SERVICE WORKER ──
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+function swMessage(msg) {
+  if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage(msg);
+  }
+}
+
 // ── BOOT ──
 (async function boot() {
   await loadConfig();
 
   // No password configured → go straight to app
   if (!passwordHash) {
+    swMessage('pv-auth-login');
     showApp();
     return;
   }
@@ -704,6 +717,7 @@ function showApp() {
   // Check if already authenticated this session
   const savedAuth = sessionStorage.getItem('pv_auth');
   if (savedAuth === passwordHash) {
+    swMessage('pv-auth-login');
     showApp();
     return;
   }
@@ -905,6 +919,7 @@ function toggleSidebar() {
 
 function logout() {
   sessionStorage.removeItem('pv_auth');
+  swMessage('pv-auth-logout');
   document.getElementById('mainApp').classList.remove('visible');
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('loginPassword').value = '';
