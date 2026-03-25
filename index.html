@@ -824,13 +824,10 @@ function renderList(filter = '') {
 
     const safeId = proto.id;
     const icon = proto.icon || '\u{1F4C4}';
-    const meta = `${escapeHtml(proto.fileName)} \u00b7 ${proto.size}`;
-
     item.innerHTML = `
       <div class="proto-icon">${icon}</div>
       <div class="proto-info">
         <div class="proto-name">${escapeHtml(proto.name)}</div>
-        <div class="proto-meta">${meta}</div>
       </div>
       <div class="item-actions">
         <button class="item-btn" onclick="event.stopPropagation(); copyLink(${safeId})" title="Copier le lien">
@@ -885,7 +882,7 @@ async function loadProto(proto) {
   iframe.src = proto.file;
   frame.appendChild(iframe);
 
-  document.getElementById('urlBar').textContent = proto.file;
+  document.getElementById('urlBar').textContent = proto.name;
   location.hash = encodeURIComponent(proto.file);
 
   document.querySelector('.sidebar').classList.remove('open');
