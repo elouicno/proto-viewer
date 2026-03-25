@@ -511,6 +511,22 @@
     border-radius: 50%;
     background: #34d399;
   }
+  .sidebar-footer .spacer { flex: 1; }
+  .logout-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .logout-btn:hover { color: var(--danger); border-color: var(--danger); }
 </style>
 </head>
 <body>
@@ -520,7 +536,7 @@
   <div class="login-box">
     <img src="logo.svg" alt="PEP" class="login-logo">
     <h1>Proto Viewer</h1>
-    <p>Accès réservé à l'équipe Produit.<br>Entrez le mot de passe pour continuer.</p>
+    <p>AccÃ¨s rÃ©servÃ© Ã  l'Ã©quipe Produit.<br>Entrez le mot de passe pour continuer.</p>
     <form id="loginForm" onsubmit="return handleLogin(event)">
       <div class="login-field">
         <input type="password" id="loginPassword" placeholder="Mot de passe" autocomplete="off" autofocus>
@@ -541,7 +557,7 @@
     <div class="sidebar-header">
       <img src="logo.svg" alt="PEP" class="sidebar-logo">
       <h1><span class="dot"></span> Proto Viewer</h1>
-      <p>Parcourez les prototypes de l'équipe</p>
+      <p>Parcourez les prototypes de l'Ã©quipe</p>
     </div>
 
     <div class="search-box">
@@ -555,6 +571,11 @@
     <div class="sidebar-footer" id="sidebarFooter">
       <span class="dot-green"></span>
       <span id="footerText">Chargement...</span>
+      <span class="spacer"></span>
+      <button class="logout-btn" id="logoutBtn" onclick="logout()" title="Se dÃ©connecter">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 1H2a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h3M7 9l3-3-3-3M10 6H4"/></svg>
+        DÃ©connexion
+      </button>
     </div>
   </aside>
 
@@ -563,7 +584,7 @@
       <button class="toolbar-btn" id="btnToggleSidebar" title="Masquer/Afficher la sidebar" onclick="toggleSidebar()">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2v12M7 4h6M7 8h6M7 12h4"/></svg>
       </button>
-      <div class="url-bar" id="urlBar">Sélectionnez un prototype</div>
+      <div class="url-bar" id="urlBar">SÃ©lectionnez un prototype</div>
 
       <button class="toolbar-btn" id="btnDesktop" title="Desktop" onclick="setDevice('desktop')">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="2" width="14" height="10" rx="1.5"/><path d="M5 14h6M8 12v2"/></svg>
@@ -587,8 +608,8 @@
     <div class="viewer-frame" id="viewerFrame">
       <div class="empty-state" id="emptyState">
         <svg width="56" height="56" fill="none" stroke="currentColor" stroke-width="1"><rect x="6" y="6" width="44" height="44" rx="6"/><path d="M20 22h16M20 28h12M20 34h8"/></svg>
-        <h2>Sélectionnez un prototype</h2>
-        <p>Les fichiers HTML dans le dossier <code>protos/</code> du repo GitHub sont détectés automatiquement.</p>
+        <h2>SÃ©lectionnez un prototype</h2>
+        <p>Les fichiers HTML dans le dossier <code>protos/</code> du repo GitHub sont dÃ©tectÃ©s automatiquement.</p>
       </div>
     </div>
   </main>
@@ -880,6 +901,14 @@ function reloadFrame() {
 
 function toggleSidebar() {
   document.querySelector('.sidebar').classList.toggle('collapsed');
+}
+
+function logout() {
+  sessionStorage.removeItem('pv_auth');
+  document.getElementById('mainApp').classList.remove('visible');
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginPassword').value = '';
+  document.getElementById('loginError').classList.remove('visible');
 }
 
 function copyLink(id) {
