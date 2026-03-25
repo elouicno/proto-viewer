@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proto Viewer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sidebar-w: 320px;
+    --bg: #0e0f11;
+    --bg-sidebar: #16171b;
+    --bg-card: #1c1d22;
+    --bg-card-hover: #24252b;
+    --bg-active: #2a2bff;
+    --accent: #636bff;
+    --accent-soft: rgba(99,107,255,.12);
+    --text: #e8e9ed;
+    --text-dim: #8b8d97;
+    --text-muted: #555660;
+    --border: #27282e;
+    --danger: #ff4d6a;
+    --danger-soft: rgba(255,77,106,.12);
+    --radius: 10px;
+    --transition: .2s cubic-bezier(.4,0,.2,1);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  html, body {
+    height: 100%;
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden;
+  }
+
+  /* ── LAYOUT ── */
+  .app { display: flex; height: 100vh; }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: var(--sidebar-w);
+    min-width: var(--sidebar-w);
+    background: var(--bg-sidebar);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: transform var(--transition);
+    z-index: 10;
+  }
+
+  .sidebar-header {
+    padding: 24px 20px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-logo {
+    height: 28px;
+    width: auto;
+    margin-bottom: 14px;
+    filter: brightness(0) invert(1);
+  }
+
+  .sidebar-header h1 {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -.02em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .sidebar-header h1 .dot {
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: inline-block;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .4; }
+  }
+
+  .sidebar-header p {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 6px;
+  }
+
+  .search-box {
+    margin: 16px 16px 8px;
+    position: relative;
+  }
+
+  .search-box input {
+    width: 100%;
+    padding: 10px 12px 10px 36px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13px;
+    outline: none;
+    transition: border-color var(--transition);
+  }
+
+  .search-box input:focus { border-color: var(--accent); }
+  .search-box input::placeholder { color: var(--text-muted); }
+
+  .search-box svg {
+    position: absolute;
+    left: 11px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+  }
+
+  .proto-count {
+    padding: 4px 16px 8px;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .proto-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 10px 20px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .proto-list::-webkit-scrollbar { width: 4px; }
+  .proto-list::-webkit-scrollbar-track { background: transparent; }
+  .proto-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  .category-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--text-muted);
+    padding: 16px 10px 6px;
+  }
+
+  .proto-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all var(--transition);
+    position: relative;
+    margin-bottom: 2px;
+  }
+
+  .proto-item:hover { background: var(--bg-card-hover); }
+
+  .proto-item.active { background: var(--accent-soft); }
+
+  .proto-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 50%;
+    transform: translateY(-50%);
+    width: 3px; height: 20px;
+    background: var(--accent);
+    border-radius: 0 3px 3px 0;
+  }
+
+  .proto-icon {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    background: var(--bg-card);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+  }
+
+  .proto-item.active .proto-icon {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .proto-info { flex: 1; min-width: 0; }
+
+  .proto-name {
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .proto-meta {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    margin-top: 2px;
+  }
+
+  .proto-item.active .proto-name { color: #fff; }
+
+  /* ── ITEM ACTIONS ── */
+  .item-actions {
+    display: flex;
+    gap: 2px;
+    opacity: 0;
+    transition: opacity var(--transition);
+    flex-shrink: 0;
+  }
+
+  .proto-item:hover .item-actions { opacity: 1; }
+
+  .item-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .item-btn:hover { color: var(--accent); background: var(--accent-soft); }
+  .item-btn.delete:hover { color: var(--danger); background: var(--danger-soft); }
+
+  /* ── SIDEBAR DROP ZONE ── */
+  .sidebar-drop {
+    margin: 10px 10px 12px;
+    padding: 14px;
+    border: 1.5px dashed var(--border);
+    border-radius: var(--radius);
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all var(--transition);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .sidebar-drop:hover,
+  .sidebar-drop.drag-over {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--text-dim);
+  }
+
+  .sidebar-drop svg { opacity: .5; }
+  .sidebar-drop:hover svg,
+  .sidebar-drop.drag-over svg { opacity: 1; }
+
+  .sidebar-drop input { display: none; }
+
+  /* ── MAIN VIEWER ── */
+  .viewer {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .viewer-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    background: var(--bg-sidebar);
+    border-bottom: 1px solid var(--border);
+    min-height: 52px;
+  }
+
+  .viewer-toolbar .url-bar {
+    flex: 1;
+    padding: 7px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .toolbar-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    width: 34px; height: 34px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition);
+  }
+
+  .toolbar-btn:hover {
+    color: var(--text);
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .viewer-frame {
+    flex: 1;
+    background: #fff;
+    position: relative;
+  }
+
+  .viewer-frame iframe {
+    width: 100%; height: 100%;
+    border: none;
+    display: block;
+  }
+
+  /* ── EMPTY STATE / DROP ZONE ── */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-muted);
+    gap: 20px;
+    background: var(--bg);
+    padding: 40px;
+    transition: all var(--transition);
+  }
+
+  .empty-state.drag-over {
+    background: rgba(99,107,255,.05);
+  }
+
+  .empty-state.drag-over .drop-area {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    transform: scale(1.02);
+  }
+
+  .drop-area {
+    border: 2px dashed var(--border);
+    border-radius: 16px;
+    padding: 48px 60px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .3s ease;
+    max-width: 480px;
+    width: 100%;
+  }
+
+  .drop-area:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .drop-area svg {
+    opacity: .25;
+    margin-bottom: 16px;
+  }
+
+  .drop-area:hover svg { opacity: .6; }
+
+  .drop-area h2 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+
+  .drop-area p {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  .drop-area .accent { color: var(--accent); }
+
+  .drop-area input { display: none; }
+
+  /* ── DEVICE FRAMES ── */
+  .viewer-frame.device-desktop iframe { width: 100%; }
+  .viewer-frame.device-tablet iframe { max-width: 768px; margin: 0 auto; display: block; }
+  .viewer-frame.device-mobile iframe { max-width: 375px; margin: 0 auto; display: block; }
+
+  .viewer-frame.device-tablet,
+  .viewer-frame.device-mobile {
+    background: var(--bg);
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+  }
+
+  .viewer-frame.device-tablet iframe,
+  .viewer-frame.device-mobile iframe {
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    background: #fff;
+  }
+
+  /* ── RESPONSIVE ── */
+  .menu-toggle {
+    display: none;
+    background: var(--bg-sidebar);
+    border: 1px solid var(--border);
+    color: var(--text);
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 6px; left: 6px;
+    z-index: 20;
+  }
+
+  @media (max-width: 768px) {
+    .sidebar {
+      position: fixed;
+      left: 0; top: 0; bottom: 0;
+      transform: translateX(-100%);
+    }
+    .sidebar.open { transform: translateX(0); }
+    .menu-toggle { display: flex; }
+    .viewer-toolbar { padding-left: 56px; }
+  }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all .3s ease;
+    pointer-events: none;
+    z-index: 100;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* ── FULL-PAGE DRAG OVERLAY ── */
+  .drag-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(14,15,17,.85);
+    z-index: 999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  .drag-overlay.visible {
+    display: flex;
+  }
+
+  .drag-overlay-inner {
+    border: 2px dashed var(--accent);
+    border-radius: 24px;
+    padding: 60px 80px;
+    text-align: center;
+    background: var(--accent-soft);
+    animation: breathe 1.5s ease-in-out infinite;
+  }
+
+  @keyframes breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+  }
+
+  .drag-overlay h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .drag-overlay p {
+    font-size: 14px;
+    color: var(--text-dim);
+  }
+</style>
+</head>
+<body>
+
+<button class="menu-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">
+  <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h14M3 10h14M3 14h14"/></svg>
+</button>
+
+<!-- FULL PAGE DRAG OVERLAY -->
+<div class="drag-overlay" id="dragOverlay">
+  <div class="drag-overlay-inner">
+    <h2>Deposez vos fichiers HTML</h2>
+    <p>Ils apparaitront dans la sidebar</p>
+  </div>
+</div>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <img src="logo.svg" alt="PEP" class="sidebar-logo">
+      <h1><span class="dot"></span> Proto Viewer</h1>
+      <p>Parcourez les prototypes de l'equipe</p>
+    </div>
+
+    <div class="search-box">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7" cy="7" r="4"/><path d="m12 12-2.5-2.5"/></svg>
+      <input type="text" id="search" placeholder="Rechercher un prototype..." autocomplete="off">
+    </div>
+
+    <div class="proto-count" id="count"></div>
+
+    <div class="proto-list" id="list"></div>
+
+    <!-- SIDEBAR DROP ZONE -->
+    <div class="sidebar-drop" id="sidebarDrop">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 4v12M4 10h12"/></svg>
+      <span>Glisser-deposer ou <strong>cliquer</strong></span>
+      <input type="file" id="sidebarFileInput" accept=".html,.htm" multiple>
+    </div>
+  </aside>
+
+  <!-- VIEWER -->
+  <main class="viewer">
+    <div class="viewer-toolbar">
+      <div class="url-bar" id="urlBar">Selectionnez un prototype</div>
+
+      <button class="toolbar-btn" id="btnDesktop" title="Desktop" onclick="setDevice('desktop')">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="2" width="14" height="10" rx="1.5"/><path d="M5 14h6M8 12v2"/></svg>
+      </button>
+      <button class="toolbar-btn" id="btnTablet" title="Tablet" onclick="setDevice('tablet')">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="1" width="12" height="14" rx="1.5"/><path d="M8 13h.01"/></svg>
+      </button>
+      <button class="toolbar-btn" id="btnMobile" title="Mobile" onclick="setDevice('mobile')">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3.5" y="1" width="9" height="14" rx="1.5"/><path d="M8 13h.01"/></svg>
+      </button>
+
+      <button class="toolbar-btn" title="Ouvrir dans un nouvel onglet" onclick="openExternal()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 1h4v4M14 1 7 8M5 2H2a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V9"/></svg>
+      </button>
+
+      <button class="toolbar-btn" title="Recharger" onclick="reloadFrame()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1v4h4"/><path d="M1 5a6 6 0 1 1 1.3 3.8"/></svg>
+      </button>
+    </div>
+
+    <div class="viewer-frame" id="viewerFrame">
+      <div class="empty-state" id="emptyState">
+        <div class="drop-area" id="mainDropArea">
+          <svg width="56" height="56" fill="none" stroke="currentColor" stroke-width="1"><rect x="6" y="6" width="44" height="44" rx="6"/><path d="M28 20v16M20 28h16"/></svg>
+          <h2>Glissez vos prototypes HTML ici</h2>
+          <p>Ou <span class="accent">cliquez pour parcourir</span> vos fichiers<br>Formats acceptes : <strong>.html, .htm</strong></p>
+          <input type="file" id="mainFileInput" accept=".html,.htm" multiple>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ╔══════════════════════════════════════════════════════════╗
+//   PROTO VIEWER — Drag & Drop HTML Prototype Viewer
+// ╚══════════════════════════════════════════════════════════╝
+
+// ── STATE ──
+// Each proto: { id, name, fileName, html?, file?, source:'repo'|'local', size, date }
+const uploadedProtos = [];
+let currentId = null;
+let currentDevice = 'desktop';
+let idCounter = 0;
+
+// ── INIT ──
+async function init() {
+  setupDragAndDrop();
+  setupFileInputs();
+
+  // Load persisted prototypes from prototypes.json (GitHub Pages mode)
+  try {
+    const res = await fetch('prototypes.json');
+    if (res.ok) {
+      const categories = await res.json();
+      for (const cat of categories) {
+        for (const item of cat.items) {
+          uploadedProtos.push({
+            id: ++idCounter,
+            name: item.name,
+            fileName: item.file.split('/').pop(),
+            file: item.file,
+            icon: item.icon || '📄',
+            category: cat.category || null,
+            source: 'repo',
+            html: null, // loaded on demand
+            size: '',
+            date: ''
+          });
+        }
+      }
+    }
+  } catch { /* no prototypes.json — drag & drop only */ }
+
+  renderList();
+  updateCount();
+
+  // Auto-select from URL hash
+  if (location.hash) {
+    const target = decodeURIComponent(location.hash.slice(1));
+    const proto = uploadedProtos.find(p => p.file === target || p.fileName === target);
+    if (proto) loadProto(proto);
+  }
+
+  // Hide empty state if we have repo protos
+  if (uploadedProtos.length > 0) hideEmptyState();
+}
+
+// ── FILE HANDLING ──
+function handleFiles(fileList) {
+  const files = Array.from(fileList).filter(f =>
+    f.name.endsWith('.html') || f.name.endsWith('.htm')
+  );
+
+  if (files.length === 0) {
+    showToast('Aucun fichier .html detecte');
+    return;
+  }
+
+  let loaded = 0;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const html = e.target.result;
+
+      // Extract title from HTML if possible
+      const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+      const name = titleMatch ? titleMatch[1].trim() : file.name.replace(/\.(html|htm)$/, '');
+
+      const proto = {
+        id: ++idCounter,
+        name: name,
+        fileName: file.name,
+        html: html,
+        size: formatSize(file.size),
+        date: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+      };
+
+      uploadedProtos.push(proto);
+      loaded++;
+
+      if (loaded === files.length) {
+        renderList();
+        updateCount();
+
+        // Auto-select the first uploaded file if nothing is selected
+        if (!currentId) {
+          loadProto(proto);
+        }
+
+        showToast(`${files.length} fichier${files.length > 1 ? 's' : ''} ajoute${files.length > 1 ? 's' : ''}`);
+        hideEmptyState();
+      }
+    };
+    reader.readAsText(file);
+  });
+}
+
+function formatSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+// ── DRAG & DROP ──
+function setupDragAndDrop() {
+  let dragCounter = 0;
+
+  // Full page drag events
+  document.addEventListener('dragenter', (e) => {
+    e.preventDefault();
+    dragCounter++;
+    document.getElementById('dragOverlay').classList.add('visible');
+  });
+
+  document.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    dragCounter--;
+    if (dragCounter <= 0) {
+      dragCounter = 0;
+      document.getElementById('dragOverlay').classList.remove('visible');
+    }
+  });
+
+  document.addEventListener('dragover', (e) => {
+    e.preventDefault();
+  });
+
+  document.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dragCounter = 0;
+    document.getElementById('dragOverlay').classList.remove('visible');
+    if (e.dataTransfer.files.length > 0) {
+      handleFiles(e.dataTransfer.files);
+    }
+  });
+
+  // Sidebar drop zone visual feedback
+  const sidebarDrop = document.getElementById('sidebarDrop');
+  sidebarDrop.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    sidebarDrop.classList.add('drag-over');
+  });
+  sidebarDrop.addEventListener('dragleave', () => {
+    sidebarDrop.classList.remove('drag-over');
+  });
+}
+
+function setupFileInputs() {
+  // Main drop area click
+  const mainDrop = document.getElementById('mainDropArea');
+  if (mainDrop) {
+    mainDrop.addEventListener('click', () => {
+      document.getElementById('mainFileInput').click();
+    });
+  }
+
+  document.getElementById('mainFileInput').addEventListener('change', (e) => {
+    handleFiles(e.target.files);
+    e.target.value = '';
+  });
+
+  // Sidebar drop click
+  const sidebarDrop = document.getElementById('sidebarDrop');
+  sidebarDrop.addEventListener('click', () => {
+    document.getElementById('sidebarFileInput').click();
+  });
+
+  document.getElementById('sidebarFileInput').addEventListener('change', (e) => {
+    handleFiles(e.target.files);
+    e.target.value = '';
+  });
+}
+
+// ── RENDER ──
+function renderList(filter = '') {
+  const list = document.getElementById('list');
+  list.innerHTML = '';
+  const q = filter.toLowerCase().trim();
+
+  const filtered = uploadedProtos.filter(p =>
+    p.name.toLowerCase().includes(q) ||
+    p.fileName.toLowerCase().includes(q) ||
+    (p.category && p.category.toLowerCase().includes(q))
+  );
+
+  if (filtered.length === 0 && uploadedProtos.length > 0) {
+    const empty = document.createElement('div');
+    empty.style.cssText = 'padding:20px 10px;text-align:center;font-size:12px;color:var(--text-muted)';
+    empty.textContent = 'Aucun resultat';
+    list.appendChild(empty);
+    updateCount(q);
+    return;
+  }
+
+  // Group by category
+  let lastCat = null;
+  filtered.forEach(proto => {
+    if (proto.category && proto.category !== lastCat) {
+      lastCat = proto.category;
+      const label = document.createElement('div');
+      label.className = 'category-label';
+      label.textContent = proto.category;
+      list.appendChild(label);
+    }
+
+    const item = document.createElement('div');
+    item.className = 'proto-item' + (proto.id === currentId ? ' active' : '');
+    item.onclick = () => loadProto(proto);
+
+    const safeId = proto.id;
+    const icon = proto.icon || '📄';
+    const meta = proto.size
+      ? `${escapeHtml(proto.fileName)} · ${proto.size}`
+      : escapeHtml(proto.file || proto.fileName);
+
+    item.innerHTML = `
+      <div class="proto-icon">${icon}</div>
+      <div class="proto-info">
+        <div class="proto-name">${escapeHtml(proto.name)}</div>
+        <div class="proto-meta">${meta}</div>
+      </div>
+      <div class="item-actions">
+        <button class="item-btn" onclick="event.stopPropagation(); copyLink(${safeId})" title="Copier le lien">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V8"/><path d="M6 9h5V4"/></svg>
+        </button>
+        ${proto.source !== 'repo' ? `<button class="item-btn delete" onclick="event.stopPropagation(); removeProto(${safeId})" title="Supprimer">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4h8M5 4V3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1M9.5 6.5l-.3 4.5M4.5 6.5l.3 4.5M4.5 4l.4 7a1 1 0 0 0 1 .9h2.2a1 1 0 0 0 1-.9l.4-7"/></svg>
+        </button>` : ''}
+      </div>
+    `;
+
+    list.appendChild(item);
+  });
+
+  updateCount(q);
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function updateCount(filter) {
+  const total = uploadedProtos.length;
+  if (total === 0) {
+    document.getElementById('count').textContent = 'Aucun prototype';
+    return;
+  }
+
+  if (filter) {
+    const shown = uploadedProtos.filter(p =>
+      p.name.toLowerCase().includes(filter) ||
+      p.fileName.toLowerCase().includes(filter)
+    ).length;
+    document.getElementById('count').textContent = `${shown} / ${total} prototypes`;
+  } else {
+    document.getElementById('count').textContent = `${total} prototype${total > 1 ? 's' : ''}`;
+  }
+}
+
+// ── ACTIONS ──
+async function loadProto(proto) {
+  currentId = proto.id;
+
+  // Update sidebar
+  renderList(document.getElementById('search').value);
+
+  // Update viewer
+  hideEmptyState();
+
+  const frame = document.getElementById('viewerFrame');
+  let iframe = frame.querySelector('iframe');
+  if (iframe) iframe.remove();
+
+  iframe = document.createElement('iframe');
+  frame.appendChild(iframe);
+
+  if (proto.source === 'repo' && proto.file) {
+    // Repo-hosted file: load via src (works on GitHub Pages)
+    iframe.src = proto.file;
+    // Also cache the HTML for "open in new tab" feature
+    if (!proto.html) {
+      try {
+        const res = await fetch(proto.file);
+        if (res.ok) proto.html = await res.text();
+      } catch {}
+    }
+  } else {
+    // Local drag & drop file: use srcdoc
+    iframe.srcdoc = proto.html;
+  }
+
+  document.getElementById('urlBar').textContent = proto.file || proto.fileName;
+  location.hash = encodeURIComponent(proto.file || proto.fileName);
+
+  // Close mobile sidebar
+  document.querySelector('.sidebar').classList.remove('open');
+}
+
+function removeProto(id) {
+  const idx = uploadedProtos.findIndex(p => p.id === id);
+  if (idx === -1) return;
+
+  uploadedProtos.splice(idx, 1);
+
+  // If we removed the active one, clear viewer
+  if (currentId === id) {
+    currentId = null;
+    const frame = document.getElementById('viewerFrame');
+    const iframe = frame.querySelector('iframe');
+    if (iframe) iframe.remove();
+    document.getElementById('urlBar').textContent = 'Selectionnez un prototype';
+
+    if (uploadedProtos.length === 0) {
+      showEmptyState();
+    } else {
+      // Load the first remaining
+      loadProto(uploadedProtos[0]);
+    }
+  }
+
+  renderList(document.getElementById('search').value);
+  updateCount();
+  showToast('Prototype supprime');
+}
+
+function hideEmptyState() {
+  const empty = document.getElementById('emptyState');
+  if (empty) empty.style.display = 'none';
+}
+
+function showEmptyState() {
+  const frame = document.getElementById('viewerFrame');
+  let empty = document.getElementById('emptyState');
+  if (!empty) {
+    empty = document.createElement('div');
+    empty.className = 'empty-state';
+    empty.id = 'emptyState';
+    empty.innerHTML = `
+      <div class="drop-area" id="mainDropArea">
+        <svg width="56" height="56" fill="none" stroke="currentColor" stroke-width="1"><rect x="6" y="6" width="44" height="44" rx="6"/><path d="M28 20v16M20 28h16"/></svg>
+        <h2>Glissez vos prototypes HTML ici</h2>
+        <p>Ou <span class="accent">cliquez pour parcourir</span> vos fichiers<br>Formats acceptes : <strong>.html, .htm</strong></p>
+        <input type="file" id="mainFileInput" accept=".html,.htm" multiple>
+      </div>
+    `;
+    frame.appendChild(empty);
+
+    // Re-bind click
+    empty.querySelector('.drop-area').addEventListener('click', () => {
+      empty.querySelector('input').click();
+    });
+    empty.querySelector('input').addEventListener('change', (e) => {
+      handleFiles(e.target.files);
+      e.target.value = '';
+    });
+  }
+  empty.style.display = 'flex';
+}
+
+function setDevice(device) {
+  currentDevice = device;
+  const frame = document.getElementById('viewerFrame');
+  frame.className = 'viewer-frame device-' + device;
+
+  ['Desktop','Tablet','Mobile'].forEach(d => {
+    document.getElementById('btn' + d).style.borderColor =
+      d.toLowerCase() === device ? 'var(--accent)' : '';
+  });
+}
+
+function openExternal() {
+  const proto = uploadedProtos.find(p => p.id === currentId);
+  if (!proto) return;
+
+  if (proto.source === 'repo' && proto.file) {
+    window.open(proto.file, '_blank');
+  } else if (proto.html) {
+    const w = window.open('', '_blank');
+    w.document.write(proto.html);
+    w.document.close();
+  }
+}
+
+function reloadFrame() {
+  const proto = uploadedProtos.find(p => p.id === currentId);
+  if (proto) loadProto(proto);
+}
+
+function copyLink(id) {
+  const proto = uploadedProtos.find(p => p.id === id);
+  if (!proto) return;
+  const url = new URL(window.location.href);
+  url.hash = encodeURIComponent(proto.file || proto.fileName);
+  navigator.clipboard.writeText(url.toString()).then(() => {
+    showToast('Lien copie !');
+  });
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
+// ── SEARCH ──
+document.getElementById('search').addEventListener('input', e => {
+  renderList(e.target.value);
+});
+
+// ── KEYBOARD ──
+document.addEventListener('keydown', e => {
+  if (e.key === '/' && document.activeElement.tagName !== 'INPUT') {
+    e.preventDefault();
+    document.getElementById('search').focus();
+  }
+  if (e.key === 'Escape') {
+    document.getElementById('search').value = '';
+    document.getElementById('search').blur();
+    renderList();
+  }
+});
+
+// ── BOOT ──
+init();
+</script>
+</body>
+</html>
