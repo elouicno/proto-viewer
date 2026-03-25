@@ -503,6 +503,133 @@
     font-size: 14px;
     color: var(--text-dim);
   }
+
+  /* ── TOKEN MODAL ── */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.6);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-backdrop.visible { display: flex; }
+
+  .modal {
+    background: var(--bg-sidebar);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 440px;
+    width: 90%;
+  }
+
+  .modal h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+
+  .modal p {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+
+  .modal a { color: var(--accent); text-decoration: none; }
+  .modal a:hover { text-decoration: underline; }
+
+  .modal input[type="password"] {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    outline: none;
+    margin-bottom: 16px;
+  }
+
+  .modal input:focus { border-color: var(--accent); }
+
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+
+  .btn {
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    transition: all var(--transition);
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+
+  .btn-primary:hover { opacity: .9; }
+
+  .btn-ghost {
+    background: none;
+    color: var(--text-dim);
+  }
+
+  .btn-ghost:hover { color: var(--text); }
+
+  /* ── STATUS INDICATOR ── */
+  .github-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    font-size: 11px;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border);
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+  .github-status:hover { color: var(--text-dim); }
+  .github-status .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--danger);
+  }
+  .github-status.connected .status-dot { background: #34d399; }
+
+  /* ── UPLOAD PROGRESS ── */
+  .upload-progress {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 14px 20px;
+    border-radius: 10px;
+    font-size: 13px;
+    z-index: 100;
+    display: none;
+  }
+  .upload-progress.visible { display: flex; align-items: center; gap: 10px; }
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin .6s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
@@ -543,7 +670,33 @@
       <span>Glisser-deposer ou <strong>cliquer</strong></span>
       <input type="file" id="sidebarFileInput" accept=".html,.htm" multiple>
     </div>
+
+    <!-- GITHUB STATUS -->
+    <div class="github-status" id="ghStatus" onclick="showTokenModal()">
+      <span class="status-dot"></span>
+      <span id="ghStatusText">GitHub non connecte</span>
+    </div>
   </aside>
+
+  <!-- TOKEN MODAL -->
+  <div class="modal-backdrop" id="tokenModal">
+    <div class="modal">
+      <h3>Connecter GitHub</h3>
+      <p>Pour publier vos prototypes directement depuis cette page, collez un token GitHub.<br><br>
+      <a href="https://github.com/settings/tokens/new?scopes=repo&description=Proto+Viewer" target="_blank">Creer un token ici</a> (cochez <strong>repo</strong>, puis cliquez "Generate token" et copiez-le)</p>
+      <input type="password" id="tokenInput" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeTokenModal()">Annuler</button>
+        <button class="btn btn-primary" onclick="saveToken()">Connecter</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- UPLOAD PROGRESS -->
+  <div class="upload-progress" id="uploadProgress">
+    <div class="spinner"></div>
+    <span id="uploadProgressText">Publication en cours...</span>
+  </div>
 
   <!-- VIEWER -->
   <main class="viewer">
@@ -590,40 +743,32 @@
 // ╚══════════════════════════════════════════════════════════╝
 
 // ── STATE ──
-// Each proto: { id, name, fileName, html?, file?, source:'repo'|'local', size, date }
 const uploadedProtos = [];
 let currentId = null;
 let currentDevice = 'desktop';
 let idCounter = 0;
+let ghToken = null;
+let ghOwner = null;
+let ghRepo = null;
 
 // ── INIT ──
 async function init() {
   setupDragAndDrop();
   setupFileInputs();
 
-  // Load persisted prototypes from prototypes.json (GitHub Pages mode)
-  try {
-    const res = await fetch('prototypes.json');
-    if (res.ok) {
-      const categories = await res.json();
-      for (const cat of categories) {
-        for (const item of cat.items) {
-          uploadedProtos.push({
-            id: ++idCounter,
-            name: item.name,
-            fileName: item.file.split('/').pop(),
-            file: item.file,
-            icon: item.icon || '📄',
-            category: cat.category || null,
-            source: 'repo',
-            html: null, // loaded on demand
-            size: '',
-            date: ''
-          });
-        }
-      }
-    }
-  } catch { /* no prototypes.json — drag & drop only */ }
+  // Detect GitHub Pages context
+  const match = location.hostname.match(/^(.+)\.github\.io$/);
+  if (match) {
+    ghOwner = match[1];
+    ghRepo = location.pathname.split('/')[1] || null;
+  }
+
+  // Check for saved token (sessionStorage only — never persisted long-term)
+  const saved = sessionStorage.getItem('gh_token');
+  if (saved) { ghToken = saved; updateGhStatus(); }
+
+  // Auto-discover HTML files from GitHub API
+  await autoDiscoverProtos();
 
   renderList();
   updateCount();
@@ -639,6 +784,50 @@ async function init() {
   if (uploadedProtos.length > 0) hideEmptyState();
 }
 
+// ── AUTO-DISCOVERY ──
+async function autoDiscoverProtos() {
+  // Detect GitHub Pages owner/repo from URL
+  // Format: https://<owner>.github.io/<repo>/
+  const match = location.hostname.match(/^(.+)\.github\.io$/);
+  if (!match) return; // Not on GitHub Pages, skip
+
+  const owner = match[1];
+  const repo = location.pathname.split('/')[1];
+  if (!repo) return;
+
+  try {
+    // Use GitHub Contents API to list all files in protos/ folder
+    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/protos`);
+    if (!res.ok) return;
+
+    const files = await res.json();
+    const htmlFiles = files
+      .filter(f => f.type === 'file' && /\.(html|htm)$/i.test(f.name))
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    for (const f of htmlFiles) {
+      // Extract a nice name from filename
+      const name = f.name
+        .replace(/\.(html|htm)$/i, '')
+        .replace(/[-_]/g, ' ')
+        .replace(/\b\w/g, c => c.toUpperCase());
+
+      uploadedProtos.push({
+        id: ++idCounter,
+        name: name,
+        fileName: f.name,
+        file: `protos/${f.name}`,
+        icon: '📄',
+        category: null,
+        source: 'repo',
+        html: null,
+        size: formatSize(f.size),
+        date: ''
+      });
+    }
+  } catch { /* API error — silent fallback */ }
+}
+
 // ── FILE HANDLING ──
 function handleFiles(fileList) {
   const files = Array.from(fileList).filter(f =>
@@ -650,38 +839,68 @@ function handleFiles(fileList) {
     return;
   }
 
+  // If no GitHub token, prompt to connect
+  if (!ghToken && ghOwner) {
+    showTokenModal();
+    // Store files to process after token is set
+    window._pendingFiles = fileList;
+    return;
+  }
+
   let loaded = 0;
   files.forEach(file => {
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       const html = e.target.result;
-
-      // Extract title from HTML if possible
       const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
       const name = titleMatch ? titleMatch[1].trim() : file.name.replace(/\.(html|htm)$/, '');
 
-      const proto = {
-        id: ++idCounter,
-        name: name,
-        fileName: file.name,
-        html: html,
-        size: formatSize(file.size),
-        date: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-      };
+      // Commit to GitHub if connected
+      if (ghToken && ghOwner && ghRepo) {
+        showUploadProgress(`Publication de ${file.name}...`);
+        const success = await commitFileToGithub(file.name, html);
+        hideUploadProgress();
 
-      uploadedProtos.push(proto);
-      loaded++;
+        if (success) {
+          const proto = {
+            id: ++idCounter,
+            name: name,
+            fileName: file.name,
+            file: `protos/${file.name}`,
+            icon: '📄',
+            source: 'repo',
+            html: html,
+            size: formatSize(file.size),
+            date: ''
+          };
+          uploadedProtos.push(proto);
+          loaded++;
+        } else {
+          showToast('Erreur lors de la publication');
+          loaded++;
+        }
+      } else {
+        // Local only (no GitHub)
+        const proto = {
+          id: ++idCounter,
+          name: name,
+          fileName: file.name,
+          html: html,
+          size: formatSize(file.size),
+          date: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+        };
+        uploadedProtos.push(proto);
+        loaded++;
+      }
 
       if (loaded === files.length) {
         renderList();
         updateCount();
-
-        // Auto-select the first uploaded file if nothing is selected
         if (!currentId) {
-          loadProto(proto);
+          loadProto(uploadedProtos[uploadedProtos.length - 1]);
         }
-
-        showToast(`${files.length} fichier${files.length > 1 ? 's' : ''} ajoute${files.length > 1 ? 's' : ''}`);
+        const pubText = ghToken ? 'publie' : 'ajoute';
+        showToast(`${files.length} fichier${files.length > 1 ? 's' : ''} ${pubText}${files.length > 1 ? 's' : ''}`);
         hideEmptyState();
       }
     };
@@ -997,6 +1216,96 @@ function showToast(msg) {
   toast.textContent = msg;
   toast.classList.add('show');
   setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
+// ── GITHUB API ──
+async function commitFileToGithub(fileName, content) {
+  if (!ghToken || !ghOwner || !ghRepo) return false;
+
+  const path = `protos/${fileName}`;
+  const url = `https://api.github.com/repos/${ghOwner}/${ghRepo}/contents/${path}`;
+  const b64 = btoa(unescape(encodeURIComponent(content)));
+
+  try {
+    // Check if file already exists (to get its sha for update)
+    let sha = null;
+    const check = await fetch(url, {
+      headers: { Authorization: `token ${ghToken}` }
+    });
+    if (check.ok) {
+      const existing = await check.json();
+      sha = existing.sha;
+    }
+
+    const body = {
+      message: `Add prototype: ${fileName}`,
+      content: b64
+    };
+    if (sha) body.sha = sha;
+
+    const res = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        Authorization: `token ${ghToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+// ── TOKEN MODAL ──
+function showTokenModal() {
+  document.getElementById('tokenModal').classList.add('visible');
+  document.getElementById('tokenInput').focus();
+}
+
+function closeTokenModal() {
+  document.getElementById('tokenModal').classList.remove('visible');
+}
+
+function saveToken() {
+  const input = document.getElementById('tokenInput');
+  const token = input.value.trim();
+  if (!token) return;
+
+  ghToken = token;
+  sessionStorage.setItem('gh_token', token);
+  updateGhStatus();
+  closeTokenModal();
+  showToast('GitHub connecte !');
+
+  // Process any pending files
+  if (window._pendingFiles) {
+    handleFiles(window._pendingFiles);
+    window._pendingFiles = null;
+  }
+}
+
+function updateGhStatus() {
+  const el = document.getElementById('ghStatus');
+  const text = document.getElementById('ghStatusText');
+  if (ghToken) {
+    el.classList.add('connected');
+    text.textContent = 'GitHub connecte';
+  } else {
+    el.classList.remove('connected');
+    text.textContent = 'GitHub non connecte';
+  }
+}
+
+function showUploadProgress(msg) {
+  const el = document.getElementById('uploadProgress');
+  document.getElementById('uploadProgressText').textContent = msg;
+  el.classList.add('visible');
+}
+
+function hideUploadProgress() {
+  document.getElementById('uploadProgress').classList.remove('visible');
 }
 
 // ── SEARCH ──
