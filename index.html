@@ -35,7 +35,7 @@
     overflow: hidden;
   }
 
-  /* ── LOGIN SCREEN ── */
+  /* ââ LOGIN SCREEN ââ */
   .login-screen {
     display: flex;
     align-items: center;
@@ -127,11 +127,11 @@
     color: var(--text-muted);
   }
 
-  /* ── LAYOUT ── */
+  /* ââ LAYOUT ââ */
   .app { display: flex; height: 100vh; display: none; }
   .app.visible { display: flex; }
 
-  /* ── SIDEBAR ── */
+  /* ââ SIDEBAR ââ */
   .sidebar {
     width: var(--sidebar-w);
     min-width: var(--sidebar-w);
@@ -293,7 +293,7 @@
 
   .proto-item.active .proto-name { color: #fff; }
 
-  /* ── ITEM ACTIONS ── */
+  /* ââ ITEM ACTIONS ââ */
   .item-actions {
     display: flex;
     gap: 2px;
@@ -319,7 +319,7 @@
 
   .item-btn:hover { color: var(--accent); background: var(--accent-soft); }
 
-  /* ── MAIN VIEWER ── */
+  /* ââ MAIN VIEWER ââ */
   .viewer {
     flex: 1;
     display: flex;
@@ -382,7 +382,7 @@
     display: block;
   }
 
-  /* ── EMPTY STATE ── */
+  /* ââ EMPTY STATE ââ */
   .empty-state {
     display: flex;
     flex-direction: column;
@@ -420,7 +420,7 @@
     color: var(--accent);
   }
 
-  /* ── DEVICE FRAMES ── */
+  /* ââ DEVICE FRAMES ââ */
   .viewer-frame.device-desktop iframe { width: 100%; }
   .viewer-frame.device-tablet iframe { max-width: 768px; margin: 0 auto; display: block; }
   .viewer-frame.device-mobile iframe { max-width: 375px; margin: 0 auto; display: block; }
@@ -440,7 +440,7 @@
     background: #fff;
   }
 
-  /* ── RESPONSIVE ── */
+  /* ââ RESPONSIVE ââ */
   .menu-toggle {
     display: none;
     background: var(--bg-sidebar);
@@ -467,7 +467,7 @@
     .viewer-toolbar { padding-left: 56px; }
   }
 
-  /* ── TOAST ── */
+  /* ââ TOAST ââ */
   .toast {
     position: fixed;
     bottom: 24px;
@@ -487,7 +487,7 @@
   }
   .toast.show { opacity: 1; transform: translateY(0); }
 
-  /* ── SIDEBAR COLLAPSE ── */
+  /* ââ SIDEBAR COLLAPSE ââ */
   .sidebar.collapsed {
     width: 0;
     min-width: 0;
@@ -515,12 +515,12 @@
 </head>
 <body>
 
-<!-- ═══ LOGIN SCREEN ═══ -->
+<!-- âââ LOGIN SCREEN âââ -->
 <div class="login-screen" id="loginScreen">
   <div class="login-box">
     <img src="logo.svg" alt="PEP" class="login-logo">
     <h1>Proto Viewer</h1>
-    <p>Acces reserve a l'equipe.<br>Entrez le mot de passe pour continuer.</p>
+    <p>Accès réservé à l'équipe Produit.<br>Entrez le mot de passe pour continuer.</p>
     <form id="loginForm" onsubmit="return handleLogin(event)">
       <div class="login-field">
         <input type="password" id="loginPassword" placeholder="Mot de passe" autocomplete="off" autofocus>
@@ -528,11 +528,10 @@
       <div class="login-error" id="loginError">Mot de passe incorrect</div>
       <button type="submit" class="login-btn" id="loginBtn">Acceder</button>
     </form>
-    <div class="login-hint">Mot de passe configurable dans config.json sur GitHub</div>
   </div>
 </div>
 
-<!-- ═══ MAIN APP (hidden until authenticated) ═══ -->
+<!-- âââ MAIN APP (hidden until authenticated) âââ -->
 <button class="menu-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">
   <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h14M3 10h14M3 14h14"/></svg>
 </button>
@@ -542,7 +541,7 @@
     <div class="sidebar-header">
       <img src="logo.svg" alt="PEP" class="sidebar-logo">
       <h1><span class="dot"></span> Proto Viewer</h1>
-      <p>Parcourez les prototypes de l'equipe</p>
+      <p>Parcourez les prototypes de l'équipe</p>
     </div>
 
     <div class="search-box">
@@ -564,7 +563,7 @@
       <button class="toolbar-btn" id="btnToggleSidebar" title="Masquer/Afficher la sidebar" onclick="toggleSidebar()">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2v12M7 4h6M7 8h6M7 12h4"/></svg>
       </button>
-      <div class="url-bar" id="urlBar">Selectionnez un prototype</div>
+      <div class="url-bar" id="urlBar">Sélectionnez un prototype</div>
 
       <button class="toolbar-btn" id="btnDesktop" title="Desktop" onclick="setDevice('desktop')">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="2" width="14" height="10" rx="1.5"/><path d="M5 14h6M8 12v2"/></svg>
@@ -588,8 +587,8 @@
     <div class="viewer-frame" id="viewerFrame">
       <div class="empty-state" id="emptyState">
         <svg width="56" height="56" fill="none" stroke="currentColor" stroke-width="1"><rect x="6" y="6" width="44" height="44" rx="6"/><path d="M20 22h16M20 28h12M20 34h8"/></svg>
-        <h2>Selectionnez un prototype</h2>
-        <p>Les fichiers HTML dans le dossier <code>protos/</code> du repo GitHub sont detectes automatiquement.</p>
+        <h2>Sélectionnez un prototype</h2>
+        <p>Les fichiers HTML dans le dossier <code>protos/</code> du repo GitHub sont détectés automatiquement.</p>
       </div>
     </div>
   </main>
@@ -598,12 +597,12 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ╔══════════════════════════════════════════════════════════╗
-//   PROTO VIEWER — Password-protected HTML Prototype Viewer
+// ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+//   PROTO VIEWER â Password-protected HTML Prototype Viewer
 //   Password hash is stored in config.json (SHA-256)
-// ╚══════════════════════════════════════════════════════════╝
+// ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
-// ── STATE ──
+// ââ STATE ââ
 const protos = [];
 let currentId = null;
 let currentDevice = 'desktop';
@@ -612,15 +611,15 @@ let ghOwner = null;
 let ghRepo = null;
 let passwordHash = null;
 
-// ── SHA-256 HELPER ──
+// ââ SHA-256 HELPER ââ
 async function sha256(text) {
   const data = new TextEncoder().encode(text);
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  returnhashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-// ── AUTH ──
+// ââ AUTH ââ
 async function loadConfig() {
   // Try to load config.json from same directory
   try {
@@ -629,7 +628,7 @@ async function loadConfig() {
       const config = await res.json();
       passwordHash = config.passwordHash || null;
     }
-  } catch { /* no config file — no password protection */ }
+  } catch { /* no config file â no password protection */ }
 }
 
 async function handleLogin(e) {
@@ -671,11 +670,11 @@ function showApp() {
   initApp();
 }
 
-// ── BOOT ──
+// ââ BOOT ââ
 (async function boot() {
   await loadConfig();
 
-  // No password configured → go straight to app
+  // No password configured â go straight to app
   if (!passwordHash) {
     showApp();
     return;
@@ -692,7 +691,7 @@ function showApp() {
   document.getElementById('loginScreen').style.display = 'flex';
 })();
 
-// ── APP INIT ──
+// ââ APP INIT ââ
 async function initApp() {
   // Detect GitHub Pages context
   const match = location.hostname.match(/^(.+)\.github\.io$/);
@@ -721,7 +720,7 @@ async function initApp() {
   }
 }
 
-// ── AUTO-DISCOVERY ──
+// ââ AUTO-DISCOVERY ââ
 async function autoDiscoverProtos() {
   const match = location.hostname.match(/^(.+)\.github\.io$/);
   if (!match) return;
@@ -763,7 +762,7 @@ function formatSize(bytes) {
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
 
-// ── RENDER ──
+// ââ RENDER ââ
 function renderList(filter = '') {
   const list = document.getElementById('list');
   list.innerHTML = '';
@@ -835,7 +834,7 @@ function updateCount(filter) {
   }
 }
 
-// ── ACTIONS ──
+// ââ ACTIONS ââ
 async function loadProto(proto) {
   currentId = proto.id;
   renderList(document.getElementById('search').value);
@@ -900,12 +899,12 @@ function showToast(msg) {
   setTimeout(() => toast.classList.remove('show'), 2000);
 }
 
-// ── SEARCH ──
+// ââ SEARCH ââ
 document.getElementById('search').addEventListener('input', e => {
   renderList(e.target.value);
 });
 
-// ── KEYBOARD ──
+// ââ KEYBOARD ââ
 document.addEventListener('keydown', e => {
   if (e.key === '/' && document.activeElement.tagName !== 'INPUT') {
     e.preventDefault();
