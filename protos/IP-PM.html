@@ -77,6 +77,15 @@
 
     const PAYS_OPTIONS = ["France", "Belgique", "Luxembourg", "Suisse", "Allemagne", "Italie", "Espagne", "Portugal", "Royaume-Uni", "Pays-Bas", "Autre"];
 
+    const PAYS_EXERCICE_UE_EEE = [
+      "Allemagne", "Autriche", "Belgique", "Bulgarie", "Chypre", "Croatie",
+      "Danemark", "Espagne", "Estonie", "Finlande", "Grèce", "Hongrie",
+      "Irlande", "Islande", "Italie", "Lettonie", "Liechtenstein", "Lituanie",
+      "Luxembourg", "Malte", "Pays-Bas", "Norvège", "Pologne", "Portugal",
+      "République tchèque", "Roumanie", "Slovaquie", "Slovénie", "Suède",
+      "Suisse (uniquement pour les SEL)",
+    ];
+
     const SESSIONS_DATA = [
       { title: "Session 30 octobre 2025" },
       { title: "Session 18 décembre 2025" },
@@ -536,8 +545,151 @@
       </svg>
     );
 
+    // ── DatePicker component (calendar popup) ──
+    const DatePicker = ({ value, onChange, placeholder = "Sélectionner une date" }) => {
+      const [open, setOpen] = useState(false);
+      const today = new Date();
+      const [viewYear, setViewYear] = useState(today.getFullYear());
+      const [viewMonth, setViewMonth] = useState(today.getMonth());
+
+      const JOURS = ['lu', 'ma', 'me', 'je', 've', 'sa', 'di'];
+      const MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+
+      const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+      // Monday-based: 0=Mon … 6=Sun
+      const firstDayRaw = new Date(viewYear, viewMonth, 1).getDay();
+      const startDay = firstDayRaw === 0 ? 6 : firstDayRaw - 1;
+
+      const prevMonth = () => {
+        if (viewMonth === 0) { setViewMonth(11); setViewYear(viewYear - 1); }
+        else setViewMonth(viewMonth - 1);
+      };
+      const nextMonth = () => {
+        if (viewMonth === 11) { setViewMonth(0); setViewYear(viewYear + 1); }
+        else setViewMonth(viewMonth + 1);
+      };
+
+      const selectDay = (day) => {
+        const dd = String(day).padStart(2, '0');
+        const mm = String(viewMonth + 1).padStart(2, '0');
+        onChange(`${dd}/${mm}/${viewYear}`);
+        setOpen(false);
+      };
+
+      const isToday = (day) => {
+        return day === today.getDate() && viewMonth === today.getMonth() && viewYear === today.getFullYear();
+      };
+
+      // Parse selected date to highlight
+      const selectedParts = (value || '').split('/');
+      const isSelected = (day) => {
+        if (selectedParts.length !== 3) return false;
+        return parseInt(selectedParts[0]) === day && parseInt(selectedParts[1]) === viewMonth + 1 && parseInt(selectedParts[2]) === viewYear;
+      };
+
+      // Build grid cells: leading blanks + days + trailing
+      const cells = [];
+      for (let i = 0; i < startDay; i++) {
+        // Previous month's trailing days
+        const prevMonthDays = new Date(viewYear, viewMonth, 0).getDate();
+        cells.push({ day: prevMonthDays - startDay + 1 + i, current: false });
+      }
+      for (let d = 1; d <= daysInMonth; d++) {
+        cells.push({ day: d, current: true });
+      }
+      const remaining = 42 - cells.length;
+      for (let i = 1; i <= remaining; i++) {
+        cells.push({ day: i, current: false });
+      }
+
+      return (
+        <div style={{ position: 'relative' }}>
+          {/* Input field */}
+          <div
+            onClick={() => setOpen(!open)}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              height: '40px', border: `1px solid ${T.color.border}`, borderRadius: T.radius,
+              padding: '0 14px', background: T.color.white, cursor: 'pointer',
+            }}
+          >
+            <span style={{ fontSize: '14px', color: value ? T.color.textDark : T.color.gray, fontFamily: T.font }}>
+              {value || placeholder}
+            </span>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+              <path d="M5.333 1.333v1.334M10.667 1.333v1.334M2 6.667h12M3.333 2.667h9.334c.736 0 1.333.597 1.333 1.333v9.333c0 .737-.597 1.334-1.333 1.334H3.333A1.333 1.333 0 0 1 2 13.333V4c0-.736.597-1.333 1.333-1.333z" stroke={T.color.gray} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+
+          {/* Calendar popup */}
+          {open && (
+            <div style={{
+              position: 'absolute', top: '46px', left: 0, zIndex: 50,
+              background: T.color.white, border: `1px solid ${T.color.border}`,
+              borderRadius: T.radius, boxShadow: T.shadow.card,
+              padding: '16px', width: '300px',
+            }}>
+              {/* Header: < month year > */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <button onClick={prevMonth} style={{
+                  background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px',
+                  color: T.color.gray, padding: '4px 8px', fontFamily: T.font,
+                }}>&lt;</button>
+                <span style={{ fontSize: '14px', fontWeight: 600, color: T.color.textDark }}>
+                  {MOIS[viewMonth]} {viewYear}
+                </span>
+                <button onClick={nextMonth} style={{
+                  background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px',
+                  color: T.color.gray, padding: '4px 8px', fontFamily: T.font,
+                }}>&gt;</button>
+              </div>
+
+              {/* Day headers */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px', marginBottom: '4px' }}>
+                {JOURS.map(j => (
+                  <div key={j} style={{ textAlign: 'center', fontSize: '12px', fontWeight: 500, color: T.color.gray, padding: '4px 0' }}>
+                    {j}
+                  </div>
+                ))}
+              </div>
+
+              {/* Day cells */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px' }}>
+                {cells.map((c, idx) => {
+                  const sel = c.current && isSelected(c.day);
+                  const tod = c.current && isToday(c.day);
+                  return (
+                    <div
+                      key={idx}
+                      onClick={c.current ? () => selectDay(c.day) : undefined}
+                      style={{
+                        textAlign: 'center', fontSize: '13px', padding: '6px 0',
+                        cursor: c.current ? 'pointer' : 'default',
+                        color: !c.current ? '#C6D1E2' : sel ? T.color.white : T.color.textDark,
+                        background: sel ? T.color.primaryBlue : 'transparent',
+                        borderRadius: '50%',
+                        width: '32px', height: '32px',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        margin: '0 auto',
+                        fontWeight: tod && !sel ? 600 : 400,
+                        border: tod && !sel ? `2px solid ${T.color.primaryBlue}` : 'none',
+                        transition: 'all 0.1s',
+                      }}
+                    >
+                      {c.day}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    };
+
     const Step2Content = () => {
       const [dateEffet, setDateEffet] = useState('');
+      const [dateUlterieure, setDateUlterieure] = useState('');
       return (
         <div>
           {/* Step header */}
@@ -605,10 +757,20 @@
             <FieldSelect
               label=""
               value={dateEffet}
-              onChange={setDateEffet}
+              onChange={(v) => { setDateEffet(v); if (v !== 'À une date ultérieure') setDateUlterieure(''); }}
               options={DATE_EFFET_OPTIONS}
               placeholder="Sélectionner une option"
             />
+
+            {/* Conditional: date picker when "À une date ultérieure" */}
+            {dateEffet === 'À une date ultérieure' && (
+              <div style={{ marginTop: '16px' }}>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: T.color.textDark }}>
+                  <span style={{ color: '#C81E1E' }}>* </span>Sélectionner une date
+                </label>
+                <DatePicker value={dateUlterieure} onChange={setDateUlterieure} placeholder="Sélectionner une date" />
+              </div>
+            )}
           </div>
         </div>
       );
@@ -643,6 +805,11 @@
 
     const FORMES_JURIDIQUES_SPFPL = [
       "SA à conseil d'administration", "SA à directoire", "SARL", "SAS", "SASU", "SCA"
+    ];
+
+    const FORMES_JURIDIQUES_PM = [
+      "Association loi de 1901", "Autre - Précisez", "EURL",
+      "SA à conseil d'administration", "SA à directoire", "SARL", "SAS"
     ];
 
     const LOCAUX_OPTIONS = [
@@ -1208,6 +1375,8 @@
       </div>
     );
 
+    const NATURE_DROITS_OPTIONS = ["-- Aucun --", "Pleine propriété", "Nue-propriété", "Usufruit"];
+
     // Single participation row
     const ParticipationRow = ({ data, onChange, onRemove, index }) => {
       const d = data || {};
@@ -1225,12 +1394,16 @@
               }}>Supprimer</button>
             )}
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <FieldSelect label="Nature des droits" required value={d.natureDroits} onChange={v => u('natureDroits', v)} options={["Pleine propriété", "Nue-propriété", "Usufruit"]} placeholder="Sélectionner" />
-            <FieldInput label="Capital détenu" required value={d.capitalDetenu} onChange={v => u('capitalDetenu', v)} placeholder="Capital détenu" />
-            <FieldInput label="Nombre de titres" required value={d.nombreTitres} onChange={v => u('nombreTitres', v)} placeholder="Nombre de titres" />
-            <FieldInput label="Droit de vote détenu" required value={d.droitVote} onChange={v => u('droitVote', v)} placeholder="Droit de vote détenu" />
-            <FieldInput label="Nombre de voix" required value={d.nombreVoix} onChange={v => u('nombreVoix', v)} placeholder="Nombre de voix" />
+          <div style={{ marginBottom: '16px' }}>
+            <FieldSelect label="Nature des droits" required value={d.natureDroits} onChange={v => u('natureDroits', v)} options={NATURE_DROITS_OPTIONS} placeholder="Sélectionner" />
+          </div>
+          <p style={{ fontSize: '14px', fontWeight: 700, color: T.color.textDark, margin: '0 0 8px 0' }}>Capital détenu</p>
+          <div style={{ marginBottom: '16px' }}>
+            <FieldInput label="Nombre de titres" required value={d.nombreTitres} onChange={v => u('nombreTitres', v)} />
+          </div>
+          <p style={{ fontSize: '14px', fontWeight: 700, color: T.color.textDark, margin: '0 0 8px 0' }}>Droit de vote détenu</p>
+          <div>
+            <FieldInput label="Nombre de voix" required value={d.nombreVoix} onChange={v => u('nombreVoix', v)} />
           </div>
         </div>
       );
@@ -1337,7 +1510,7 @@
           {/* Conditional: Pays d'exercice (when exerce = Oui) */}
           {exerceOui && (
             <div style={{ marginBottom: '16px' }}>
-              <FieldSelect label="Pays d'exercice" required value={d.paysExercice} onChange={v => u('paysExercice', v)} options={PAYS_OPTIONS} placeholder="Sélectionner" />
+              <FieldSelect label="Pays d'exercice" required value={d.paysExercice} onChange={v => u('paysExercice', v)} options={PAYS_EXERCICE_UE_EEE} placeholder="Sélectionner" />
             </div>
           )}
 
@@ -1447,8 +1620,13 @@
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
             <FieldInput label="Dénomination sociale" required value={d.denomination} onChange={v => u('denomination', v)} />
-            <FieldSelect label="Forme juridique" required value={d.formeJuridique} onChange={v => u('formeJuridique', v)} options={FORMES_JURIDIQUES_DEFAULT} placeholder="Sélectionner" />
+            <FieldSelect label="Forme juridique" required value={d.formeJuridique} onChange={v => { u('formeJuridique', v); if (v !== 'Autre - Précisez') u('formeJuridiqueAutre', ''); }} options={FORMES_JURIDIQUES_PM} placeholder="Sélectionner" />
           </div>
+          {d.formeJuridique === 'Autre - Précisez' && (
+            <div style={{ marginBottom: '16px' }}>
+              <FieldInput label="Autre - précisez" required value={d.formeJuridiqueAutre} onChange={v => u('formeJuridiqueAutre', v)} />
+            </div>
+          )}
           <div style={{ marginBottom: '16px' }}>
             <FieldInput label="SIREN" required value={d.siren} onChange={v => u('siren', v)} />
           </div>
@@ -1511,7 +1689,7 @@
           {d.statutPM === PM_STATUT_OPTIONS[1] && (
             <>
               <div style={{ marginBottom: '16px' }}>
-                <FieldSelect label="Pays d'exercice" required value={d.paysExercicePM} onChange={v => u('paysExercicePM', v)} options={PAYS_OPTIONS} placeholder="Sélectionner" />
+                <FieldSelect label="Pays d'exercice" required value={d.paysExercicePM} onChange={v => u('paysExercicePM', v)} options={PAYS_EXERCICE_UE_EEE} placeholder="Sélectionner" />
               </div>
               <div style={{ marginBottom: '16px' }}>
                 <FieldInput label="A quelle organisation de la profession comptable adhère ce représentant légal Personne morale dans ce pays?" value={d.organisationProfession} onChange={v => u('organisationProfession', v)} />
@@ -1762,7 +1940,7 @@
           {d.situation === STEP5_SITUATION_OPTIONS[1] && (
             <>
               <div style={{ marginBottom: '16px' }}>
-                <FieldSelect label="Pays d'exercice" required value={d.paysExercice} onChange={v => u('paysExercice', v)} options={PAYS_OPTIONS} placeholder="Sélectionner" />
+                <FieldSelect label="Pays d'exercice" required value={d.paysExercice} onChange={v => u('paysExercice', v)} options={PAYS_EXERCICE_UE_EEE} placeholder="Sélectionner" />
               </div>
               <div style={{ marginBottom: '16px' }}>
                 <FieldInput label="A quelle organisation de la profession comptable adhère ce représentant légal Personne morale dans ce pays?" value={d.organisationProfession} onChange={v => u('organisationProfession', v)} />
@@ -1913,7 +2091,7 @@
                 {/* Conditional: Pays d'exercice */}
                 {exerceOui && (
                   <div style={{ marginBottom: '16px' }}>
-                    <FieldSelect label="Pays d'exercice" required value={pp.paysExercice} onChange={v => updatePP('paysExercice', v)} options={PAYS_OPTIONS} placeholder="Sélectionner" />
+                    <FieldSelect label="Pays d'exercice" required value={pp.paysExercice} onChange={v => updatePP('paysExercice', v)} options={PAYS_EXERCICE_UE_EEE} placeholder="Sélectionner" />
                   </div>
                 )}
 
