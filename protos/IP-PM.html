@@ -58,8 +58,8 @@
     // ============================================================
     const PROFILES = [
       { id: 'SEC', title: "SEC", desc: "Société d'Expertise Comptable. Structure dédiée à l'exercice exclusif de la profession d'expert-comptable." },
-      { id: 'SPEC', title: "SPEC", desc: "Société Pluriprofessionnelle d'Exercice Comptable. Permet l'exercice en commun de plusieurs professions réglementées du droit et du chiffre." },
-      { id: 'SPE', title: "SPE", desc: "Société de Participations d'Expertise. Structure permettant la détention de titres et l'animation de sociétés d'expertise comptable." },
+      { id: 'SPEC', title: "SPEC", desc: "Société de Participations d'Expertise Comptable. Structure permettant la détention de titres et l'animation de sociétés d'expertise comptable." },
+      { id: 'SPE', title: "SPE", desc: "Société Pluri-professionnelle d'Exercice. Permet l'exercice en commun de plusieurs professions réglementées du droit et du chiffre." },
       { id: 'SPFPL', title: "SPFPL", desc: "Société de Participations Financières de Professions Libérales. Holding ayant pour objet la détention de parts ou d'actions de sociétés d'exercice libéral." },
     ];
 
@@ -69,13 +69,56 @@
     ];
 
     const CROEC_OPTIONS = [
-      "Île-de-France", "Auvergne-Rhône-Alpes", "Bourgogne-Franche-Comté", "Bretagne",
-      "Centre-Val de Loire", "Grand Est", "Hauts-de-France", "Normandie",
-      "Nouvelle-Aquitaine", "Occitanie", "Pays de la Loire", "Provence-Alpes-Côte d'Azur",
-      "Corse", "Guadeloupe", "Martinique", "Guyane", "La Réunion", "Mayotte"
+      "Auvergne – Rhône-Alpes",
+      "Bourgogne – Franche-Comté",
+      "Bretagne",
+      "Centre – Val de Loire",
+      "Corse",
+      "Grand Est",
+      "Guadeloupe",
+      "Guyane",
+      "Hauts de France",
+      "Île-de-France",
+      "Martinique",
+      "Mayotte (Comité Départemental de l'Ordre)",
+      "Normandie",
+      "Nouvelle Aquitaine",
+      "Occitanie",
+      "Pays de Loire",
+      "Provence – Alpes – Côte d'Azur",
+      "Réunion",
     ];
 
-    const PAYS_OPTIONS = ["France", "Belgique", "Luxembourg", "Suisse", "Allemagne", "Italie", "Espagne", "Portugal", "Royaume-Uni", "Pays-Bas", "Autre"];
+    const PAYS_OPTIONS = [
+      "Afghanistan", "Afrique du Sud", "Albanie", "Algérie", "Allemagne", "Andorre", "Angola",
+      "Antigua-et-Barbuda", "Arabie saoudite", "Argentine", "Arménie", "Australie", "Autriche",
+      "Azerbaïdjan", "Bahamas", "Bahreïn", "Bangladesh", "Barbade", "Belgique", "Belize",
+      "Bénin", "Bhoutan", "Biélorussie", "Birmanie", "Bolivie", "Bosnie-Herzégovine",
+      "Botswana", "Brésil", "Brunei", "Bulgarie", "Burkina Faso", "Burundi", "Cambodge",
+      "Cameroun", "Canada", "Cap-Vert", "Centrafrique", "Chili", "Chine", "Chypre", "Colombie",
+      "Comores", "Corée du Nord", "Corée du Sud", "Costa Rica", "Côte d'Ivoire", "Croatie",
+      "Cuba", "Danemark", "Djibouti", "Dominique", "Égypte", "Émirats arabes unis", "Équateur",
+      "Érythrée", "Espagne", "Estonie", "Eswatini", "États-Unis", "Éthiopie", "Fidji",
+      "Finlande", "France", "Gabon", "Gambie", "Géorgie", "Ghana", "Grèce", "Grenade",
+      "Guatemala", "Guinée", "Guinée équatoriale", "Guinée-Bissau", "Guyana", "Haïti",
+      "Honduras", "Hongrie", "Inde", "Indonésie", "Irak", "Iran", "Irlande", "Islande",
+      "Israël", "Italie", "Jamaïque", "Japon", "Jordanie", "Kazakhstan", "Kenya", "Kirghizistan",
+      "Kiribati", "Koweït", "Laos", "Lesotho", "Lettonie", "Liban", "Liberia", "Libye",
+      "Liechtenstein", "Lituanie", "Luxembourg", "Macédoine du Nord", "Madagascar", "Malaisie",
+      "Malawi", "Maldives", "Mali", "Malte", "Maroc", "Maurice", "Mauritanie", "Mexique",
+      "Micronésie", "Moldavie", "Monaco", "Mongolie", "Monténégro", "Mozambique", "Namibie",
+      "Nauru", "Népal", "Nicaragua", "Niger", "Nigeria", "Norvège", "Nouvelle-Zélande", "Oman",
+      "Ouganda", "Ouzbékistan", "Pakistan", "Palaos", "Palestine", "Panama", "Papouasie-Nouvelle-Guinée",
+      "Paraguay", "Pays-Bas", "Pérou", "Philippines", "Pologne", "Portugal", "Qatar",
+      "République dominicaine", "République tchèque", "Roumanie", "Royaume-Uni", "Russie",
+      "Rwanda", "Saint-Kitts-et-Nevis", "Saint-Vincent-et-les-Grenadines", "Sainte-Lucie",
+      "Salomon", "Salvador", "Samoa", "São Tomé-et-Príncipe", "Sénégal", "Serbie", "Seychelles",
+      "Sierra Leone", "Singapour", "Slovaquie", "Slovénie", "Somalie", "Soudan", "Soudan du Sud",
+      "Sri Lanka", "Suède", "Suisse", "Suriname", "Syrie", "Tadjikistan", "Tanzanie", "Tchad",
+      "Thaïlande", "Timor oriental", "Togo", "Tonga", "Trinité-et-Tobago", "Tunisie",
+      "Turkménistan", "Turquie", "Tuvalu", "Ukraine", "Uruguay", "Vanuatu", "Vatican",
+      "Venezuela", "Viêt Nam", "Yémen", "Zambie", "Zimbabwe",
+    ];
 
     const PAYS_EXERCICE_UE_EEE = [
       "Allemagne", "Autriche", "Belgique", "Bulgarie", "Chypre", "Croatie",
@@ -87,9 +130,9 @@
     ];
 
     const SESSIONS_DATA = [
-      { title: "Session 30 octobre 2025" },
-      { title: "Session 18 décembre 2025" },
-      { title: "Session 5 mars 2026" },
+      { title: "Session 30 octobre 2025", date: new Date(2025, 9, 30) },
+      { title: "Session 18 décembre 2025", date: new Date(2025, 11, 18) },
+      { title: "Session 5 mars 2026", date: new Date(2026, 2, 5) },
     ];
 
     const DATE_EFFET_OPTIONS = [
@@ -100,7 +143,7 @@
     const BASE_STEPS = [
       "Qualité de la PM & CROEC",
       "Dates de sessions",
-      "Caractéristiques de la société",
+      "Caractéristiques de la Société et Renseignements Divers",
       "Représentants Légaux",
       "Personne de contact principal",
       "Liste des associés",
@@ -495,20 +538,7 @@
                 <h4 style={{ fontSize: '14px', fontWeight: 700, color: T.color.textDark, margin: '0 0 16px 0' }}>
                   Adresse du domicile personnel
                 </h4>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px', marginBottom: '20px' }}>
-                  <FieldInput label="Rue" required value={data.mandataire?.rue} onChange={(v) => update('mandataire.rue', v)} />
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px', marginBottom: '20px' }}>
-                  <FieldInput label="Complément d'adresse" value={data.mandataire?.complement} onChange={(v) => update('mandataire.complement', v)} />
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px', marginBottom: '20px' }}>
-                  <FieldInput label="Lieu-dit" value={data.mandataire?.lieuDit} onChange={(v) => update('mandataire.lieuDit', v)} />
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px' }}>
-                  <FieldInput label="Code postal" required value={data.mandataire?.codePostal} onChange={(v) => update('mandataire.codePostal', v)} />
-                  <FieldInput label="Ville" required value={data.mandataire?.ville} onChange={(v) => update('mandataire.ville', v)} />
-                  <FieldSelect label="Pays" required value={data.mandataire?.pays} onChange={(v) => update('mandataire.pays', v)} options={PAYS_OPTIONS} placeholder="Sélectionner" />
-                </div>
+                <AddressBlock data={data.mandataire || {}} onChange={(k, v) => update(`mandataire.${k}`, v)} />
               </div>
             )}
           </div>
@@ -548,9 +578,11 @@
     // ── DatePicker component (calendar popup) ──
     const DatePicker = ({ value, onChange, placeholder = "Sélectionner une date" }) => {
       const [open, setOpen] = useState(false);
+      const [yearPickerOpen, setYearPickerOpen] = useState(false);
       const today = new Date();
       const [viewYear, setViewYear] = useState(today.getFullYear());
       const [viewMonth, setViewMonth] = useState(today.getMonth());
+      const yearListRef = React.useRef(null);
 
       const JOURS = ['lu', 'ma', 'me', 'je', 've', 'sa', 'di'];
       const MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
@@ -631,20 +663,60 @@
             }}>
               {/* Header: < month year > */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                <button onClick={prevMonth} style={{
+                <button onClick={() => { if (yearPickerOpen) { setYearPickerOpen(false); } prevMonth(); }} style={{
                   background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px',
                   color: T.color.gray, padding: '4px 8px', fontFamily: T.font,
                 }}>&lt;</button>
-                <span style={{ fontSize: '14px', fontWeight: 600, color: T.color.textDark }}>
-                  {MOIS[viewMonth]} {viewYear}
-                </span>
-                <button onClick={nextMonth} style={{
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span style={{ fontSize: '14px', fontWeight: 600, color: T.color.textDark }}>
+                    {MOIS[viewMonth]}
+                  </span>
+                  <span
+                    onClick={() => setYearPickerOpen(!yearPickerOpen)}
+                    style={{
+                      fontSize: '14px', fontWeight: 600, color: T.color.primaryBlue,
+                      cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: '2px',
+                    }}
+                  >
+                    {viewYear}
+                  </span>
+                </div>
+                <button onClick={() => { if (yearPickerOpen) { setYearPickerOpen(false); } nextMonth(); }} style={{
                   background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px',
                   color: T.color.gray, padding: '4px 8px', fontFamily: T.font,
                 }}>&gt;</button>
               </div>
 
+              {/* Year picker grid */}
+              {yearPickerOpen && (
+                <div ref={yearListRef} style={{
+                  display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px',
+                  marginBottom: '12px', maxHeight: '180px', overflowY: 'auto',
+                  padding: '4px',
+                }}>
+                  {Array.from({ length: 30 }, (_, i) => today.getFullYear() - 25 + i).map(y => (
+                    <div
+                      key={y}
+                      onClick={() => { setViewYear(y); setYearPickerOpen(false); }}
+                      style={{
+                        textAlign: 'center', padding: '8px 4px', fontSize: '13px',
+                        fontFamily: T.font, cursor: 'pointer', borderRadius: T.radius,
+                        fontWeight: y === viewYear ? 700 : 400,
+                        color: y === viewYear ? T.color.white : T.color.textDark,
+                        background: y === viewYear ? T.color.primaryBlue : 'transparent',
+                        transition: 'background 0.1s',
+                      }}
+                      onMouseEnter={e => { if (y !== viewYear) e.currentTarget.style.background = T.color.radioBg; }}
+                      onMouseLeave={e => { if (y !== viewYear) e.currentTarget.style.background = 'transparent'; }}
+                    >
+                      {y}
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {/* Day headers */}
+              {!yearPickerOpen && (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px', marginBottom: '4px' }}>
                 {JOURS.map(j => (
                   <div key={j} style={{ textAlign: 'center', fontSize: '12px', fontWeight: 500, color: T.color.gray, padding: '4px 0' }}>
@@ -652,8 +724,10 @@
                   </div>
                 ))}
               </div>
+              )}
 
               {/* Day cells */}
+              {!yearPickerOpen && (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px' }}>
                 {cells.map((c, idx) => {
                   const sel = c.current && isSelected(c.day);
@@ -681,28 +755,56 @@
                   );
                 })}
               </div>
+              )}
             </div>
           )}
         </div>
       );
     };
 
-    const Step2Content = () => {
+    const Step2Content = ({ croec }) => {
       const [dateEffet, setDateEffet] = useState('');
       const [dateUlterieure, setDateUlterieure] = useState('');
+      const noDates = croec === 'Auvergne – Rhône-Alpes';
+
+      // Parse dd/mm/yyyy to Date
+      const parseDate = (str) => {
+        if (!str) return null;
+        const parts = str.split('/');
+        if (parts.length !== 3) return null;
+        return new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+      };
+
+      // Validation logic
+      const getDateError = () => {
+        if (!dateUlterieure) return null;
+        const chosen = parseDate(dateUlterieure);
+        if (!chosen) return null;
+        const today = new Date(); today.setHours(0,0,0,0);
+        const maxDate = new Date(today); maxDate.setMonth(maxDate.getMonth() + 6);
+        // RG9: max 6 months
+        if (chosen > maxDate) return "Vérifier l'information renseignée.";
+        if (noDates) {
+          // RG8: no sessions → date must be strictly after today
+          if (chosen <= today) return "Vérifier l'information renseignée.";
+        } else {
+          // RG7: date must be strictly after next session date
+          const nextSession = SESSIONS_DATA[0].date;
+          if (chosen <= nextSession) return "Vérifier l'information renseignée.";
+        }
+        return null;
+      };
+      const dateError = getDateError();
       return (
         <div>
           {/* Step header */}
           <div style={{ marginBottom: '8px' }}>
             <h1 style={{ fontSize: '24px', fontWeight: 700, color: T.color.textDark, margin: 0, lineHeight: '24px' }}>
-              Dates de session
+              Prochaines dates de sessions
             </h1>
           </div>
-          <p style={{ fontSize: '14px', fontWeight: 400, color: T.color.gray, margin: '0 0 8px 0', lineHeight: '21px' }}>
-            {`Les dates de tenue des sessions du Conseil régional vous sont communiquées à titre indicatif et ne préjugent pas de l'examen de votre demande lors de la prochaine session indiquée.`}
-          </p>
-          <p style={{ fontSize: '14px', fontWeight: 400, color: T.color.primaryRed, margin: '0 0 24px 0', lineHeight: '21px' }}>
-            *Champs obligatoires
+          <p style={{ fontSize: '14px', fontWeight: 400, color: T.color.gray, margin: '0 0 24px 0', lineHeight: '21px' }}>
+            Informations sur les dates de sessions où sera rendue la décision du conseil régional
           </p>
 
           {/* Main card — Prochaines dates de session */}
@@ -718,26 +820,26 @@
               Prochaines dates de session
             </h2>
 
-            {/* Session cards */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
-              {SESSIONS_DATA.map((s, idx) => (
-                <div key={idx} style={{
-                  border: `1px solid ${T.color.border}`,
-                  borderRadius: T.radius,
-                  padding: '20px 16px',
-                  background: T.color.white,
-                }}>
-                  <p style={{ fontSize: '14px', fontWeight: 400, color: T.color.primaryBlue, margin: 0, lineHeight: '24px' }}>
-                    {s.title}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            {/* Footer text */}
-            <p style={{ fontSize: '14px', fontWeight: 400, color: T.color.gray, margin: 0, lineHeight: '21px' }}>
-              La décision du Conseil régional sera rendue dans un délai de trois mois à compter de la date du récépissé: récépissé qui vous sera adressé par le Conseil régional lorsque votre dossier sera complet.
-            </p>
+            {noDates ? (
+              <p style={{ fontSize: '14px', fontWeight: 600, fontStyle: 'italic', color: T.color.primaryRed, margin: '0 0 16px 0', lineHeight: '21px' }}>
+                {`Les dates des prochaines sessions du CRO ${croec} ne sont pas encore fixées. Vous pouvez cependant soumettre votre demande d'inscription dès maintenant.`}
+              </p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
+                {SESSIONS_DATA.map((s, idx) => (
+                  <div key={idx} style={{
+                    border: `1px solid ${T.color.border}`,
+                    borderRadius: T.radius,
+                    padding: '20px 16px',
+                    background: T.color.white,
+                  }}>
+                    <p style={{ fontSize: '14px', fontWeight: 400, color: T.color.primaryBlue, margin: 0, lineHeight: '24px' }}>
+                      {s.title}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Date d'effet souhaitée card */}
@@ -748,27 +850,33 @@
             boxShadow: T.shadow.card,
             padding: '24px',
           }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 700, color: T.color.textDark, margin: '0 0 4px 0', lineHeight: '24px' }}>
-              Date d'effet souhaitée
-            </h2>
-            <p style={{ fontSize: '14px', fontWeight: 400, color: T.color.gray, margin: '0 0 16px 0', lineHeight: '21px' }}>
-              A compter de quelle date ?
-            </p>
             <FieldSelect
-              label=""
+              label="À compter de quelle date ?"
+              required
               value={dateEffet}
               onChange={(v) => { setDateEffet(v); if (v !== 'À une date ultérieure') setDateUlterieure(''); }}
               options={DATE_EFFET_OPTIONS}
               placeholder="Sélectionner une option"
             />
 
-            {/* Conditional: date picker when "À une date ultérieure" */}
+            {/* Conditional: date picker + blue text + validation when "À une date ultérieure" */}
             {dateEffet === 'À une date ultérieure' && (
               <div style={{ marginTop: '16px' }}>
+                <p style={{ fontSize: '14px', fontWeight: 400, color: T.color.primaryBlue, margin: '0 0 16px 0', lineHeight: '21px' }}>
+                  {noDates
+                    ? "La date d'effet de votre inscription doit être dans les six prochains mois."
+                    : "La date d'effet de votre inscription doit être ultérieure à la date de la prochaine session de votre CROEC et dans les six prochains mois."
+                  }
+                </p>
                 <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: T.color.textDark }}>
-                  <span style={{ color: '#C81E1E' }}>* </span>Sélectionner une date
+                  <span style={{ color: '#C81E1E' }}>* </span>Date d'effet souhaitée
                 </label>
                 <DatePicker value={dateUlterieure} onChange={setDateUlterieure} placeholder="Sélectionner une date" />
+                {dateError && (
+                  <p style={{ fontSize: '13px', fontWeight: 500, color: T.color.primaryRed, margin: '6px 0 0 0' }}>
+                    {dateError}
+                  </p>
+                )}
               </div>
             )}
           </div>
@@ -804,7 +912,7 @@
     ];
 
     const FORMES_JURIDIQUES_SPFPL = [
-      "SA à conseil d'administration", "SA à directoire", "SARL", "SAS", "SASU", "SCA"
+      "SA à conseil d'administration", "SA à directoire", "SARL", "SAS", "SASU", "SCA", "Autre"
     ];
 
     const FORMES_JURIDIQUES_PM = [
@@ -816,6 +924,119 @@
       "Sa propriété", "Loués", "Pris en sous-location",
       "La résidence d'un Représentant légal", "Une domiciliation"
     ];
+
+    // Mock entreprise mère data
+    const MOCK_ENTREPRISES_MERE = [
+      { denomination: 'AUDIT CONSEIL GROUPE', siren: '412 345 678', rue: '15 rue de la Paix', complement: 'Bâtiment A', lieuDit: '', codePostal: '75002', ville: 'Paris', pays: 'France' },
+      { denomination: 'FIDUCIAIRE NATIONALE', siren: '523 456 789', rue: '8 avenue des Champs-Élysées', complement: '', lieuDit: '', codePostal: '75008', ville: 'Paris', pays: 'France' },
+      { denomination: 'EXPERTISE PARTNERS SA', siren: '634 567 890', rue: '22 boulevard Haussmann', complement: '3ème étage', lieuDit: 'Les Music-Halls', codePostal: '75009', ville: 'Paris', pays: 'France' },
+      { denomination: 'COMPTALIA GROUP SAS', siren: '745 678 901', rue: '3 place Bellecour', complement: '', lieuDit: 'Le Vieux Lyon', codePostal: '69002', ville: 'Lyon', pays: 'France' },
+      { denomination: 'KPMG FRANCE', siren: '775 726 417', rue: '2 avenue Gambetta', complement: 'Tour EQHO', lieuDit: '', codePostal: '92066', ville: 'Paris La Défense', pays: 'France' },
+      { denomination: 'MAZARS SA', siren: '784 824 153', rue: '61 rue Henri Regnault', complement: '', lieuDit: '', codePostal: '92075', ville: 'Paris La Défense', pays: 'France' },
+    ];
+
+    const SocieteSearchAutocomplete = ({ onSelectSociete, onManual, onClear, searchMode, selectedLabel }) => {
+      const [query, setQuery] = useState('');
+      const [focused, setFocused] = useState(false);
+
+      const filtered = query.length >= 1
+        ? MOCK_ENTREPRISES_MERE.filter(s =>
+            s.siren.replace(/\s/g, '').includes(query.replace(/\s/g, '')) ||
+            s.denomination.toLowerCase().includes(query.toLowerCase())
+          )
+        : [];
+
+      const showDropdown = focused && !searchMode;
+
+      const handleSelect = (societe) => {
+        setQuery(`${societe.siren} - ${societe.denomination}`);
+        setFocused(false);
+        onSelectSociete(societe);
+      };
+
+      const handleManual = () => {
+        setQuery('+ Renseigner manuellement');
+        setFocused(false);
+        onManual();
+      };
+
+      const handleClear = () => {
+        setQuery('');
+        setFocused(true);
+        onClear();
+      };
+
+      const handleChange = (e) => {
+        const v = e.target.value;
+        setQuery(v);
+        if (searchMode) onClear();
+      };
+
+      return (
+        <div style={{ position: 'relative', marginBottom: '16px' }}>
+          <p style={{ fontSize: '14px', fontWeight: 500, color: T.color.textDark, margin: '0 0 6px 0' }}>
+            Recherchez la personne morale (SIREN ou dénomination)
+          </p>
+          <div style={{
+            display: 'flex', alignItems: 'center',
+            border: `1px solid ${T.color.border}`, borderRadius: T.radius,
+            height: '40px', background: T.color.white, overflow: 'hidden',
+          }}>
+            <input
+              value={searchMode ? (selectedLabel || query) : query}
+              onChange={handleChange}
+              onFocus={() => !searchMode && setFocused(true)}
+              onBlur={() => setTimeout(() => setFocused(false), 200)}
+              readOnly={!!searchMode}
+              placeholder="Saisissez un SIREN ou une dénomination sociale"
+              style={{
+                flex: 1, border: 'none', outline: 'none', fontSize: '14px',
+                color: T.color.textDark, background: 'transparent', fontFamily: T.font,
+                padding: '0 14px', height: '100%',
+              }}
+            />
+            {searchMode && (
+              <span onClick={handleClear} style={{
+                cursor: 'pointer', color: T.color.gray, fontWeight: 600,
+                padding: '0 14px', fontSize: '14px',
+              }}>✕</span>
+            )}
+          </div>
+
+          {/* Dropdown suggestions */}
+          {showDropdown && (
+            <div style={{
+              position: 'absolute', top: '68px', left: 0, right: 0, zIndex: 50,
+              background: T.color.white, border: `1px solid ${T.color.border}`,
+              borderRadius: T.radius, boxShadow: T.shadow.card, maxHeight: '240px', overflowY: 'auto',
+            }}>
+              {filtered.map((s, idx) => (
+                <div key={idx} onClick={() => handleSelect(s)} style={{
+                  padding: '10px 14px', fontSize: '14px', color: T.color.textDark,
+                  cursor: 'pointer', borderBottom: `1px solid ${T.color.border}`,
+                  transition: 'background 0.1s',
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = T.color.radioBg}
+                onMouseLeave={e => e.currentTarget.style.background = T.color.white}
+                >
+                  <span style={{ fontWeight: 600 }}>{s.siren}</span>
+                  <span style={{ color: T.color.gray }}> — {s.denomination}</span>
+                </div>
+              ))}
+              <div onClick={handleManual} style={{
+                padding: '10px 14px', fontSize: '14px', color: T.color.textDark,
+                cursor: 'pointer', fontWeight: 500,
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = T.color.radioBg}
+              onMouseLeave={e => e.currentTarget.style.background = T.color.white}
+              >
+                + Renseigner manuellement
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    };
 
     // OUI/NON Radio inline
     const OuiNon = ({ value, onChange, label, required }) => (
@@ -970,7 +1191,7 @@
           {/* Step header */}
           <div style={{ marginBottom: '48px' }}>
             <h1 style={{ fontSize: '24px', fontWeight: 700, color: T.color.textDark, margin: 0, lineHeight: '24px' }}>
-              Caractéristiques de la société
+              Caractéristiques de la Société et Renseignements Divers
             </h1>
           </div>
 
@@ -1057,20 +1278,7 @@
           {/* ---- CARD 3: Siège social ---- */}
           <SectionCard>
             <SectionTitle>Siège social</SectionTitle>
-            <div style={{ marginBottom: '20px' }}>
-              <FieldInput label="Adresse" required value={d.siegeAdresse} onChange={v => update('siegeAdresse', v)} />
-            </div>
-            <div style={{ marginBottom: '20px' }}>
-              <FieldInput label="Complément d'adresse" value={d.siegeComplement} onChange={v => update('siegeComplement', v)} />
-            </div>
-            <div style={{ marginBottom: '20px' }}>
-              <FieldInput label="Lieu-dit" value={d.siegeLieuDit} onChange={v => update('siegeLieuDit', v)} />
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-              <FieldInput label="Code postal" required value={d.siegeCP} onChange={v => update('siegeCP', v)} />
-              <FieldInput label="Ville" required value={d.siegeVille} onChange={v => update('siegeVille', v)} />
-              <FieldSelect label="Pays" required value={d.siegePays} onChange={v => update('siegePays', v)} options={PAYS_OPTIONS} placeholder="Sélectionner" height="40px" />
-            </div>
+            <AddressBlock data={d} onChange={(k, v) => update(k, v)} prefix="siege" />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px' }}>
               <FieldInput label="Téléphone" required value={d.siegeTelephone} onChange={v => update('siegeTelephone', v)} />
               <FieldInput label="Email de la société" value={d.siegeEmail} onChange={v => update('siegeEmail', v)} />
@@ -1083,57 +1291,77 @@
             <SectionTitle>Entreprise mère</SectionTitle>
             <OuiNon
               label="Cette société est-elle liée à une entreprise mère (différente du siège social) ?"
-              required
               value={d.entrepriseMere}
               onChange={v => { update('entrepriseMere', v); if (v === 'Non') { update('emRecherche', ''); update('emFound', false); } }}
             />
             {d.entrepriseMere === 'Oui' && (
               <div>
-                {/* Barre de recherche */}
-                <SearchBar placeholder="Recherchez la personne morale" value={d.emRecherche} onClear={() => { update('emRecherche', ''); update('emFound', false); }} />
+                <SocieteSearchAutocomplete
+                  searchMode={d.emSearchMode}
+                  selectedLabel={d.emSelectedLabel}
+                  onSelectSociete={(societe) => {
+                    update('emSearchMode', 'selected');
+                    update('emSelectedLabel', `${societe.siren} - ${societe.denomination}`);
+                    update('emDenomination', societe.denomination);
+                    update('emSiren', societe.siren);
+                    update('emRue', societe.rue);
+                    update('emComplement', societe.complement);
+                    update('emLieuDit', societe.lieuDit);
+                    update('emCodePostal', societe.codePostal);
+                    update('emVille', societe.ville);
+                    update('emPays', societe.pays);
+                  }}
+                  onManual={() => {
+                    update('emSearchMode', 'manual');
+                    update('emSelectedLabel', '+ Renseigner manuellement');
+                    update('emDenomination', ''); update('emSiren', '');
+                    update('emRue', ''); update('emComplement', '');
+                    update('emLieuDit', ''); update('emCodePostal', '');
+                    update('emVille', ''); update('emPays', '');
+                  }}
+                  onClear={() => {
+                    update('emSearchMode', null); update('emSelectedLabel', '');
+                    update('emDenomination', ''); update('emSiren', '');
+                    update('emRue', ''); update('emComplement', '');
+                    update('emLieuDit', ''); update('emCodePostal', '');
+                    update('emVille', ''); update('emPays', '');
+                  }}
+                />
 
-                {/* Résultat trouvé (simulation) */}
-                {d.emFound && (
-                  <div style={{
-                    padding: '16px', background: T.color.radioBg,
-                    border: `1px solid ${T.color.border}`, borderRadius: T.radius, marginBottom: '16px',
-                  }}>
-                    <div style={{ marginBottom: '12px' }}>
-                      <p style={{ fontSize: '12px', color: T.color.gray, margin: '0 0 4px 0' }}>Dénomination sociale</p>
-                      <p style={{ fontSize: '14px', color: T.color.textDark, margin: 0, fontWeight: 500 }}>{d.emDenomination || '—'}</p>
+                {/* Mode sélection : mêmes champs que manuel, pré-remplis en lecture seule */}
+                {d.emSearchMode === 'selected' && (
+                  <div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '16px' }}>
+                      <ReadOnlyField label="Dénomination sociale" required value={d.emDenomination} />
+                      <ReadOnlyField label="SIREN (ou équivalent européen)" required value={d.emSiren} />
                     </div>
-                    <div style={{ marginBottom: '12px' }}>
-                      <p style={{ fontSize: '12px', color: T.color.gray, margin: '0 0 4px 0' }}>SIREN</p>
-                      <p style={{ fontSize: '14px', color: T.color.textDark, margin: 0, fontWeight: 500 }}>{d.emSiren || '—'}</p>
+                    <div style={{ marginBottom: '16px' }}>
+                      <ReadOnlyField label="Rue" required value={d.emRue} />
                     </div>
-                    <div>
-                      <p style={{ fontSize: '12px', color: T.color.gray, margin: '0 0 4px 0' }}>Adresse</p>
-                      <p style={{ fontSize: '14px', color: T.color.textDark, margin: 0, fontWeight: 500 }}>{d.emAdresseComplete || '—'}</p>
+                    <div style={{ marginBottom: '16px' }}>
+                      <ReadOnlyField label="Complément d'adresse" value={d.emComplement} />
+                    </div>
+                    <div style={{ marginBottom: '16px' }}>
+                      <ReadOnlyField label="Lieu-dit" value={d.emLieuDit} />
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                      <ReadOnlyField label="Code postal" required value={d.emCodePostal} />
+                      <ReadOnlyField label="Ville" required value={d.emVille} />
+                    </div>
+                    <div style={{ marginBottom: '16px' }}>
+                      <ReadOnlyField label="Pays" required value={d.emPays} />
                     </div>
                   </div>
                 )}
 
-                {/* Formulaire manuel (si recherche KO) */}
-                {!d.emFound && (
+                {/* Mode manuel : champs éditables */}
+                {d.emSearchMode === 'manual' && (
                   <div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
                       <FieldInput label="Dénomination sociale" required value={d.emDenomination} onChange={v => update('emDenomination', v)} />
                       <FieldInput label="SIREN (ou équivalent européen)" required value={d.emSiren} onChange={v => update('emSiren', v)} />
                     </div>
-                    <div style={{ marginBottom: '20px' }}>
-                      <FieldInput label="Rue" required value={d.emRue} onChange={v => update('emRue', v)} />
-                    </div>
-                    <div style={{ marginBottom: '20px' }}>
-                      <FieldInput label="Complément d'adresse" value={d.emComplement} onChange={v => update('emComplement', v)} />
-                    </div>
-                    <div style={{ marginBottom: '20px' }}>
-                      <FieldInput label="Lieu-dit" value={d.emLieuDit} onChange={v => update('emLieuDit', v)} />
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px' }}>
-                      <FieldInput label="Code postal" required value={d.emCP} onChange={v => update('emCP', v)} />
-                      <FieldInput label="Ville" required value={d.emVille} onChange={v => update('emVille', v)} />
-                      <FieldSelect label="Pays" required value={d.emPays} onChange={v => update('emPays', v)} options={PAYS_OPTIONS} placeholder="Sélectionner" />
-                    </div>
+                    <AddressBlock data={d} onChange={(k, v) => update(k, v)} prefix="em" />
                   </div>
                 )}
               </div>
@@ -1186,7 +1414,12 @@
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '20px' }}>
                     <FieldInput label="SIRET du siège social" required value={d.siret} onChange={v => update('siret', v)} />
                     <FieldInput label="N° de TVA intracommunautaire" required value={d.tvaIntra} onChange={v => update('tvaIntra', v)} />
-                    <FieldInput label="Date de création de la société" required value={d.dateCreation} onChange={v => update('dateCreation', v)} />
+                    <div>
+                      <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: T.color.textDark }}>
+                        <span style={{ color: '#C81E1E', marginRight: '3px' }}>*</span>Date de création de la société
+                      </label>
+                      <DatePicker value={d.dateCreation} onChange={v => update('dateCreation', v)} placeholder="Sélectionner une date" />
+                    </div>
                   </div>
 
                   <OuiNon
@@ -1213,17 +1446,12 @@
                   />
                   {d.activiteOrigine === 'Oui' && (
                     <div style={{ marginBottom: '20px' }}>
-                      <FieldInput label="Si oui, qu'est devenue ou deviendra cette activité après son inscription?" required value={d.devenirActivite} onChange={v => update('devenirActivite', v)} />
+                      <FieldInput label="Si oui, qu'est devenue ou deviendra cette activité après son inscription au tableau de l'ordre ?" required value={d.devenirActivite} onChange={v => update('devenirActivite', v)} />
                     </div>
                   )}
                 </div>
               )}
 
-              {d.immatriculeeRNE === 'Non' && (
-                <div style={{ marginBottom: '20px' }}>
-                  <FieldInput label="Quel est ou était son objet social d'origine ?" required value={d.objetOrigine} onChange={v => update('objetOrigine', v)} />
-                </div>
-              )}
             </SectionCard>
 
             {/* Origine de la clientèle */}
@@ -1249,22 +1477,22 @@
                 {`Experts-comptables inscrits ou en cours d'inscription`}
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-                <FieldInput label="Nombre" value={d.ecInscritsNombre} onChange={v => update('ecInscritsNombre', v)} />
-                <FieldInput label="Équivalent temps plein" value={d.ecInscritsETP} onChange={v => update('ecInscritsETP', v)} />
+                <FieldInput label="Nombre" value={d.ecInscritsNombre} onChange={v => { if (v === '' || /^\d+$/.test(v)) update('ecInscritsNombre', v); }} />
+                <FieldInput label="Équivalent temps plein" value={d.ecInscritsETP} onChange={v => { if (v === '' || /^\d+$/.test(v)) update('ecInscritsETP', v); }} />
               </div>
               <p style={{ fontSize: '14px', fontWeight: 600, color: T.color.textDark, margin: '0 0 8px 0' }}>
                 Experts-comptables stagiaires
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-                <FieldInput label="Nombre" value={d.ecStagiairesNombre} onChange={v => update('ecStagiairesNombre', v)} />
-                <FieldInput label="Équivalent temps plein" value={d.ecStagiairesETP} onChange={v => update('ecStagiairesETP', v)} />
+                <FieldInput label="Nombre" value={d.ecStagiairesNombre} onChange={v => { if (v === '' || /^\d+$/.test(v)) update('ecStagiairesNombre', v); }} />
+                <FieldInput label="Équivalent temps plein" value={d.ecStagiairesETP} onChange={v => { if (v === '' || /^\d+$/.test(v)) update('ecStagiairesETP', v); }} />
               </div>
               <p style={{ fontSize: '14px', fontWeight: 600, color: T.color.textDark, margin: '0 0 8px 0' }}>
                 Autres personnels
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-                <FieldInput label="Nombre" value={d.autresNombre} onChange={v => update('autresNombre', v)} />
-                <FieldInput label="Équivalent temps plein" value={d.autresETP} onChange={v => update('autresETP', v)} />
+                <FieldInput label="Nombre" value={d.autresNombre} onChange={v => { if (v === '' || /^\d+$/.test(v)) update('autresNombre', v); }} />
+                <FieldInput label="Équivalent temps plein" value={d.autresETP} onChange={v => { if (v === '' || /^\d+$/.test(v)) update('autresETP', v); }} />
               </div>
               <p style={{ fontSize: '14px', fontWeight: 700, color: T.color.textDark, margin: '0 0 8px 0' }}>
                 Total
@@ -1311,6 +1539,46 @@
       );
     };
 
+    // ── Reusable Address Block ──
+    const AddressBlock = ({ data, onChange, prefix }) => {
+      const pfx = (k) => prefix ? `${prefix}${k.charAt(0).toUpperCase()}${k.slice(1)}` : k;
+      const val = (k) => data[pfx(k)] || '';
+      const set = (k, v) => onChange(pfx(k), v);
+      return (
+        <>
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: T.color.textDark }}>
+              Recherche adresse
+            </label>
+            <input
+              placeholder="Saisissez une adresse..."
+              style={{
+                width: '100%', height: '40px', border: `1px solid ${T.color.border}`, borderRadius: T.radius,
+                padding: '0 14px', fontSize: '14px', color: T.color.textDark, fontFamily: T.font,
+                background: T.color.white, outline: 'none',
+              }}
+            />
+          </div>
+          <div style={{ marginBottom: '16px' }}>
+            <FieldInput label="Rue" required value={val('rue')} onChange={v => set('rue', v)} />
+          </div>
+          <div style={{ marginBottom: '16px' }}>
+            <FieldInput label="Complément d'adresse" value={val('complement')} onChange={v => set('complement', v)} />
+          </div>
+          <div style={{ marginBottom: '16px' }}>
+            <FieldInput label="Lieu-dit" value={val('lieuDit')} onChange={v => set('lieuDit', v)} />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+            <FieldInput label="Code postal" required value={val('codePostal')} onChange={v => set('codePostal', v)} />
+            <FieldInput label="Ville" required value={val('ville')} onChange={v => set('ville', v)} />
+          </div>
+          <div style={{ marginBottom: '16px' }}>
+            <FieldSelect label="Pays" required value={val('pays') || 'France'} onChange={v => set('pays', v)} options={PAYS_OPTIONS} placeholder="Sélectionner" />
+          </div>
+        </>
+      );
+    };
+
     // ============================================================
     // STEP 4: REPRÉSENTANTS LÉGAUX
     // ============================================================
@@ -1326,7 +1594,7 @@
       "Directeur général délégué",
     ];
 
-    // Search bar with tag result
+    // Search bar with tag result (kept for PM search)
     const SearchBar = ({ placeholder, value, onClear }) => (
       <div style={{ marginBottom: '16px' }}>
         <div style={{
@@ -1360,6 +1628,142 @@
         )}
       </div>
     );
+
+    // ── Mock data for person search ──
+    const MOCK_PERSONNES_PP = [
+      { civilite: 'Madame', nom: 'DUBOIS', prenom: 'Maud', prenom2: '', prenom3: '', prenom4: '', region: 'IDF', conseilRegional: 'Île-de-France' },
+      { civilite: 'Monsieur', nom: 'DUPONT', prenom: 'Jean', prenom2: 'Marc', prenom3: '', prenom4: '', region: 'AURA', conseilRegional: 'Auvergne-Rhône-Alpes' },
+      { civilite: 'Madame', nom: 'DURAND', prenom: 'Marie', prenom2: 'Claire', prenom3: '', prenom4: '', region: 'IDF', conseilRegional: 'Île-de-France' },
+      { civilite: 'Monsieur', nom: 'MARTIN', prenom: 'Pierre', prenom2: '', prenom3: '', prenom4: '', region: 'Grand Est', conseilRegional: 'Grand Est' },
+      { civilite: 'Madame', nom: 'MOREAU', prenom: 'Sophie', prenom2: 'Anne', prenom3: '', prenom4: '', region: 'Normandie', conseilRegional: 'Normandie' },
+      { civilite: 'Monsieur', nom: 'MARTINEZ', prenom: 'Luis', prenom2: '', prenom3: '', prenom4: '', region: 'Occitanie', conseilRegional: 'Occitanie' },
+      { civilite: 'Madame', nom: 'BERNARD', prenom: 'Isabelle', prenom2: '', prenom3: '', prenom4: '', region: 'IDF', conseilRegional: 'Île-de-France' },
+      { civilite: 'Monsieur', nom: 'BERTRAND', prenom: 'Alain', prenom2: 'François', prenom3: '', prenom4: '', region: 'PACA', conseilRegional: "Provence-Alpes-Côte d'Azur" },
+    ];
+
+    const NATIONALITE_OPTIONS = [
+      "Française", "Allemande", "Belge", "Britannique", "Espagnole",
+      "Italienne", "Luxembourgeoise", "Portugaise", "Suisse", "Autre",
+    ];
+
+    // ── Read-only field (grey background) ──
+    const ReadOnlyField = ({ label, required, value }) => (
+      <div>
+        <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: T.color.textDark }}>
+          {required && <span style={{ color: '#C81E1E', marginRight: '3px' }}>*</span>}{label}
+        </label>
+        <div style={{
+          width: '100%', height: '40px', border: `1px solid ${T.color.border}`, borderRadius: T.radius,
+          padding: '0 14px', fontSize: '14px', color: T.color.textDark, background: '#E5E7EB',
+          display: 'flex', alignItems: 'center', fontFamily: T.font,
+        }}>
+          {value || ''}
+        </div>
+      </div>
+    );
+
+    // ── Person Search Autocomplete ──
+    const PersonSearchAutocomplete = ({ onSelectPerson, onManual, onClear, searchMode, selectedLabel }) => {
+      const [query, setQuery] = useState('');
+      const [focused, setFocused] = useState(false);
+
+      const filtered = query.length >= 1
+        ? MOCK_PERSONNES_PP.filter(p =>
+            `${p.nom} ${p.prenom}`.toLowerCase().includes(query.toLowerCase()) ||
+            p.nom.toLowerCase().startsWith(query.toLowerCase())
+          )
+        : [];
+
+      const showDropdown = focused && !searchMode;
+
+      const handleSelect = (person) => {
+        setQuery(`${person.nom} ${person.prenom} - ${person.region}`);
+        setFocused(false);
+        onSelectPerson(person);
+      };
+
+      const handleManual = () => {
+        setQuery('+ Renseigner manuellement');
+        setFocused(false);
+        onManual();
+      };
+
+      const handleClear = () => {
+        setQuery('');
+        setFocused(true);
+        onClear();
+      };
+
+      const handleChange = (e) => {
+        const v = e.target.value;
+        setQuery(v);
+        if (searchMode) onClear();
+      };
+
+      return (
+        <div style={{ position: 'relative', marginBottom: '16px' }}>
+          <p style={{ fontSize: '14px', fontWeight: 500, color: T.color.textDark, margin: '0 0 6px 0' }}>
+            <span style={{ color: '#C81E1E' }}>* </span>Recherchez la personne physique
+          </p>
+          <div style={{
+            display: 'flex', alignItems: 'center',
+            border: `1px solid ${T.color.border}`, borderRadius: T.radius,
+            height: '40px', background: T.color.white, overflow: 'hidden',
+          }}>
+            <input
+              value={searchMode ? (selectedLabel || query) : query}
+              onChange={handleChange}
+              onFocus={() => !searchMode && setFocused(true)}
+              onBlur={() => setTimeout(() => setFocused(false), 200)}
+              readOnly={!!searchMode}
+              placeholder="Recherchez la personne physique"
+              style={{
+                flex: 1, border: 'none', outline: 'none', fontSize: '14px',
+                color: T.color.textDark, background: 'transparent', fontFamily: T.font,
+                padding: '0 14px', height: '100%',
+              }}
+            />
+            {searchMode && (
+              <span onClick={handleClear} style={{
+                cursor: 'pointer', color: T.color.gray, fontWeight: 600,
+                padding: '0 14px', fontSize: '14px',
+              }}>✕</span>
+            )}
+          </div>
+
+          {/* Dropdown suggestions */}
+          {showDropdown && (
+            <div style={{
+              position: 'absolute', top: '68px', left: 0, right: 0, zIndex: 50,
+              background: T.color.white, border: `1px solid ${T.color.border}`,
+              borderRadius: T.radius, boxShadow: T.shadow.card, maxHeight: '240px', overflowY: 'auto',
+            }}>
+              {filtered.map((p, idx) => (
+                <div key={idx} onClick={() => handleSelect(p)} style={{
+                  padding: '10px 14px', fontSize: '14px', color: T.color.textDark,
+                  cursor: 'pointer', borderBottom: `1px solid ${T.color.border}`,
+                  transition: 'background 0.1s',
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = T.color.radioBg}
+                onMouseLeave={e => e.currentTarget.style.background = T.color.white}
+                >
+                  {p.nom} {p.prenom} - {p.region}
+                </div>
+              ))}
+              <div onClick={handleManual} style={{
+                padding: '10px 14px', fontSize: '14px', color: T.color.textDark,
+                cursor: 'pointer', fontWeight: 500,
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = T.color.radioBg}
+              onMouseLeave={e => e.currentTarget.style.background = T.color.white}
+              >
+                + Renseigner manuellement
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    };
 
     // Dropdown for Statut
     const StatutSelect = ({ value, onChange }) => (
@@ -1444,6 +1848,36 @@
       const exerceOui = d.exerce === 'Oui';
       const associeOui = d.associe === 'Oui';
       const participations = d.participations || [{}];
+      const mode = d.searchMode; // undefined | 'selected' | 'manual'
+      const isSelected = mode === 'selected';
+      const isManual = mode === 'manual';
+      const showFields = isSelected || isManual;
+
+      const handleSelectPerson = (person) => {
+        u('searchMode', 'selected');
+        u('civilite', person.civilite);
+        u('nom', person.nom);
+        u('prenom', person.prenom);
+        u('prenom2', person.prenom2 || '');
+        u('prenom3', person.prenom3 || '');
+        u('prenom4', person.prenom4 || '');
+        u('conseilRegional', person.conseilRegional);
+        u('searchLabel', `${person.nom} ${person.prenom} - ${person.region}`);
+      };
+
+      const handleManual = () => {
+        u('searchMode', 'manual');
+        u('civilite', ''); u('nom', ''); u('prenom', ''); u('prenom2', '');
+        u('prenom3', ''); u('prenom4', ''); u('conseilRegional', '');
+        u('searchLabel', '+ Renseigner manuellement');
+      };
+
+      const handleClear = () => {
+        u('searchMode', undefined);
+        u('civilite', ''); u('nom', ''); u('prenom', ''); u('prenom2', '');
+        u('prenom3', ''); u('prenom4', ''); u('conseilRegional', '');
+        u('searchLabel', '');
+      };
 
       return (
         <SectionCard>
@@ -1451,53 +1885,84 @@
             <SectionTitle>Représentant légal personne physique</SectionTitle>
             <button style={{
               background: 'none', border: `1px solid ${T.color.border}`, borderRadius: T.radius,
-              padding: '6px 16px', fontSize: '14px', color: T.color.primaryBlue,
+              padding: '6px 16px', fontSize: '14px', color: T.color.primaryRed,
               cursor: 'pointer', fontFamily: T.font, fontWeight: 500,
             }}>Ajouter</button>
           </div>
 
-          <SearchBar placeholder="Recherchez la personne physique" value={d.search} onClear={() => u('search', '')} />
+          {/* Search autocomplete */}
+          <PersonSearchAutocomplete
+            onSelectPerson={handleSelectPerson}
+            onManual={handleManual}
+            onClear={handleClear}
+            searchMode={mode}
+            selectedLabel={d.searchLabel}
+          />
 
-          {/* Civilité */}
-          <div style={{ marginBottom: '16px' }}>
-            <p style={{ fontSize: '14px', fontWeight: 600, color: T.color.textDark, margin: '0 0 8px 0' }}>
-              <span style={{ color: '#C81E1E' }}>* </span>Civilité
-            </p>
-            <div style={{ display: 'flex', gap: '24px' }}>
-              {CIVILITE_OPTIONS.map(opt => {
-                const selected = d.civilite === opt;
-                return (
-                  <label key={opt} onClick={() => u('civilite', opt)} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                    <div style={{
-                      width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0,
-                      border: `2px solid ${selected ? T.color.primaryBlue : T.color.borderMedium}`,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      background: T.color.white,
-                    }}>
-                      {selected && <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: T.color.primaryBlue }} />}
-                    </div>
-                    <span style={{ fontSize: '14px', color: T.color.textDark }}>{opt}</span>
-                  </label>
-                );
-              })}
-            </div>
-          </div>
+          {/* ── Fields shown only after selection or manual ── */}
+          {showFields && (
+            <>
+              {/* Civilité */}
+              <div style={{ marginBottom: '16px' }}>
+                <p style={{ fontSize: '14px', fontWeight: 600, color: T.color.textDark, margin: '0 0 8px 0' }}>
+                  <span style={{ color: '#C81E1E' }}>* </span>Civilité
+                </p>
+                <div style={{ display: 'flex', gap: '24px' }}>
+                  {CIVILITE_OPTIONS.map(opt => {
+                    const selected = d.civilite === opt;
+                    return (
+                      <label key={opt} onClick={isManual ? () => u('civilite', opt) : undefined} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: isManual ? 'pointer' : 'default' }}>
+                        <div style={{
+                          width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0,
+                          border: `2px solid ${selected ? T.color.primaryBlue : T.color.borderMedium}`,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          background: T.color.white,
+                        }}>
+                          {selected && <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: T.color.primaryBlue }} />}
+                        </div>
+                        <span style={{ fontSize: '14px', color: T.color.textDark }}>{opt}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
 
-          {/* Name fields: 3 columns */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-            <FieldInput label="Nom patronymique" required value={d.nom} onChange={v => u('nom', v)} />
-            <FieldInput label="Prénom" required value={d.prenom} onChange={v => u('prenom', v)} />
-            <FieldInput label="Prénom 2" value={d.prenom2} onChange={v => u('prenom2', v)} />
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-            <FieldInput label="Prénom 3" value={d.prenom3} onChange={v => u('prenom3', v)} />
-            <FieldInput label="Prénom 4" value={d.prenom4} onChange={v => u('prenom4', v)} />
-          </div>
+              {/* Name fields */}
+              {isSelected ? (
+                <>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                    <ReadOnlyField label="Nom de famille" required value={d.nom} />
+                    <ReadOnlyField label="Prénom" required value={d.prenom} />
+                    <ReadOnlyField label="Prénom 2" value={d.prenom2} />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                    <ReadOnlyField label="Prénom 3" value={d.prenom3} />
+                    <ReadOnlyField label="Prénom 4" value={d.prenom4} />
+                  </div>
+                  <div style={{ marginBottom: '16px' }}>
+                    <ReadOnlyField label="Conseil régional d'inscription principale" required value={d.conseilRegional} />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                    <FieldInput label="Nom de famille" required value={d.nom} onChange={v => u('nom', v)} />
+                    <FieldInput label="Prénom" required value={d.prenom} onChange={v => u('prenom', v)} />
+                    <FieldInput label="Prénom 2" value={d.prenom2} onChange={v => u('prenom2', v)} />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                    <FieldInput label="Prénom 3" value={d.prenom3} onChange={v => u('prenom3', v)} />
+                    <FieldInput label="Prénom 4" value={d.prenom4} onChange={v => u('prenom4', v)} />
+                    <FieldSelect label="Nationalité" required value={d.nationalite} onChange={v => u('nationalite', v)} options={NATIONALITE_OPTIONS} placeholder="Sélectionner" />
+                  </div>
+                  {/* Adresse du domicile personnel */}
+                  <AddressBlock data={d} onChange={(k, v) => u(k, v)} />
+                </>
+              )}
+            </>
+          )}
 
-          {/* Conseil régional de l'Ordre (single field, before questions) */}
-          <div style={{ marginBottom: '16px' }}>
-            <FieldSelect label="Conseil régional de l'Ordre" required value={d.conseilRegional} onChange={v => u('conseilRegional', v)} options={CROEC_OPTIONS} placeholder="Sélectionner" />
-          </div>
+          {/* ── Questions always visible ── */}
 
           {/* Q1: exerce la profession */}
           <OuiNon
@@ -1538,7 +2003,6 @@
           {/* Conditional on associé = Oui: Participation + Bénéficiaire + Birth info */}
           {associeOui && (
             <>
-              {/* Participation section with Ajouter */}
               <ParticipationSection
                 items={participations}
                 onAdd={() => u('participations', [...participations, {}])}
@@ -1553,7 +2017,6 @@
                 }}
               />
 
-              {/* Q4: bénéficiaire effectif */}
               <div style={{ marginTop: '16px' }}>
                 <OuiNon
                   label="Ce représentant légal est-il un bénéficiaire effectif au sens de l'article R561-1 du code monétaire et financier de la société en cours d'inscription ?"
@@ -1563,10 +2026,14 @@
                 />
               </div>
 
-              {/* Date de Naissance + Lieu de naissance (only when bénéficiaire = Oui) */}
               {d.beneficiaire === 'Oui' && (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-                  <FieldInput label="Date de Naissance" required value={d.dateNaissance} onChange={v => u('dateNaissance', v)} type="date" />
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: T.color.textDark }}>
+                      <span style={{ color: '#C81E1E', marginRight: '3px' }}>*</span>Date de Naissance
+                    </label>
+                    <DatePicker value={d.dateNaissance} onChange={v => u('dateNaissance', v)} />
+                  </div>
                   <FieldSelect label="Lieu de naissance" required value={d.lieuNaissance} onChange={v => u('lieuNaissance', v)} options={CROEC_OPTIONS} placeholder="Sélectionner" />
                 </div>
               )}
@@ -1589,8 +2056,6 @@
       "Il exerce la profession d'expert-comptable dans un pays de l'UE ou de l'EEE (ou en Suisse)",
       "Il n'exerce pas la profession d'expert-comptable",
     ];
-
-    const NATIONALITE_OPTIONS = ["Française", "Belge", "Luxembourgeoise", "Suisse", "Allemande", "Italienne", "Espagnole", "Portugaise", "Britannique", "Néerlandaise", "Autre"];
 
     // Personne Morale sub-card
     const PersonneMoraleCard = ({ data, update }) => {
@@ -1635,16 +2100,7 @@
           <p style={{ fontSize: '14px', fontWeight: 600, color: T.color.textDark, margin: '0 0 12px 0' }}>
             Adresse du siège social
           </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '16px' }}>
-            <FieldInput label="Rue" required value={d.rue} onChange={v => u('rue', v)} />
-            <FieldInput label="Complément d'adresse" value={d.complement} onChange={v => u('complement', v)} />
-            <FieldInput label="Lieu-dit" value={d.lieuDit} onChange={v => u('lieuDit', v)} />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
-              <FieldInput label="Code postal" required value={d.codePostal} onChange={v => u('codePostal', v)} />
-              <FieldInput label="Ville" required value={d.ville} onChange={v => u('ville', v)} />
-              <FieldSelect label="Pays" required value={d.pays} onChange={v => u('pays', v)} options={PAYS_OPTIONS} placeholder="Sélectionner" />
-            </div>
-          </div>
+          <AddressBlock data={d} onChange={(k, v) => u(k, v)} />
 
           {/* Cette société représentant légal: — 3 radio buttons */}
           <div style={{ marginBottom: '16px' }}>
@@ -1760,10 +2216,10 @@
       const showPM = d.declarePersonneMorale;
 
       const updatePP = (k, v) => {
-        update('pp', { ...(d.pp || {}), [k]: v });
+        update('pp', prev => ({ ...(prev || {}), [k]: v }));
       };
       const updatePM = (k, v) => {
-        update('pm', { ...(d.pm || {}), [k]: v });
+        update('pm', prev => ({ ...(prev || {}), [k]: v }));
       };
 
       return (
@@ -1804,6 +2260,31 @@
     const Step5Content = ({ data, update }) => {
       const d = data || {};
       const u = (k, v) => update(k, v);
+      const mode = d.searchMode; // undefined | 'selected' | 'manual'
+      const isSelected = mode === 'selected';
+      const isManual = mode === 'manual';
+      const showFields = isSelected || isManual;
+
+      const handleSelectPerson = (person) => {
+        u('searchMode', 'selected');
+        u('civilite', person.civilite); u('nom', person.nom); u('prenom', person.prenom);
+        u('prenom2', person.prenom2 || ''); u('prenom3', person.prenom3 || ''); u('prenom4', person.prenom4 || '');
+        u('conseilRegional', person.conseilRegional);
+        u('searchLabel', `${person.nom} ${person.prenom} - ${person.region}`);
+      };
+      const handleManual = () => {
+        u('searchMode', 'manual');
+        u('civilite', ''); u('nom', ''); u('prenom', ''); u('prenom2', '');
+        u('prenom3', ''); u('prenom4', ''); u('conseilRegional', '');
+        u('searchLabel', '+ Renseigner manuellement');
+      };
+      const handleClear = () => {
+        u('searchMode', undefined);
+        u('civilite', ''); u('nom', ''); u('prenom', ''); u('prenom2', '');
+        u('prenom3', ''); u('prenom4', ''); u('conseilRegional', '');
+        u('searchLabel', '');
+      };
+
       return (
         <SectionCard>
           {/* Title + Ajouter */}
@@ -1811,79 +2292,79 @@
             <SectionTitle>Représentant légal personne physique du représentant légal personne morale</SectionTitle>
             <button style={{
               background: 'none', border: `1px solid ${T.color.border}`, borderRadius: T.radius,
-              padding: '6px 16px', fontSize: '14px', color: T.color.primaryBlue,
+              padding: '6px 16px', fontSize: '14px', color: T.color.primaryRed,
               cursor: 'pointer', fontFamily: T.font, fontWeight: 500,
             }}>Ajouter</button>
           </div>
 
           {/* Search */}
-          <SearchBar placeholder="Recherchez la personne physique" value={d.search} onClear={() => u('search', '')} />
+          <PersonSearchAutocomplete
+            onSelectPerson={handleSelectPerson}
+            onManual={handleManual}
+            onClear={handleClear}
+            searchMode={mode}
+            selectedLabel={d.searchLabel}
+          />
 
-          {/* Civilité */}
-          <div style={{ marginBottom: '16px' }}>
-            <p style={{ fontSize: '14px', fontWeight: 600, color: T.color.textDark, margin: '0 0 8px 0' }}>
-              <span style={{ color: '#C81E1E' }}>* </span>Civilité
-            </p>
-            <div style={{ display: 'flex', gap: '24px' }}>
-              {CIVILITE_OPTIONS.map(opt => {
-                const selected = d.civilite === opt;
-                return (
-                  <label key={opt} onClick={() => u('civilite', opt)} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                    <div style={{
-                      width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0,
-                      border: `2px solid ${selected ? T.color.primaryBlue : T.color.borderMedium}`,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      background: T.color.white,
-                    }}>
-                      {selected && <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: T.color.primaryBlue }} />}
-                    </div>
-                    <span style={{ fontSize: '14px', color: T.color.textDark }}>{opt}</span>
-                  </label>
-                );
-              })}
-            </div>
-          </div>
+          {showFields && (
+            <>
+              {/* Civilité */}
+              <div style={{ marginBottom: '16px' }}>
+                <p style={{ fontSize: '14px', fontWeight: 600, color: T.color.textDark, margin: '0 0 8px 0' }}>
+                  <span style={{ color: '#C81E1E' }}>* </span>Civilité
+                </p>
+                <div style={{ display: 'flex', gap: '24px' }}>
+                  {CIVILITE_OPTIONS.map(opt => {
+                    const selected = d.civilite === opt;
+                    return (
+                      <label key={opt} onClick={isManual ? () => u('civilite', opt) : undefined} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: isManual ? 'pointer' : 'default' }}>
+                        <div style={{
+                          width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0,
+                          border: `2px solid ${selected ? T.color.primaryBlue : T.color.borderMedium}`,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          background: T.color.white,
+                        }}>
+                          {selected && <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: T.color.primaryBlue }} />}
+                        </div>
+                        <span style={{ fontSize: '14px', color: T.color.textDark }}>{opt}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
 
-          {/* Nom / Prénom / Prénom 2 (3 cols) */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-            <FieldInput label="Nom patronymique" required value={d.nom} onChange={v => u('nom', v)} />
-            <FieldInput label="Prénom" required value={d.prenom} onChange={v => u('prenom', v)} />
-            <FieldInput label="Prénom 2" value={d.prenom2} onChange={v => u('prenom2', v)} />
-          </div>
-
-          {/* Prénom 3 / Prénom 4 / Nationalité (3 cols) */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-            <FieldInput label="Prénom 3" value={d.prenom3} onChange={v => u('prenom3', v)} />
-            <FieldInput label="Prénom 4" value={d.prenom4} onChange={v => u('prenom4', v)} />
-            <FieldSelect label="Nationalité" required value={d.nationalite} onChange={v => u('nationalite', v)} options={NATIONALITE_OPTIONS} placeholder="Sélectionner" />
-          </div>
-
-          {/* Adresse du domicile personnel */}
-          <div style={{ marginBottom: '16px' }}>
-            <FieldInput label="Adresse du domicile personnel" required value={d.adresseDomicile} onChange={v => u('adresseDomicile', v)} />
-          </div>
-
-          {/* Rue */}
-          <div style={{ marginBottom: '16px' }}>
-            <FieldInput label="Rue" required value={d.rue} onChange={v => u('rue', v)} />
-          </div>
-
-          {/* Complément d'adresse */}
-          <div style={{ marginBottom: '16px' }}>
-            <FieldInput label="Complément d'adresse" value={d.complement} onChange={v => u('complement', v)} />
-          </div>
-
-          {/* Lieu-dit */}
-          <div style={{ marginBottom: '16px' }}>
-            <FieldInput label="Lieu-dit" value={d.lieuDit} onChange={v => u('lieuDit', v)} />
-          </div>
-
-          {/* Code postal / Ville / Pays (3 cols) */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-            <FieldInput label="Code postal" required value={d.codePostal} onChange={v => u('codePostal', v)} />
-            <FieldInput label="Ville" required value={d.ville} onChange={v => u('ville', v)} />
-            <FieldSelect label="Pays" required value={d.pays} onChange={v => u('pays', v)} options={PAYS_OPTIONS} placeholder="Sélectionner" />
-          </div>
+              {isSelected ? (
+                <>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                    <ReadOnlyField label="Nom de famille" required value={d.nom} />
+                    <ReadOnlyField label="Prénom" required value={d.prenom} />
+                    <ReadOnlyField label="Prénom 2" value={d.prenom2} />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                    <ReadOnlyField label="Prénom 3" value={d.prenom3} />
+                    <ReadOnlyField label="Prénom 4" value={d.prenom4} />
+                  </div>
+                  <div style={{ marginBottom: '16px' }}>
+                    <ReadOnlyField label="Conseil régional d'inscription principale" required value={d.conseilRegional} />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                    <FieldInput label="Nom de famille" required value={d.nom} onChange={v => u('nom', v)} />
+                    <FieldInput label="Prénom" required value={d.prenom} onChange={v => u('prenom', v)} />
+                    <FieldInput label="Prénom 2" value={d.prenom2} onChange={v => u('prenom2', v)} />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                    <FieldInput label="Prénom 3" value={d.prenom3} onChange={v => u('prenom3', v)} />
+                    <FieldInput label="Prénom 4" value={d.prenom4} onChange={v => u('prenom4', v)} />
+                    <FieldSelect label="Nationalité" required value={d.nationalite} onChange={v => u('nationalite', v)} options={NATIONALITE_OPTIONS} placeholder="Sélectionner" />
+                  </div>
+                  <AddressBlock data={d} onChange={(k, v) => u(k, v)} />
+                </>
+              )}
+            </>
+          )}
 
           {/* Sélectionnez le représentant légal PM */}
           <div style={{ marginBottom: '16px' }}>
@@ -1991,7 +2472,7 @@
 
       // Sub-state helpers for the PP form inside PCP
       const pp = d.pp || {};
-      const updatePP = (k, v) => update('pp', { ...pp, [k]: v });
+      const updatePP = (k, v) => update('pp', prev => ({ ...(prev || {}), [k]: v }));
       const exerceOui = pp.exerce === 'Oui';
       const associeOui = pp.associe === 'Oui';
       const ppParticipations = pp.participations || [{}];
@@ -2036,49 +2517,90 @@
                 <SectionTitle>Personne de contact principal</SectionTitle>
 
                 <div style={{ marginTop: '16px' }}>
-                  <SearchBar placeholder="Recherchez la personne physique" value={pp.search} onClear={() => updatePP('search', '')} />
+                  <PersonSearchAutocomplete
+                    onSelectPerson={(person) => {
+                      updatePP('searchMode', 'selected');
+                      updatePP('civilite', person.civilite); updatePP('nom', person.nom); updatePP('prenom', person.prenom);
+                      updatePP('prenom2', person.prenom2 || ''); updatePP('prenom3', person.prenom3 || ''); updatePP('prenom4', person.prenom4 || '');
+                      updatePP('conseilRegional', person.conseilRegional);
+                      updatePP('searchLabel', `${person.nom} ${person.prenom} - ${person.region}`);
+                    }}
+                    onManual={() => {
+                      updatePP('searchMode', 'manual');
+                      updatePP('civilite', ''); updatePP('nom', ''); updatePP('prenom', ''); updatePP('prenom2', '');
+                      updatePP('prenom3', ''); updatePP('prenom4', ''); updatePP('conseilRegional', '');
+                      updatePP('searchLabel', '+ Renseigner manuellement');
+                    }}
+                    onClear={() => {
+                      updatePP('searchMode', undefined);
+                      updatePP('civilite', ''); updatePP('nom', ''); updatePP('prenom', ''); updatePP('prenom2', '');
+                      updatePP('prenom3', ''); updatePP('prenom4', ''); updatePP('conseilRegional', '');
+                      updatePP('searchLabel', '');
+                    }}
+                    searchMode={pp.searchMode}
+                    selectedLabel={pp.searchLabel}
+                  />
                 </div>
 
-                {/* Civilité */}
-                <div style={{ marginBottom: '16px' }}>
-                  <p style={{ fontSize: '14px', fontWeight: 600, color: T.color.textDark, margin: '0 0 8px 0' }}>
-                    <span style={{ color: '#C81E1E' }}>* </span>Civilité
-                  </p>
-                  <div style={{ display: 'flex', gap: '24px' }}>
-                    {CIVILITE_OPTIONS.map(opt => {
-                      const selected = pp.civilite === opt;
-                      return (
-                        <label key={opt} onClick={() => updatePP('civilite', opt)} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                          <div style={{
-                            width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0,
-                            border: `2px solid ${selected ? T.color.primaryBlue : T.color.borderMedium}`,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            background: T.color.white,
-                          }}>
-                            {selected && <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: T.color.primaryBlue }} />}
-                          </div>
-                          <span style={{ fontSize: '14px', color: T.color.textDark }}>{opt}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
+                {(pp.searchMode === 'selected' || pp.searchMode === 'manual') && (
+                  <>
+                    {/* Civilité */}
+                    <div style={{ marginBottom: '16px' }}>
+                      <p style={{ fontSize: '14px', fontWeight: 600, color: T.color.textDark, margin: '0 0 8px 0' }}>
+                        <span style={{ color: '#C81E1E' }}>* </span>Civilité
+                      </p>
+                      <div style={{ display: 'flex', gap: '24px' }}>
+                        {CIVILITE_OPTIONS.map(opt => {
+                          const selected = pp.civilite === opt;
+                          return (
+                            <label key={opt} onClick={pp.searchMode === 'manual' ? () => updatePP('civilite', opt) : undefined} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: pp.searchMode === 'manual' ? 'pointer' : 'default' }}>
+                              <div style={{
+                                width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0,
+                                border: `2px solid ${selected ? T.color.primaryBlue : T.color.borderMedium}`,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                background: T.color.white,
+                              }}>
+                                {selected && <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: T.color.primaryBlue }} />}
+                              </div>
+                              <span style={{ fontSize: '14px', color: T.color.textDark }}>{opt}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
 
-                {/* Nom / Prénom / Prénom 2 */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-                  <FieldInput label="Nom patronymique" required value={pp.nom} onChange={v => updatePP('nom', v)} />
-                  <FieldInput label="Prénom" required value={pp.prenom} onChange={v => updatePP('prenom', v)} />
-                  <FieldInput label="Prénom 2" value={pp.prenom2} onChange={v => updatePP('prenom2', v)} />
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-                  <FieldInput label="Prénom 3" value={pp.prenom3} onChange={v => updatePP('prenom3', v)} />
-                  <FieldInput label="Prénom 4" value={pp.prenom4} onChange={v => updatePP('prenom4', v)} />
-                </div>
-
-                {/* Conseil régional */}
-                <div style={{ marginBottom: '16px' }}>
-                  <FieldSelect label="Conseil régional de l'Ordre" required value={pp.conseilRegional} onChange={v => updatePP('conseilRegional', v)} options={CROEC_OPTIONS} placeholder="Sélectionner" />
-                </div>
+                    {pp.searchMode === 'selected' ? (
+                      <>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                          <ReadOnlyField label="Nom de famille" required value={pp.nom} />
+                          <ReadOnlyField label="Prénom" required value={pp.prenom} />
+                          <ReadOnlyField label="Prénom 2" value={pp.prenom2} />
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                          <ReadOnlyField label="Prénom 3" value={pp.prenom3} />
+                          <ReadOnlyField label="Prénom 4" value={pp.prenom4} />
+                        </div>
+                        <div style={{ marginBottom: '16px' }}>
+                          <ReadOnlyField label="Conseil régional d'inscription principale" required value={pp.conseilRegional} />
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                          <FieldInput label="Nom de famille" required value={pp.nom} onChange={v => updatePP('nom', v)} />
+                          <FieldInput label="Prénom" required value={pp.prenom} onChange={v => updatePP('prenom', v)} />
+                          <FieldInput label="Prénom 2" value={pp.prenom2} onChange={v => updatePP('prenom2', v)} />
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                          <FieldInput label="Prénom 3" value={pp.prenom3} onChange={v => updatePP('prenom3', v)} />
+                          <FieldInput label="Prénom 4" value={pp.prenom4} onChange={v => updatePP('prenom4', v)} />
+                          <FieldSelect label="Nationalité" required value={pp.nationalite} onChange={v => updatePP('nationalite', v)} options={NATIONALITE_OPTIONS} placeholder="Sélectionner" />
+                        </div>
+                        <AddressBlock data={pp} onChange={(k, v) => updatePP(k, v)} />
+                      </>
+                    )}
+                  </>
+                )}
 
                 {/* Q1: exerce */}
                 <OuiNon
@@ -2144,7 +2666,12 @@
 
                     {pp.beneficiaire === 'Oui' && (
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-                        <FieldInput label="Date de Naissance" required value={pp.dateNaissance} onChange={v => updatePP('dateNaissance', v)} type="date" />
+                        <div>
+                          <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: T.color.textDark }}>
+                            <span style={{ color: '#C81E1E', marginRight: '3px' }}>*</span>Date de Naissance
+                          </label>
+                          <DatePicker value={pp.dateNaissance} onChange={v => updatePP('dateNaissance', v)} />
+                        </div>
                         <FieldSelect label="Lieu de naissance" required value={pp.lieuNaissance} onChange={v => updatePP('lieuNaissance', v)} options={CROEC_OPTIONS} placeholder="Sélectionner" />
                       </div>
                     )}
@@ -2203,7 +2730,12 @@
 
                 {d.pcpBeneficiaire === 'Oui' && (
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-                    <FieldInput label="Date de Naissance" required value={d.pcpDateNaissance} onChange={v => u('pcpDateNaissance', v)} type="date" placeholder="JJ/MM/AAAA" />
+                    <div>
+                      <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: T.color.textDark }}>
+                        <span style={{ color: '#C81E1E', marginRight: '3px' }}>*</span>Date de Naissance
+                      </label>
+                      <DatePicker value={d.pcpDateNaissance} onChange={v => u('pcpDateNaissance', v)} />
+                    </div>
                     <FieldSelect label="Lieu de naissance" required value={d.pcpLieuNaissance} onChange={v => u('pcpLieuNaissance', v)} options={CROEC_OPTIONS} placeholder="Sélectionner" />
                   </div>
                 )}
@@ -2389,13 +2921,13 @@
               display: 'block', fontSize: '14px', fontWeight: 500,
               marginBottom: '6px', color: T.color.textDark,
             }}>
+              {required && <span style={{ color: T.color.primaryRed, marginRight: '3px' }}>*</span>}
               {label}
-              {required && <span style={{ color: T.color.primaryRed, marginLeft: '3px' }}>*</span>}
             </label>
           )}
           <input
             type={type}
-            placeholder={placeholder || label}
+            placeholder={placeholder || ''}
             value={value || ''}
             onChange={(e) => onChange(e.target.value)}
             onFocus={() => setFocused(true)}
@@ -2429,8 +2961,8 @@
               display: 'block', fontSize: '14px', fontWeight: 500,
               marginBottom: '6px', color: T.color.textDark,
             }}>
+              {required && <span style={{ color: T.color.primaryRed, marginRight: '3px' }}>*</span>}
               {label}
-              {required && <span style={{ color: T.color.primaryRed, marginLeft: '3px' }}>*</span>}
             </label>
           )}
           <div style={{ position: 'relative' }}>
@@ -2525,23 +3057,23 @@
       }, []);
 
       const updateStep4 = useCallback((key, value) => {
-        setStep4(prev => ({ ...prev, [key]: value }));
+        setStep4(prev => ({ ...prev, [key]: typeof value === 'function' ? value(prev[key]) : value }));
       }, []);
 
       const updateStep5 = useCallback((key, value) => {
-        setStep5(prev => ({ ...prev, [key]: value }));
+        setStep5(prev => ({ ...prev, [key]: typeof value === 'function' ? value(prev[key]) : value }));
       }, []);
 
       const updateStepPCP = useCallback((key, value) => {
-        setStepPCP(prev => ({ ...prev, [key]: value }));
+        setStepPCP(prev => ({ ...prev, [key]: typeof value === 'function' ? value(prev[key]) : value }));
       }, []);
 
       const renderStep = () => {
         const stepName = steps[currentStep - 1];
         switch (stepName) {
           case "Qualité de la PM & CROEC": return <Step1Content data={step1} update={updateStep1} />;
-          case "Dates de sessions": return <Step2Content />;
-          case "Caractéristiques de la société": return <Step3Content data={step3} update={updateStep3} profile={step1.profile} />;
+          case "Dates de sessions": return <Step2Content croec={step1.croec} />;
+          case "Caractéristiques de la Société et Renseignements Divers": return <Step3Content data={step3} update={updateStep3} profile={step1.profile} />;
           case "Représentants Légaux": return <Step4Content data={step4} update={updateStep4} />;
           case EXTRA_STEP: return <Step5Content data={step5} update={updateStep5} />;
           case "Personne de contact principal": return <StepPCPContent data={stepPCP} update={updateStepPCP} />;
