@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Account Record — Alphabet, Inc. | PEP Salesforce</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Inter', 'Segoe UI', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    button { cursor: pointer; background: none; border: none; font: inherit; color: inherit; padding: 0; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #c9c9c9; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    /* ═══════════════════════════════════════════════
+       ICON HELPER — wraps lucide icons
+       ═══════════════════════════════════════════════ */
+    const Icon = ({ name, size = 16, color = "currentColor", strokeWidth = 2, className = "", fill = "none" }) => {
+      const ref = useRef(null);
+      useEffect(() => {
+        if (ref.current && lucide.icons[name]) {
+          ref.current.innerHTML = "";
+          const el = lucide.createElement(lucide.icons[name]);
+          el.setAttribute("width", size);
+          el.setAttribute("height", size);
+          el.setAttribute("stroke", color);
+          el.setAttribute("stroke-width", strokeWidth);
+          if (fill !== "none") el.setAttribute("fill", fill);
+          ref.current.appendChild(el);
+        }
+      }, [name, size, color, strokeWidth, fill]);
+      return <span ref={ref} className={`inline-flex items-center justify-center shrink-0 ${className}`} style={{ width: size, height: size }} />;
+    };
+
+    /* ═══════════════════════════════════════════════
+       DATA
+       ═══════════════════════════════════════════════ */
+    const NAV_TABS = [
+      { label: "Home", active: false },
+      { label: "Contacts", active: false },
+      { label: "Accounts", active: true },
+      { label: "Service", active: false },
+      { label: "Sales", active: false },
+      { label: "Calendar", active: false },
+      { label: "Dashboards", active: false },
+      { label: "Reports", active: false },
+    ];
+
+    const PATH_STEPS = [
+      { completed: true },
+      { completed: true },
+      { completed: true },
+      { completed: true },
+      { completed: false, current: true, label: "Incomplete" },
+      { completed: false, label: "Label" },
+    ];
+
+    const CONTACTS = [
+      { name: "Kristen Jones", title: "VP of Sales", role: "Decision Maker", color: "#9050e9" },
+      { name: "Kristen Jones", title: "VP of Sales", role: "Decision Maker", color: "#9050e9" },
+      { name: "Lauren Bailey", title: "VP of Sales", role: "Decision Maker", color: "#e16032" },
+      { name: "Steve Handler", title: "VP of Sales", role: "Decision Maker", color: "#0070d2" },
+    ];
+
+    const ABOUT_FIELDS = [
+      { label: "Account Name", value: "Alphabet, Inc" },
+      { label: "Website", value: "" },
+      { label: "Type", value: "" },
+      { label: "Description", value: "" },
+      { label: "Parent Account", value: "" },
+    ];
+
+    const EMAILS = [
+      { subject: "Re: Mobile conversation on Monday with the global team", sender: "You", action: "emailed", target: "Name", time: "9:00am | 3/20/24" },
+      { subject: "Re: Mobile conversation on Monday with the global team", sender: "You", action: "emailed", target: "Name", time: "9:00am | 3/20/24" },
+    ];
+
+    /* ═══════════════════════════════════════════════
+       SLDS-STYLE PATH CHEVRON (SVG) — pill-shaped, interlocking arrows, no gaps
+       ═══════════════════════════════════════════════ */
+    const PathStep = ({ step, index, total }) => {
+      const isFirst = index === 0;
+      const isLast = index === total - 1;
+      const bg = step.completed ? "#acf3e4" : step.current ? "#032d60" : "#e5e5e5";
+      const textColor = step.current ? "white" : "#03234d";
+
+      /*
+       * Each step is drawn inside its own SVG with overflow visible.
+       * The chevron "arrow tip" extends PAST the step's right edge (overflow)
+       * and the next step's left side has a matching V-notch.
+       * Arrow depth = 10px. viewBox width = 100 (content) + 10 (arrow overflow) = 110 visible area.
+       * Height = 32.  Rounded caps use r=16 arcs.
+       */
+      const D = 10; /* chevron arrow depth in viewBox units */
+      const R = 16; /* rounded cap radius */
+      const W = 100; /* base width */
+
+      let shapePath;
+      if (isFirst) {
+        /* Rounded left cap → flat top → arrow tip right → flat bottom → back to arc */
+        shapePath = `M${R},0 L${W},0 L${W+D},16 L${W},32 L${R},32 A${R},${R} 0 0,1 ${R},0 Z`;
+      } else if (isLast) {
+        /* V-notch left → flat top → rounded right cap → flat bottom → back to notch */
+        shapePath = `M0,0 L${W-R},0 A${R},${R} 0 0,1 ${W-R},32 L0,32 L${D},16 Z`;
+      } else {
+        /* V-notch left → flat top → arrow tip right → flat bottom → back to notch */
+        shapePath = `M0,0 L${W},0 L${W+D},16 L${W},32 L0,32 L${D},16 Z`;
+      }
+
+      return (
+        <div className="relative h-[32px] flex items-center" style={{ flex: 1, minWidth: 0, marginRight: isLast ? 0 : "-5px" }}>
+          <svg
+            className="absolute inset-0 w-full h-full"
+            viewBox={`0 0 ${isFirst || (!isFirst && !isLast) ? W + D : W} 32`}
+            preserveAspectRatio="none"
+            style={{ overflow: "visible" }}
+          >
+            <path d={shapePath} fill={bg} />
+          </svg>
+          <div className="relative z-10 flex items-center justify-center w-full" style={{ paddingLeft: isFirst ? 0 : D/2, paddingRight: isLast ? 0 : D/2 }}>
+            {step.completed && (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#056764" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            )}
+            {step.label && <span className="text-[13px] leading-none font-medium" style={{ color: textColor }}>{step.label}</span>}
+          </div>
+        </div>
+      );
+    };
+
+    const SvgChevRightCircle = () => (
+      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" style={{ display: "block" }}>
+        <circle cx="16" cy="16" r="15" stroke="#c9c9c9" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="white"/>
+        <path d="M13 10L19 16L13 22" stroke="#5c5c5c" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    );
+
+    const SalesPath = () => (
+      <div className="flex items-center gap-[8px] mb-[16px]">
+        <div className="shrink-0 cursor-pointer" style={{ width: 32, height: 32 }}>
+          <SvgChevRightCircle />
+        </div>
+        <div className="flex items-center flex-1 h-[32px] overflow-visible">
+          {PATH_STEPS.map((step, i) => (
+            <PathStep key={i} step={step} index={i} total={PATH_STEPS.length} />
+          ))}
+        </div>
+      </div>
+    );
+
+    /* ═══════════════════════════════════════════════
+       SLDS COLORED ICON (for related lists & contacts)
+       ═══════════════════════════════════════════════ */
+    /* OFFICIAL SLDS standard icons (from Salesforce icon pack) */
+    const SvgContactsIcon = ({ size = 13, color = "white" }) => (
+      <svg width={size} height={size} viewBox="0 0 1000 1000" fill={color} style={{ display: "block" }}>
+        <path d="M740 290H260c-33 0-60 27-60 60v290c0 33 27 60 60 60h480c33 0 60-27 60-60V350c0-33-27-60-60-60zM486 630H314c-19 0-34-21-34-41 1-30 32-48 65-63 23-10 26-19 26-29s-6-19-14-26a68 68 0 0 1-21-50c0-38 23-70 63-70s63 32 63 70c0 20-7 38-21 50-8 7-14 16-14 26s3 19 26 28c33 14 64 34 65 64 2 20-13 41-32 41zm234-70c0 11-9 20-20 20h-90c-11 0-20-9-20-20v-30c0-11 9-20 20-20h90c11 0 20 9 20 20v30zm0-110c0 11-9 20-20 20H550c-11 0-20-9-20-20v-30c0-11 9-20 20-20h150c11 0 20 9 20 20v30z"/>
+      </svg>
+    );
+    const SvgOpportunity = ({ size = 13, color = "white" }) => (
+      <svg width={size} height={size} viewBox="0 0 1000 1000" fill={color} style={{ display: "block" }}>
+        <path d="M711 690H289c-10 0-19 9-19 19v1c0 33 27 60 60 60h340c33 0 60-27 60-60v-1c0-10-9-19-19-19zm49-410a60 60 0 0 0-39 106c-17 39-56 66-102 64-53-3-96-46-99-99 0-9 0-17 2-25a60 60 0 0 0-22-116 60 60 0 0 0-22 116c2 8 2 16 2 25-3 53-46 96-99 99-46 3-86-25-102-64a60 60 0 0 0-39-106c-33 0-60 27-60 60s27 60 60 60l28 214c1 9 9 16 19 16h426c9 0 17-7 19-16l28-214c33 0 60-27 60-60s-27-60-60-60z"/>
+      </svg>
+    );
+    const SvgCase = ({ size = 13, color = "white" }) => (
+      <svg width={size} height={size} viewBox="0 0 1000 1000" fill={color} style={{ display: "block" }}>
+        <path d="M380 290h40c6 0 10-4 10-10v-30h140v30c0 6 4 10 10 10h40c6 0 10-4 10-10v-30c0-33-27-60-60-60H430c-33 0-60 27-60 60v30c0 6 4 10 10 10zm360 60H260c-33 0-60 27-60 60v320c0 33 27 60 60 60h480c33 0 60-27 60-60V410c0-33-27-60-60-60z"/>
+      </svg>
+    );
+    const SvgFile = ({ size = 13, color = "white" }) => (
+      <svg width={size} height={size} viewBox="0 0 1000 1000" fill={color} style={{ display: "block" }}>
+        <path d="M290 630V310c-33 0-60 27-60 60v380c0 33 27 60 60 60h300c33 0 60-27 60-60H410c-66 0-120 0-120-120zm460-260H650c-33 0-60-27-60-60V210c0-11-9-20-20-20H410c-33 0-60 27-60 60v380c0 33 27 60 60 60h300c33 0 60-27 60-60V390c0-11-9-20-20-20zm16-84-92-92c-3-3-6-4-10-4-8 0-14 6-14 14v66c0 22 18 40 40 40h66c8 0 14-6 14-14 0-4-1-7-4-10z"/>
+      </svg>
+    );
+    const SvgAccount = ({ size = 13, color = "white" }) => (
+      <svg width={size} height={size} viewBox="0 0 100 100" fill={color} style={{ display: "block" }}>
+        <path d="M79 51.1c.1-2.1-1.4-2.7-2-2.7H55.2c-1.9 0-2.2 2-2.2 2.2V74h26zM64 67.9a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-2c0-1.1.9-2 2-2h2a2 2 0 0 1 2 2zm0-10.2a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-2c0-1.1.9-2 2-2h2a2 2 0 0 1 2 2zm10 10.2a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-2c0-1.1.9-2 2-2h2a2 2 0 0 1 2 2zm0-10.2a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-2c0-1.1.9-2 2-2h2a2 2 0 0 1 2 2zM59 40.3V28.7c.1-2.1-1.4-2.7-2-2.7H23.2c-1.9 0-2.2 2-2.2 2.2V74h26V44.7s0-2.4 2.2-2.4h7.9c1.1 0 1.9-1.2 1.9-2zM32 66.9a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-2c0-1.1.9-2 2-2h2a2 2 0 0 1 2 2zm0-10.3a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-2c0-1.1.9-2 2-2h2a2 2 0 0 1 2 2zm0-10.2a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-2c0-1.1.9-2 2-2h2a2 2 0 0 1 2 2zm0-10.2a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-2c0-1.1.9-2 2-2h2a2 2 0 0 1 2 2zm11 30.7a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-2c0-1.1.9-2 2-2h2a2 2 0 0 1 2 2zm0-10.3a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-2c0-1.1.9-2 2-2h2a2 2 0 0 1 2 2zm0-10.2a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-2c0-1.1.9-2 2-2h2a2 2 0 0 1 2 2zm0-10.2a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-2c0-1.1.9-2 2-2h2a2 2 0 0 1 2 2zm11 0a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-2c0-1.1.9-2 2-2h2a2 2 0 0 1 2 2z"/>
+      </svg>
+    );
+    const SvgUpload = ({ size = 14, color = "#0250d9" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ display: "block" }}>
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <polyline points="17 8 12 3 7 8" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <line x1="12" y1="3" x2="12" y2="15" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    );
+    const SvgListTodo = ({ size = 14, color = "#747474" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ display: "block" }}>
+        <rect x="3" y="5" width="6" height="6" rx="1" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M13 6h8M13 12h8M5 17h14M5 21h14" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    );
+
+    const SLDS_SVG_MAP = {
+      users: SvgContactsIcon,
+      contact: SvgContactsIcon,
+      opportunity: SvgOpportunity,
+      case: SvgCase,
+      file: SvgFile,
+      folder: SvgFile,
+      account: SvgAccount,
+    };
+
+    const SLDSIcon = ({ bgColor, iconName, size = 32, iconSize = 18 }) => {
+      const SvgComp = SLDS_SVG_MAP[iconName];
+      return (
+        <div
+          className="flex items-center justify-center rounded-full shrink-0"
+          style={{ width: size, height: size, backgroundColor: bgColor }}
+        >
+          {SvgComp ? <SvgComp size={iconSize} color="white" /> : null}
+        </div>
+      );
+    };
+
+    const ContactAvatar = ({ color = "#9602c7" }) => (
+      <div
+        className="flex items-center justify-center w-[36px] h-[36px] rounded-full shrink-0"
+        style={{ backgroundColor: color }}
+      >
+        <SvgContactsIcon size={20} color="white" />
+      </div>
+    );
+
+    /* ═══════════════════════════════════════════════
+       FIGMA ASSET URLS (from node 1290:9920)
+       ═══════════════════════════════════════════════ */
+    const FA = {
+      pepLogo:      "https://www.figma.com/api/mcp/asset/7e8deb8c-ef72-46c4-8175-69f9385277e3",
+      searchIcon:   "https://www.figma.com/api/mcp/asset/0e709b80-f7e1-4622-be4c-66dac0d8e266",
+      chevronDown:  "https://www.figma.com/api/mcp/asset/089a23a0-21a0-4f76-823d-17225d539818",
+      agentforce:   "https://www.figma.com/api/mcp/asset/25436778-0252-454c-ae26-7bd6d1cd5e78",
+      favorite:     "https://www.figma.com/api/mcp/asset/5333c716-9bd4-4b9a-9121-ea83b1553615",
+      newIcon:      "https://www.figma.com/api/mcp/asset/f63ed126-e96d-4e3d-8b8d-849907922d30",
+      trailhead:    "https://www.figma.com/api/mcp/asset/092f5d8b-3d01-4811-a2a6-2fe6471132a2",
+      question:     "https://www.figma.com/api/mcp/asset/c91548dd-e366-478a-9b4f-b5f0645bae8a",
+      setup:        "https://www.figma.com/api/mcp/asset/a0fd4db7-e4cc-4a7d-8d19-d668e7a82585",
+      notification: "https://www.figma.com/api/mcp/asset/9daec927-24f8-49fa-b2ed-c0ef7096ed5a",
+      avatar:       "https://www.figma.com/api/mcp/asset/f3cc0b11-cd8a-440c-af27-1539c957debc",
+    };
+
+    /* ═══════════════════════════════════════════════
+       GLOBAL HEADER — pixel-perfect from Figma 1290:9920
+       White bg, PEP logo image, pill search, SLDS icons
+       ═══════════════════════════════════════════════ */
+    const GlobalHeader = () => (
+      <header className="flex items-center justify-between h-[56px] bg-white px-[12px] shrink-0 border-b border-[#e5e5e5]">
+        {/* ── PEP Logo — with vertical breathing room ── */}
+        <div className="shrink-0 flex items-center py-[6px]">
+          <img src={FA.pepLogo} alt="PEP" style={{ width: "160px", height: "43px", objectFit: "contain", display: "block" }} />
+        </div>
+
+        {/* ── Search bar — pill shape with border ── */}
+        <div className="flex items-center bg-white border border-[#5c5c5c] rounded-full h-[32px] w-[482px] px-[8px] gap-[8px]">
+          <div className="shrink-0 w-[20px] h-[20px] flex items-center justify-center p-[2px]">
+            <img src={FA.searchIcon} alt="" className="w-[16px] h-[16px] opacity-70" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <span className="text-[13px] text-[#5c5c5c] leading-[18px]">Search...</span>
+          </div>
+          <div className="shrink-0 w-[16px] h-[16px] flex items-center justify-center">
+            <img src={FA.chevronDown} alt="" className="w-[10px] h-[10px] opacity-50" />
+          </div>
+        </div>
+
+        {/* ── Right header icons (exact Figma order + assets) ── */}
+        <div className="flex items-center gap-[16px] px-[16px] shrink-0">
+          {/* 1. Agentforce */}
+          <button className="w-[24px] h-[24px] shrink-0 hover:opacity-70 transition-opacity">
+            <img src={FA.agentforce} alt="Agentforce" className="w-full h-full" />
+          </button>
+
+          {/* 2. Favorite split button (star + chevron) */}
+          <div className="flex items-center shrink-0">
+            <button className="flex items-center justify-center p-[5px] border border-[#5c5c5c] rounded-l-full bg-white hover:bg-[#f3f3f3] transition-colors">
+              <img src={FA.favorite} alt="Favorites" className="w-[14px] h-[14px]" />
+            </button>
+            <button className="flex items-center justify-center p-[5px] border border-[#5c5c5c] border-l-0 rounded-r-full bg-white hover:bg-[#f3f3f3] transition-colors">
+              <img src={FA.chevronDown} alt="" className="w-[10px] h-[10px]" />
+            </button>
+          </div>
+
+          {/* 3. New/Plus */}
+          <button className="w-[24px] h-[24px] shrink-0 hover:opacity-70 transition-opacity">
+            <img src={FA.newIcon} alt="New" className="w-full h-full" />
+          </button>
+
+          {/* 4. Trailhead */}
+          <button className="w-[24px] h-[24px] shrink-0 hover:opacity-70 transition-opacity">
+            <img src={FA.trailhead} alt="Trailhead" className="w-full h-full" />
+          </button>
+
+          {/* 5. Question/Help */}
+          <button className="w-[24px] h-[24px] shrink-0 hover:opacity-70 transition-opacity">
+            <img src={FA.question} alt="Help" className="w-full h-full" />
+          </button>
+
+          {/* 6. Setup */}
+          <button className="w-[24px] h-[24px] shrink-0 hover:opacity-70 transition-opacity">
+            <img src={FA.setup} alt="Setup" className="w-full h-full" />
+          </button>
+
+          {/* 7. Notification */}
+          <button className="w-[24px] h-[24px] shrink-0 hover:opacity-70 transition-opacity">
+            <img src={FA.notification} alt="Notifications" className="w-full h-full" />
+          </button>
+
+          {/* 8. Avatar */}
+          <div className="w-[32px] h-[32px] rounded-full overflow-hidden shrink-0">
+            <img src={FA.avatar} alt="Profile" className="w-full h-full object-cover rounded-full" />
+          </div>
+        </div>
+      </header>
+    );
+
+    /* ═══════════════════════════════════════════════
+       NAVIGATION BAR
+       ═══════════════════════════════════════════════ */
+    {/* Inline SVG helpers for NavBar (no Lucide dependency) */}
+    const WaffleIcon = () => (
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <rect x="1" y="1" width="4" height="4" rx="1" fill="#747474"/>
+        <rect x="7" y="1" width="4" height="4" rx="1" fill="#747474"/>
+        <rect x="13" y="1" width="4" height="4" rx="1" fill="#747474"/>
+        <rect x="1" y="7" width="4" height="4" rx="1" fill="#747474"/>
+        <rect x="7" y="7" width="4" height="4" rx="1" fill="#747474"/>
+        <rect x="13" y="7" width="4" height="4" rx="1" fill="#747474"/>
+        <rect x="1" y="13" width="4" height="4" rx="1" fill="#747474"/>
+        <rect x="7" y="13" width="4" height="4" rx="1" fill="#747474"/>
+        <rect x="13" y="13" width="4" height="4" rx="1" fill="#747474"/>
+      </svg>
+    );
+    const ChevDown = ({ color = "#747474", size = 10 }) => (
+      <svg width={size} height={size} viewBox="0 0 10 10" fill="none" style={{ display: "block" }}>
+        <path d="M2.5 3.75L5 6.25L7.5 3.75" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    );
+    const PencilIcon = () => (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#747474" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17 3a2.85 2.83 0 114 4L7.5 20.5 2 22l1.5-5.5Z"/>
+        <path d="m15 5 4 4"/>
+      </svg>
+    );
+
+    const SvgClose = ({ size = 10, color = "#747474" }) => (
+      <svg width={size} height={size} viewBox="0 0 10 10" fill="none" style={{ display: "block" }}>
+        <path d="M2 2L8 8M8 2L2 8" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    );
+
+    const NavBar = () => (
+      <nav className="flex items-center h-[40px] bg-white border-b border-[#c9c9c9] px-[12px] shrink-0">
+        {/* Waffle / App Launcher icon */}
+        <button className="flex items-center justify-center w-[32px] h-[32px] rounded-[4px] hover:bg-[#f3f3f3] mr-[4px]">
+          <WaffleIcon />
+        </button>
+        {/* App name: PEP */}
+        <span className="text-[14px] font-bold text-[#2e2e2e] mr-[12px] whitespace-nowrap">PEP</span>
+
+        {/* Navigation Tabs */}
+        {NAV_TABS.map((tab, i) => (
+          <button
+            key={i}
+            className={`relative flex items-center gap-[4px] h-[40px] px-[12px] text-[13px] transition-colors whitespace-nowrap ${
+              tab.active
+                ? "text-[#0250d9] font-semibold"
+                : "text-[#2e2e2e] hover:bg-[#f3f3f3]"
+            }`}
+          >
+            {tab.label}
+            <ChevDown color={tab.active ? "#0250d9" : "#747474"} />
+            {tab.active && <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#0250d9] rounded-t-[2px]" />}
+          </button>
+        ))}
+
+        {/* Pinned Accounts tabs with close buttons */}
+        {[0, 1].map((j) => (
+          <div key={`pin-${j}`} className="flex items-center gap-[4px] h-[40px] px-[12px] text-[13px] text-[#2e2e2e] border-b-[3px] border-transparent hover:bg-[#f3f3f3] whitespace-nowrap cursor-pointer">
+            <span>Accounts</span>
+            <ChevDown />
+            <button className="ml-[2px] hover:opacity-70"><SvgClose size={9} color="#747474" /></button>
+          </div>
+        ))}
+
+        <div className="flex-1" />
+        {/* Edit pencil */}
+        <button className="flex items-center justify-center w-[32px] h-[32px] rounded-[4px] hover:bg-[#f3f3f3]">
+          <PencilIcon />
+        </button>
+      </nav>
+    );
+
+    /* ═══════════════════════════════════════════════
+       PAGE HEADER — Figma node 1291:10008 pixel-perfect
+       ═══════════════════════════════════════════════ */
+    const FA_PH = {
+      accountIcon: "https://www.figma.com/api/mcp/asset/8900c627-f976-4a4b-b74b-a327afe25e07",
+      addIcon: "https://www.figma.com/api/mcp/asset/8e9bef3f-cfcb-4aff-a242-7f2504934463",
+      downIcon: "https://www.figma.com/api/mcp/asset/05361655-9ee7-410b-af5b-675e65306e1a",
+    };
+
+    const RecordHeader = () => (
+      <div className="bg-[#f3f3f3] shrink-0">
+        <div className="flex items-center justify-between p-[16px]">
+          {/* ── Left: Icon + Title ── */}
+          <div className="flex items-center gap-[12px] flex-1 min-w-0 pr-[12px]">
+            {/* SLDS Account icon — 32x32 round blue #5867e8 */}
+            <div className="w-[32px] h-[32px] rounded-full bg-[#5867e8] flex items-center justify-center shrink-0">
+              <SvgAccount size={18} color="white" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[13px] text-[#5c5c5c] leading-[18px] truncate">Account</p>
+              <h1 className="text-[28px] font-normal text-[#03234d] leading-[35px] truncate">Alphabet, Inc.</h1>
+            </div>
+          </div>
+
+          {/* ── Right: Action buttons ── */}
+          <div className="flex items-center gap-[8px] shrink-0">
+            {/* + Follow button */}
+            <button className="flex items-center gap-[8px] h-[32px] px-[16px] rounded-full bg-white text-[14px] text-[#0250d9] hover:bg-[#f3f3f3] transition-colors" style={{ border: "1.5px solid #c9c9c9" }}>
+              <img src={FA_PH.addIcon} alt="" className="w-[14px] h-[14px]" />
+              <span className="leading-[19px] whitespace-nowrap">Follow</span>
+            </button>
+
+            {/* New — split button */}
+            <div className="flex items-center">
+              <button className="flex items-center h-[32px] px-[16px] rounded-l-full bg-white text-[14px] text-[#0250d9] hover:bg-[#f3f3f3] transition-colors" style={{ border: "1.5px solid #c9c9c9", borderRight: "none" }}>
+                <span className="leading-[19px] whitespace-nowrap">New</span>
+              </button>
+              <button className="flex items-center justify-center w-[32px] h-[32px] rounded-r-full bg-white hover:bg-[#f3f3f3] transition-colors" style={{ border: "1.5px solid #c9c9c9" }}>
+                <img src={FA_PH.downIcon} alt="" className="w-[10px] h-[10px]" />
+              </button>
+            </div>
+
+            {/* Edit | Delete | Clone | ▼  — joined button group */}
+            <div className="flex items-center rounded-full overflow-hidden" style={{ border: "1.5px solid #c9c9c9" }}>
+              <button className="flex items-center justify-center h-[32px] px-[16px] bg-white text-[14px] text-[#0250d9] hover:bg-[#f3f3f3] transition-colors" style={{ borderRight: "1.5px solid #c9c9c9" }}>
+                <span className="leading-[19px] whitespace-nowrap">Edit</span>
+              </button>
+              <button className="flex items-center justify-center h-[32px] px-[16px] bg-white text-[14px] text-[#0250d9] hover:bg-[#f3f3f3] transition-colors" style={{ borderRight: "1.5px solid #c9c9c9" }}>
+                <span className="leading-[19px] whitespace-nowrap">Delete</span>
+              </button>
+              <button className="flex items-center justify-center h-[32px] px-[16px] bg-white text-[14px] text-[#0250d9] hover:bg-[#f3f3f3] transition-colors" style={{ borderRight: "1.5px solid #c9c9c9" }}>
+                <span className="leading-[19px] whitespace-nowrap">Clone</span>
+              </button>
+              <button className="flex items-center justify-center w-[32px] h-[32px] bg-white hover:bg-[#f3f3f3] transition-colors">
+                <img src={FA_PH.downIcon} alt="" className="w-[10px] h-[10px]" />
+              </button>
+            </div>
+
+            {/* Single round dropdown button */}
+            <button className="flex items-center justify-center w-[32px] h-[32px] rounded-full bg-white hover:bg-[#f3f3f3] transition-colors" style={{ border: "1.5px solid #c9c9c9" }}>
+              <img src={FA_PH.downIcon} alt="" className="w-[10px] h-[10px]" />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+
+    const PillButton = ({ label, hasDropdown = false, primary = false }) => (
+      <button className={`flex items-center gap-[6px] h-[32px] px-[16px] rounded-full text-[14px] transition-colors ${
+        primary
+          ? "bg-[#066afe] text-white border border-[#066afe] hover:bg-[#0555cc]"
+          : "bg-white text-[#0250d9] border border-[#5c5c5c] hover:bg-[#f3f3f3]"
+      }`}>
+        {label}
+        {hasDropdown && <Icon name="chevron-down" size={10} color={primary ? "white" : "#0250d9"} />}
+      </button>
+    );
+
+    const SvgChevDownCircle = ({ size = 32 }) => (
+      <svg width={size} height={size} viewBox="0 0 32 32" fill="none" style={{ display: "block" }}>
+        <circle cx="16" cy="16" r="15" stroke="#c9c9c9" strokeWidth="1.5" fill="white"/>
+        <path d="M11 14L16 19L21 14" stroke="#0250d9" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    );
+
+    const SmallRoundBtn = ({ icon }) => (
+      <div className="cursor-pointer shrink-0" style={{ width: 32, height: 32 }}>
+        <SvgChevDownCircle />
+      </div>
+    );
+
+    /* ═══════════════════════════════════════════════
+       INLINE SVG ICONS (reliable, no CDN dependency)
+       ═══════════════════════════════════════════════ */
+    const SvgEdit = () => (
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#747474" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block" }}>
+        <path d="M17 3a2.85 2.83 0 114 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/>
+      </svg>
+    );
+    const SvgChevDown2 = ({ size = 12, color = "#2e2e2e" }) => (
+      <svg width={size} height={size} viewBox="0 0 12 12" fill="none" style={{ display: "block" }}>
+        <path d="M3 4.5L6 7.5L9 4.5" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    );
+    const SvgChevRight = ({ size = 16, color = "#5c5c5c" }) => (
+      <svg width={size} height={size} viewBox="0 0 16 16" fill="none" style={{ display: "block" }}>
+        <path d="M6 3L11 8L6 13" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    );
+    const SvgUser = ({ size = 10, color = "white" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block" }}>
+        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+      </svg>
+    );
+    const SvgExternalLink = ({ size = 12, color = "#747474" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block" }}>
+        <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+      </svg>
+    );
+
+    /* ═══════════════════════════════════════════════
+       FORM FIELD (read-only with edit icon)
+       ═══════════════════════════════════════════════ */
+    const FormField = ({ label, value }) => (
+      <div className="pb-[4px]">
+        <p className="text-[13px] text-[#5c5c5c] leading-[18px] font-normal">{label}</p>
+        <div className="flex items-center gap-[4px] border-b border-[#c9c9c9] pb-[4px] pt-[2px] min-h-[24px]">
+          <div className="flex-1 min-w-0">
+            {value && <span className="text-[13px] text-[#2e2e2e] leading-[18px] block truncate font-normal">{value}</span>}
+          </div>
+          <div className="shrink-0 w-[16px] h-[16px] flex items-center justify-center opacity-60 hover:opacity-100 cursor-pointer">
+            <SvgEdit />
+          </div>
+        </div>
+      </div>
+    );
+
+    /* ═══════════════════════════════════════════════
+       LEFT COLUMN — ABOUT
+       ═══════════════════════════════════════════════ */
+    const AboutSection = () => {
+      const [aboutOpen, setAboutOpen] = useState(true);
+      const [touchOpen, setTouchOpen] = useState(true);
+
+      return (
+        <div className="bg-white rounded-[20px] overflow-hidden" style={{ boxShadow: "0 0 1.49px rgba(0,0,0,0.09), 0 1.4px 1.5px rgba(0,0,0,0.09), 0 -1px 1px rgba(0,0,0,0.04)" }}>
+          {/* About section */}
+          <div className="px-[16px] pt-[16px] pb-[12px]">
+            <button
+              onClick={() => setAboutOpen(!aboutOpen)}
+              className="flex items-center gap-[8px] w-full h-[32px] px-[8px] bg-[#f3f3f3] rounded-[8px] hover:bg-[#eaeaea] text-left transition-colors"
+            >
+              <SvgChevDown2 size={12} color="#2e2e2e" />
+              <span className="text-[16px] font-normal text-[#2e2e2e] leading-[22px]">About</span>
+            </button>
+          </div>
+
+          {aboutOpen && (
+            <div className="px-[16px] pb-[16px]">
+              {/* Name label with info icon */}
+              <div className="flex items-center gap-[8px] mb-[12px]">
+                <span className="text-[13px] font-bold text-[#5c5c5c]">Name</span>
+                <div className="w-[14px] h-[14px] rounded-full bg-[#0250d9] flex items-center justify-center shrink-0">
+                  <span className="text-white text-[10px] font-bold leading-none">i</span>
+                </div>
+              </div>
+
+              {/* Form fields */}
+              <div className="flex flex-col gap-[12px]">
+                {ABOUT_FIELDS.map((f, i) => (
+                  <FormField key={i} label={f.label} value={f.value} />
+                ))}
+
+                {/* Account Owner with avatar */}
+                <div className="pb-[4px]">
+                  <p className="text-[13px] text-[#5c5c5c] leading-[18px] font-normal">Account Owner</p>
+                  <div className="flex items-center gap-[8px] border-b border-[#c9c9c9] pb-[4px] pt-[2px] min-h-[24px]">
+                    <div className="w-[20px] h-[20px] rounded-[4px] bg-[#5867e8] flex items-center justify-center shrink-0">
+                      <SvgUser size={10} color="white" />
+                    </div>
+                    <span className="text-[13px] text-[#2e2e2e] font-normal">Kai Smith</span>
+                    <div className="ml-auto opacity-60 hover:opacity-100 cursor-pointer">
+                      <SvgExternalLink size={12} color="#747474" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Account Currency */}
+                <FormField label="Account Currency" value="USD - U.S. Dollar" />
+              </div>
+            </div>
+          )}
+
+          {/* Get in Touch section */}
+          <div className="px-[16px] pt-[12px]">
+            <button
+              onClick={() => setTouchOpen(!touchOpen)}
+              className="flex items-center gap-[8px] w-full h-[32px] px-[8px] bg-[#f3f3f3] rounded-[8px] hover:bg-[#eaeaea] text-left transition-colors"
+            >
+              <SvgChevDown2 size={12} color="#2e2e2e" />
+              <span className="text-[16px] font-normal text-[#2e2e2e] leading-[22px]">Get in Touch</span>
+            </button>
+            {touchOpen && (
+              <div className="px-[16px] pb-[16px]">
+                <FormField label="Phone Number" value="" />
+                <div className="mt-[12px]">
+                  <FormField label="Billing Address" value="" />
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    };
+
+    /* ═══════════════════════════════════════════════
+       ACTIVITY SPLIT BUTTON
+       ═══════════════════════════════════════════════ */
+    /* OFFICIAL SLDS activity button icons */
+    const SvgLogACall = ({ size = 12, color = "white" }) => (
+      <svg width={size} height={size} viewBox="0 0 1000 1000" fill={color} style={{ display: "block" }}>
+        <path d="M697 200H321c-33 0-61 30-61 60v20h-20c-22 0-40 18-40 40s18 40 40 40h20v100h-20c-22 0-40 18-40 40s18 40 40 40h20v100h-20c-22 0-40 18-40 40s18 40 40 40h20v20c0 30 28 60 61 60h376c33 0 63-30 63-63V257c0-33-30-57-63-57zm-36 403-28 28c-6 6-15 10-23 9a264 264 0 0 1-249-249c0-9 3-17 9-23l28-28c13-13 35-12 46 3l26 32c9 11 9 26 1 38l-22 31c-3 4-3 10 1 13l46 51 51 46c4 4 9 4 13 1l31-22c11-8 27-8 38 1l32 26c12 8 13 30 0 43z"/>
+      </svg>
+    );
+    const SvgMail = ({ size = 12, color = "white" }) => (
+      <svg width={size} height={size} viewBox="0 0 1000 1000" fill={color} style={{ display: "block" }}>
+        <path d="M487 550c8 7 19 7 27 0l283-262c5-10 4-26-16-26l-560 1c-15 0-27 14-16 26zm313-150c0-13-16-20-25-11L555 593c-15 14-34 21-54 21s-39-7-54-21L226 389a15 15 0 0 0-25 11v260c0 33 27 60 60 60h480c33 0 60-27 60-60z"/>
+      </svg>
+    );
+    const SvgEvent = ({ size = 12, color = "white" }) => (
+      <svg width={size} height={size} viewBox="0 0 100 100" fill={color} style={{ display: "block" }}>
+        <path d="M76 42H24a2 2 0 0 0-2 2v30a6 6 0 0 0 6 6h44a6 6 0 0 0 6-6V44a2 2 0 0 0-2-2zM40 70a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-4c0-1.1.9-2 2-2h4a2 2 0 0 1 2 2zm0-14a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-4c0-1.1.9-2 2-2h4a2 2 0 0 1 2 2zm14 14a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-4c0-1.1.9-2 2-2h4a2 2 0 0 1 2 2zm0-14a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-4c0-1.1.9-2 2-2h4a2 2 0 0 1 2 2zm14 14a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-4c0-1.1.9-2 2-2h4a2 2 0 0 1 2 2zm0-14a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-4c0-1.1.9-2 2-2h4a2 2 0 0 1 2 2zm4-30h-5v-2c0-2.2-1.8-4-4-4s-4 1.8-4 4v2H41v-2c0-2.2-1.8-4-4-4s-4 1.8-4 4v2h-5a6 6 0 0 0-6 6v2c0 1.1.9 2 2 2h52a2 2 0 0 0 2-2v-2a6 6 0 0 0-6-6z"/>
+      </svg>
+    );
+    const SvgTask = ({ size = 12, color = "white" }) => (
+      <svg width={size} height={size} viewBox="0 0 1000 1000" fill={color} style={{ display: "block" }}>
+        <path d="m466 237-21-21c-6-6-15-6-21 0L292 348l-53-53c-6-6-15-6-21 0l-21 21c-6 6-6 15 0 21l74 74a29 29 0 0 0 42 0l153-153c5-5 5-15 0-21zm304 143H510c-11 0-20-9-20-20v-40c0-11 9-20 20-20h260c11 0 20 9 20 20v40c0 11-9 20-20 20zm0 180H450c-11 0-20-9-20-20v-40c0-11 9-20 20-20h320c11 0 20 9 20 20v40c0 11-9 20-20 20zm-440 0h-40c-11 0-20-9-20-20v-40c0-11 9-20 20-20h40c11 0 20 9 20 20v40c0 11-9 20-20 20zm0 180h-40c-11 0-20-9-20-20v-40c0-11 9-20 20-20h40c11 0 20 9 20 20v40c0 11-9 20-20 20zm440 0H450c-11 0-20-9-20-20v-40c0-11 9-20 20-20h320c11 0 20 9 20 20v40c0 11-9 20-20 20z"/>
+      </svg>
+    );
+    const SvgChevDown3 = ({ size = 10, color = "#5c5c5c" }) => (
+      <svg width={size} height={size} viewBox="0 0 10 10" fill="none" style={{ display: "block" }}>
+        <path d="M2.5 3.75L5 6.25L7.5 3.75" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    );
+    const SvgBrain = ({ size = 16, color = "#5c5c5c" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ display: "block" }}>
+        <path d="M9.5 2A5.5 5.5 0 0 0 5 9.23V12a1 1 0 0 0 1 1h2.5" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M14.5 2A5.5 5.5 0 0 1 19 9.23V12a1 1 0 0 1-1 1h-2.5" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <circle cx="12" cy="17" r="5" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M12 12v5" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    );
+    const SvgSettings = ({ size = 20, color = "#5c5c5c" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ display: "block" }}>
+        <circle cx="12" cy="12" r="3" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    );
+    const SvgPaperclip = ({ size = 12, color = "#747474" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ display: "block" }}>
+        <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    );
+    const SvgUsers2 = ({ size = 12, color = "#747474" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ display: "block" }}>
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <circle cx="9" cy="7" r="4" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    );
+
+    const ACTIVITY_SVG_MAP = {
+      phone: SvgLogACall,
+      mail: SvgMail,
+      calendar: SvgEvent,
+      "check-square": SvgTask,
+    };
+
+    const ActivitySplitButton = ({ iconName, label, iconBg }) => {
+      const SvgComp = ACTIVITY_SVG_MAP[iconName];
+      return (
+        <div className="flex items-center">
+          <button className="flex items-center gap-[8px] h-[32px] px-[16px] bg-white rounded-l-full hover:bg-[#f3f3f3] transition-colors" style={{ border: "1.5px solid #c9c9c9", borderRight: "none" }}>
+            <div className="w-[24px] h-[24px] rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: iconBg }}>
+              {SvgComp ? <SvgComp size={12} color="white" /> : null}
+            </div>
+            {label && <span className="text-[14px] text-[#0250d9] whitespace-nowrap font-normal">{label}</span>}
+          </button>
+          <button className="flex items-center justify-center w-[32px] h-[32px] bg-white rounded-r-full hover:bg-[#f3f3f3] transition-colors" style={{ border: "1.5px solid #c9c9c9" }}>
+            <SvgChevDown3 size={10} color="#5c5c5c" />
+          </button>
+        </div>
+      );
+    };
+
+    /* ═══════════════════════════════════════════════
+       TOGGLE SWITCH
+       ═══════════════════════════════════════════════ */
+    const ToggleSwitch = () => {
+      const [on, setOn] = useState(false);
+      return (
+        <button
+          onClick={() => setOn(!on)}
+          className={`relative w-[48px] h-[24px] rounded-full shrink-0 transition-colors ${on ? "bg-[#0250d9]" : "bg-[#c9c9c9]"}`}
+        >
+          <div className={`absolute top-[2px] w-[20px] h-[20px] bg-white rounded-full shadow-sm transition-transform ${on ? "left-[26px]" : "left-[2px]"}`} />
+        </button>
+      );
+    };
+
+    /* ═══════════════════════════════════════════════
+       ACTIVITY EMAIL ITEM
+       ═══════════════════════════════════════════════ */
+    const ActivityItem = ({ email, iconBg = "#939393" }) => (
+      <div className="flex items-start gap-[8px] py-[12px] border-b border-[#e5e5e5] last:border-b-0">
+        <div className="shrink-0 mt-[4px] cursor-pointer">
+          <SvgChevRight size={14} color="#0250d9" />
+        </div>
+        <div className="w-[24px] h-[24px] rounded-full bg-[#939393] flex items-center justify-center shrink-0 mt-[2px]">
+          <SvgMail size={13} color="white" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[13px] text-[#0250d9] leading-[18px] truncate cursor-pointer hover:underline font-semibold">{email.subject}</p>
+          <p className="text-[12px] text-[#5c5c5c] leading-[17px]">
+            <span className="text-[#0250d9] hover:underline cursor-pointer">{email.sender}</span>
+            {" "}{email.action}{" "}
+            <span className="text-[#0250d9] hover:underline cursor-pointer">{email.target}</span>
+          </p>
+        </div>
+        <div className="flex items-center gap-[4px] shrink-0 text-[12px] text-[#5c5c5c]">
+          <SvgUsers2 size={14} color="#747474" />
+          <SvgPaperclip size={14} color="#747474" />
+          <span className="whitespace-nowrap ml-[2px]">{email.time}</span>
+          <div className="ml-[4px] cursor-pointer" style={{ width: 24, height: 24 }}>
+            <SvgChevDownCircle size={24} />
+          </div>
+        </div>
+      </div>
+    );
+
+    /* ═══════════════════════════════════════════════
+       CENTER COLUMN
+       ═══════════════════════════════════════════════ */
+    const CenterColumn = () => {
+      const [activityOpen, setActivityOpen] = useState(true);
+
+      return (
+        <div className="flex flex-col gap-[12px]">
+          {/* ── Path + Guidance card ── */}
+          <div className="bg-white rounded-[20px] p-[16px]" style={{ boxShadow: "0 0 1.49px rgba(0,0,0,0.09), 0 1.4px 1.5px rgba(0,0,0,0.09), 0 -1px 1px rgba(0,0,0,0.04)" }}>
+            <SalesPath />
+
+            {/* Status row */}
+            <div className="flex items-center justify-between mb-[16px]">
+              <h2 className="text-[20px] font-normal text-[#03234d]">Status: Working</h2>
+              <PillButton label="Mark Stage as Complete" primary />
+            </div>
+
+            {/* Guidance for Success */}
+            <div>
+              <h3 className="text-[14px] font-semibold text-[#2e2e2e] mb-[8px]">Guidance for Success</h3>
+              <div className="flex flex-col gap-[6px] text-[14px] text-[#2e2e2e] leading-[18px] font-normal">
+                {[
+                  "What problems do they want to solve and what are they hoping to improve?",
+                  "Why are they looking now and where are they in the buying cycle?",
+                  "What's their budget?",
+                  "What other solutions are they considering?"
+                ].map((q, i) => (
+                  <div key={i} className="flex gap-[8px]">
+                    <span className="text-[#5c5c5c] shrink-0">•</span>
+                    <span>{q}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* ── Activity timeline card ── */}
+          <div className="bg-white rounded-[20px] overflow-hidden" style={{ boxShadow: "0 0 1.49px rgba(0,0,0,0.09), 0 1.4px 1.5px rgba(0,0,0,0.09), 0 -1px 1px rgba(0,0,0,0.04)" }}>
+            {/* Activity buttons row */}
+            <div className="flex items-center gap-[8px] flex-wrap px-[16px] pt-[16px] pb-[16px]">
+              <ActivitySplitButton iconName="phone" label="Log a Call" iconBg="#06a59a" />
+              <ActivitySplitButton iconName="mail" label="Email" iconBg="#107cad" />
+              <ActivitySplitButton iconName="calendar" label="New Event" iconBg="#ff538a" />
+              {/* Task button — icon only */}
+              <ActivitySplitButton iconName="check-square" iconBg="#3ba755" />
+            </div>
+
+            {/* Einstein Insights toggle */}
+            <div className="flex items-center mx-[16px] px-[8px] py-[4px] gap-[8px] bg-[#f3f3f3] rounded-[8px] h-[32px] mb-[16px]">
+              <SvgBrain size={16} color="#5c5c5c" />
+              <span className="text-[14px] text-[#03234d] font-normal">Only show activities with insights</span>
+              <div className="ml-auto">
+                <ToggleSwitch />
+              </div>
+            </div>
+
+            {/* Filters row */}
+            <div className="px-[16px] py-[8px] text-[13px] text-[#5c5c5c] flex items-center gap-[4px] flex-wrap">
+              <span className="font-normal">Filters:</span>
+              <span className="text-[#2e2e2e] font-normal">All time</span>
+              <span>•</span>
+              <span className="text-[#2e2e2e] font-normal">All Activities</span>
+              <span>•</span>
+              <span className="text-[#2e2e2e] font-normal">Logged calls, Email, Events, List email, and Tasks</span>
+              <button className="ml-auto"><SvgSettings size={20} color="#5c5c5c" /></button>
+            </div>
+
+            {/* Refresh / Expand / View All */}
+            <div className="flex items-center justify-end gap-[8px] px-[16px] py-[8px]">
+              <button className="text-[13px] text-[#0250d9] hover:underline font-normal">Refresh</button>
+              <span className="text-[#c9c9c9]">•</span>
+              <button className="text-[13px] text-[#0250d9] hover:underline font-normal">Expand All</button>
+              <span className="text-[#c9c9c9]">•</span>
+              <button className="text-[13px] text-[#0250d9] hover:underline font-normal">View All</button>
+            </div>
+
+            {/* Upcoming & Overdue section */}
+            <div className="border-t border-[#c9c9c9]">
+              <button
+                onClick={() => setActivityOpen(!activityOpen)}
+                className="flex items-center gap-[8px] w-full text-left h-[48px] px-[12px]"
+              >
+                <SvgChevDown2 size={16} color="#5c5c5c" />
+                <span className="text-[20px] font-normal text-[#03234d] flex-1">Upcoming and Overdue</span>
+                <div className="cursor-pointer" style={{ width: 28, height: 28 }}>
+                  <SvgChevDownCircle size={28} />
+                </div>
+              </button>
+              {activityOpen && (
+                <div className="flex flex-col px-[12px] pb-[12px]">
+                  {EMAILS.map((email, i) => (
+                    <ActivityItem key={i} email={email} />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    /* ═══════════════════════════════════════════════
+       RELATED LIST CARD (right column)
+       ═══════════════════════════════════════════════ */
+    const RelatedListCard = ({ title, count, iconName, iconBg, children }) => (
+      <div className="bg-white rounded-[20px] overflow-hidden" style={{ boxShadow: "0 0 1.49px rgba(0,0,0,0.09), 0 1.4px 1.5px rgba(0,0,0,0.09), 0 -1px 1px rgba(0,0,0,0.04)" }}>
+        <div className="flex items-center justify-between px-[16px] py-[12px]">
+          <div className="flex items-center gap-[8px]">
+            <SLDSIcon bgColor={iconBg} iconName={iconName} size={24} iconSize={13} />
+            <span className="text-[20px] font-normal text-[#03234d]">{title} ({count})</span>
+          </div>
+          <SmallRoundBtn icon="chevron-down" />
+        </div>
+        {children && <div className="px-[16px] pb-[16px] border-t border-[#e5e5e5]">{children}</div>}
+      </div>
+    );
+
+    /* ═══════════════════════════════════════════════
+       RIGHT COLUMN
+       ═══════════════════════════════════════════════ */
+    const RightColumn = () => (
+      <div className="flex flex-col gap-[12px]">
+        {/* Contacts */}
+        <RelatedListCard title="Contacts" count={3} iconName="users" iconBg="#9602c7">
+          <div className="flex flex-col gap-[20px]">
+            {CONTACTS.map((c, i) => (
+              <div key={i} className="flex items-start gap-[12px]">
+                <ContactAvatar />
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] text-[#0250d9] leading-[18px] cursor-pointer hover:underline font-normal">{c.name}</p>
+                  <p className="text-[12px] text-[#5c5c5c] leading-[17px] font-normal">
+                    <span className="inline-block w-[42px]">Title:</span>{c.title}
+                  </p>
+                  <p className="text-[12px] text-[#5c5c5c] leading-[17px] font-normal">
+                    <span className="inline-block w-[42px]">Role:</span>{c.role}
+                  </p>
+                </div>
+                <div className="shrink-0 mt-[2px] cursor-pointer" style={{ width: 28, height: 28 }}>
+                  <SvgChevDownCircle size={28} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </RelatedListCard>
+
+        {/* Opportunities */}
+        <RelatedListCard title="Opportunities" count={0} iconName="opportunity" iconBg="#fcb95b" />
+
+        {/* Cases */}
+        <RelatedListCard title="Cases" count={0} iconName="case" iconBg="#e8726d" />
+
+        {/* Files */}
+        <RelatedListCard title="Files" count={0} iconName="file" iconBg="#54698d">
+          <div className="flex items-center justify-center py-[12px]">
+            <button className="flex items-center gap-[8px] h-[32px] px-[16px] rounded-full border-2 border-dashed border-[#c9c9c9] text-[14px] text-[#0250d9] bg-white hover:bg-[#f3f3f3] transition-colors font-normal">
+              <SvgUpload size={14} color="#0250d9" />
+              Upload Image
+            </button>
+          </div>
+        </RelatedListCard>
+      </div>
+    );
+
+    /* ═══════════════════════════════════════════════
+       BOTTOM BAR (To Do List)
+       ═══════════════════════════════════════════════ */
+    const BottomBar = () => (
+      <div className="fixed bottom-0 left-0 right-0 h-[32px] bg-white border-t border-[#c9c9c9] flex items-center px-[16px] gap-[8px] z-50">
+        <SvgListTodo size={14} color="#747474" />
+        <span className="text-[12px] text-[#5c5c5c] font-normal">To Do List</span>
+      </div>
+    );
+
+    /* ═══════════════════════════════════════════════
+       MAIN APP
+       ═══════════════════════════════════════════════ */
+    const App = () => (
+      <div className="min-h-screen bg-[#f3f3f3] flex flex-col" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Inter', 'Segoe UI', system-ui, sans-serif" }}>
+        <GlobalHeader />
+        <NavBar />
+        <RecordHeader />
+
+        {/* Main 3-column layout */}
+        <div className="flex-1 overflow-auto px-[24px] py-[16px] pb-[48px]">
+          <div className="flex gap-[16px]">
+            {/* Left column — About */}
+            <div className="w-[360px] shrink-0">
+              <AboutSection />
+            </div>
+            {/* Center column — Path + Activity */}
+            <div className="flex-1 min-w-0">
+              <CenterColumn />
+            </div>
+            {/* Right column — Related Lists */}
+            <div className="w-[360px] shrink-0">
+              <RightColumn />
+            </div>
+          </div>
+        </div>
+
+        <BottomBar />
+      </div>
+    );
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>

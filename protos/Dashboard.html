@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Home — Dashboard | PEP Salesforce</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Inter', 'Segoe UI', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    button { cursor: pointer; background: none; border: none; font: inherit; color: inherit; padding: 0; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #c9c9c9; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState } = React;
+
+    /* ═══════════════════════════════════════════════
+       FIGMA ASSET URLS
+       ═══════════════════════════════════════════════ */
+    const FA = {
+      pepLogo:      "https://www.figma.com/api/mcp/asset/7e8deb8c-ef72-46c4-8175-69f9385277e3",
+      searchIcon:   "https://www.figma.com/api/mcp/asset/0e709b80-f7e1-4622-be4c-66dac0d8e266",
+      chevronDown:  "https://www.figma.com/api/mcp/asset/089a23a0-21a0-4f76-823d-17225d539818",
+      agentforce:   "https://www.figma.com/api/mcp/asset/25436778-0252-454c-ae26-7bd6d1cd5e78",
+      favorite:     "https://www.figma.com/api/mcp/asset/5333c716-9bd4-4b9a-9121-ea83b1553615",
+      newIcon:      "https://www.figma.com/api/mcp/asset/f63ed126-e96d-4e3d-8b8d-849907922d30",
+      trailhead:    "https://www.figma.com/api/mcp/asset/092f5d8b-3d01-4811-a2a6-2fe6471132a2",
+      question:     "https://www.figma.com/api/mcp/asset/c91548dd-e366-478a-9b4f-b5f0645bae8a",
+      setup:        "https://www.figma.com/api/mcp/asset/a0fd4db7-e4cc-4a7d-8d19-d668e7a82585",
+      notification: "https://www.figma.com/api/mcp/asset/9daec927-24f8-49fa-b2ed-c0ef7096ed5a",
+      avatar:       "https://www.figma.com/api/mcp/asset/f3cc0b11-cd8a-440c-af27-1539c957debc",
+    };
+
+    /* ═══════════════════════════════════════════════
+       NAV DATA — Home active, Dashboards highlighted
+       ═══════════════════════════════════════════════ */
+    const NAV_TABS = [
+      { label: "Home", active: true },
+      { label: "Accounts", active: false },
+      { label: "Contacts", active: false },
+      { label: "Service", active: false },
+      { label: "Sales", active: false },
+      { label: "Calendar", active: false },
+      { label: "Dashboards", active: false, highlighted: true },
+      { label: "Reports", active: false },
+      { label: "More", active: false },
+    ];
+
+    /* ═══════════════════════════════════════════════
+       INLINE SVG ICONS
+       ═══════════════════════════════════════════════ */
+    const WaffleIcon = () => (
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <rect x="1" y="1" width="4" height="4" rx="1" fill="#747474"/>
+        <rect x="7" y="1" width="4" height="4" rx="1" fill="#747474"/>
+        <rect x="13" y="1" width="4" height="4" rx="1" fill="#747474"/>
+        <rect x="1" y="7" width="4" height="4" rx="1" fill="#747474"/>
+        <rect x="7" y="7" width="4" height="4" rx="1" fill="#747474"/>
+        <rect x="13" y="7" width="4" height="4" rx="1" fill="#747474"/>
+        <rect x="1" y="13" width="4" height="4" rx="1" fill="#747474"/>
+        <rect x="7" y="13" width="4" height="4" rx="1" fill="#747474"/>
+        <rect x="13" y="13" width="4" height="4" rx="1" fill="#747474"/>
+      </svg>
+    );
+    const ChevDown = ({ color = "#747474", size = 10 }) => (
+      <svg width={size} height={size} viewBox="0 0 10 10" fill="none" style={{ display: "block" }}>
+        <path d="M2.5 3.75L5 6.25L7.5 3.75" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    );
+    const PencilIcon = () => (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#747474" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17 3a2.85 2.83 0 114 4L7.5 20.5 2 22l1.5-5.5Z"/>
+        <path d="m15 5 4 4"/>
+      </svg>
+    );
+    const SvgClose = ({ size = 10, color = "#747474" }) => (
+      <svg width={size} height={size} viewBox="0 0 10 10" fill="none" style={{ display: "block" }}>
+        <path d="M2 2L8 8M8 2L2 8" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    );
+    const SvgListTodo = ({ size = 14, color = "#747474" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ display: "block" }}>
+        <rect x="3" y="5" width="6" height="6" rx="1" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M13 6h8M13 12h8M5 17h14M5 21h14" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    );
+    /* SLDS Standard Icons */
+    const SvgContactsIcon = ({ size = 13, color = "white" }) => (
+      <svg width={size} height={size} viewBox="0 0 1000 1000" fill={color} style={{ display: "block" }}>
+        <path d="M740 290H260c-33 0-60 27-60 60v290c0 33 27 60 60 60h480c33 0 60-27 60-60V350c0-33-27-60-60-60zM486 630H314c-19 0-34-21-34-41 1-30 32-48 65-63 23-10 26-19 26-29s-6-19-14-26a68 68 0 0 1-21-50c0-38 23-70 63-70s63 32 63 70c0 20-7 38-21 50-8 7-14 16-14 26s3 19 26 28c33 14 64 34 65 64 2 20-13 41-32 41zm234-70c0 11-9 20-20 20h-90c-11 0-20-9-20-20v-30c0-11 9-20 20-20h90c11 0 20 9 20 20v30zm0-110c0 11-9 20-20 20H550c-11 0-20-9-20-20v-30c0-11 9-20 20-20h150c11 0 20 9 20 20v30z"/>
+      </svg>
+    );
+    const SvgAccount = ({ size = 13, color = "white" }) => (
+      <svg width={size} height={size} viewBox="0 0 100 100" fill={color} style={{ display: "block" }}>
+        <path d="M79 51.1c.1-2.1-1.4-2.7-2-2.7H55.2c-1.9 0-2.2 2-2.2 2.2V74h26zM64 67.9a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-2c0-1.1.9-2 2-2h2a2 2 0 0 1 2 2zm0-10.2a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-2c0-1.1.9-2 2-2h2a2 2 0 0 1 2 2zm10 10.2a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-2c0-1.1.9-2 2-2h2a2 2 0 0 1 2 2zm0-10.2a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-2c0-1.1.9-2 2-2h2a2 2 0 0 1 2 2zM59 40.3V28.7c.1-2.1-1.4-2.7-2-2.7H23.2c-1.9 0-2.2 2-2.2 2.2V74h26V44.7s0-2.4 2.2-2.4h7.9c1.1 0 1.9-1.2 1.9-2zM32 66.9a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-2c0-1.1.9-2 2-2h2a2 2 0 0 1 2 2zm0-10.3a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-2c0-1.1.9-2 2-2h2a2 2 0 0 1 2 2zm0-10.2a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-2c0-1.1.9-2 2-2h2a2 2 0 0 1 2 2zm0-10.2a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-2c0-1.1.9-2 2-2h2a2 2 0 0 1 2 2zm11 30.7a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-2c0-1.1.9-2 2-2h2a2 2 0 0 1 2 2zm0-10.3a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-2c0-1.1.9-2 2-2h2a2 2 0 0 1 2 2zm0-10.2a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-2c0-1.1.9-2 2-2h2a2 2 0 0 1 2 2zm0-10.2a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-2c0-1.1.9-2 2-2h2a2 2 0 0 1 2 2zm11 0a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-2c0-1.1.9-2 2-2h2a2 2 0 0 1 2 2z"/>
+      </svg>
+    );
+    const SvgOpportunity = ({ size = 13, color = "white" }) => (
+      <svg width={size} height={size} viewBox="0 0 1000 1000" fill={color} style={{ display: "block" }}>
+        <path d="M711 690H289c-10 0-19 9-19 19v1c0 33 27 60 60 60h340c33 0 60-27 60-60v-1c0-10-9-19-19-19zm49-410a60 60 0 0 0-39 106c-17 39-56 66-102 64-53-3-96-46-99-99 0-9 0-17 2-25a60 60 0 0 0-22-116 60 60 0 0 0-22 116c2 8 2 16 2 25-3 53-46 96-99 99-46 3-86-25-102-64a60 60 0 0 0-39-106c-33 0-60 27-60 60s27 60 60 60l28 214c1 9 9 16 19 16h426c9 0 17-7 19-16l28-214c33 0 60-27 60-60s-27-60-60-60z"/>
+      </svg>
+    );
+    const SvgLeads = ({ size = 13, color = "white" }) => (
+      <svg width={size} height={size} viewBox="0 0 1000 1000" fill={color} style={{ display: "block" }}>
+        <path d="M500 230c-72 0-130 58-130 130s58 130 130 130 130-58 130-130-58-130-130-130zm0 310c-105 0-310 53-310 158v42c0 17 13 30 30 30h560c17 0 30-13 30-30v-42c0-105-205-158-310-158z"/>
+      </svg>
+    );
+    /* Activity icons */
+    const SvgMail = ({ size = 13, color = "white" }) => (
+      <svg width={size} height={size} viewBox="0 0 1000 1000" fill={color} style={{ display: "block" }}>
+        <path d="M770 290H230c-33 0-60 27-60 60v300c0 33 27 60 60 60h540c33 0 60-27 60-60V350c0-33-27-60-60-60zM230 350h540l-270 162L230 350z"/>
+      </svg>
+    );
+    const SvgLogACall = ({ size = 13, color = "white" }) => (
+      <svg width={size} height={size} viewBox="0 0 1000 1000" fill={color} style={{ display: "block" }}>
+        <path d="M740 630c-33-22-68-38-103-50-18-6-21-13-21-24s6-17 14-24a98 98 0 0032-73c0-55-36-99-92-99s-92 44-92 99c0 29 12 55 32 73 8 7 14 13 14 24s-3 18-21 24c-35 12-70 28-103 50-24 16-40 43-40 73v37c0 17 13 30 30 30h360c17 0 30-13 30-30v-37c0-30-16-57-40-73zM760 240H600c-11 0-20 9-20 20v20c0 11 9 20 20 20h160c11 0 20-9 20-20v-20c0-11-9-20-20-20zm0 100H600c-11 0-20 9-20 20v20c0 11 9 20 20 20h160c11 0 20-9 20-20v-20c0-11-9-20-20-20zm-60 100H600c-11 0-20 9-20 20v20c0 11 9 20 20 20h100c11 0 20-9 20-20v-20c0-11-9-20-20-20z"/>
+      </svg>
+    );
+    /* Expand icon (4-arrow) */
+    const SvgExpand = ({ size = 14, color = "#5c5c5c" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ display: "block" }}>
+        <polyline points="15 3 21 3 21 9" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <polyline points="9 21 3 21 3 15" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <line x1="21" y1="3" x2="14" y2="10" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <line x1="3" y1="21" x2="10" y2="14" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    );
+    /* Chevron right for timeline expand */
+    const SvgChevRight = ({ size = 10, color = "#5c5c5c" }) => (
+      <svg width={size} height={size} viewBox="0 0 10 10" fill="none" style={{ display: "block" }}>
+        <path d="M3.75 2.5L6.25 5L3.75 7.5" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    );
+    /* Blue info circle for timeline */
+    const SvgInfoCircle = ({ size = 16, color = "#0250d9" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ display: "block" }}>
+        <circle cx="12" cy="12" r="10" stroke={color} strokeWidth="2"/>
+        <line x1="12" y1="16" x2="12" y2="12" stroke={color} strokeWidth="2" strokeLinecap="round"/>
+        <circle cx="12" cy="8" r="1" fill={color}/>
+      </svg>
+    );
+
+    /* ═══════════════════════════════════════════════
+       SLDS ICON COMPONENT (circle bg)
+       ═══════════════════════════════════════════════ */
+    const SLDS_BG = {
+      contact: "#9050e9",
+      lead: "#f88962",
+      account: "#5867e8",
+      opportunity: "#ecb22e",
+    };
+    const SLDS_SVG_MAP = {
+      contact: SvgContactsIcon,
+      lead: SvgLeads,
+      account: SvgAccount,
+      opportunity: SvgOpportunity,
+    };
+    const SLDSIcon = ({ type, size = 32 }) => {
+      const Svg = SLDS_SVG_MAP[type];
+      return (
+        <div className="shrink-0 rounded-full flex items-center justify-center" style={{ width: size, height: size, backgroundColor: SLDS_BG[type] || "#5867e8" }}>
+          {Svg && <Svg size={size * 0.5} color="white" />}
+        </div>
+      );
+    };
+
+    /* ═══════════════════════════════════════════════
+       GLOBAL HEADER
+       ═══════════════════════════════════════════════ */
+    const GlobalHeader = () => (
+      <header className="flex items-center justify-between h-[56px] bg-white px-[12px] shrink-0 border-b border-[#e5e5e5]">
+        <div className="shrink-0 flex items-center py-[6px]">
+          <img src={FA.pepLogo} alt="PEP" style={{ width: "160px", height: "43px", objectFit: "contain", display: "block" }} />
+        </div>
+        <div className="flex items-center bg-white border border-[#5c5c5c] rounded-full h-[32px] w-[482px] px-[8px] gap-[8px]">
+          <div className="shrink-0 w-[20px] h-[20px] flex items-center justify-center p-[2px]">
+            <img src={FA.searchIcon} alt="" className="w-[16px] h-[16px] opacity-70" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <span className="text-[13px] text-[#5c5c5c] leading-[18px]">Search...</span>
+          </div>
+          <div className="shrink-0 w-[16px] h-[16px] flex items-center justify-center">
+            <img src={FA.chevronDown} alt="" className="w-[10px] h-[10px] opacity-50" />
+          </div>
+        </div>
+        <div className="flex items-center gap-[16px] px-[16px] shrink-0">
+          <button className="w-[24px] h-[24px] shrink-0 hover:opacity-70 transition-opacity">
+            <img src={FA.agentforce} alt="Agentforce" className="w-full h-full" />
+          </button>
+          <div className="flex items-center shrink-0">
+            <button className="flex items-center justify-center p-[5px] border border-[#5c5c5c] rounded-l-full bg-white hover:bg-[#f3f3f3] transition-colors">
+              <img src={FA.favorite} alt="Favorites" className="w-[14px] h-[14px]" />
+            </button>
+            <button className="flex items-center justify-center p-[5px] border border-[#5c5c5c] border-l-0 rounded-r-full bg-white hover:bg-[#f3f3f3] transition-colors">
+              <img src={FA.chevronDown} alt="" className="w-[10px] h-[10px]" />
+            </button>
+          </div>
+          <button className="w-[24px] h-[24px] shrink-0 hover:opacity-70 transition-opacity">
+            <img src={FA.newIcon} alt="New" className="w-full h-full" />
+          </button>
+          <button className="w-[24px] h-[24px] shrink-0 hover:opacity-70 transition-opacity">
+            <img src={FA.trailhead} alt="Trailhead" className="w-full h-full" />
+          </button>
+          <button className="w-[24px] h-[24px] shrink-0 hover:opacity-70 transition-opacity">
+            <img src={FA.question} alt="Help" className="w-full h-full" />
+          </button>
+          <button className="w-[24px] h-[24px] shrink-0 hover:opacity-70 transition-opacity">
+            <img src={FA.setup} alt="Setup" className="w-full h-full" />
+          </button>
+          <button className="w-[24px] h-[24px] shrink-0 hover:opacity-70 transition-opacity">
+            <img src={FA.notification} alt="Notifications" className="w-full h-full" />
+          </button>
+          <div className="w-[32px] h-[32px] rounded-full overflow-hidden shrink-0">
+            <img src={FA.avatar} alt="Profile" className="w-full h-full object-cover rounded-full" />
+          </div>
+        </div>
+      </header>
+    );
+
+    /* ═══════════════════════════════════════════════
+       NAVIGATION BAR — Home active, Dashboards highlighted blue
+       ═══════════════════════════════════════════════ */
+    const NavBar = () => (
+      <nav className="flex items-center h-[40px] bg-white border-b border-[#c9c9c9] px-[12px] shrink-0">
+        <button className="flex items-center justify-center w-[32px] h-[32px] rounded-[4px] hover:bg-[#f3f3f3] mr-[4px]">
+          <WaffleIcon />
+        </button>
+        <span className="text-[14px] font-bold text-[#2e2e2e] mr-[12px] whitespace-nowrap">Home</span>
+        {NAV_TABS.map((tab, i) => (
+          <button
+            key={i}
+            className={`relative flex items-center gap-[4px] h-[40px] px-[12px] text-[13px] transition-colors whitespace-nowrap ${
+              tab.active ? "text-[#0250d9] font-semibold" : tab.highlighted ? "text-[#0250d9] font-medium" : "text-[#2e2e2e] hover:bg-[#f3f3f3]"
+            }`}
+          >
+            {tab.label}
+            <ChevDown color={tab.active || tab.highlighted ? "#0250d9" : "#747474"} />
+            {tab.active && <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#0250d9] rounded-t-[2px]" />}
+          </button>
+        ))}
+        <div className="flex-1" />
+        <button className="flex items-center justify-center w-[32px] h-[32px] rounded-[4px] hover:bg-[#f3f3f3]">
+          <PencilIcon />
+        </button>
+      </nav>
+    );
+
+    /* ═══════════════════════════════════════════════
+       CARD WRAPPER
+       ═══════════════════════════════════════════════ */
+    const Card = ({ title, children, className = "" }) => (
+      <div
+        className={`bg-white rounded-[20px] p-[20px] ${className}`}
+        style={{ boxShadow: "0 0 1.49px rgba(0,0,0,0.09), 0 1.4px 1.5px rgba(0,0,0,0.09), 0 -1px 1px rgba(0,0,0,0.04)" }}
+      >
+        <div className="flex items-center justify-between mb-[16px]">
+          <h2 className="text-[18px] font-bold text-[#03234d]">{title}</h2>
+          <button className="hover:opacity-70"><SvgExpand size={14} color="#5c5c5c" /></button>
+        </div>
+        {children}
+      </div>
+    );
+
+    /* ═══════════════════════════════════════════════
+       RECENT ACTIVITY (Left column) — with timeline vertical line
+       ═══════════════════════════════════════════════ */
+    /* Down-arrow circle button (matches Figma) */
+    const SvgChevDownCircle = ({ size = 20, color = "#5c5c5c" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ display: "block" }}>
+        <circle cx="12" cy="12" r="10" stroke={color} strokeWidth="1.5" fill="white"/>
+        <path d="M8 10.5L12 14.5L16 10.5" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    );
+
+    const ACTIVITY_DATA = [
+      { type: "contact", name: "Contact Name", time: "9:00am | 3/20/24", desc: "<b>2 contacts</b> were created in your org recently." },
+      { type: "lead", name: "Lead Name", time: "9:00am | 3/20/24", desc: "<b>23 leads</b> were created recently, <a>1 was assigned to you.</a>" },
+      { type: "lead", name: "Lead Name", time: "9:00am | 3/20/24", desc: "<b>3 leads</b> you own have updated stages." },
+      { type: "contact", name: "Contact Name", time: "9:00am | 3/20/24", desc: "<b>2 contacts</b> were created in your org recently." },
+      { type: "contact", name: "Contact Name", time: "9:00am | 3/20/24", desc: "<b>4 contacts</b> were created in your org recently." },
+      { type: "lead", name: "Lead Name", time: "9:00am | 3/20/24", desc: "<b>23 leads</b> were created recently, <a>1 was assigned to you.</a>" },
+      { type: "lead", name: "Lead Name", time: "9:00am | 3/20/24", desc: "<b>2 leads</b> you own have updated stages." },
+      { type: "lead", name: "Lead Name", time: "9:00am | 3/20/24", desc: "<b>2 leads</b> you own have updated stages" },
+    ];
+
+    /* Render description with bold and blue link parts */
+    const ActivityDesc = ({ html }) => {
+      const parts = html.split(/(<b>.*?<\/b>|<a>.*?<\/a>)/g);
+      return (
+        <p className="text-[12px] text-[#5c5c5c] leading-[18px] mt-[2px]">
+          {parts.map((part, i) => {
+            if (part.startsWith("<b>")) return <span key={i} className="font-semibold text-[#2e2e2e]">{part.replace(/<\/?b>/g, "")}</span>;
+            if (part.startsWith("<a>")) return <span key={i} className="text-[#0250d9]">{part.replace(/<\/?a>/g, "")}</span>;
+            return <span key={i}>{part}</span>;
+          })}
+        </p>
+      );
+    };
+
+    const ActivityItem = ({ item, isLast }) => {
+      const lineColor = item.type === "contact" ? "#9050e9" : "#0250d9";
+      return (
+        <div className="flex items-start gap-[8px] relative" style={{ paddingBottom: isLast ? 0 : 4, paddingTop: 4 }}>
+          {/* Expand chevron */}
+          <button className="shrink-0 mt-[8px] hover:opacity-70">
+            <SvgChevRight size={12} color="#5c5c5c" />
+          </button>
+          {/* Icon + vertical timeline line */}
+          <div className="relative shrink-0 flex flex-col items-center">
+            <SLDSIcon type={item.type} size={32} />
+            {/* Vertical line below icon */}
+            {!isLast && (
+              <div className="w-[3px] flex-1 mt-[4px] rounded-full" style={{ backgroundColor: lineColor, minHeight: 24 }} />
+            )}
+          </div>
+          {/* Content */}
+          <div className="flex-1 min-w-0 pt-[2px]">
+            <div className="flex items-center justify-between gap-[6px]">
+              <span className="text-[13px] font-bold text-[#0250d9] truncate">{item.name}</span>
+              <div className="flex items-center gap-[6px] shrink-0">
+                <span className="text-[12px] text-[#5c5c5c] whitespace-nowrap">{item.time}</span>
+                <button className="hover:opacity-70"><SvgChevDownCircle size={18} color="#5c5c5c" /></button>
+              </div>
+            </div>
+            <ActivityDesc html={item.desc} />
+          </div>
+        </div>
+      );
+    };
+
+    const RecentActivity = () => (
+      <Card title="Recent Activity" className="flex-1 overflow-hidden">
+        <div className="overflow-y-auto" style={{ maxHeight: "calc(100vh - 240px)" }}>
+          {ACTIVITY_DATA.map((item, i) => (
+            <ActivityItem key={i} item={item} isLast={i === ACTIVITY_DATA.length - 1} />
+          ))}
+        </div>
+      </Card>
+    );
+
+    /* ═══════════════════════════════════════════════
+       LEADS DONUT CHART (Center top)
+       ═══════════════════════════════════════════════ */
+    const DonutChart = () => {
+      /* Colors from Figma screenshot: blue, gray, pink/purple, teal/green */
+      const data = [
+        { label: "Lead 1", color: "#0250d9", value: 35 },
+        { label: "Lead 2", color: "#9e9e9e", value: 20 },
+        { label: "Lead 3", color: "#b078e8", value: 22 },
+        { label: "Lead 4", color: "#04c8a9", value: 23 },
+      ];
+      const total = data.reduce((s, d) => s + d.value, 0);
+      const size = 240;
+      const r = 80, cx = size / 2, cy = size / 2, strokeW = 36;
+      let cumAngle = -90;
+
+      const arcs = data.map((d) => {
+        const angle = (d.value / total) * 360;
+        const startAngle = cumAngle;
+        const endAngle = cumAngle + angle;
+        cumAngle = endAngle;
+
+        const startRad = (startAngle * Math.PI) / 180;
+        const endRad = (endAngle * Math.PI) / 180;
+        const x1 = cx + r * Math.cos(startRad);
+        const y1 = cy + r * Math.sin(startRad);
+        const x2 = cx + r * Math.cos(endRad);
+        const y2 = cy + r * Math.sin(endRad);
+        const largeArc = angle > 180 ? 1 : 0;
+
+        return (
+          <path
+            key={d.label}
+            d={`M${x1},${y1} A${r},${r} 0 ${largeArc} 1 ${x2},${y2}`}
+            fill="none"
+            stroke={d.color}
+            strokeWidth={strokeW}
+            strokeLinecap="butt"
+          />
+        );
+      });
+
+      return (
+        <div>
+          <div className="flex justify-center py-[8px]">
+            <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+              {arcs}
+            </svg>
+          </div>
+          {/* Legend */}
+          <div className="flex items-center justify-center gap-[20px] mt-[8px]">
+            {data.map((d) => (
+              <div key={d.label} className="flex items-center gap-[6px]">
+                <div className="w-[10px] h-[10px] rounded-full shrink-0" style={{ backgroundColor: d.color }} />
+                <span className="text-[13px] text-[#5c5c5c]">{d.label}</span>
+              </div>
+            ))}
+          </div>
+          {/* Separator + View All */}
+          <div className="border-t border-[#e5e5e5] mt-[16px] pt-[12px] text-center">
+            <a href="#" className="text-[13px] text-[#0250d9] hover:underline">View All</a>
+          </div>
+        </div>
+      );
+    };
+
+    /* ═══════════════════════════════════════════════
+       CONTACTS TABLE (Center bottom)
+       ═══════════════════════════════════════════════ */
+    const CONTACTS_DATA = [
+      { account: "Nintendo", name: "Becca Yukelson", title: "Sales Assistant" },
+      { account: "eBay", name: "Nicole McGovern", title: "VP of Technology" },
+      { account: "Gillette", name: "John McGinn", title: "UX Designer" },
+      { account: "Ferrari", name: "Alwin Mulyono", title: "Sales Director" },
+      { account: "Nike", name: "Angie Elko", title: "Sales Manager" },
+      { account: "Porsche", name: "Adam Doti", title: "Sales Assistant" },
+    ];
+
+    const ContactsTable = () => (
+      <Card title="Contacts">
+        <table className="w-full text-[13px] border-collapse" style={{ border: "1px solid #e5e5e5" }}>
+          <thead>
+            <tr>
+              <th className="text-left font-medium text-[#2e2e2e] px-[12px] py-[10px]" style={{ border: "1px solid #e5e5e5" }}>Account</th>
+              <th className="text-left font-medium text-[#2e2e2e] px-[12px] py-[10px]" style={{ border: "1px solid #e5e5e5" }}>Name</th>
+              <th className="text-left font-medium text-[#2e2e2e] px-[12px] py-[10px]" style={{ border: "1px solid #e5e5e5" }}>Title</th>
+            </tr>
+          </thead>
+          <tbody>
+            {CONTACTS_DATA.map((c, i) => (
+              <tr key={i}>
+                <td className="px-[12px] py-[10px] text-[#2e2e2e]" style={{ border: "1px solid #e5e5e5" }}>{c.account}</td>
+                <td className="px-[12px] py-[10px]" style={{ border: "1px solid #e5e5e5" }}>
+                  <a href="#" className="text-[#0250d9] hover:underline">{c.name}</a>
+                </td>
+                <td className="px-[12px] py-[10px] text-[#2e2e2e]" style={{ border: "1px solid #e5e5e5" }}>{c.title}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Card>
+    );
+
+    /* ═══════════════════════════════════════════════
+       ACCOUNTS LIST (Right top — same as account-record-page)
+       ═══════════════════════════════════════════════ */
+    const ACCOUNTS_CONTACTS = [
+      { name: "Kristen Jones", title: "VP of Sales", role: "Decision Maker" },
+      { name: "Kristen Jones", title: "VP of Sales", role: "Decision Maker" },
+      { name: "Lauren Bailey", title: "VP of Sales", role: "Decision Maker" },
+      { name: "Steve Handler", title: "VP of Sales", role: "Decision Maker" },
+    ];
+
+    const AccountsCard = () => (
+      <Card title="Accounts">
+        <div className="space-y-[16px]">
+          {ACCOUNTS_CONTACTS.map((c, i) => (
+            <div key={i} className="flex items-start gap-[12px]">
+              {/* Purple SLDS contact icon circle */}
+              <SLDSIcon type="contact" size={36} />
+              <div className="flex-1 min-w-0">
+                <a href="#" className="text-[14px] font-bold text-[#0250d9] hover:underline block truncate">{c.name}</a>
+                <p className="text-[12px] text-[#5c5c5c] leading-[18px]">Title: &nbsp;&nbsp; {c.title}</p>
+                <p className="text-[12px] text-[#5c5c5c] leading-[18px]">Role: &nbsp;&nbsp; {c.role}</p>
+              </div>
+              <button className="shrink-0 mt-[4px] hover:opacity-70"><SvgChevDownCircle size={20} color="#5c5c5c" /></button>
+            </div>
+          ))}
+        </div>
+      </Card>
+    );
+
+    /* ═══════════════════════════════════════════════
+       OPPORTUNITIES BAR CHART (Right bottom)
+       ═══════════════════════════════════════════════ */
+    const OPPS_DATA = [
+      { label: "Qualifying", value: 50 },
+      { label: "Proposal", value: 35 },
+      { label: "Negotiation", value: 25 },
+      { label: "Closed Won", value: 15 },
+    ];
+
+    const OpportunitiesCard = () => (
+      <Card title="Opportunities">
+        <div className="space-y-[14px]">
+          {OPPS_DATA.map((o, i) => (
+            <div key={i} className="flex items-center gap-[12px]">
+              <span className="text-[13px] font-semibold text-[#2e2e2e] w-[85px] shrink-0">{o.label}</span>
+              <div className="flex-1 h-[28px] bg-[#fef3e0] rounded-[6px] overflow-hidden relative">
+                <div
+                  className="h-full rounded-[6px] flex items-center justify-end pr-[10px]"
+                  style={{ width: `${(o.value / 50) * 100}%`, backgroundColor: "#f5bc5c" }}
+                >
+                  <span className="text-[13px] font-bold text-[#2e2e2e]">${o.value}k</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="border-t border-[#e5e5e5] mt-[16px] pt-[12px] text-center">
+          <a href="#" className="text-[13px] text-[#0250d9] hover:underline">View All</a>
+        </div>
+      </Card>
+    );
+
+    /* ═══════════════════════════════════════════════
+       BOTTOM BAR
+       ═══════════════════════════════════════════════ */
+    const BottomBar = () => (
+      <div className="fixed bottom-0 left-0 right-0 h-[32px] bg-white border-t border-[#c9c9c9] flex items-center px-[16px] gap-[8px] z-50">
+        <SvgListTodo size={14} color="#747474" />
+        <span className="text-[12px] text-[#5c5c5c] font-normal">To Do List</span>
+      </div>
+    );
+
+    /* ═══════════════════════════════════════════════
+       MAIN APP — 3-column dashboard layout
+       ═══════════════════════════════════════════════ */
+    const App = () => (
+      <div className="h-screen flex flex-col" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Inter', 'Segoe UI', system-ui, sans-serif" }}>
+        <GlobalHeader />
+        <NavBar />
+        <div className="flex-1 overflow-auto bg-[#f3f3f3] p-[16px] pb-[48px]">
+          <div className="flex gap-[16px] h-full" style={{ minHeight: 0 }}>
+            {/* Left column — Recent Activity (1/3) */}
+            <div className="flex flex-col min-w-0" style={{ flex: "1 1 33.333%" }}>
+              <RecentActivity />
+            </div>
+            {/* Center column — Leads + Contacts (1/3) */}
+            <div className="flex flex-col gap-[16px] min-w-0" style={{ flex: "1 1 33.333%" }}>
+              <Card title="Leads">
+                <DonutChart />
+              </Card>
+              <ContactsTable />
+            </div>
+            {/* Right column — Accounts + Opportunities (1/3) */}
+            <div className="flex flex-col gap-[16px] min-w-0" style={{ flex: "1 1 33.333%" }}>
+              <AccountsCard />
+              <OpportunitiesCard />
+            </div>
+          </div>
+        </div>
+        <BottomBar />
+      </div>
+    );
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
