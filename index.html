@@ -756,39 +756,53 @@ async function initApp() {
 }
 
 // ── AUTO-DISCOVERY ──
+// Strategy: try GitHub API first (auto-detects new uploads),
+// fall back to protos.json manifest if API fails (rate limit).
 async function autoDiscoverProtos() {
+  function addProto(fileName) {
+    const name = fileName
+      .replace(/\.(html|htm)$/i, '')
+      .replace(/[-_]/g, ' ')
+      .replace(/\b\w/g, c => c.toUpperCase());
+    protos.push({
+      id: ++idCounter,
+      name: name,
+      fileName: fileName,
+      file: `protos/${fileName}`,
+      icon: '\u{1F4C4}'
+    });
+  }
+
+  // 1) Try GitHub Contents API first (detects any new upload automatically)
   const match = location.hostname.match(/^(.+)\.github\.io$/);
-  if (!match) return;
-
-  const owner = match[1];
-  const repo = location.pathname.split('/')[1];
-  if (!repo) return;
-
-  try {
-    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/protos`);
-    if (!res.ok) return;
-
-    const files = await res.json();
-    const htmlFiles = files
-      .filter(f => f.type === 'file' && /\.(html|htm)$/i.test(f.name))
-      .sort((a, b) => a.name.localeCompare(b.name));
-
-    for (const f of htmlFiles) {
-      const name = f.name
-        .replace(/\.(html|htm)$/i, '')
-        .replace(/[-_]/g, ' ')
-        .replace(/\b\w/g, c => c.toUpperCase());
-
-      protos.push({
-        id: ++idCounter,
-        name: name,
-        fileName: f.name,
-        file: `protos/${f.name}`,
-        icon: '\u{1F4C4}',
-        size: formatSize(f.size)
-      });
+  if (match) {
+    const owner = match[1];
+    const repo = location.pathname.split('/')[1];
+    if (repo) {
+      try {
+        const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/protos`);
+        if (res.ok) {
+          const files = await res.json();
+          files
+            .filter(f => f.type === 'file' && /\.(html|htm)$/i.test(f.name))
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .forEach(f => addProto(f.name));
+          if (protos.length > 0) return;
+        }
+      } catch { /* API failed, try manifest */ }
     }
-  } catch { /* silent */ }
+  }
+
+  // 2) Fallback: protos.json manifest (works when API is rate-limited)
+  try {
+    const res = await fetch('protos.json?t=' + Date.now());
+    if (res.ok) {
+      const files = await res.json();
+      for (const f of files) {
+        addProto(typeof f === 'string' ? f : f.file);
+      }
+    }
+  } catch { /* no manifest either */ }
 }
 
 function formatSize(bytes) {
