@@ -817,11 +817,11 @@
           {/* Step header */}
           <div style={{ marginBottom: '8px' }}>
             <h1 style={{ fontSize: '24px', fontWeight: 700, color: T.color.textDark, margin: 0, lineHeight: '24px' }}>
-              Prochaines dates de sessions
+              Dates de sessions
             </h1>
           </div>
-          <p style={{ fontSize: '14px', fontWeight: 400, color: T.color.gray, margin: '0 0 24px 0', lineHeight: '21px' }}>
-            Informations sur les dates de sessions où sera rendue la décision du conseil régional
+          <p style={{ fontSize: '14px', fontWeight: 400, color: T.color.gray, margin: '0 0 4px 0', lineHeight: '21px' }}>
+            Les dates de tenue des sessions du Conseil régional vous sont communiquées à titre indicatif et ne préjugent pas de l'examen de votre demande lors de la prochaine session indiquée.
           </p>
 
           {/* Main card — Prochaines dates de session */}
@@ -857,6 +857,10 @@
                 ))}
               </div>
             )}
+
+            <p style={{ fontSize: '14px', fontWeight: 700, color: T.color.textDark, margin: '0', lineHeight: '21px' }}>
+              La décision du Conseil régional sera rendue dans un délai de trois mois à compter de la date du récépissé ; récépissé qui vous sera adressé par le Conseil régional lorsque votre dossier sera complet.
+            </p>
           </div>
 
           {/* Date d'effet souhaitée card */}
@@ -868,7 +872,7 @@
             padding: '24px',
           }}>
             <FieldSelect
-              label="À compter de quelle date ?"
+              label="À compter de quelle date souhaiteriez-vous être inscrit ?"
               required
               value={dateEffet}
               onChange={(v) => { setDateEffet(v); if (v !== 'À une date ultérieure') setDateUlterieure(''); }}
@@ -2584,6 +2588,18 @@
 
           {showFields && (
             <>
+              {/* N° Supra — toujours visible */}
+              <div style={{ marginBottom: '16px' }}>
+                <FieldInput label="N° Supra" value={d.numSupra} onChange={v => u('numSupra', v)} />
+              </div>
+
+              {/* Conseil régional — uniquement en mode manuel */}
+              {isManual && (
+                <div style={{ marginBottom: '16px' }}>
+                  <FieldSelect label="Conseil régional d'inscription principale" required value={d.conseilRegional} onChange={v => u('conseilRegional', v)} options={CROEC_OPTIONS} placeholder="Sélectionner" />
+                </div>
+              )}
+
               {/* Civilité */}
               <div style={{ marginBottom: '16px' }}>
                 <p style={{ fontSize: '14px', fontWeight: 600, color: T.color.textDark, margin: '0 0 8px 0' }}>
