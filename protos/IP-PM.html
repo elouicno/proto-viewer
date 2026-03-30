@@ -2528,7 +2528,7 @@
     );
 
     // Step 4 main component
-    const Step4Content = ({ data, update, profile }) => {
+    const Step4Content = ({ data, update, profile, showError }) => {
       const d = data || {};
       const showPP = d.declarePersonnePhysique;
       const showPM = d.declarePersonneMorale;
@@ -2560,6 +2560,12 @@
                 label="Déclarer un représentant légal personne morale"
               />
             </div>
+            {/* Message d'erreur : affiché uniquement après tentative de navigation */}
+            {showError && !showPP && !showPM && (
+              <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: '#DC2626' }}>
+                Veuillez sélectionner au moins un type de représentant légal pour continuer.
+              </p>
+            )}
           </div>
 
           {/* Personne Physique section (conditional) */}
@@ -3346,6 +3352,7 @@
       const [step4, setStep4] = useState({});
       const [step5, setStep5] = useState({});
       const [stepPCP, setStepPCP] = useState({});
+      const [step4Attempted, setStep4Attempted] = useState(false);
 
       const updateStep1 = useCallback((path, value) => {
         setStep1(prev => {
@@ -3377,10 +3384,17 @@
       };
 
       const goNext = () => {
+        const stepName = steps[currentStep - 1];
+        if (stepName === "Représentants Légaux" && !step4.declarePersonnePhysique && !step4.declarePersonneMorale) {
+          setStep4Attempted(true);
+          return;
+        }
+        setStep4Attempted(false);
         window.scrollTo(0, 0);
         setCurrentStep(prev => Math.min(prev + 1, steps.length));
       };
       const goPrev = () => {
+        setStep4Attempted(false);
         window.scrollTo(0, 0);
         setCurrentStep(prev => Math.max(prev - 1, 1));
       };
@@ -3407,7 +3421,7 @@
           case "Qualité de la PM & CROEC": return <Step1Content data={step1} update={updateStep1} />;
           case "Dates de sessions": return <Step2Content croec={step1.croec} />;
           case "Caractéristiques de la société et renseignements divers": return <Step3Content data={step3} update={updateStep3} profile={step1.profile} />;
-          case "Représentants Légaux": return <Step4Content data={step4} update={updateStep4} profile={step1.profile} />;
+          case "Représentants Légaux": return <Step4Content data={step4} update={updateStep4} profile={step1.profile} showError={step4Attempted} />;
           case EXTRA_STEP: return <Step5Content data={step5} update={updateStep5} />;
           case "Personne de contact principal": return <StepPCPContent data={stepPCP} update={updateStepPCP} />;
           case "Liste des associés": return <StepAssociesContent />;
