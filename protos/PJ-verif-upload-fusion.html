@@ -1,0 +1,2326 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1440">
+    <title>PEP Backoffice</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            background: #F3F3F3;
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            width: 100%;
+            height: 100vh;
+            background: #f3f3f3;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* ===== GLOBAL HEADER (64px) ===== */
+        .global-header {
+            width: 100%;
+            height: 64px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 12px;
+            border-bottom: 1px solid #e5e5e5;
+            flex-shrink: 0;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .pep-logo {
+            height: 36px;
+            object-fit: contain;
+        }
+        .header-center {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .search-bar {
+            width: 482px;
+            height: 32px;
+            border: 1px solid #5C5C5C;
+            border-radius: 9999px;
+            background: white;
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            gap: 8px;
+        }
+        .search-bar input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            font-family: inherit;
+            font-size: 16px;
+            color: #1c1d22;
+            outline: none;
+        }
+        .search-bar input::placeholder { color: #5C5C5C; }
+        .search-icon { width: 16px; height: 16px; flex-shrink: 0; }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .header-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .header-icon img { width: 100%; height: 100%; object-fit: contain; }
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 9999px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* ===== GLOBAL NAVIGATION (40px) ===== */
+        .global-nav {
+            width: 100%;
+            height: 40px;
+            background: white;
+            display: flex;
+            align-items: center;
+            padding: 0 0 0 4px;
+            border-bottom: 1px solid #e5e5e5;
+            overflow-x: auto;
+            flex-shrink: 0;
+        }
+        .nav-tab {
+            display: flex;
+            align-items: center;
+            height: 40px;
+            padding: 0 12px;
+            gap: 4px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .nav-tab.active { border-bottom-color: #0250D9; }
+        .nav-tab-icon {
+            width: 14px;
+            height: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .nav-tab-icon img { width: 100%; height: 100%; object-fit: contain; }
+        .nav-tab-text {
+            font-size: 13px;
+            font-weight: 600;
+            color: #03234D;
+            white-space: nowrap;
+        }
+        .nav-tab:not(.active) .nav-tab-text { font-weight: 400; color: #5C5C5C; }
+        .nav-tab.active .nav-tab-text { color: #0250D9; font-weight: 600; }
+        .nav-tab-chevron, .nav-tab-close {
+            width: 12px;
+            height: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .nav-tab-chevron img, .nav-tab-close img { width: 100%; height: 100%; object-fit: contain; }
+
+        /* ===== CONTENT AREA ===== */
+        .content-wrapper {
+            flex: 1;
+            overflow-y: auto;
+            background: #f3f3f3;
+        }
+        .content-header {
+            background: #f3f3f3;
+            padding: 0 16px;
+        }
+        .content-scroll {
+            padding: 0 16px;
+        }
+        .content-wrapper::-webkit-scrollbar { width: 8px; }
+        .content-wrapper::-webkit-scrollbar-track { background: transparent; }
+        .content-wrapper::-webkit-scrollbar-thumb { background: #c9c9c9; border-radius: 4px; }
+        .content-wrapper::-webkit-scrollbar-thumb:hover { background: #999; }
+
+        /* ===== PAGE HEADER ===== */
+        .page-header {
+            background: #f3f3f3;
+            padding: 12px 0 8px;
+        }
+        .page-header-row1 {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .page-header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .page-header-label {
+            font-size: 13px;
+            color: #5C5C5C;
+            font-weight: 400;
+            line-height: 18px;
+        }
+        .page-header-text-col {
+            display: flex;
+            flex-direction: column;
+        }
+        .case-icon-container {
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            background: #5867E8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .case-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .case-icon img { width: 100%; height: 100%; object-fit: contain; }
+        .page-header-title {
+            font-size: 28px;
+            color: #03234D;
+            font-weight: 400;
+            line-height: 35px;
+        }
+
+        /* Button Group */
+        .button-group {
+            display: flex;
+            height: 32px;
+            border: 1px solid #5C5C5C;
+            border-radius: 9999px;
+            overflow: hidden;
+            background: white;
+        }
+        .button-group-item {
+            height: 100%;
+            padding: 0 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-right: 1px solid #5C5C5C;
+            font-size: 14px;
+            color: #0250D9;
+            font-weight: 400;
+            cursor: pointer;
+            background: white;
+            white-space: nowrap;
+        }
+        .button-group-item:last-child {
+            border-right: none;
+            padding: 0 8px;
+        }
+        .overflow-icon {
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .overflow-icon img { width: 100%; height: 100%; object-fit: contain; }
+
+        /* Detail / Highlights Row */
+        .detail-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px 32px;
+            padding-bottom: 8px;
+        }
+        .detail-column {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            flex-shrink: 0;
+        }
+        .detail-label {
+            font-size: 12px;
+            color: #5C5C5C;
+            font-weight: 400;
+            line-height: 17px;
+            white-space: nowrap;
+        }
+        .detail-value {
+            font-size: 13px;
+            color: #03234D;
+            font-weight: 400;
+            line-height: 18px;
+            white-space: nowrap;
+        }
+
+        /* ===== PATH / STEPPER (clip-path) ===== */
+        .path-coaching {
+            width: 100%;
+            height: 32px;
+            display: flex;
+            margin-bottom: 8px;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        .step {
+            flex: 1 1 0;
+            min-width: 0;
+            height: 32px;
+            background: #E5E5E5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            color: rgba(0,0,0,0.7);
+            font-weight: 400;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding: 0 4px 0 10px;
+            clip-path: polygon(0 0, calc(100% - 4px) 0, 100% 50%, calc(100% - 4px) 100%, 0 100%, 4px 50%);
+        }
+        .step.completed { background: #ACF3E4; }
+        .step:first-child {
+            padding: 0 4px 0 12px;
+            clip-path: polygon(0 0, calc(100% - 4px) 0, 100% 50%, calc(100% - 4px) 100%, 0 100%);
+        }
+        .step:last-child {
+            padding: 0 12px 0 10px;
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 4px 50%);
+        }
+        .step-check {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+        }
+
+        /* Status Button */
+        .status-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            height: 32px;
+            background: #5B7EEB;
+            border-radius: 9999px;
+            padding: 0 16px;
+            cursor: pointer;
+            box-shadow: inset 0px 1px 0px rgba(0,0,0,0.15), inset 0px 0.5px 2px rgba(0,0,0,0.35);
+            margin-bottom: 8px;
+        }
+        .status-button-icon {
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .status-button-icon img { width: 100%; height: 100%; object-fit: contain; }
+        .status-button-text {
+            font-size: 14px;
+            color: white;
+            font-weight: 500;
+        }
+
+        /* ===== BODY CARD ===== */
+        .body-card {
+            border-radius: 20px;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            overflow: hidden;
+            margin-bottom: 80px;
+            padding: 12px 16px 8px;
+        }
+
+        /* Tabs */
+        .tabs-container {
+            display: flex;
+            width: 100%;
+            height: 40px;
+        }
+        .tab {
+            padding: 0 12px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: #5C5C5C;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .tab.active {
+            color: #0250D9;
+            border-bottom-color: #0250D9;
+        }
+        .tab:not(.active) {
+            border-bottom: 1px solid #C9C9C9;
+        }
+        .tabs-fill {
+            flex: 1;
+            border-bottom: 1px solid #C9C9C9;
+        }
+
+        /* Accordion Section */
+        .accordion-section {
+            margin-top: 8px;
+            display: flex;
+            flex-direction: column;
+        }
+        .accordion-item-wrapper {
+            padding-bottom: 8px;
+        }
+        .accordion-item {
+            width: 100%;
+            height: 32px;
+            background: #F3F3F3;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            padding: 0 8px;
+            cursor: pointer;
+            gap: 8px;
+            transition: opacity 0.15s;
+        }
+        .accordion-item:hover { opacity: 0.8; }
+        .accordion-chevron {
+            width: 12px;
+            height: 12px;
+            flex-shrink: 0;
+            color: #5C5C5C;
+        }
+        .accordion-label {
+            font-size: 16px;
+            color: #2E2E2E;
+            font-weight: 400;
+            line-height: 22px;
+        }
+        .accordion-chevron.open {
+            transform: rotate(180deg);
+        }
+        /* Expand content */
+        .expand-content {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 8px;
+        }
+        .field-row {
+            display: flex;
+            gap: 12px;
+        }
+        .field {
+            flex: 1;
+            padding-left: 4px;
+            padding-bottom: 4px;
+        }
+        .field-label {
+            font-size: 13px;
+            color: #5C5C5C;
+            line-height: 18px;
+            font-weight: 400;
+        }
+        .field-value-row {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            border-bottom: 1px solid #C9C9C9;
+            min-height: 24px;
+            padding-bottom: 4px;
+            padding-top: 2px;
+        }
+        .field-value {
+            flex: 1;
+            font-size: 13px;
+            color: #2E2E2E;
+            line-height: 18px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .field-edit-icon {
+            width: 14px;
+            height: 14px;
+            flex-shrink: 0;
+            color: #5C5C5C;
+            opacity: 0.6;
+        }
+
+        /* ===== TABLE VIEW ===== */
+        .view-table, .view-detail { display: none; }
+        .view-table.active, .view-detail.active { display: block; }
+
+        .table-page-header {
+            padding: 12px 0 8px;
+        }
+        .table-page-row1 {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .table-page-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .table-page-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            background: #E8739F;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .table-page-text {
+            display: flex;
+            flex-direction: column;
+        }
+        .table-page-label {
+            font-size: 13px;
+            color: #5C5C5C;
+            line-height: 18px;
+        }
+        .table-page-title {
+            font-size: 28px;
+            color: #03234D;
+            font-weight: 400;
+            line-height: 35px;
+        }
+        .table-btn-group {
+            display: flex;
+            gap: 8px;
+        }
+        .table-btn {
+            height: 32px;
+            padding: 0 16px;
+            border: 1px solid #0250D9;
+            border-radius: 4px;
+            background: white;
+            color: #0250D9;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: inherit;
+            white-space: nowrap;
+        }
+        .table-subtitle {
+            font-size: 13px;
+            color: #5C5C5C;
+            margin-top: 4px;
+        }
+        .table-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+            margin: 8px 0;
+        }
+        .table-search {
+            width: 220px;
+            height: 32px;
+            border: 1px solid #C9C9C9;
+            border-radius: 4px;
+            padding: 0 8px 0 32px;
+            font-size: 13px;
+            font-family: inherit;
+            background: white url("data:image/svg+xml,%3Csvg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235C5C5C' stroke-width='2' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") 10px center no-repeat;
+            outline: none;
+        }
+        .table-search:focus { border-color: #0250D9; }
+        .table-icon-btn {
+            width: 32px;
+            height: 32px;
+            border: 1px solid #C9C9C9;
+            border-radius: 4px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #5C5C5C;
+        }
+        /* Data Table - ISO reference */
+        .table-card {
+            background: white;
+            border-radius: 8px 8px 0 0;
+            overflow: auto;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .data-table thead tr {
+            background: #F3F3F3;
+            border-bottom: 1px solid #C9C9C9;
+        }
+        .data-table th {
+            text-align: left;
+            font-weight: 700;
+            color: #000;
+            padding: 8px;
+            border-bottom: 1px solid #C9C9C9;
+            white-space: nowrap;
+            font-size: 13px;
+        }
+        .data-table th .sort-icon {
+            display: inline-block;
+            margin-left: 4px;
+            color: #C9C9C9;
+            font-size: 10px;
+        }
+        .data-table td {
+            padding: 8px;
+            border-bottom: 1px solid #E5E5E5;
+            color: #000;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+        }
+        .data-table tr:hover { background: #F8F8FC; }
+        .data-table .link { color: #0250D9; cursor: pointer; }
+        .data-table .link:hover { text-decoration: underline; }
+        .data-table .cb { width: 32px; padding: 8px; }
+        .data-table .cb input { width: 16px; height: 16px; accent-color: #0250D9; cursor: pointer; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+        .badge-soumise { background: #E8F0FE; color: #0250D9; }
+        .badge-affectee { background: #FFF3E0; color: #E65100; }
+        /* Split-screen PJ */
+        .split-container {
+            display: flex;
+            gap: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .split-container .body-card {
+            flex: 0 0 50%;
+            min-width: 0;
+        }
+        .s3-panel {
+            flex: 0 0 50%;
+            overflow: hidden;
+            opacity: 1;
+            border: 1px solid #E5E5E5;
+            border-radius: 12px;
+            background: #f6f7f9;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            margin: 0 0 0 8px;
+        }
+        .split-container.split-active .s3-panel {
+            flex: 0 0 50%;
+            opacity: 1;
+        }
+        /* S3 panel internal styles - adapted from fichiers-s3-v3_1 */
+        .s3-panel .s3-toolbar {
+            padding: 8px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            border-bottom: 1px solid #e8eaef;
+            background: white;
+            flex-shrink: 0;
+        }
+        .s3-toolbar-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+        }
+        .s3-panel .s3-filter-tags {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .s3-panel .s3-filter-tags::-webkit-scrollbar { display: none; }
+        .s3-panel .s3-filter-tag {
+            height: 28px;
+            padding: 0 10px;
+            border-radius: 999px;
+            font-family: inherit;
+            font-size: 11px;
+            font-weight: 500;
+            border: 1.5px solid #e8eaef;
+            background: white;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 180ms ease;
+            display: inline-flex;
+            align-items: center;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .s3-panel .s3-filter-tag:hover { border-color: #c7cad0; background: #f9fafb; color: #111827; }
+        .s3-panel .s3-filter-tag.active { border-color: #2563eb; background: #eff4ff; color: #2563eb; font-weight: 600; }
+        .s3-panel .s3-search {
+            flex: 1;
+            min-width: 80px;
+            height: 30px;
+            border: 1.5px solid #e8eaef;
+            border-radius: 8px;
+            padding: 0 10px;
+            font-family: inherit;
+            font-size: 12px;
+            outline: none;
+            background: white;
+            color: #111827;
+        }
+        .s3-panel .s3-search:focus { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,0.1); }
+        .s3-panel .s3-file-count {
+            font-size: 11px;
+            color: #9ca3af;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .s3-action-btn {
+            height: 30px;
+            padding: 0 10px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+            flex-shrink: 0;
+            transition: all 150ms ease;
+            border: 1.5px solid #e8eaef;
+            background: #fff;
+            color: #374151;
+        }
+        .s3-action-btn:hover { background: #f3f4f6; border-color: #d1d5db; }
+        .s3-action-btn.primary {
+            background: #2563eb;
+            color: #fff;
+            border-color: #2563eb;
+        }
+        .s3-action-btn.primary:hover { background: #1d4ed8; }
+        .s3-action-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+        /* Import modal */
+        .s3-import-overlay {
+            position: absolute; inset: 0; background: #fff; z-index: 11;
+            display: none; flex-direction: column;
+            animation: s3PreviewIn 200ms ease;
+        }
+        .s3-import-overlay.active { display: flex; }
+        .s3-import-topbar {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 16px; border-bottom: 1px solid #e8eaef; flex-shrink: 0;
+        }
+        .s3-import-topbar-title { font-size: 14px; font-weight: 600; color: #111827; }
+        .s3-import-dropzone {
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            margin: 12px 16px; border: 2px dashed #d1d5db; border-radius: 12px;
+            cursor: pointer; transition: all 200ms ease;
+            color: #6b7280; text-align: center; padding: 16px;
+            height: 200px; max-height: 200px; flex-shrink: 0;
+        }
+        .s3-import-dropzone:hover, .s3-import-dropzone.dragover {
+            border-color: #2563eb; background: #eff6ff; color: #2563eb;
+        }
+        .s3-import-dropzone svg { width: 28px; height: 28px; margin-bottom: 8px; opacity: 0.5; }
+        .s3-import-dropzone p { font-size: 13px; margin: 4px 0; }
+        .s3-import-dropzone .s3-import-hint { font-size: 11px; color: #9ca3af; }
+        .s3-import-file-input { display: none; }
+        .s3-import-list { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; }
+        .s3-import-item {
+            display: flex; align-items: center; gap: 10px; padding: 8px 12px;
+            background: #f9fafb; border-radius: 8px; font-size: 12px;
+            transition: box-shadow 150ms ease, background 150ms ease, transform 150ms ease;
+            user-select: none;
+        }
+        .s3-import-item.drag-over-above { box-shadow: 0 -2px 0 0 #2563eb; }
+        .s3-import-item.drag-over-below { box-shadow: 0 2px 0 0 #2563eb; }
+        .s3-import-item.dragging { opacity: 0.4; background: #e0e7ff; }
+        .s3-import-item-name { flex: 1; font-weight: 500; color: #111827; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .s3-import-item-size { color: #9ca3af; font-size: 11px; }
+        .s3-import-item-check { color: #16a34a; font-weight: 700; }
+        .s3-import-item-grip {
+            cursor: grab; display: flex; align-items: center; justify-content: center;
+            color: #c5c9d0; flex-shrink: 0; width: 16px;
+        }
+        .s3-import-item-grip:active { cursor: grabbing; }
+        .s3-import-item-num {
+            width: 20px; height: 20px; border-radius: 50%; background: #e8eaef;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 10px; font-weight: 700; color: #6b7280; flex-shrink: 0;
+        }
+        .s3-import-item-remove {
+            width: 20px; height: 20px; border: none; background: transparent;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            color: #d1d5db; border-radius: 4px; font-size: 14px; line-height: 1; flex-shrink: 0;
+        }
+        .s3-import-item-remove:hover { background: #fee2e2; color: #dc2626; }
+        .s3-merge-bar {
+            padding: 10px 16px; border-top: 1px solid #e8eaef;
+            display: none; flex-direction: column; gap: 10px; flex-shrink: 0; background: #fff;
+        }
+        .s3-merge-bar.visible { display: flex; }
+        .s3-merge-row { display: flex; align-items: center; gap: 8px; }
+        .s3-merge-name-input {
+            flex: 1; height: 32px; border: 1.5px solid #e8eaef; border-radius: 8px;
+            padding: 0 10px; font-family: inherit; font-size: 12px; outline: none; color: #111827;
+        }
+        .s3-merge-name-input:focus { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,0.1); }
+        .s3-merge-result {
+            display: none; padding: 12px; margin: 0 16px; border-radius: 10px;
+            background: #f0fdf4; border: 1.5px solid #86efac; flex-direction: column; gap: 8px;
+        }
+        .s3-merge-result.visible { display: flex; }
+        .s3-merge-result-icon { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #166534; }
+        .s3-merge-result-icon svg { width: 18px; height: 18px; color: #16a34a; }
+        .s3-merge-result-info { font-size: 11px; color: #6b7280; }
+        /* Request form selects */
+        .req-select {
+            height: 40px; width: 100%; border: 1.5px solid #e8eaef; border-radius: 10px;
+            padding: 0 32px 0 12px; font-family: inherit; font-size: 13px; outline: none;
+            color: #111827; background: #fff; cursor: pointer;
+            appearance: none; -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 10px 6px;
+            transition: border-color 150ms ease;
+        }
+        .req-select:focus { border-color: #2563eb; }
+        .s3-import-footer {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            border-top: 2px solid #e8eaef;
+            flex-shrink: 0;
+            background: #f9fafb;
+            gap: 8px;
+        }
+        .s3-import-footer.visible { display: flex; }
+        .s3-panel .s3-header {
+            background: white;
+            border-radius: 12px 12px 0 0;
+            padding: 11px 12px 0; /* 12px body-card top padding − 1px s3-panel border = 11px */
+        }
+        .s3-panel .s3-close-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6b7280;
+            transition: all 180ms ease;
+        }
+        .s3-panel .s3-close-btn:hover { background: #f3f4f6; color: #111827; }
+        .s3-panel .s3-file-list-container {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: auto;
+        }
+        .s3-file-table-inner {
+            min-width: 780px;
+            width: max-content;
+            min-width: 100%;
+        }
+        /* Fixed column layout — forces horizontal scroll, no shrinking */
+        .s3-file-grid {
+            display: grid;
+            grid-template-columns: 32px 140px 118px 84px 96px 180px 86px 32px;
+            align-items: center;
+            padding: 0 12px;
+            min-width: 780px;
+        }
+        .s3-panel .s3-file-list-header {
+            grid-template-columns: 32px 140px 118px 84px 96px 180px 86px 32px;
+            display: grid;
+            align-items: center;
+            padding: 0 12px;
+            height: 30px;
+            border-bottom: 1px solid #e8eaef;
+            background: #f6f7f9;
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            min-width: 780px;
+        }
+        .s3-panel .s3-file-list-header span {
+            font-size: 10px;
+            font-weight: 700;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .s3-panel .s3-file-row {
+            display: grid;
+            grid-template-columns: 32px 140px 118px 84px 96px 180px 86px 32px;
+            align-items: center;
+            padding: 0 12px;
+            height: 44px;
+            border-bottom: 1px solid #f0f1f4;
+            cursor: pointer;
+            transition: background 180ms ease;
+            position: relative;
+            min-width: 780px;
+        }
+        .s3-panel .s3-file-row:hover { background: #f9fafb; }
+        /* Status badge */
+        .s3-status-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 600;
+            cursor: pointer; white-space: nowrap; border: none; font-family: inherit;
+            transition: filter 120ms ease; line-height: 1.4;
+        }
+        .s3-status-badge:hover { filter: brightness(0.94); }
+        .s3-status-badge.examiner { background: #F3F4F6; color: #6B7280; }
+        .s3-status-badge.demandee { background: #FFF3E0; color: #C2410C; }
+        .s3-status-badge.conforme { background: #DCFCE7; color: #166534; }
+        .s3-status-badge.nonconforme { background: #FEE2E2; color: #DC2626; }
+        /* Status dropdown */
+        .s3-status-dropdown {
+            position: fixed; background: #fff; border: 1px solid #e5e7eb;
+            border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.13);
+            padding: 4px; z-index: 300; min-width: 156px;
+            animation: s3PreviewIn 120ms ease;
+        }
+        .s3-status-option {
+            display: flex; align-items: center; padding: 5px 8px;
+            border-radius: 6px; cursor: pointer; border: none; background: none;
+            width: 100%; text-align: left; font-family: inherit;
+        }
+        .s3-status-option:hover { background: #f3f4f6; }
+        .s3-status-option.active { background: #eff6ff; }
+        /* File cell helpers */
+        .s3-cell-truncate {
+            font-size: 11.5px; color: #6b7280; white-space: nowrap;
+            overflow: hidden; text-overflow: ellipsis; padding-right: 6px;
+        }
+        .s3-cell-date {
+            font-size: 11px; color: #9ca3af; font-family: monospace; white-space: nowrap;
+        }
+        .s3-file-actions-btn {
+            width: 24px; height: 24px; border: none; background: transparent;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            color: #c5c9d0; border-radius: 6px; opacity: 0; transition: all 150ms ease;
+        }
+        .s3-file-row:hover .s3-file-actions-btn { opacity: 1; }
+        .s3-file-actions-btn:hover { background: #e5e7eb; color: #374151; }
+        .s3-ctx-menu {
+            position: fixed; background: #fff; border: 1px solid #e5e7eb;
+            border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            padding: 4px; z-index: 100; min-width: 160px;
+            animation: s3PreviewIn 120ms ease;
+        }
+        .s3-ctx-item {
+            display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+            font-size: 12px; font-weight: 500; color: #374151; border-radius: 6px;
+            cursor: pointer; border: none; background: none; width: 100%;
+            font-family: inherit; text-align: left;
+        }
+        .s3-ctx-item:hover { background: #f3f4f6; }
+        .s3-ctx-item.danger { color: #dc2626; }
+        .s3-ctx-item.danger:hover { background: #fef2f2; }
+        .s3-ctx-item svg { width: 14px; height: 14px; flex-shrink: 0; }
+        .s3-ctx-separator { height: 1px; background: #e5e7eb; margin: 4px 0; }
+        .s3-rename-input {
+            font-size: 12.5px; font-weight: 500; color: #111827; border: 1.5px solid #2563eb;
+            border-radius: 4px; padding: 2px 6px; font-family: inherit; outline: none;
+            width: 100%; background: #eff6ff; box-shadow: 0 0 0 2px rgba(37,99,235,0.15);
+        }
+        .s3-panel .s3-file-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .s3-panel .s3-file-icon svg { width: 14px; height: 14px; color: #fff; }
+        .s3-panel .s3-file-icon.pdf { background: #dc2626; }
+        .s3-panel .s3-file-icon.docx { background: #2563eb; }
+        .s3-panel .s3-file-icon.xlsx { background: #16a34a; }
+        .s3-panel .s3-file-icon.pptx { background: #e04e2a; }
+        .s3-panel .s3-file-icon.png { background: #f59e0b; }
+        .s3-panel .s3-file-icon.csv { background: #059669; }
+        .s3-panel .s3-file-icon.zip { background: #6b7280; }
+        .s3-panel .s3-file-icon.mp3 { background: #3b82f6; }
+        .s3-panel .s3-file-icon.mov { background: #8b5cf6; }
+        .s3-panel .s3-file-name {
+            font-size: 12.5px;
+            font-weight: 500;
+            color: #111827;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding-right: 8px;
+        }
+        .s3-panel .s3-file-size { font-size: 12px; color: #6b7280; }
+        .s3-panel .s3-file-date { font-size: 11px; color: #9ca3af; font-family: 'JetBrains Mono', monospace; }
+
+        /* S3 Preview Overlay (inside s3-panel) */
+        .s3-preview-overlay {
+            position: absolute;
+            inset: 0;
+            background: #fff;
+            z-index: 10;
+            display: none;
+            flex-direction: column;
+            animation: s3PreviewIn 200ms ease;
+        }
+        .s3-preview-overlay.active { display: flex; }
+        @keyframes s3PreviewIn { from { opacity:0; transform:translateX(12px); } to { opacity:1; transform:translateX(0); } }
+        .s3-panel { position: relative; }
+        .s3-preview-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            border-bottom: 1px solid #e8eaef;
+            flex-shrink: 0;
+            background: #fff;
+        }
+        .s3-preview-topbar-left { display: flex; align-items: center; gap: 8px; }
+        .s3-preview-nav-btn {
+            width: 32px; height: 32px; border-radius: 6px; border: 1.5px solid #e8eaef;
+            background: #fff; cursor: pointer; display: flex;
+            align-items: center; justify-content: center; color: #6b7280;
+            transition: all 150ms ease;
+        }
+        .s3-preview-nav-btn:hover { background: #f3f4f6; color: #111827; border-color: #d1d5db; }
+        .s3-preview-nav-btn:disabled { opacity: 0.35; cursor: default; pointer-events: none; }
+        .s3-preview-nav-btn svg { width: 16px; height: 16px; }
+        .s3-preview-counter { font-size: 12px; color: #6b7280; font-weight: 500; }
+        .s3-preview-close-x {
+            width: 28px; height: 28px; border-radius: 6px; border: none;
+            background: transparent; cursor: pointer; display: flex;
+            align-items: center; justify-content: center; color: #9ca3af;
+            transition: all 150ms ease;
+        }
+        .s3-preview-close-x:hover { background: #f3f4f6; color: #111827; }
+        .s3-preview-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            text-align: center;
+            overflow: auto;
+            position: relative;
+            cursor: grab;
+        }
+        .s3-preview-area.dragging { cursor: grabbing; }
+        .s3-preview-big-icon {
+            width: 72px; height: 72px; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 16px;
+        }
+        .s3-preview-big-icon svg { width: 32px; height: 32px; color: #fff; }
+        .s3-preview-filename {
+            font-size: 13px; font-weight: 600; color: #111827;
+            word-break: break-word; line-height: 1.4; max-width: 100%;
+        }
+        .s3-preview-img-wrap {
+            transform-origin: center center;
+            transition: transform 150ms ease;
+            display: flex; align-items: center; justify-content: center;
+            max-width: 100%; max-height: 100%;
+        }
+        .s3-preview-img-wrap img {
+            max-width: 100%; max-height: 100%; object-fit: contain;
+            border-radius: 6px; box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+            pointer-events: none; user-select: none;
+        }
+        .s3-zoom-controls {
+            display: flex; align-items: center; gap: 4px;
+            margin-left: 8px;
+        }
+        .s3-zoom-btn {
+            width: 28px; height: 28px; border-radius: 6px; border: 1.5px solid #e8eaef;
+            background: #fff; cursor: pointer; display: flex;
+            align-items: center; justify-content: center; color: #6b7280;
+            font-size: 16px; font-weight: 600; line-height: 1;
+            transition: all 150ms ease;
+        }
+        .s3-zoom-btn:hover { background: #f3f4f6; color: #111827; border-color: #d1d5db; }
+        .s3-zoom-label {
+            font-size: 11px; color: #6b7280; font-weight: 500;
+            min-width: 36px; text-align: center;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 16px 0 4px;
+        }
+        .pagination .pg-btn {
+            height: 32px;
+            min-width: 32px;
+            padding: 0 10px;
+            border: 1px solid #C9C9C9;
+            border-radius: 4px;
+            background: white;
+            color: #2E2E2E;
+            font-size: 13px;
+            cursor: pointer;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .pagination .pg-btn.active {
+            background: #0250D9;
+            color: white;
+            border-color: #0250D9;
+        }
+        .pagination .pg-btn:disabled { color: #C9C9C9; cursor: default; }
+        .pagination .pg-dots { color: #5C5C5C; padding: 0 4px; }
+        .pagination-info {
+            text-align: center;
+            font-size: 12px;
+            color: #5C5C5C;
+            padding: 4px 0 8px;
+        }
+        /* Footer bar */
+        .footer-bar {
+            height: 40px;
+            background: white;
+            border-top: 1px solid #E5E5E5;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            font-size: 13px;
+            color: #5C5C5C;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        /* ===== FAB BUTTON ===== */
+        .fab-button {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #5B7EEB 0%, #0250D9 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(5,80,217,0.3);
+            font-size: 18px;
+            font-weight: 700;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+
+        <!-- ===== GLOBAL HEADER ===== -->
+        <div class="global-header">
+            <div class="header-left">
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYxIiBoZWlnaHQ9IjQzIiB2aWV3Qm94PSIwIDAgMTYxIDQzIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8ZyBjbGlwLXBhdGg9InVybCgjY2xpcDBfMjMyXzc5NDkpIj4KPHBhdGggZD0iTTEwMC43NjMgNy45MTQwNkMxMDAuMzgxIDcuOTE0MDYgMTAwLjAyMiA3Ljk4NzI1IDk5LjY4OSA4LjEzMzYyQzk5LjM1MyA4LjI3OTk5IDk5LjA0MzYgOC41MTI4NiA5OC43NjQyIDguODI4ODlDOTguNTA4IDkuMjU4MDIgOTguMzU1IDkuNjc3MTggOTguMzAxOCAxMC4wODk3Qzk4LjMwMTggMTMuMDYwNCA5OC4zMDE4IDE0LjU0MDcgOTguMzAxOCAxNC41MzQxSDk4LjkwMDVWMTEuOTE2Qzk5LjE1MzQgMTIuMjI1NCA5OS40Mzk1IDEyLjQ1ODIgOTkuNzUyMiAxMi42MTEzQzEwMC4wNjUgMTIuNzY0MyAxMDAuNDExIDEyLjg0MDggMTAwLjc4MyAxMi44NDA4QzEwMS40NDUgMTIuODQwOCAxMDIuMDExIDEyLjYwMTMgMTAyLjQ4MyAxMi4xMTg5QzEwMi45NTIgMTEuNjM2NiAxMDMuMTg5IDExLjA1MTEgMTAzLjE4OSAxMC4zNjU4QzEwMy4xODkgOS42ODA1IDEwMi45NTIgOS4xMTE2NSAxMDIuNDc3IDguNjMyNjFDMTAyLjAwNCA4LjE1MzU4IDEwMS40MzIgNy45MTQwNiAxMDAuNzY3IDcuOTE0MDZIMTAwLjc2M1pNMTAyLjMyNCAxMS4zMzcyQzEwMi4xNTQgMTEuNjM5OSAxMDEuOTI0IDExLjg3NjEgMTAxLjYzOCAxMi4wNDI0QzEwMS4zNTIgMTIuMjA4NyAxMDEuMDQ2IDEyLjI5MTkgMTAwLjcyIDEyLjI5MTlDMTAwLjM5NCAxMi4yOTE5IDEwMC4wNzUgMTIuMjA4NyA5OS43Nzg4IDEyLjA0MjRDOTkuNDgyNyAxMS44NzYxIDk5LjI1MzIgMTEuNjQ5OSA5OS4wOTM1IDExLjM2MzhDOTguOTMzOCAxMS4wNzc3IDk4Ljg1NCAxMC43NTgzIDk4Ljg1NCAxMC40MDI0Qzk4Ljg1NCA5Ljg1NjgxIDk5LjAzMzYgOS40MDEwNyA5OS4zOTI5IDkuMDM4NDZDOTkuNzUyMiA4LjY3MjUzIDEwMC4xOTEgOC40ODk1NyAxMDAuNzEgOC40ODk1N0MxMDEuMDUgOC40ODk1NyAxMDEuMzYyIDguNTcyNzMgMTAxLjY0NSA4LjczOTA3QzEwMS45MjggOC45MDU0IDEwMi4xNTQgOS4xMzgyNiAxMDIuMzI0IDkuNDM0MzNDMTAyLjQ5MyA5LjczMDQgMTAyLjU3NiAxMC4wNDY0IDEwMi41NzYgMTAuMzg1N0MxMDIuNTc2IDEwLjcyNTEgMTAyLjQ5MyAxMS4wMzQ0IDEwMi4zMiAxMS4zMzcySDEwMi4zMjRaIiBmaWxsPSIjMUIzMjRGIiBzdHJva2U9IiMxQjMyNEYiIHN0cm9rZS13aWR0aD0iMC4zMzI2NjMiIHN0cm9rZS1taXRlcmxpbWl0PSIxMCIvPgo8cGF0aCBkPSJNMTA1LjUxNCA2LjMxNDQ1SDEwNC45MDVWMTIuODIxM0gxMDUuNTE0VjYuMzE0NDVaIiBmaWxsPSIjMUIzMjRGIiBzdHJva2U9IiMxQjMyNEYiIHN0cm9rZS13aWR0aD0iMC4zMzI2NjMiIHN0cm9rZS1taXRlcmxpbWl0PSIxMCIvPgo8cGF0aCBkPSJNMTExLjQwMyAxMS43OFYxMi44NDQ2SDExMi4wNDFDMTEyLjA0OCAxMi44MTc5IDExMi4wNDggMTEuOTk2MyAxMTIuMDQxIDEwLjM3NjJDMTEyLjA0MSA5LjcyMDg1IDExMS44MjIgOS4xNTUzMiAxMTEuMzgzIDguNjc2MjlDMTEwLjkwNyA4LjE1NDAxIDExMC4zMDggNy44OTQ1MyAxMDkuNTg2IDcuODk0NTNDMTA4Ljg2NCA3Ljg5NDUzIDEwOC4yNjYgOC4xNTczNCAxMDcuNzkgOC42ODI5NEMxMDcuMzYxIDkuMTYxOTggMTA3LjE0NSA5LjcyNzUgMTA3LjE0NSAxMC4zNzYyQzEwNy4xNDUgMTEuMDI0OSAxMDcuMzcxIDExLjYwMDQgMTA3LjgyNiAxMi4wODk0QzEwOC4yODIgMTIuNTc4NCAxMDguODY4IDEyLjgyNDYgMTA5LjU4NiAxMi44MjQ2QzExMC40NjUgMTIuNzUxNCAxMTEuMDcgMTIuNDAyMSAxMTEuNDA2IDExLjc4SDExMS40MDNaTTEwOC45NjggMTIuMTYyNkMxMDguNTI4IDExLjk0NjQgMTA4LjIxNiAxMS42ODAyIDEwOC4wMzMgMTEuMzY3NUMxMDcuODUgMTEuMDU0OCAxMDcuNzU3IDEwLjcyODggMTA3Ljc1NyAxMC4zODYyQzEwNy43NTcgOS44NjA1NyAxMDcuOTM2IDkuNDE0OCAxMDguMjk2IDkuMDQyMjJDMTA4LjY1NSA4LjY3Mjk2IDEwOS4wODQgOC40ODY2NyAxMDkuNTgzIDguNDg2NjdDMTEwLjA4MiA4LjQ4NjY3IDExMC41MDggOC42NzI5NiAxMTAuODU3IDkuMDQyMjJDMTEwLjk5NyA5LjE5MTkyIDExMS4xMDcgOS4zNDgyNyAxMTEuMTg2IDkuNTExMjdDMTExLjI5NiA5Ljg3NzIgMTExLjMzOSAxMC4yNTk4IDExMS4zMTYgMTAuNjU5QzExMC44NSAxMS45MDY0IDExMC4wNjkgMTIuNDA1NCAxMDguOTY4IDEyLjE1OTNWMTIuMTYyNloiIGZpbGw9IiMxQjMyNEYiIHN0cm9rZT0iIzFCMzI0RiIgc3Ryb2tlLXdpZHRoPSIwLjMzMjY2MyIgc3Ryb2tlLW1pdGVybGltaXQ9IjEwIi8+CjxwYXRoIGQ9Ik0xMTUuNjkzIDEyLjY1ODJDMTE1LjY0MyAxMi41Mzg0IDExNS41ODMgMTIuMzcyMSAxMTUuNTA0IDEyLjE1OTJDMTE1LjIwNyAxMi4zMTg5IDExNC45MTUgMTIuMzMyMiAxMTQuNjMyIDEyLjE5OTFDMTE0LjI4MyAxMS45MzMgMTE0LjEyIDExLjU1NzEgMTE0LjEzNiAxMS4wNjQ3VjkuMDc4NzNIMTE1LjI0N1Y4LjU1OTc4SDExNC4xM1Y2LjI5MTAySDExMy41MjFWMTEuMTY0NUMxMTMuNTE0IDExLjUwNzIgMTEzLjU5NCAxMS44MTk5IDExMy43NTcgMTIuMTA2QzExNC4wMjcgMTIuNTU4NCAxMTQuMzg5IDEyLjc5NzkgMTE0Ljg1MiAxMi44MjQ1QzExNS4wOTggMTIuODM0NSAxMTUuMzc3IDEyLjc3NzkgMTE1LjY5IDEyLjY1ODJIMTE1LjY5M1oiIGZpbGw9IiMxQjMyNEYiIHN0cm9rZT0iIzFCMzI0RiIgc3Ryb2tlLXdpZHRoPSIwLjMzMjY2MyIgc3Ryb2tlLW1pdGVybGltaXQ9IjEwIi8+CjxwYXRoIGQ9Ik0xMTkuNDc2IDEyLjgyMzJDMTE5LjgyMiAxMi44MjMyIDEyMC4xMzEgMTIuNzcgMTIwLjQwNCAxMi42NjY5QzEyMC42NzcgMTIuNTYzNyAxMjAuOTIzIDEyLjQxMDcgMTIxLjE0MyAxMi4yMTExQzEyMS4zNjIgMTIuMDExNSAxMjEuNTUyIDExLjc0ODcgMTIxLjcxNSAxMS40MTk0TDEyMS4yMDkgMTEuMTQ5OUMxMjEuMDIzIDExLjQ1OTMgMTIwLjg1MyAxMS42Nzg5IDEyMC42OTMgMTEuODE4NkMxMjAuNTM0IDExLjk1NSAxMjAuMzQ0IDEyLjA2NDcgMTIwLjExOCAxMi4xNTEyQzExOS44OTIgMTIuMjM0NCAxMTkuNjU5IDEyLjI3NzcgMTE5LjQxOSAxMi4yNzc3QzExOC45MjcgMTIuMjc3NyAxMTguNTExIDEyLjEwNDcgMTE4LjE3NSAxMS43NTJDMTE3LjgzOSAxMS40MDI4IDExNy42NjYgMTAuOTUzNyAxMTcuNjUzIDEwLjQwODFIMTIxLjg2OEMxMjEuODY4IDkuNzY5MzggMTIxLjY5NSA5LjIzNzEyIDEyMS4zNTUgOC44MDc5OEMxMjAuODc2IDguMTk5MjEgMTIwLjIzOCA3Ljg5NjQ4IDExOS40NDMgNy44OTY0OEMxMTguNjQ4IDcuODk2NDggMTE4LjA0MiA4LjE5MjU1IDExNy41ODMgOC43ODQ2OUMxMTcuMjE3IDkuMjUwNDIgMTE3LjAzNCA5Ljc3OTM2IDExNy4wMzQgMTAuMzc0OEMxMTcuMDM0IDExLjAwNjkgMTE3LjI1IDExLjU2OTEgMTE3LjY4IDEyLjA3MTRDMTE4LjEwOSAxMi41NzM3IDExOC43MDcgMTIuODIzMiAxMTkuNDczIDEyLjgyMzJIMTE5LjQ3NlpNMTE4LjI2NSA4LjkxNzc2QzExOC41OTQgOC42MjE2OSAxMTguOTkgOC40NzE5OSAxMTkuNDQ5IDguNDcxOTlDMTE5LjcyOSA4LjQ3MTk5IDExOS45OTUgOC41MzE4NyAxMjAuMjQ4IDguNjQ4M0MxMjAuNTAxIDguNzY4MDYgMTIwLjcwNyA4LjkyMTA5IDEyMC44NiA5LjExNDAzQzEyMS4wMTMgOS4zMDY5NyAxMjEuMTI5IDkuNTYzMTMgMTIxLjIwOSA5Ljg4NTgxSDExNy43MTlDMTE3Ljg0MyA5LjQ1NjY3IDExOC4wMjIgOS4xMzA2NiAxMTguMjYyIDguOTE0NDNMMTE4LjI2NSA4LjkxNzc2WiIgZmlsbD0iIzFCMzI0RiIgc3Ryb2tlPSIjMUIzMjRGIiBzdHJva2Utd2lkdGg9IjAuMzMyNjYzIiBzdHJva2UtbWl0ZXJsaW1pdD0iMTAiLz4KPHBhdGggZD0iTTEyMy45NDMgOS4wNDg1NUgxMjUuMDYxVjguNTI5NkgxMjMuOTVWOC4wNjA1NEMxMjQuMDIzIDcuNDQxNzkgMTI0LjE5IDcuMDYyNTUgMTI0LjQ0NiA2LjkyNjE2QzEyNC43MzIgNi43OTMxIDEyNS4wMjEgNi44MDY0IDEyNS4zMTcgNi45NjYwOEMxMjUuMzk0IDYuNzUzMTggMTI1LjQ1NyA2LjU4Njg1IDEyNS41MDcgNi40NjcwOUMxMjUuMjA0IDYuMjg0MTIgMTI0LjkyNSA2LjIyNDI0IDEyNC42NjkgNi4yODQxMkMxMjQuMTY2IDYuMzAwNzUgMTIzLjggNi41NDY5MyAxMjMuNTc0IDcuMDE5MzFDMTIzLjQyNCA3LjI2NTQ4IDEyMy4zNDggNy41NzgxOCAxMjMuMzM4IDcuOTYwNzRWMTIuODM0M0gxMjMuOTQ3VjkuMDUxODhMMTIzLjk0MyA5LjA0ODU1WiIgZmlsbD0iIzFCMzI0RiIgc3Ryb2tlPSIjMUIzMjRGIiBzdHJva2Utd2lkdGg9IjAuMzMyNjYzIiBzdHJva2UtbWl0ZXJsaW1pdD0iMTAiLz4KPHBhdGggZD0iTTEyOS4yNzkgMTIuODI0NkMxMjkuOTk0IDEyLjgyNDYgMTMwLjU4IDEyLjU3ODQgMTMxLjAzOSAxMi4wODk0QzEzMS40OTggMTEuNjAwNCAxMzEuNzI0IDExLjAyODIgMTMxLjcyNCAxMC4zNzYyQzEzMS43MjQgOS43MjQxOCAxMzEuNTA4IDkuMTU1MzIgMTMxLjA3OSA4LjY3NjI5QzEzMC42MDMgOC4xNTQwMSAxMzAuMDA0IDcuODk0NTMgMTI5LjI4MyA3Ljg5NDUzQzEyOC41NjEgNy44OTQ1MyAxMjcuOTYyIDguMTU3MzQgMTI3LjQ4NiA4LjY4Mjk0QzEyNy4wNTcgOS4xNjE5OCAxMjYuODQxIDkuNzI3NSAxMjYuODQxIDEwLjM3NjJDMTI2Ljg0MSAxMS4wMjQ5IDEyNy4wNjcgMTEuNjAwNCAxMjcuNTIzIDEyLjA4OTRDMTI3Ljk3OSAxMi41Nzg0IDEyOC41NjQgMTIuODI0NiAxMjkuMjgzIDEyLjgyNDZIMTI5LjI3OVpNMTI3Ljk5MiA5LjA0MjIyQzEyOC4zNTEgOC42NzI5NiAxMjguNzggOC40ODY2NyAxMjkuMjc5IDguNDg2NjdDMTI5Ljc3OCA4LjQ4NjY3IDEzMC4yMDcgOC42NzI5NiAxMzAuNTY3IDkuMDQyMjJDMTMwLjkyNiA5LjQxMTQ3IDEzMS4xMDYgOS44NjA1NyAxMzEuMTA2IDEwLjM4NjJDMTMxLjEwNiAxMC43MjU1IDEzMS4wMjYgMTEuMDQxNSAxMzAuODYzIDExLjMzNzZDMTMwLjcgMTEuNjMzNyAxMzAuNDggMTEuODU5OSAxMzAuMjAxIDEyLjAxOTZDMTI5LjkyMSAxMi4xNzkyIDEyOS42MTUgMTIuMjU1NyAxMjkuMjc5IDEyLjI1NTdDMTI4Ljk0MyAxMi4yNTU3IDEyOC42NDQgMTIuMTc1OSAxMjguMzY0IDEyLjAxOTZDMTI4LjA4NSAxMS44NTk5IDEyNy44NjIgMTEuNjMzNyAxMjcuNjk5IDExLjMzNzZDMTI3LjUzNiAxMS4wNDE1IDEyNy40NTMgMTAuNzI1NSAxMjcuNDUzIDEwLjM4NjJDMTI3LjQ1MyA5Ljg2MDU3IDEyNy42MzMgOS40MTQ4IDEyNy45OTIgOS4wNDIyMloiIGZpbGw9IiMxQjMyNEYiIHN0cm9rZT0iIzFCMzI0RiIgc3Ryb2tlLXdpZHRoPSIwLjMzMjY2MyIgc3Ryb2tlLW1pdGVybGltaXQ9IjEwIi8+CjxwYXRoIGQ9Ik0xMzUuMjY4IDguNjY2N0wxMzUuNTggOC4xNjEwNUMxMzUuMzkxIDguMDUxMjcgMTM1LjIxNSA3Ljk5ODA1IDEzNS4wNTIgNy45OTgwNUMxMzQuODI5IDcuOTk4MDUgMTM0LjU0OSA4LjExMTE1IDEzNC4yMTMgOC4zNDA2OUMxMzMuODc3IDguNTcwMjMgMTMzLjYwOCA4LjkyOTUgMTMzLjQwOCA5LjQxODUyQzEzMy4zMjIgOS41OTQ4MyAxMzMuMjU4IDkuODI0MzcgMTMzLjIxMiAxMC4xMDcxVjEyLjgxMTdIMTMzLjgyN1YxMS4yMjQ5QzEzMy44MjcgMTAuNDk2MyAxMzMuODY0IDkuOTk3MzUgMTMzLjkzNyA5LjczMTIyQzEzNC4wMzcgOS40MzE4MiAxMzQuMjE3IDkuMTU1NzEgMTM0LjQ3OSA4Ljg5OTU2QzEzNC43MzkgOC42NDY3NCAxMzUuMDA1IDguNTY2OSAxMzUuMjY4IDguNjYzMzdWOC42NjY3WiIgZmlsbD0iIzFCMzI0RiIgc3Ryb2tlPSIjMUIzMjRGIiBzdHJva2Utd2lkdGg9IjAuMzMyNjYzIiBzdHJva2UtbWl0ZXJsaW1pdD0iMTAiLz4KPHBhdGggZD0iTTEzNy4yODcgMTAuODMxM0MxMzcuMjY0IDEwLjE5MjYgMTM3LjMxIDkuNzMwMjEgMTM3LjQyMyA5LjQ0NzQ1QzEzNy41MzcgOS4xNjQ2OSAxMzcuNjk2IDguOTUxNzggMTM3Ljg5NiA4LjgwODc0QzEzOC4wOTUgOC42NjU2OSAxMzguMzM4IDguNTk1ODMgMTM4LjYxOCA4LjU5NTgzQzEzOC44NzcgOC41OTU4MyAxMzkuMDkzIDguNjU1NzEgMTM5LjI2NiA4Ljc3ODhDMTM5LjQzOSA4LjkwMTg4IDEzOS41ODkgOS4wNjE1NiAxMzkuNzE2IDkuMjY3ODFDMTM5Ljg0MiA5LjQ3MDc0IDEzOS45MDUgOS44NTY2MiAxMzkuOTA1IDEwLjQyMjJWMTIuODI3M0gxNDAuNTA3VjEwLjQ0ODhDMTQwLjU3NCA5LjgzOTk5IDE0MC42NyA5LjQ0NzQ1IDE0MC43OTcgOS4yNzExNEMxNDEuMTI2IDguODU1MzEgMTQxLjUxOSA4LjYzMjQyIDE0MS45ODEgOC41OTkxNkMxNDIuMjI3IDguNTk5MTYgMTQyLjQzNyA4LjY1NTcxIDE0Mi42MSA4Ljc3MjE0QzE0Mi43ODMgOC44ODg1OCAxNDIuOTA2IDkuMDM4MjcgMTQyLjk3OSA5LjIyNzg5QzE0My4wNTIgOS40MTc1MSAxNDMuMDg1IDkuNzYwMTUgMTQzLjA4NSAxMC4yNjI1VjEyLjgyNEgxNDMuNzAxVjEwLjI2MjVDMTQzLjcwMSA5LjY3Njk5IDE0My42NDEgOS4yMzc4NyAxNDMuNTE4IDguOTQxOEMxNDMuMzk4IDguNjQ1NzMgMTQzLjE4NSA4LjQxNjE5IDE0Mi44ODYgOC4yNTY1MkMxNDIuNTg2IDguMDkzNTEgMTQyLjI3NCA4LjAxMzY3IDE0MS45NDggOC4wMTM2N0MxNDEuNTEyIDguMDYzNTcgMTQxLjIzMiA4LjEzMDEgMTQxLjExMyA4LjIwNjYyQzE0MC45MzYgOC4yOTY0NCAxNDAuNzkzIDguMzg5NTggMTQwLjY4IDguNDg2MDVDMTQwLjQ1MSA4LjczMjIyIDE0MC4zMDEgOC45NDUxMyAxNDAuMjMxIDkuMTI4MDlDMTQwLjEwMSA4Ljg0MiAxMzkuOTcyIDguNjI5MSAxMzkuODQyIDguNDg2MDVDMTM5LjcxMiA4LjM0MzAxIDEzOS41MzMgOC4yMjk5IDEzOS4zIDguMTQzNDFDMTM5LjA2NyA4LjA1NjkyIDEzOC44MzQgOC4wMTM2NyAxMzguNjA4IDguMDEzNjdDMTM4LjI1NSA4LjAyMzY1IDEzNy45ODIgOC4wODY4NiAxMzcuNzg5IDguMjA5OTRDMTM3LjUgOC4zNjk2MiAxMzcuMjY0IDguNTg1ODUgMTM3LjA4NCA4Ljg1NTMxQzEzNi44NjggOS4xNTEzOCAxMzYuNzM1IDkuNjIwNDMgMTM2LjY4MiAxMC4yNTkxVjEyLjgyNzNIMTM3LjI4VjEwLjgzOEwxMzcuMjg3IDEwLjgzMTNaIiBmaWxsPSIjMUIzMjRGIiBzdHJva2U9IiMxQjMyNEYiIHN0cm9rZS13aWR0aD0iMC4zMzI2NjMiIHN0cm9rZS1taXRlcmxpbWl0PSIxMCIvPgo8cGF0aCBkPSJNMTQ3Ljc4OCAxMi44MjMyQzE0OC4xMzQgMTIuODIzMiAxNDguNDQ0IDEyLjc3IDE0OC43MTcgMTIuNjY2OUMxNDguOTg5IDEyLjU2MzcgMTQ5LjIzNiAxMi40MTA3IDE0OS40NTUgMTIuMjExMUMxNDkuNjc1IDEyLjAxMTUgMTQ5Ljg2NCAxMS43NDg3IDE1MC4wMjcgMTEuNDE5NEwxNDkuNTIyIDExLjE0OTlDMTQ5LjMzNSAxMS40NTkzIDE0OS4xNjYgMTEuNjc4OSAxNDkuMDA2IDExLjgxODZDMTQ4Ljg0NiAxMS45NTUgMTQ4LjY1NyAxMi4wNjQ3IDE0OC40MyAxMi4xNTEyQzE0OC4yMDQgMTIuMjM0NCAxNDcuOTcxIDEyLjI3NzcgMTQ3LjczMiAxMi4yNzc3QzE0Ny4yNCAxMi4yNzc3IDE0Ni44MjQgMTIuMTA0NyAxNDYuNDg4IDExLjc1MkMxNDYuMTUyIDExLjQwMjggMTQ1Ljk3OSAxMC45NTM3IDE0NS45NjUgMTAuNDA4MUgxNTAuMThDMTUwLjE4IDkuNzY5MzggMTUwLjAwNyA5LjIzNzEyIDE0OS42NjggOC44MDc5OEMxNDkuMTg5IDguMTk5MjEgMTQ4LjU1IDcuODk2NDggMTQ3Ljc1NSA3Ljg5NjQ4QzE0Ni45NiA3Ljg5NjQ4IDE0Ni4zNTUgOC4xOTI1NSAxNDUuODk2IDguNzg0NjlDMTQ1LjUzIDkuMjUwNDIgMTQ1LjM0NyA5Ljc3OTM2IDE0NS4zNDcgMTAuMzc0OEMxNDUuMzQ3IDExLjAwNjkgMTQ1LjU2MyAxMS41NjkxIDE0NS45OTIgMTIuMDcxNEMxNDYuNDIxIDEyLjU3MzcgMTQ3LjAyIDEyLjgyMzIgMTQ3Ljc4NSAxMi44MjMySDE0Ny43ODhaTTE0Ni41NzggOC45MTc3NkMxNDYuOTA3IDguNjIxNjkgMTQ3LjMwMyA4LjQ3MTk5IDE0Ny43NjIgOC40NzE5OUMxNDguMDQxIDguNDcxOTkgMTQ4LjMwNyA4LjUzMTg3IDE0OC41NiA4LjY0ODNDMTQ4LjgxMyA4Ljc2ODA2IDE0OS4wMTkgOC45MjEwOSAxNDkuMTcyIDkuMTE0MDNDMTQ5LjMyNSA5LjMwNjk3IDE0OS40NDIgOS41NjMxMyAxNDkuNTIyIDkuODg1ODFIMTQ2LjAzMkMxNDYuMTU1IDkuNDU2NjcgMTQ2LjMzNSA5LjEzMDY2IDE0Ni41NzQgOC45MTQ0M0wxNDYuNTc4IDguOTE3NzZaIiBmaWxsPSIjMUIzMjRGIiBzdHJva2U9IiMxQjMyNEYiIHN0cm9rZS13aWR0aD0iMC4zMzI2NjMiIHN0cm9rZS1taXRlcmxpbWl0PSIxMCIvPgo8cGF0aCBkPSJNMTAyLjU4NyAyMC4wMDI4QzEwMi4zMzQgMTkuNjkzNSAxMDIuMDQ4IDE5LjQ2MDYgMTAxLjczNSAxOS4zMDc2QzEwMS40MjMgMTkuMTU0NiAxMDEuMDc3IDE5LjA3OCAxMDAuNzA0IDE5LjA3OEMxMDAuMDQyIDE5LjA3OCA5OS40NzY1IDE5LjMxNzYgOTkuMDA0MSAxOS43OTk5Qzk4LjUzMTcgMjAuMjgyMyA5OC4yOTg4IDIwLjg2NzggOTguMjk4OCAyMS41NTMxQzk4LjI5ODggMjIuMjM4MyA5OC41MzUgMjIuODA3MiA5OS4wMTA3IDIzLjI4NjJDOTkuNDgzMSAyMy43NjUzIDEwMC4wNTUgMjQuMDA0OCAxMDAuNzIxIDI0LjAwNDhDMTAxLjEwMyAyNC4wMDQ4IDEwMS40NjIgMjMuOTMxNiAxMDEuNzk1IDIzLjc4NTJDMTAyLjEzMSAyMy42Mzg5IDEwMi40NCAyMy40MDYgMTAyLjcyIDIzLjA5QzEwMi45NzYgMjIuNjYwOCAxMDMuMTI5IDIyLjI0MTcgMTAzLjE4MiAyMS44MjkyQzEwMy4xODIgMTguODU4NSAxMDMuMTgyIDE3LjM3ODEgMTAzLjE4MiAxNy4zODQ4SDEwMi41ODRWMjAuMDAyOEgxMDIuNTg3Wk0xMDIuMDkxIDIyLjg4MzdDMTAxLjczMiAyMy4yNDk2IDEwMS4yOTMgMjMuNDMyNiAxMDAuNzc0IDIzLjQzMjZDMTAwLjQzNSAyMy40MzI2IDEwMC4xMjIgMjMuMzQ5NCA5OS44MzkxIDIzLjE4MzFDOTkuNTU2MyAyMy4wMTY4IDk5LjMzMDEgMjIuNzgzOSA5OS4xNjA0IDIyLjQ4NzhDOTguOTkwOCAyMi4xOTE4IDk4LjkwNzYgMjEuODc1NyA5OC45MDc2IDIxLjUzNjRDOTguOTA3NiAyMS4xOTcxIDk4Ljk5MDggMjAuODg3NyA5OS4xNjM4IDIwLjU4NUM5OS4zMzM0IDIwLjI4MjMgOTkuNTYyOSAyMC4wNDYxIDk5Ljg0OSAxOS44Nzk4QzEwMC4xMzUgMTkuNzEzNCAxMDAuNDQxIDE5LjYzMDMgMTAwLjc2NyAxOS42MzAzQzEwMS4wOTMgMTkuNjMwMyAxMDEuNDEzIDE5LjcxMzQgMTAxLjcwOSAxOS44Nzk4QzEwMi4wMDUgMjAuMDQ2MSAxMDIuMjM0IDIwLjI3MjMgMTAyLjM5NCAyMC41NTg0QzEwMi41NTQgMjAuODQ0NSAxMDIuNjMzIDIxLjE2MzggMTAyLjYzMyAyMS41MTk4QzEwMi42MzMgMjIuMDY1NCAxMDIuNDU0IDIyLjUyMTEgMTAyLjA5NSAyMi44ODM3SDEwMi4wOTFaIiBmaWxsPSIjMUIzMjRGIiBzdHJva2U9IiMxQjMyNEYiIHN0cm9rZS13aWR0aD0iMC4zMzI2NjMiIHN0cm9rZS1taXRlcmxpbWl0PSIxMCIvPgo8cGF0aCBkPSJNMTA1LjUxMSAxOS41NjM3TDEwNS44NDQgMTkuNzU2N0MxMDUuOTkzIDE5LjQ2NzIgMTA2LjA5IDE5LjIxNzcgMTA2LjE0IDE5LjAwNDhDMTA2LjE5IDE4Ljc5MTkgMTA2LjIxMyAxOC40OTkyIDEwNi4yMTMgMTguMTI5OVYxNy4zODQ4SDEwNS40MzVWMTguNTc1N0gxMDUuODE0QzEwNS43OTcgMTguNzY4NiAxMDUuNzY3IDE4LjkyODMgMTA1LjczMSAxOS4wNTQ3QzEwNS42OTQgMTkuMTgxMSAxMDUuNjE4IDE5LjM1MDggMTA1LjUxMSAxOS41NjM3WiIgZmlsbD0iIzFCMzI0RiIgc3Ryb2tlPSIjMUIzMjRGIiBzdHJva2Utd2lkdGg9IjAuMzMyNjYzIiBzdHJva2UtbWl0ZXJsaW1pdD0iMTAiLz4KPHBhdGggZD0iTTExMi44MDYgMTkuOTg5NkMxMTIuMzI3IDE5LjM4MDggMTExLjY4OCAxOS4wNzgxIDExMC44OTMgMTkuMDc4MUMxMTAuMDk4IDE5LjA3ODEgMTA5LjQ5MiAxOS4zNzQyIDEwOS4wMzMgMTkuOTY2M0MxMDguNjY3IDIwLjQzMjEgMTA4LjQ4NCAyMC45NjEgMTA4LjQ4NCAyMS41NTY1QzEwOC40ODQgMjIuMTg4NSAxMDguNzAxIDIyLjc1MDcgMTA5LjEzIDIzLjI1M0MxMDkuNTU5IDIzLjc1NTQgMTEwLjE1OCAyNC4wMDQ5IDExMC45MjMgMjQuMDA0OUMxMTEuMjY5IDI0LjAwNDkgMTExLjU3OCAyMy45NTE2IDExMS44NTEgMjMuODQ4NUMxMTIuMTI0IDIzLjc0NTQgMTEyLjM3IDIzLjU5MjQgMTEyLjU4OSAyMy4zOTI4QzExMi44MDkgMjMuMTkzMiAxMTIuOTk5IDIyLjkzMDQgMTEzLjE2MiAyMi42MDFMMTEyLjY1NiAyMi4zMzE2QzExMi40NyAyMi42NDA5IDExMi4zIDIyLjg2MDUgMTEyLjE0IDIzLjAwMDJDMTExLjk4MSAyMy4xMzY2IDExMS43OTEgMjMuMjQ2NCAxMTEuNTY1IDIzLjMzMjlDMTExLjMzOSAyMy40MTYgMTExLjEwNiAyMy40NTkzIDExMC44NjYgMjMuNDU5M0MxMTAuMzc0IDIzLjQ1OTMgMTA5Ljk1OCAyMy4yODYzIDEwOS42MjIgMjIuOTMzN0MxMDkuMjg2IDIyLjU4NDQgMTA5LjExMyAyMi4xMzUzIDEwOS4xIDIxLjU4OTdIMTEzLjMxNUMxMTMuMzE1IDIwLjk1MSAxMTMuMTQyIDIwLjQxODggMTEyLjgwMiAxOS45ODk2SDExMi44MDZaTTEwOS4xNyAyMS4wNzQxQzEwOS4yOTMgMjAuNjQ1IDEwOS40NzIgMjAuMzE5IDEwOS43MTIgMjAuMTAyN0MxMTAuMDQxIDE5LjgwNjcgMTEwLjQzNyAxOS42NTcgMTEwLjg5NiAxOS42NTdDMTExLjE3NiAxOS42NTcgMTExLjQ0MiAxOS43MTY4IDExMS42OTUgMTkuODMzM0MxMTEuOTQ3IDE5Ljk1MyAxMTIuMTU0IDIwLjEwNjEgMTEyLjMwNyAyMC4yOTlDMTEyLjQ2IDIwLjQ5MTkgMTEyLjU3NiAyMC43NDgxIDExMi42NTYgMjEuMDcwOEgxMDkuMTY2TDEwOS4xNyAyMS4wNzQxWiIgZmlsbD0iIzFCMzI0RiIgc3Ryb2tlPSIjMUIzMjRGIiBzdHJva2Utd2lkdGg9IjAuMzMyNjYzIiBzdHJva2UtbWl0ZXJsaW1pdD0iMTAiLz4KPHBhdGggZD0iTTExOC42NTEgMjQuMDA0NEwxMTYuODQyIDIxLjUzOTRMMTE4LjQ1MiAxOS4zMTA1SDExNy43MjdMMTE2LjQ4MiAyMS4wNTA0TDExNS4yNDIgMTkuMzEwNUgxMTQuNTJMMTE2LjEyMyAyMS41Mzk0TDExNC4zNDcgMjQuMDA0NEgxMTUuMDY1TDExNi40ODIgMjIuMDMxN0wxMTcuOTE5IDI0LjAwNDRIMTE4LjY1MVoiIGZpbGw9IiMxQjMyNEYiIHN0cm9rZT0iIzFCMzI0RiIgc3Ryb2tlLXdpZHRoPSIwLjMzMjY2MyIgc3Ryb2tlLW1pdGVybGltaXQ9IjEwIi8+CjxwYXRoIGQ9Ik0xMjMuODQ0IDIyLjMzNTVDMTIzLjY1OCAyMi42NDQ5IDEyMy40ODggMjIuODY0NCAxMjMuMzI4IDIzLjAwNDFDMTIzLjE2OSAyMy4xNDA1IDEyMi45NzkgMjMuMjUwMyAxMjIuNzUzIDIzLjMzNjhDMTIyLjUyNyAyMy40MiAxMjIuMjk0IDIzLjQ2MzIgMTIyLjA1NCAyMy40NjMyQzEyMS41NjIgMjMuNDYzMiAxMjEuMTQ2IDIzLjI5MDIgMTIwLjgxIDIyLjkzNzZDMTIwLjQ3NCAyMi41ODgzIDEyMC4zMDEgMjIuMTM5MiAxMjAuMjg4IDIxLjU5MzZIMTI0LjUwM0MxMjQuNTAzIDIwLjk1NDkgMTI0LjMzIDIwLjQyMjcgMTIzLjk5IDE5Ljk5MzVDMTIzLjUxMSAxOS4zODQ4IDEyMi44NzIgMTkuMDgyIDEyMi4wNzcgMTkuMDgyQzEyMS4yODIgMTkuMDgyIDEyMC42NzcgMTkuMzc4MSAxMjAuMjE4IDE5Ljk3MDJDMTE5Ljg1MiAyMC40MzYgMTE5LjY2OSAyMC45NjQ5IDExOS42NjkgMjEuNTYwNEMxMTkuNjY5IDIyLjE5MjQgMTE5Ljg4NSAyMi43NTQ2IDEyMC4zMTQgMjMuMjU3QzEyMC43NDMgMjMuNzU5MyAxMjEuMzQyIDI0LjAwODggMTIyLjEwNyAyNC4wMDg4QzEyMi40NTMgMjQuMDA4OCAxMjIuNzYzIDIzLjk1NTUgMTIzLjAzNSAyMy44NTI0QzEyMy4zMDggMjMuNzQ5MyAxMjMuNTU0IDIzLjU5NjMgMTIzLjc3NCAyMy4zOTY3QzEyMy45OTQgMjMuMTk3MSAxMjQuMTgzIDIyLjkzNDMgMTI0LjM0NiAyMi42MDQ5TDEyMy44NDEgMjIuMzM1NUgxMjMuODQ0Wk0xMjAuODk2IDIwLjEwMzNDMTIxLjIyNiAxOS44MDcyIDEyMS42MjIgMTkuNjU3NSAxMjIuMDgxIDE5LjY1NzVDMTIyLjM2IDE5LjY1NzUgMTIyLjYyNiAxOS43MTc0IDEyMi44NzkgMTkuODMzOEMxMjMuMTMyIDE5Ljk1MzYgMTIzLjMzOCAyMC4xMDY2IDEyMy40OTEgMjAuMjk5NkMxMjMuNjQ0IDIwLjQ5MjUgMTIzLjc2MSAyMC43NDg3IDEyMy44NDEgMjEuMDcxNEgxMjAuMzUxQzEyMC40NzQgMjAuNjQyMiAxMjAuNjU0IDIwLjMxNjIgMTIwLjg5MyAyMC4xTDEyMC44OTYgMjAuMTAzM1oiIGZpbGw9IiMxQjMyNEYiIHN0cm9rZT0iIzFCMzI0RiIgc3Ryb2tlLXdpZHRoPSIwLjMzMjY2MyIgc3Ryb2tlLW1pdGVybGltaXQ9IjEwIi8+CjxwYXRoIGQ9Ik0xMjguMzcxIDE5LjM0NDZDMTI4LjE4MiAxOS4yMzQ5IDEyOC4wMDYgMTkuMTgxNiAxMjcuODQzIDE5LjE4MTZDMTI3LjYyIDE5LjE4MTYgMTI3LjM0IDE5LjI5NDcgMTI3LjAwNCAxOS41MjQzQzEyNi42NjggMTkuNzUzOCAxMjYuMzk5IDIwLjExMzEgMTI2LjE5OSAyMC42MDIxQzEyNi4xMTMgMjAuNzc4NCAxMjYuMDUgMjEuMDA4IDEyNi4wMDMgMjEuMjkwN1YyMy45OTUzSDEyNi42MThWMjIuNDA4NUMxMjYuNjE4IDIxLjY3OTkgMTI2LjY1NSAyMS4xODA5IDEyNi43MjggMjAuOTE0OEMxMjYuODI4IDIwLjYxNTQgMTI3LjAwOCAyMC4zMzkzIDEyNy4yNyAyMC4wODMyQzEyNy41MyAxOS44MzAzIDEyNy43OTYgMTkuNzUwNSAxMjguMDU5IDE5Ljg0N0wxMjguMzcxIDE5LjM0MTNWMTkuMzQ0NloiIGZpbGw9IiMxQjMyNEYiIHN0cm9rZT0iIzFCMzI0RiIgc3Ryb2tlLXdpZHRoPSIwLjMzMjY2MyIgc3Ryb2tlLW1pdGVybGltaXQ9IjEwIi8+CjxwYXRoIGQ9Ik0xMzEuNzA4IDE5LjY0NDJDMTMyLjQyMyAxOS42NDQyIDEzMi45ODkgMTkuOTIwMyAxMzMuNDAxIDIwLjQ3NTlMMTMzLjg4IDIwLjE3NjVDMTMzLjc0IDE5Ljk0MDMgMTMzLjU3MSAxOS43NDQgMTMzLjM2OCAxOS41OTFDMTMzLjE2NSAxOS40MzggMTMyLjkxOSAxOS4zMTQ5IDEzMi42MjkgMTkuMjIxN0MxMzIuMzQgMTkuMTI4NiAxMzIuMDQxIDE5LjA4MiAxMzEuNzM0IDE5LjA4MkMxMzEuMjM5IDE5LjA4MiAxMzAuNzkgMTkuMTkxOCAxMzAuMzk0IDE5LjQwOEMxMjkuOTk1IDE5LjYyNzYgMTI5LjY4MiAxOS45MzAzIDEyOS40NTIgMjAuMzE5NUMxMjkuMjIzIDIwLjcwODggMTI5LjEwNiAyMS4xMzEyIDEyOS4xMDYgMjEuNTg3QzEyOS4xMDYgMjIuMjU5IDEyOS4zNTMgMjIuODMxMSAxMjkuODQyIDIzLjMwMzVDMTMwLjMzMSAyMy43NzI2IDEzMC45NDYgMjQuMDA4OCAxMzEuNjg1IDI0LjAwODhDMTMyLjE3IDI0LjAwODggMTMyLjU5OSAyMy45MTU2IDEzMi45NzkgMjMuNzMyN0MxMzMuMzU4IDIzLjU0OTcgMTMzLjY1NyAyMy4yODY5IDEzMy44ODMgMjIuOTUwOUwxMzMuNDA0IDIyLjYzODJDMTMyLjk2OSAyMy4xODcxIDEzMi40MDMgMjMuNDU5OSAxMzEuNzExIDIzLjQ1OTlDMTMxLjMzNSAyMy40NTk5IDEzMC45OTYgMjMuMzc2NyAxMzAuNjkzIDIzLjIxMDRDMTMwLjM5MSAyMy4wNDQgMTMwLjE1MSAyMi44MTEyIDEyOS45NzggMjIuNTA1MUMxMjkuODA1IDIyLjIwMjQgMTI5LjcxOSAyMS44Nzk3IDEyOS43MTkgMjEuNTM3MUMxMjkuNzE5IDIxLjAwODEgMTI5LjkwOCAyMC41NjI0IDEzMC4yODQgMjAuMTkzMUMxMzAuNjYzIDE5LjgyMzkgMTMxLjEzOSAxOS42NDA5IDEzMS43MTEgMTkuNjQwOUwxMzEuNzA4IDE5LjY0NDJaIiBmaWxsPSIjMUIzMjRGIiBzdHJva2U9IiMxQjMyNEYiIHN0cm9rZS13aWR0aD0iMC4zMzI2NjMiIHN0cm9rZS1taXRlcmxpbWl0PSIxMCIvPgo8cGF0aCBkPSJNMTM1LjM1NyAxNy44NzY1QzEzNS4zNTcgMTguMDEyOSAxMzUuNDA3IDE4LjEzMjcgMTM1LjUwNCAxOC4yMjkxQzEzNS42IDE4LjMyODkgMTM1LjcxNyAxOC4zNzU1IDEzNS44NTMgMTguMzc1NUMxMzUuOTg5IDE4LjM3NTUgMTM2LjEwOSAxOC4zMjU2IDEzNi4yMDYgMTguMjI5MUMxMzYuMzAyIDE4LjEzMjcgMTM2LjM1MiAxOC4wMTI5IDEzNi4zNTIgMTcuODc2NUMxMzYuMzUyIDE3Ljc0MDEgMTM2LjMwMiAxNy42MjM3IDEzNi4yMDYgMTcuNTI3MkMxMzYuMTA2IDE3LjQzMDggMTM1Ljk4OSAxNy4zODA5IDEzNS44NTMgMTcuMzgwOUMxMzUuNzE3IDE3LjM4MDkgMTM1LjYgMTcuNDMwOCAxMzUuNTA0IDE3LjUyNzJDMTM1LjQwNyAxNy42MjM3IDEzNS4zNTcgMTcuNzQwMSAxMzUuMzU3IDE3Ljg3NjVaIiBmaWxsPSIjMUIzMjRGIiBzdHJva2U9IiMxQjMyNEYiIHN0cm9rZS13aWR0aD0iMC4zMzI2NjMiIHN0cm9rZS1taXRlcmxpbWl0PSIxMCIvPgo8cGF0aCBkPSJNMTM2LjE1NiAxOS4zMTA1SDEzNS41NTRWMjQuMDA0NEgxMzYuMTU2VjE5LjMxMDVaIiBmaWxsPSIjMUIzMjRGIiBzdHJva2U9IiMxQjMyNEYiIHN0cm9rZS13aWR0aD0iMC4zMzI2NjMiIHN0cm9rZS1taXRlcmxpbWl0PSIxMCIvPgo8cGF0aCBkPSJNMTQyLjU2MyAyMi45NTAzTDE0Mi4wODQgMjIuNjM3NkMxNDEuNjQ4IDIzLjE4NjUgMTQxLjA4MiAyMy40NTkzIDE0MC4zOSAyMy40NTkzQzE0MC4wMTUgMjMuNDU5MyAxMzkuNjc1IDIzLjM3NjEgMTM5LjM3MyAyMy4yMDk4QzEzOS4wNyAyMy4wNDM1IDEzOC44MyAyMi44MTA2IDEzOC42NTcgMjIuNTA0NkMxMzguNDg0IDIyLjIwMTggMTM4LjM5OCAyMS44NzkxIDEzOC4zOTggMjEuNTM2NUMxMzguMzk4IDIxLjAwNzYgMTM4LjU4NyAyMC41NjE4IDEzOC45NjMgMjAuMTkyNUMxMzkuMzQzIDE5LjgyMzMgMTM5LjgxOCAxOS42NDAzIDE0MC4zOSAxOS42NDAzQzE0MS4xMDYgMTkuNjQwMyAxNDEuNjcxIDE5LjkxNjQgMTQyLjA4NCAyMC40NzJMMTQyLjU2MyAyMC4xNzI2QzE0Mi40MjMgMTkuOTM2NCAxNDIuMjUzIDE5Ljc0MDEgMTQyLjA1IDE5LjU4NzFDMTQxLjg0OCAxOS40MzQxIDE0MS42MDEgMTkuMzExIDE0MS4zMTIgMTkuMjE3OEMxNDEuMDIzIDE5LjEyNDcgMTQwLjcyMyAxOS4wNzgxIDE0MC40MTcgMTkuMDc4MUMxMzkuOTIxIDE5LjA3ODEgMTM5LjQ3MiAxOS4xODc5IDEzOS4wNzYgMTkuNDA0MUMxMzguNjc3IDE5LjYyMzcgMTM4LjM2NSAxOS45MjY0IDEzOC4xMzUgMjAuMzE1NkMxMzcuOTA1IDIwLjcwNDggMTM3Ljc4OSAyMS4xMjczIDEzNy43ODkgMjEuNTgzMUMxMzcuNzg5IDIyLjI1NTEgMTM4LjAzNSAyMi44MjcyIDEzOC41MjQgMjMuMjk5NkMxMzkuMDEzIDIzLjc2ODcgMTM5LjYyOSAyNC4wMDQ5IDE0MC4zNjcgMjQuMDA0OUMxNDAuODUzIDI0LjAwNDkgMTQxLjI4MiAyMy45MTE3IDE0MS42NjEgMjMuNzI4OEMxNDIuMDQgMjMuNTQ1OCAxNDIuMzQgMjMuMjgzIDE0Mi41NjYgMjIuOTQ3TDE0Mi41NjMgMjIuOTUwM1oiIGZpbGw9IiMxQjMyNEYiIHN0cm9rZT0iIzFCMzI0RiIgc3Ryb2tlLXdpZHRoPSIwLjMzMjY2MyIgc3Ryb2tlLW1pdGVybGltaXQ9IjEwIi8+CjxwYXRoIGQ9Ik0xNDguMjAxIDIzLjM5NjdDMTQ4LjQyMSAyMy4xOTcxIDE0OC42MSAyMi45MzQzIDE0OC43NzMgMjIuNjA0OUwxNDguMjY4IDIyLjMzNTVDMTQ4LjA4MSAyMi42NDQ5IDE0Ny45MTIgMjIuODY0NCAxNDcuNzUyIDIzLjAwNDFDMTQ3LjU5MiAyMy4xNDA1IDE0Ny40MDMgMjMuMjUwMyAxNDcuMTc3IDIzLjMzNjhDMTQ2Ljk1IDIzLjQyIDE0Ni43MTcgMjMuNDYzMiAxNDYuNDc4IDIzLjQ2MzJDMTQ1Ljk4NiAyMy40NjMyIDE0NS41NyAyMy4yOTAyIDE0NS4yMzQgMjIuOTM3NkMxNDQuODk4IDIyLjU4ODMgMTQ0LjcyNSAyMi4xMzkyIDE0NC43MTIgMjEuNTkzNkgxNDguOTI2QzE0OC45MjYgMjAuOTU0OSAxNDguNzUzIDIwLjQyMjcgMTQ4LjQxNCAxOS45OTM1QzE0Ny45MzUgMTkuMzg0OCAxNDcuMjk2IDE5LjA4MiAxNDYuNTAxIDE5LjA4MkMxNDUuNzA2IDE5LjA4MiAxNDUuMTAxIDE5LjM3ODEgMTQ0LjY0MiAxOS45NzAyQzE0NC4yNzYgMjAuNDM2IDE0NC4wOTMgMjAuOTY0OSAxNDQuMDkzIDIxLjU2MDRDMTQ0LjA5MyAyMi4xOTI0IDE0NC4zMDkgMjIuNzU0NiAxNDQuNzM4IDIzLjI1N0MxNDUuMTY3IDIzLjc1OTMgMTQ1Ljc2NiAyNC4wMDg4IDE0Ni41MzEgMjQuMDA4OEMxNDYuODc3IDI0LjAwODggMTQ3LjE4NyAyMy45NTU1IDE0Ny40NTkgMjMuODUyNEMxNDcuNzMyIDIzLjc0OTMgMTQ3Ljk3OCAyMy41OTYzIDE0OC4xOTggMjMuMzk2N0gxNDguMjAxWk0xNDUuMzI0IDIwLjEwMzNDMTQ1LjY1MyAxOS44MDcyIDE0Ni4wNDkgMTkuNjU3NSAxNDYuNTA4IDE5LjY1NzVDMTQ2Ljc4NyAxOS42NTc1IDE0Ny4wNTMgMTkuNzE3NCAxNDcuMzA2IDE5LjgzMzhDMTQ3LjU1OSAxOS45NTM2IDE0Ny43NjUgMjAuMTA2NiAxNDcuOTE4IDIwLjI5OTZDMTQ4LjA3MSAyMC40OTI1IDE0OC4xODggMjAuNzQ4NyAxNDguMjY4IDIxLjA3MTRIMTQ0Ljc3OEMxNDQuOTAxIDIwLjY0MjIgMTQ1LjA4MSAyMC4zMTYyIDE0NS4zMiAyMC4xTDE0NS4zMjQgMjAuMTAzM1oiIGZpbGw9IiMxQjMyNEYiIHN0cm9rZT0iIzFCMzI0RiIgc3Ryb2tlLXdpZHRoPSIwLjMzMjY2MyIgc3Ryb2tlLW1pdGVybGltaXQ9IjEwIi8+CjxwYXRoIGQ9Ik0xMDAuNzYzIDMwLjI4MzJDMTAwLjM4MSAzMC4yODMyIDEwMC4wMjIgMzAuMzU2NCA5OS42ODkgMzAuNTAyOEM5OS4zNTMgMzAuNjQ5MSA5OS4wNDM2IDMwLjg4MiA5OC43NjQyIDMxLjE5OEM5OC41MDggMzEuNjI3MiA5OC4zNTUgMzIuMDQ2MyA5OC4zMDE4IDMyLjQ1ODhDOTguMzAxOCAzNS40Mjk1IDk4LjMwMTggMzYuOTA5OCA5OC4zMDE4IDM2LjkwMzJIOTguOTAwNVYzNC4yODUxQzk5LjE1MzQgMzQuNTk0NSA5OS40Mzk1IDM0LjgyNzQgOTkuNzUyMiAzNC45ODA0QzEwMC4wNjUgMzUuMTMzNCAxMDAuNDExIDM1LjIwOTkgMTAwLjc4MyAzNS4yMDk5QzEwMS40NDUgMzUuMjA5OSAxMDIuMDExIDM0Ljk3MDQgMTAyLjQ4MyAzNC40ODgxQzEwMi45NTIgMzQuMDA1NyAxMDMuMTg5IDMzLjQyMDIgMTAzLjE4OSAzMi43MzQ5QzEwMy4xODkgMzIuMDQ5NiAxMDIuOTUyIDMxLjQ4MDggMTAyLjQ3NyAzMS4wMDE4QzEwMi4wMDQgMzAuNTIyNyAxMDEuNDMyIDMwLjI4MzIgMTAwLjc2NyAzMC4yODMySDEwMC43NjNaTTEwMi4zMjQgMzMuNzA2M0MxMDIuMTU0IDM0LjAwOSAxMDEuOTI0IDM0LjI0NTIgMTAxLjYzOCAzNC40MTE2QzEwMS4zNTIgMzQuNTc3OSAxMDEuMDQ2IDM0LjY2MSAxMDAuNzIgMzQuNjYxQzEwMC4zOTQgMzQuNjYxIDEwMC4wNzUgMzQuNTc3OSA5OS43Nzg4IDM0LjQxMTZDOTkuNDgyNyAzNC4yNDUyIDk5LjI1MzIgMzQuMDE5IDk5LjA5MzUgMzMuNzMyOUM5OC45MzM4IDMzLjQ0NjggOTguODU0IDMzLjEyNzUgOTguODU0IDMyLjc3MTVDOTguODU0IDMyLjIyNiA5OS4wMzM2IDMxLjc3MDIgOTkuMzkyOSAzMS40MDc2Qzk5Ljc1MjIgMzEuMDQxNyAxMDAuMTkxIDMwLjg1ODcgMTAwLjcxIDMwLjg1ODdDMTAxLjA1IDMwLjg1ODcgMTAxLjM2MiAzMC45NDE5IDEwMS42NDUgMzEuMTA4MkMxMDEuOTI4IDMxLjI3NDUgMTAyLjE1NCAzMS41MDc0IDEwMi4zMjQgMzEuODAzNUMxMDIuNDkzIDMyLjA5OTUgMTAyLjU3NiAzMi40MTU2IDEwMi41NzYgMzIuNzU0OUMxMDIuNTc2IDMzLjA5NDIgMTAyLjQ5MyAzMy40MDM2IDEwMi4zMiAzMy43MDYzSDEwMi4zMjRaIiBmaWxsPSIjMUIzMjRGIiBzdHJva2U9IiMxQjMyNEYiIHN0cm9rZS13aWR0aD0iMC4zMzI2NjMiIHN0cm9rZS1taXRlcmxpbWl0PSIxMCIvPgo8cGF0aCBkPSJNMTA1Ljc3IDMwLjcwNzNDMTA1LjQzNCAzMC45MzY4IDEwNS4xNjQgMzEuMjk2MSAxMDQuOTY1IDMxLjc4NTFDMTA0Ljg3OCAzMS45NjE0IDEwNC44MTUgMzIuMTkxIDEwNC43NjkgMzIuNDczN1YzNS4xNzgzSDEwNS4zODRWMzMuNTkxNUMxMDUuMzg0IDMyLjg2MyAxMDUuNDIxIDMyLjM2NCAxMDUuNDk0IDMyLjA5NzhDMTA1LjU5NCAzMS43OTg0IDEwNS43NzMgMzEuNTIyMyAxMDYuMDM2IDMxLjI2NjJDMTA2LjI5NSAzMS4wMTMzIDEwNi41NjIgMzAuOTMzNSAxMDYuODI0IDMxLjAzTDEwNy4xMzcgMzAuNTI0M0MxMDYuOTQ3IDMwLjQxNDYgMTA2Ljc3MSAzMC4zNjEzIDEwNi42MDggMzAuMzYxM0MxMDYuMzg1IDMwLjM2MTMgMTA2LjEwNiAzMC40NzQ0IDEwNS43NyAzMC43MDRWMzAuNzA3M1oiIGZpbGw9IiMxQjMyNEYiIHN0cm9rZT0iIzFCMzI0RiIgc3Ryb2tlLXdpZHRoPSIwLjMzMjY2MyIgc3Ryb2tlLW1pdGVybGltaXQ9IjEwIi8+CjxwYXRoIGQ9Ik0xMTAuMzE1IDMwLjI2MTdDMTA5LjU5MyAzMC4yNjE3IDEwOC45OTQgMzAuNTI0NSAxMDguNTE4IDMxLjA1MDFDMTA4LjA4OSAzMS41MjkyIDEwNy44NzMgMzIuMDk0NyAxMDcuODczIDMyLjc0MzRDMTA3Ljg3MyAzMy4zOTIxIDEwOC4wOTkgMzMuOTY3NiAxMDguNTU1IDM0LjQ1NjZDMTA5LjAxMSAzNC45NDU2IDEwOS41OTYgMzUuMTkxOCAxMTAuMzE1IDM1LjE5MThDMTExLjAzMyAzNS4xOTE4IDExMS42MTYgMzQuOTQ1NiAxMTIuMDc1IDM0LjQ1NjZDMTEyLjUzNCAzMy45Njc2IDExMi43NiAzMy4zOTU0IDExMi43NiAzMi43NDM0QzExMi43NiAzMi4wOTE0IDExMi41NDQgMzEuNTIyNSAxMTIuMTE0IDMxLjA0MzVDMTExLjYzOSAzMC41MjEyIDExMS4wNCAzMC4yNjE3IDExMC4zMTggMzAuMjYxN0gxMTAuMzE1Wk0xMTEuODk4IDMzLjcwNDhDMTExLjczNSAzNC4wMDA4IDExMS41MTYgMzQuMjI3MSAxMTEuMjM2IDM0LjM4NjdDMTEwLjk1NyAzNC41NDY0IDExMC42NTEgMzQuNjIyOSAxMTAuMzE1IDM0LjYyMjlDMTA5Ljk3OSAzNC42MjI5IDEwOS42NzkgMzQuNTQzMSAxMDkuNCAzNC4zODY3QzEwOS4xMjEgMzQuMjI3MSAxMDguODk4IDM0LjAwMDggMTA4LjczNSAzMy43MDQ4QzEwOC41NzIgMzMuNDA4NyAxMDguNDg4IDMzLjA5MjcgMTA4LjQ4OCAzMi43NTM0QzEwOC40ODggMzIuMjI3OCAxMDguNjY4IDMxLjc4MiAxMDkuMDI3IDMxLjQwOTRDMTA5LjM4NyAzMS4wNDAxIDEwOS44MTYgMzAuODUzOSAxMTAuMzE1IDMwLjg1MzlDMTEwLjgxNCAzMC44NTM5IDExMS4yNDMgMzEuMDQwMSAxMTEuNjAyIDMxLjQwOTRDMTExLjk2MSAzMS43Nzg3IDExMi4xNDEgMzIuMjI3OCAxMTIuMTQxIDMyLjc1MzRDMTEyLjE0MSAzMy4wOTI3IDExMi4wNjEgMzMuNDA4NyAxMTEuODk4IDMzLjcwNDhaIiBmaWxsPSIjMUIzMjRGIiBzdHJva2U9IiMxQjMyNEYiIHN0cm9rZS13aWR0aD0iMC4zMzI2NjMiIHN0cm9rZS1taXRlcmxpbWl0PSIxMCIvPgo8cGF0aCBkPSJNMTE1LjU0MSAyOC42NDZDMTE1LjAzOCAyOC42NjI3IDExNC42NzIgMjguOTA4OCAxMTQuNDQ2IDI5LjM4MTJDMTE0LjI5NiAyOS42Mjc0IDExNC4yMiAyOS45NDAxIDExNC4yMSAzMC4zMjI3VjM1LjE5NjJIMTE0LjgxOVYzMS40MTM4SDExNS45MzZWMzAuODk0OEgxMTQuODI1VjMwLjQyNThDMTE0Ljg5OSAyOS44MDcgMTE1LjA2NSAyOS40Mjc4IDExNS4zMjEgMjkuMjkxNEMxMTUuNjA3IDI5LjE1ODMgMTE1Ljg5NyAyOS4xNzE2IDExNi4xOTMgMjkuMzMxM0MxMTYuMjY5IDI5LjExODQgMTE2LjMzMiAyOC45NTIxIDExNi4zODIgMjguODMyM0MxMTYuMDggMjguNjQ5NCAxMTUuOCAyOC41ODk1IDExNS41NDQgMjguNjQ5NEwxMTUuNTQxIDI4LjY0NloiIGZpbGw9IiMxQjMyNEYiIHN0cm9rZT0iIzFCMzI0RiIgc3Ryb2tlLXdpZHRoPSIwLjMzMjY2MyIgc3Ryb2tlLW1pdGVybGltaXQ9IjEwIi8+CjxwYXRoIGQ9Ik0xMjIuMDM0IDMxLjE3MzJDMTIxLjU1NSAzMC41NjQ0IDEyMC45MTYgMzAuMjYxNyAxMjAuMTIxIDMwLjI2MTdDMTE5LjMyNiAzMC4yNjE3IDExOC43MjEgMzAuNTU3OCAxMTguMjYyIDMxLjE0OTlDMTE3Ljg5NiAzMS42MTU3IDExNy43MTMgMzIuMTQ0NiAxMTcuNzEzIDMyLjc0MDFDMTE3LjcxMyAzMy4zNzIxIDExNy45MjkgMzMuOTM0MyAxMTguMzU4IDM0LjQzNjZDMTE4Ljc4NyAzNC45MzkgMTE5LjM4NiAzNS4xODg1IDEyMC4xNTEgMzUuMTg4NUMxMjAuNDk3IDM1LjE4ODUgMTIwLjgwNyAzNS4xMzUyIDEyMS4wNzkgMzUuMDMyMUMxMjEuMzUyIDM0LjkyOSAxMjEuNTk4IDM0Ljc3NiAxMjEuODE4IDM0LjU3NjRDMTIyLjAzOCAzNC4zNzY4IDEyMi4yMjcgMzQuMTE0IDEyMi4zOSAzMy43ODQ2TDEyMS44ODQgMzMuNTE1MkMxMjEuNjk4IDMzLjgyNDUgMTIxLjUyOSAzNC4wNDQxIDEyMS4zNjkgMzQuMTgzOEMxMjEuMjA5IDM0LjMyMDIgMTIxLjAyIDM0LjQzIDEyMC43OTMgMzQuNTE2NUMxMjAuNTY3IDM0LjU5OTYgMTIwLjMzNCAzNC42NDI5IDEyMC4wOTUgMzQuNjQyOUMxMTkuNjAyIDM0LjY0MjkgMTE5LjE4NyAzNC40Njk5IDExOC44NTEgMzQuMTE3M0MxMTguNTE1IDMzLjc2OCAxMTguMzQyIDMzLjMxODkgMTE4LjMyOCAzMi43NzMzSDEyMi41NDNDMTIyLjU0MyAzMi4xMzQ2IDEyMi4zNyAzMS42MDIzIDEyMi4wMzEgMzEuMTczMkgxMjIuMDM0Wk0xMTguMzk1IDMyLjI1NzdDMTE4LjUxOCAzMS44Mjg2IDExOC42OTggMzEuNTAyNiAxMTguOTM3IDMxLjI4NjNDMTE5LjI2NiAzMC45OTAzIDExOS42NjIgMzAuODQwNiAxMjAuMTIxIDMwLjg0MDZDMTIwLjQwMSAzMC44NDA2IDEyMC42NjcgMzAuOTAwNCAxMjAuOTIgMzEuMDE2OUMxMjEuMTczIDMxLjEzNjYgMTIxLjM3OSAzMS4yODk2IDEyMS41MzIgMzEuNDgyNkMxMjEuNjg1IDMxLjY3NTUgMTIxLjgwMSAzMS45MzE3IDEyMS44ODEgMzIuMjU0NEgxMTguMzkyTDExOC4zOTUgMzIuMjU3N1oiIGZpbGw9IiMxQjMyNEYiIHN0cm9rZT0iIzFCMzI0RiIgc3Ryb2tlLXdpZHRoPSIwLjMzMjY2MyIgc3Ryb2tlLW1pdGVybGltaXQ9IjEwIi8+CjxwYXRoIGQ9Ik0xMjUuNDg3IDMyLjQwNzRDMTI1LjExOCAzMi4yMTc4IDEyNC44NzkgMzIuMDUxNCAxMjQuNzY1IDMxLjkwODRDMTI0LjY0OSAzMS43NzIgMTI0LjU4OSAzMS42MjkgMTI0LjU4OSAzMS40NzkzQzEyNC41ODkgMzEuMzAzIDEyNC42NTkgMzEuMTQ5OSAxMjQuNzk5IDMxLjAyMDJDMTI0LjkzOCAzMC44OTA1IDEyNS4xMDggMzAuODI3MiAxMjUuMzA0IDMwLjgyNzJDMTI1LjYxIDMwLjgyNzIgMTI1LjkyMyAzMC45ODM2IDEyNi4yNDkgMzEuMjk2M0wxMjYuNjM1IDMwLjg5MzhDMTI2LjE5NiAzMC40NzEzIDEyNS43NiAzMC4yNjE3IDEyNS4zMzEgMzAuMjYxN0MxMjQuOTYyIDMwLjI2MTcgMTI0LjY1NiAzMC4zNzgxIDEyNC40MTMgMzAuNjE0M0MxMjQuMTcgMzAuODUwNSAxMjQuMDQ3IDMxLjE0NjYgMTI0LjA0NyAzMS41MDI1QzEyNC4wNDcgMzEuNzc1MyAxMjQuMTIzIDMyLjAxODIgMTI0LjI3NiAzMi4yMzExQzEyNC40MjYgMzIuNDQ3MyAxMjQuNzE2IDMyLjY2MzUgMTI1LjE0MSAzMi44NzY0QzEyNS41MzQgMzMuMDc5NCAxMjUuNzg3IDMzLjI0NTcgMTI1LjkgMzMuMzgyMUMxMjYuMDEgMzMuNTE1MiAxMjYuMDY2IDMzLjY3MTUgMTI2LjA2NiAzMy44NDQ1QzEyNi4wNjYgMzQuMDU0MSAxMjUuOTgzIDM0LjIzMzcgMTI1LjgxIDM0LjM5MDFDMTI1LjY0IDM0LjU0NjQgMTI1LjQzNCAzNC42MjI5IDEyNS4xOTUgMzQuNjIyOUMxMjQuODQ5IDM0LjYyMjkgMTI0LjUyMyAzNC40NDk5IDEyNC4yMTMgMzQuMTAwNkwxMjMuODM0IDM0LjUzMzFDMTIzLjk5NCAzNC43NDI3IDEyNC4xOTcgMzQuOTAyNCAxMjQuNDQzIDM1LjAxODhDMTI0LjY4OSAzNS4xMzUyIDEyNC45NDggMzUuMTkxOCAxMjUuMjE4IDM1LjE5MThDMTI1LjYyNCAzNS4xOTE4IDEyNS45NiAzNS4wNTg3IDEyNi4yMjkgMzQuNzkyNkMxMjYuNDk5IDM0LjUyNjUgMTI2LjYzNSAzNC4yMDA0IDEyNi42MzUgMzMuODE3OUMxMjYuNjM1IDMzLjU0NTEgMTI2LjU1NSAzMy4yOTg5IDEyNi4zOTkgMzMuMDc2QzEyNi4yMzkgMzIuODU5OCAxMjUuOTMzIDMyLjYzNjkgMTI1LjQ4NCAzMi40MDQxTDEyNS40ODcgMzIuNDA3NFoiIGZpbGw9IiMxQjMyNEYiIHN0cm9rZT0iIzFCMzI0RiIgc3Ryb2tlLXdpZHRoPSIwLjMzMjY2MyIgc3Ryb2tlLW1pdGVybGltaXQ9IjEwIi8+CjxwYXRoIGQ9Ik0xMjkuNTE2IDMyLjQwNzRDMTI5LjE0NiAzMi4yMTc4IDEyOC45MDcgMzIuMDUxNCAxMjguNzk0IDMxLjkwODRDMTI4LjY3NyAzMS43NzIgMTI4LjYxNyAzMS42MjkgMTI4LjYxNyAzMS40NzkzQzEyOC42MTcgMzEuMzAzIDEyOC42ODcgMzEuMTQ5OSAxMjguODI3IDMxLjAyMDJDMTI4Ljk2NyAzMC44OTA1IDEyOS4xMzYgMzAuODI3MiAxMjkuMzMzIDMwLjgyNzJDMTI5LjYzOSAzMC44MjcyIDEyOS45NTEgMzAuOTgzNiAxMzAuMjc3IDMxLjI5NjNMMTMwLjY2MyAzMC44OTM4QzEzMC4yMjQgMzAuNDcxMyAxMjkuNzg4IDMwLjI2MTcgMTI5LjM1OSAzMC4yNjE3QzEyOC45OSAzMC4yNjE3IDEyOC42ODQgMzAuMzc4MSAxMjguNDQxIDMwLjYxNDNDMTI4LjE5OCAzMC44NTA1IDEyOC4wNzUgMzEuMTQ2NiAxMjguMDc1IDMxLjUwMjVDMTI4LjA3NSAzMS43NzUzIDEyOC4xNTIgMzIuMDE4MiAxMjguMzA1IDMyLjIzMTFDMTI4LjQ1NCAzMi40NDczIDEyOC43NDQgMzIuNjYzNSAxMjkuMTcgMzIuODc2NEMxMjkuNTYyIDMzLjA3OTQgMTI5LjgxNSAzMy4yNDU3IDEyOS45MjggMzMuMzgyMUMxMzAuMDM4IDMzLjUxNTIgMTMwLjA5NCAzMy42NzE1IDEzMC4wOTQgMzMuODQ0NUMxMzAuMDk0IDM0LjA1NDEgMTMwLjAxMSAzNC4yMzM3IDEyOS44MzggMzQuMzkwMUMxMjkuNjY5IDM0LjU0NjQgMTI5LjQ2MiAzNC42MjI5IDEyOS4yMjMgMzQuNjIyOUMxMjguODc3IDM0LjYyMjkgMTI4LjU1MSAzNC40NDk5IDEyOC4yNDIgMzQuMTAwNkwxMjcuODYyIDM0LjUzMzFDMTI4LjAyMiAzNC43NDI3IDEyOC4yMjUgMzQuOTAyNCAxMjguNDcxIDM1LjAxODhDMTI4LjcxNyAzNS4xMzUyIDEyOC45NzcgMzUuMTkxOCAxMjkuMjQ2IDM1LjE5MThDMTI5LjY1MiAzNS4xOTE4IDEyOS45ODggMzUuMDU4NyAxMzAuMjU3IDM0Ljc5MjZDMTMwLjUyNyAzNC41MjY1IDEzMC42NjMgMzQuMjAwNCAxMzAuNjYzIDMzLjgxNzlDMTMwLjY2MyAzMy41NDUxIDEzMC41ODMgMzMuMjk4OSAxMzAuNDI3IDMzLjA3NkMxMzAuMjY3IDMyLjg1OTggMTI5Ljk2MSAzMi42MzY5IDEyOS41MTIgMzIuNDA0MUwxMjkuNTE2IDMyLjQwNzRaIiBmaWxsPSIjMUIzMjRGIiBzdHJva2U9IiMxQjMyNEYiIHN0cm9rZS13aWR0aD0iMC4zMzI2NjMiIHN0cm9rZS1taXRlcmxpbWl0PSIxMCIvPgo8cGF0aCBkPSJNMTMyLjU0IDI4LjU2NjRDMTMyLjQwMyAyOC41NjY0IDEzMi4yODcgMjguNjE2MyAxMzIuMTkgMjguNzEyOEMxMzIuMDk0IDI4LjgwOTIgMTMyLjA0NCAyOC45MjU3IDEzMi4wNDQgMjkuMDYyMUMxMzIuMDQ0IDI5LjE5ODUgMTMyLjA5NCAyOS4zMTgyIDEzMi4xOSAyOS40MTQ3QzEzMi4yODcgMjkuNTE0NSAxMzIuNDAzIDI5LjU2MTEgMTMyLjU0IDI5LjU2MTFDMTMyLjY3NiAyOS41NjExIDEzMi43OTYgMjkuNTExMiAxMzIuODkyIDI5LjQxNDdDMTMyLjk4OSAyOS4zMTgyIDEzMy4wMzkgMjkuMTk4NSAxMzMuMDM5IDI5LjA2MjFDMTMzLjAzOSAyOC45MjU3IDEzMi45ODkgMjguODA5MiAxMzIuODkyIDI4LjcxMjhDMTMyLjc5MiAyOC42MTYzIDEzMi42NzYgMjguNTY2NCAxMzIuNTQgMjguNTY2NFoiIGZpbGw9IiMxQjMyNEYiIHN0cm9rZT0iIzFCMzI0RiIgc3Ryb2tlLXdpZHRoPSIwLjMzMjY2MyIgc3Ryb2tlLW1pdGVybGltaXQ9IjEwIi8+CjxwYXRoIGQ9Ik0xMzIuODQyIDMwLjQ5NjFIMTMyLjI0VjM1LjE5SDEzMi44NDJWMzAuNDk2MVoiIGZpbGw9IiMxQjMyNEYiIHN0cm9rZT0iIzFCMzI0RiIgc3Ryb2tlLXdpZHRoPSIwLjMzMjY2MyIgc3Ryb2tlLW1pdGVybGltaXQ9IjEwIi8+CjxwYXRoIGQ9Ik0xMzYuOTE0IDMwLjI2MTdDMTM2LjE5MyAzMC4yNjE3IDEzNS41OTQgMzAuNTI0NSAxMzUuMTE4IDMxLjA1MDFDMTM0LjY4OSAzMS41MjkyIDEzNC40NzMgMzIuMDk0NyAxMzQuNDczIDMyLjc0MzRDMTM0LjQ3MyAzMy4zOTIxIDEzNC42OTkgMzMuOTY3NiAxMzUuMTU1IDM0LjQ1NjZDMTM1LjYxIDM0Ljk0NTYgMTM2LjE5NiAzNS4xOTE4IDEzNi45MTQgMzUuMTkxOEMxMzcuNjMzIDM1LjE5MTggMTM4LjIxNSAzNC45NDU2IDEzOC42NzQgMzQuNDU2NkMxMzkuMTMzIDMzLjk2NzYgMTM5LjM1OSAzMy4zOTU0IDEzOS4zNTkgMzIuNzQzNEMxMzkuMzU5IDMyLjA5MTQgMTM5LjE0MyAzMS41MjI1IDEzOC43MTQgMzEuMDQzNUMxMzguMjM4IDMwLjUyMTIgMTM3LjY0IDMwLjI2MTcgMTM2LjkxOCAzMC4yNjE3SDEzNi45MTRaTTEzOC40OTggMzMuNzA0OEMxMzguMzM1IDM0LjAwMDggMTM4LjExNSAzNC4yMjcxIDEzNy44MzYgMzQuMzg2N0MxMzcuNTU2IDM0LjU0NjQgMTM3LjI1IDM0LjYyMjkgMTM2LjkxNCAzNC42MjI5QzEzNi41NzggMzQuNjIyOSAxMzYuMjc5IDM0LjU0MzEgMTM2IDM0LjM4NjdDMTM1LjcyIDM0LjIyNzEgMTM1LjQ5NyAzNC4wMDA4IDEzNS4zMzQgMzMuNzA0OEMxMzUuMTcxIDMzLjQwODcgMTM1LjA4OCAzMy4wOTI3IDEzNS4wODggMzIuNzUzNEMxMzUuMDg4IDMyLjIyNzggMTM1LjI2OCAzMS43ODIgMTM1LjYyNyAzMS40MDk0QzEzNS45ODYgMzEuMDQwMSAxMzYuNDE1IDMwLjg1MzkgMTM2LjkxNCAzMC44NTM5QzEzNy40MTMgMzAuODUzOSAxMzcuODQzIDMxLjA0MDEgMTM4LjIwMiAzMS40MDk0QzEzOC41NjEgMzEuNzc4NyAxMzguNzQxIDMyLjIyNzggMTM4Ljc0MSAzMi43NTM0QzEzOC43NDEgMzMuMDkyNyAxMzguNjYxIDMzLjQwODcgMTM4LjQ5OCAzMy43MDQ4WiIgZmlsbD0iIzFCMzI0RiIgc3Ryb2tlPSIjMUIzMjRGIiBzdHJva2Utd2lkdGg9IjAuMzMyNjYzIiBzdHJva2UtbWl0ZXJsaW1pdD0iMTAiLz4KPHBhdGggZD0iTTE0NC4zMjIgMzAuNjQyQzE0NC4wMjMgMzAuNDYyNCAxNDMuNjk0IDMwLjM3NTkgMTQzLjM0MSAzMC4zNzU5QzE0Mi44ODkgMzAuMzY1OSAxNDIuNDgzIDMwLjQzOTEgMTQyLjEzIDMwLjU4ODhDMTQxLjkxNyAzMC43MDg2IDE0MS43MDggMzAuODc4MiAxNDEuNTAxIDMxLjA5NzhDMTQxLjI5MiAzMS4zNDczIDE0MS4xNTIgMzEuNzQzMSAxNDEuMDkyIDMyLjI4MjFDMTQxLjA2MiAzMi40NTE3IDE0MS4wNTIgMzIuNjYxMyAxNDEuMDYyIDMyLjkwNzVMMTQxLjA3MiAzMy40MDY1VjM1LjE4NjJIMTQxLjY4MVYzMy40NjYzQzE0MS42ODEgMzIuODQ3NiAxNDEuNzA4IDMyLjQyMTggMTQxLjc2MSAzMi4xODU2QzE0MS43NDEgMzEuODE5NyAxNDEuODc0IDMxLjUzMzYgMTQyLjE2IDMxLjMyMDdDMTQyLjQ0NiAzMS4xMTExIDE0Mi43NjkgMzEuMDA0NiAxNDMuMTM1IDMxLjAwNDZDMTQzLjU0NyAzMS4wMDQ2IDE0My44NiAzMS4wNzEyIDE0NC4wNzMgMzEuMjAwOUMxNDQuMjgzIDMxLjMzMDYgMTQ0LjQyNiAzMS41NTAyIDE0NC40OTUgMzEuODYyOUMxNDQuNTQyIDMyLjA0NTkgMTQ0LjU2NSAzMi40MDg1IDE0NC41NjUgMzIuOTUwN1YzNS4xODk1SDE0NS4xNjRWMzIuNzc3N0MxNDUuMTY0IDMyLjEzNTcgMTQ1LjEwMSAzMS42NjMzIDE0NC45NzEgMzEuMzYzOUMxNDQuODQxIDMxLjA2NDUgMTQ0LjYyOCAzMC44MjUgMTQ0LjMyNiAzMC42NDU0TDE0NC4zMjIgMzAuNjQyWiIgZmlsbD0iIzFCMzI0RiIgc3Ryb2tlPSIjMUIzMjRGIiBzdHJva2Utd2lkdGg9IjAuMzMyNjYzIiBzdHJva2UtbWl0ZXJsaW1pdD0iMTAiLz4KPHBhdGggZD0iTTE1MC4zMDQgMzAuNjQyQzE1MC4wMDQgMzAuNDYyNCAxNDkuNjc1IDMwLjM3NTkgMTQ5LjMyMyAzMC4zNzU5QzE0OC44NyAzMC4zNjU5IDE0OC40NjQgMzAuNDM5MSAxNDguMTEyIDMwLjU4ODhDMTQ3Ljg5OSAzMC43MDg2IDE0Ny42ODkgMzAuODc4MiAxNDcuNDgzIDMxLjA5NzhDMTQ3LjI3MyAzMS4zNDczIDE0Ny4xMzQgMzEuNzQzMSAxNDcuMDc0IDMyLjI4MjFDMTQ3LjA0NCAzMi40NTE3IDE0Ny4wMzQgMzIuNjYxMyAxNDcuMDQ0IDMyLjkwNzVMMTQ3LjA1NCAzMy40MDY1VjM1LjE4NjJIMTQ3LjY2M1YzMy40NjYzQzE0Ny42NjMgMzIuODQ3NiAxNDcuNjg5IDMyLjQyMTggMTQ3Ljc0MiAzMi4xODU2QzE0Ny43MjIgMzEuODE5NyAxNDcuODU1IDMxLjUzMzYgMTQ4LjE0MiAzMS4zMjA3QzE0OC40MjggMzEuMTExMSAxNDguNzUgMzEuMDA0NiAxNDkuMTE2IDMxLjAwNDZDMTQ5LjUyOSAzMS4wMDQ2IDE0OS44NDEgMzEuMDcxMiAxNTAuMDU0IDMxLjIwMDlDMTUwLjI2NCAzMS4zMzA2IDE1MC40MDcgMzEuNTUwMiAxNTAuNDc3IDMxLjg2MjlDMTUwLjUyMyAzMi4wNDU5IDE1MC41NDcgMzIuNDA4NSAxNTAuNTQ3IDMyLjk1MDdWMzUuMTg5NUgxNTEuMTQ2VjMyLjc3NzdDMTUxLjE0NiAzMi4xMzU3IDE1MS4wODIgMzEuNjYzMyAxNTAuOTUzIDMxLjM2MzlDMTUwLjgyMyAzMS4wNjQ1IDE1MC42MSAzMC44MjUgMTUwLjMwNyAzMC42NDU0TDE1MC4zMDQgMzAuNjQyWiIgZmlsbD0iIzFCMzI0RiIgc3Ryb2tlPSIjMUIzMjRGIiBzdHJva2Utd2lkdGg9IjAuMzMyNjYzIiBzdHJva2UtbWl0ZXJsaW1pdD0iMTAiLz4KPHBhdGggZD0iTTE1Ny4xMjcgMzEuMTczMkMxNTYuNjQ4IDMwLjU2NDQgMTU2LjAwOSAzMC4yNjE3IDE1NS4yMTQgMzAuMjYxN0MxNTQuNDE5IDMwLjI2MTcgMTUzLjgxNCAzMC41NTc4IDE1My4zNTUgMzEuMTQ5OUMxNTIuOTg5IDMxLjYxNTcgMTUyLjgwNiAzMi4xNDQ2IDE1Mi44MDYgMzIuNzQwMUMxNTIuODA2IDMzLjM3MjEgMTUzLjAyMiAzMy45MzQzIDE1My40NTEgMzQuNDM2NkMxNTMuODggMzQuOTM5IDE1NC40NzkgMzUuMTg4NSAxNTUuMjQ0IDM1LjE4ODVDMTU1LjU5IDM1LjE4ODUgMTU1Ljg5OSAzNS4xMzUyIDE1Ni4xNzIgMzUuMDMyMUMxNTYuNDQ1IDM0LjkyOSAxNTYuNjkxIDM0Ljc3NiAxNTYuOTExIDM0LjU3NjRDMTU3LjEzIDM0LjM3NjggMTU3LjMyIDM0LjExNCAxNTcuNDgzIDMzLjc4NDZMMTU2Ljk3NyAzMy41MTUyQzE1Ni43OTEgMzMuODI0NSAxNTYuNjIxIDM0LjA0NDEgMTU2LjQ2MiAzNC4xODM4QzE1Ni4zMDIgMzQuMzIwMiAxNTYuMTEyIDM0LjQzIDE1NS44ODYgMzQuNTE2NUMxNTUuNjYgMzQuNTk5NiAxNTUuNDI3IDM0LjY0MjkgMTU1LjE4OCAzNC42NDI5QzE1NC42OTUgMzQuNjQyOSAxNTQuMjc5IDM0LjQ2OTkgMTUzLjk0MyAzNC4xMTczQzE1My42MDcgMzMuNzY4IDE1My40MzQgMzMuMzE4OSAxNTMuNDIxIDMyLjc3MzNIMTU3LjYzNkMxNTcuNjM2IDMyLjEzNDYgMTU3LjQ2MyAzMS42MDIzIDE1Ny4xMjQgMzEuMTczMkgxNTcuMTI3Wk0xNTMuNDg4IDMyLjI1NzdDMTUzLjYxMSAzMS44Mjg2IDE1My43OSAzMS41MDI2IDE1NC4wMyAzMS4yODYzQzE1NC4zNTkgMzAuOTkwMyAxNTQuNzU1IDMwLjg0MDYgMTU1LjIxNCAzMC44NDA2QzE1NS40OTQgMzAuODQwNiAxNTUuNzYgMzAuOTAwNCAxNTYuMDEzIDMxLjAxNjlDMTU2LjI2NSAzMS4xMzY2IDE1Ni40NzIgMzEuMjg5NiAxNTYuNjI1IDMxLjQ4MjZDMTU2Ljc3OCAzMS42NzU1IDE1Ni44OTQgMzEuOTMxNyAxNTYuOTc0IDMyLjI1NDRIMTUzLjQ4NEwxNTMuNDg4IDMyLjI1NzdaIiBmaWxsPSIjMUIzMjRGIiBzdHJva2U9IiMxQjMyNEYiIHN0cm9rZS13aWR0aD0iMC4zMzI2NjMiIHN0cm9rZS1taXRlcmxpbWl0PSIxMCIvPgo8cGF0aCBkPSJNMTU5Ljg4NCAyOC42ODE2SDE1OS4yNzVWMzUuMTg4NUgxNTkuODg0VjI4LjY4MTZaIiBmaWxsPSIjMUIzMjRGIiBzdHJva2U9IiMxQjMyNEYiIHN0cm9rZS13aWR0aD0iMC4zMzI2NjMiIHN0cm9rZS1taXRlcmxpbWl0PSIxMCIvPgo8cGF0aCBkPSJNODkuNDgzIDcuOTQxMjNDODQuMzMgLTIuMzY0NjcgNzEuMjkzIC0yLjAwMjA3IDY1LjM2ODMgNS40MzI5NUw1OS40ODM0IDExLjgyNjdDNTkuNDgzNCAxMS44MjY3IDU5LjQ4MzQgMTEuODE2NyA1OS40ODM0IDExLjgxMzRMNTUuODQ3NCAxNS43NTg4SDU1Ljg2NzRMNTIuMDM1MSAxOS45MjM3SDUyLjAzODVDNDguOTU0NyAyMy41MjMyIDQzLjU0NTYgMjMuOTM1NyAzOS45NDk1IDIwLjg1NTJDMzguNDIyNiAxOS41NDc4IDM3LjQwNDYgMTcuNzQ0OCAzNy4wNzUzIDE1Ljc2MjFINTMuNDIyM0w1OS4wMzQ0IDkuNjcxMDhDNTcuMDkxNiA0LjA1OTA1IDUxLjgxNTYgMC4wMDA1NjUzMjkgNDUuNTQxNSAwLjAwMDU2NTMyOUM0MC43MTc5IDAuMDAwNTY1MzI5IDM3LjIyODMgMi4wMjk4MSAzMy45MjgzIDYuMDk4MjhDMjkuNzkgMTAuNjk5IDI1LjEwNjEgMTUuODY4NiAyMS45MTkyIDE5LjA2MjFDMjAuMjQyNSAyMS4wODE0IDE3LjUyMTQgMjIuOTQxIDE0LjMyNDUgMjIuOTQxQzkuNTc3MzYgMjIuOTQxIDUuNzI4NDUgMTkuMDkyMSA1LjczMTc4IDE0LjM0NUM1LjczMTc4IDkuNTk3ODkgOS41ODA2OSA1Ljc0ODk4IDE0LjMyNzggNS43NTIzMUMxOS4wNzQ5IDUuNzUyMzEgMjIuOTIzOCA5LjYwMTIyIDIyLjkyMDUgMTQuMzQ4M0MyMi45MjA1IDE0LjUwNDcgMjIuODQwNiAxNC42MzQ0IDIyLjgzMDcgMTQuNzg3NEwyNy44MjA2IDkuNjY0NDJDMjcuNjI3NyA5LjA3ODk0IDI3LjM5ODEgOC41MDM0MyAyNy4xMzUzIDcuOTQ0NTVDMjAuMzc4OSAtNS41ODE1MiAwIC0wLjc3MTIxMyAwIDE0LjM0ODNWNDMuMDAwNkg1LjczMTc4VjI1LjgwODZDMTIuMjM1MyAzMC42ODg3IDE5Ljg0NjcgMjkuMDM1NCAyNC40NjQgMjQuMzgxNEMyNC40NjQgMjQuMzgxNCAzOC42MzIxIDkuMTkyMDQgMzguOTQ4MiA4LjgxOTQ2QzQxLjk4NTQgNS4xNzY4IDQ3LjQwMTEgNC42ODc3OSA1MS4wNDA1IDcuNzI1QzUxLjgxODkgOC4zNzM2OSA1Mi40NzQyIDkuMTUyMTIgNTIuOTc5OSAxMC4wMzA0SDQwLjYxNDhMMzEuOTkyMiAxOC44ODI1QzMzLjkzODMgMjQuNzE0MSAzOS4zOTM5IDI4LjY0NjIgNDUuNTQxNSAyOC42NTI4QzQ5LjcxMzEgMjguNjUyOCA1My4zOTkgMjYuODA5OSA1Ni4wMTM4IDIzLjk1ODlMNjkuMzA3IDkuNzU0MjRMNjkuNjU5NiA5LjM3ODMzQzcwLjc1NDEgOC4wNDc2OCA3My4yMjU4IDUuNzkyMjMgNzYuNjY4OCA1Ljc0ODk4QzgxLjQxNTkgNS43NDg5OCA4NS4yNjQ4IDkuNTk0NTYgODUuMjY0OCAxNC4zNDE3Qzg1LjI2NDggMTkuMDg4OCA4MS40MTkyIDIyLjkzNzcgNzYuNjcyMSAyMi45Mzc3QzcxLjkyNSAyMi45Mzc3IDY4LjA3NjEgMTkuMDkyMSA2OC4wNzYxIDE0LjM0NUM2OC4wNzYxIDE0LjA2MjIgNjguMjEyNSAxMy44MjI3IDY4LjIzOTEgMTMuNTQzM0w2Mi4zNDc3IDE5LjgxNzNWNDIuOTk3Mkg2OC4wNzk1VjI1LjgwNTJDODAuMTcxOCAzNC44NzY5IDk2LjI0NiAyMS40NTczIDg5LjQ4NjMgNy45NDEyM0g4OS40ODNaIiBmaWxsPSJ1cmwoI3BhaW50MF9saW5lYXJfMjMyXzc5NDkpIi8+CjwvZz4KPGRlZnM+CjxsaW5lYXJHcmFkaWVudCBpZD0icGFpbnQwX2xpbmVhcl8yMzJfNzk0OSIgeDE9IjAuNDYyODAxIiB5MT0iMjEuMDExNSIgeDI9IjkxLjA5MDQiIHkyPSIyMS4wMTE1IiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+CjxzdG9wIHN0b3AtY29sb3I9IiNGRjJCNDQiLz4KPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMUIzMjRGIi8+CjwvbGluZWFyR3JhZGllbnQ+CjxjbGlwUGF0aCBpZD0iY2xpcDBfMjMyXzc5NDkiPgo8cmVjdCB3aWR0aD0iMTYwLjA0NyIgaGVpZ2h0PSI0MyIgZmlsbD0id2hpdGUiLz4KPC9jbGlwUGF0aD4KPC9kZWZzPgo8L3N2Zz4K" alt="PEP Logo" class="pep-logo">
+            </div>
+            <div class="header-center">
+                <div class="search-bar">
+                    <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5C5C5C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" placeholder="Rechercher...">
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="header-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5C5C5C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                </div>
+                <div class="header-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5C5C5C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== GLOBAL NAVIGATION ===== -->
+        <div class="global-nav">
+            <div class="nav-tab">
+                <div class="nav-tab-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5C5C5C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                </div>
+                <span class="nav-tab-text">PEP</span>
+            </div>
+            <div class="nav-tab">
+                <div class="nav-tab-icon">
+                    
+                </div>
+                <span class="nav-tab-text">Demandes</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="nav-tab active">
+                <div class="nav-tab-icon">
+                    
+                </div>
+                <span class="nav-tab-text">#043512844</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </div>
+        </div>
+
+        <!-- ===== CONTENT AREA ===== -->
+        <div class="content-wrapper">
+
+          <!-- ===== VIEW: TABLE (Demandes) ===== -->
+          <div class="view-table" id="viewTable">
+            <div style="padding:0 16px;">
+              <div class="table-page-header">
+                <div class="table-page-row1">
+                  <div class="table-page-left">
+                    <div class="table-page-icon">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="2" y="3" width="20" height="18" rx="2"/><line x1="2" y1="9" x2="22" y2="9"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+                    </div>
+                    <div class="table-page-text">
+                      <span class="table-page-label">Demandes</span>
+                      <div class="table-page-title">Toutes les demandes tableau</div>
+                    </div>
+                  </div>
+                  <div class="button-group">
+                    <div class="button-group-item">Nouveau</div>
+                    <div class="button-group-item">Modifier le propriétaire</div>
+                    <div class="button-group-item">Changer le statut</div>
+                    <div class="button-group-item">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0250D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                  </div>
+                </div>
+                <div class="table-subtitle">150 demandes • Filtrées par date de dernière soumission • Mise à jour il y a 50 sec</div>
+              </div>
+              <div class="table-toolbar">
+                <input class="table-search" type="text" placeholder="Rechercher...">
+                <button class="table-icon-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></button>
+                <button class="table-icon-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button>
+              </div>
+
+              <div class="table-card">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th class="cb"><input type="checkbox"></th>
+                      <th>N° de la dem... <span class="sort-icon">↓</span></th>
+                      <th>Type de demande <span class="sort-icon">↓</span></th>
+                      <th>Nom du com... <span class="sort-icon">↓</span></th>
+                      <th>Demandeur <span class="sort-icon">↓</span></th>
+                      <th>Profil du demandeur</th>
+                      <th>Statut <span class="sort-icon">↓</span></th>
+                      <th>Date de soumission <span class="sort-icon">↓</span></th>
+                      <th>Statut des pièces just...</th>
+                      <th>Nom Complet du proprié...</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td class="cb"><input type="checkbox"></td><td class="link">#043512789</td><td>Demander une radiation PM</td><td>Société d'Exerci...</td><td class="link">Cabinet d'Audit Inte...</td><td>Article 83 bis</td><td><span class="badge badge-soumise">Soumise</span></td><td>14/03/2025</td><td>Demandée</td><td>Julie Moreau</td></tr>
+                    <tr><td class="cb"><input type="checkbox"></td><td class="link">#043512800</td><td>Mettre à jour des information...</td><td>Cabinet Legal</td><td class="link">Emma Mercier</td><td>Article 27</td><td><span class="badge badge-affectee">Affectée</span></td><td>22/01/2025</td><td>A examiner</td><td>Pierre Lefebvre</td></tr>
+                    <tr><td class="cb"><input type="checkbox"></td><td class="link">#043512811</td><td>Demander un changement d...</td><td>Cabinet Expert</td><td class="link">Emma Boyer</td><td>Article 83 septies</td><td><span class="badge badge-soumise">Soumise</span></td><td>07/05/2025</td><td>Conforme</td><td>Camille Rousseau</td></tr>
+                    <tr><td class="cb"><input type="checkbox"></td><td class="link">#043512822</td><td>Demander une omission PP</td><td>Étude Partenaires</td><td class="link">Emma Denis</td><td>Diplômé d'expertise com...</td><td><span class="badge badge-affectee">Affectée</span></td><td>11/02/2025</td><td>Non conforme</td><td>Lucas Fontaine</td></tr>
+                    <tr><td class="cb"><input type="checkbox"></td><td class="link">#043512833</td><td>Inscription principale PP</td><td>Cabinet XYZ</td><td class="link">Alexandre Gauthier</td><td>Article 7bis</td><td><span class="badge badge-soumise">Soumise</span></td><td>03/04/2025</td><td>Demandée</td><td>Nicolas Bernard</td></tr>
+                    <tr><td class="cb"><input type="checkbox"></td><td class="link">#043512844</td><td>Demander une suspension PP</td><td>Cabinet Durand ...</td><td class="link">Sophie Meyer</td><td>Expert-comptable en ent...</td><td><span class="badge badge-affectee">Affectée</span></td><td>19/06/2025</td><td>A examiner</td><td>Isabelle Durand</td></tr>
+                    <tr><td class="cb"><input type="checkbox"></td><td class="link">#043512855</td><td>Demander une omission PP</td><td>Étude Legrand &...</td><td class="link">Alexandre André</td><td>Article 7bis</td><td><span class="badge badge-soumise">Soumise</span></td><td>28/07/2025</td><td>Conforme</td><td>Alexandre Petit</td></tr>
+                    <tr><td class="cb"><input type="checkbox"></td><td class="link">#043512866</td><td>Inscription secondaire PM</td><td>Étude Notariale ...</td><td class="link">Société d'Expertise...</td><td>Article 83 bis</td><td><span class="badge badge-affectee">Affectée</span></td><td>05/09/2025</td><td>Non conforme</td><td>Julie Moreau</td></tr>
+                    <tr><td class="cb"><input type="checkbox"></td><td class="link">#043512877</td><td>Demander un changement d...</td><td>Étude Collaborat...</td><td class="link">Sophie Barbier</td><td>Article 83 bis</td><td><span class="badge badge-soumise">Soumise</span></td><td>16/10/2025</td><td>Demandée</td><td>Camille Rousseau</td></tr>
+                    <tr><td class="cb"><input type="checkbox"></td><td class="link">#043512888</td><td>Inscription principale PM</td><td>Société Associés</td><td class="link">Société de Services...</td><td>Article 26</td><td><span class="badge badge-affectee">Affectée</span></td><td>24/11/2025</td><td>A examiner</td><td>Pierre Lefebvre</td></tr>
+                    <tr><td class="cb"><input type="checkbox"></td><td class="link">#043512899</td><td>Mettre à jour des information...</td><td>Société Pluridisc...</td><td class="link">Entreprise Innovant...</td><td>Article 83 septies</td><td><span class="badge badge-soumise">Soumise</span></td><td>02/08/2025</td><td>Conforme</td><td>Lucas Fontaine</td></tr>
+                    <tr><td class="cb"><input type="checkbox"></td><td class="link">#043512910</td><td>Inscription principale PP</td><td>Cabinet d'Avocat...</td><td class="link">Thomas François</td><td>Article 27</td><td><span class="badge badge-affectee">Affectée</span></td><td>30/01/2025</td><td>Demandée</td><td>Nicolas Bernard</td></tr>
+                    <tr><td class="cb"><input type="checkbox"></td><td class="link">#043512921</td><td>Inscription principale PP</td><td>Cabinet Conseil ...</td><td class="link">Sophie Lemoine</td><td>Article 83 septies</td><td><span class="badge badge-soumise">Soumise</span></td><td>18/12/2025</td><td>Non conforme</td><td>Isabelle Durand</td></tr>
+                    <tr><td class="cb"><input type="checkbox"></td><td class="link">#043512932</td><td>Inscription principale PP</td><td>Cabinet Indépen...</td><td class="link">Thomas Gauthier</td><td>Article 83 septies</td><td><span class="badge badge-affectee">Affectée</span></td><td>09/03/2025</td><td>A examiner</td><td>Alexandre Petit</td></tr>
+                    <tr><td class="cb"><input type="checkbox"></td><td class="link">#043512943</td><td>Inscription principale PM</td><td>Cabinet d'Expert...</td><td class="link">Cabinet de Conseil ...</td><td>Article 83 septies</td><td><span class="badge badge-soumise">Soumise</span></td><td>25/05/2025</td><td>Conforme</td><td>Julie Moreau</td></tr>
+                    <tr><td class="cb"><input type="checkbox"></td><td class="link">#043512954</td><td>Demander une radiation PM</td><td>Réseau Professi...</td><td class="link">Société d'Avocats R...</td><td>Diplômé d'expertise com...</td><td><span class="badge badge-affectee">Affectée</span></td><td>13/04/2025</td><td>Demandée</td><td>Camille Rousseau</td></tr>
+                    <tr><td class="cb"><input type="checkbox"></td><td class="link">#043512965</td><td>Demander une omission PP</td><td>Cabinet Audit & ...</td><td class="link">Sophie Lambert</td><td>Article 7bis</td><td><span class="badge badge-soumise">Soumise</span></td><td>06/07/2025</td><td>Non conforme</td><td>Pierre Lefebvre</td></tr>
+                    <tr><td class="cb"><input type="checkbox"></td><td class="link">#043512976</td><td>Inscription principale PP</td><td>Société Fiduciar...</td><td class="link">Alexandre Blanc</td><td>Article 27</td><td><span class="badge badge-affectee">Affectée</span></td><td>21/09/2025</td><td>A examiner</td><td>Lucas Fontaine</td></tr>
+                    <tr><td class="cb"><input type="checkbox"></td><td class="link">#043512987</td><td>Mettre à jour des information...</td><td>Société Conseil</td><td class="link">Société TechConseil</td><td>Article 26</td><td><span class="badge badge-soumise">Soumise</span></td><td>17/02/2025</td><td>Conforme</td><td>Nicolas Bernard</td></tr>
+                    <tr><td class="cb"><input type="checkbox"></td><td class="link">#043512998</td><td>Demander une suspension PP</td><td>Cabinet ABC</td><td class="link">Lucas Dupont</td><td>Article 7bis</td><td><span class="badge badge-affectee">Affectée</span></td><td>08/11/2025</td><td>Demandée</td><td>Isabelle Durand</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="pagination">
+                <button class="pg-btn" disabled>Précédent</button>
+                <button class="pg-btn active">1</button>
+                <button class="pg-btn">2</button>
+                <span class="pg-dots">...</span>
+                <button class="pg-btn">8</button>
+                <button class="pg-btn">Suivant</button>
+              </div>
+              <div class="pagination-info">Affichage de 1-20 sur 150 demandes</div>
+            </div>
+          </div>
+
+          <!-- ===== VIEW: DETAIL (#043512844) ===== -->
+          <div class="view-detail active" id="viewDetail">
+
+          <div class="content-header">
+            <!-- PAGE HEADER -->
+            <div class="page-header">
+                <div class="page-header-row1">
+                    <div class="page-header-left">
+                        <div class="case-icon-container">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        </div>
+                        <div class="page-header-text-col">
+                            <span class="page-header-label">Demande</span>
+                            <div class="page-header-title">#043512844</div>
+                        </div>
+                    </div>
+                    <div class="button-group">
+                        <div class="button-group-item">Récépissé</div>
+                        <div class="button-group-item">Modifier</div>
+                        <div class="button-group-item">Supprimer</div>
+                        <div class="button-group-item">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0250D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Highlights / Detail Row -->
+                <div class="detail-row">
+                    <div class="detail-column">
+                        <span class="detail-label">Type de demande</span>
+                        <span class="detail-value">Inscription principale PM</span>
+                    </div>
+                    <div class="detail-column">
+                        <span class="detail-label">Nom du compte</span>
+                        <span class="detail-value">Cabinet Indépendant</span>
+                    </div>
+                    <div class="detail-column">
+                        <span class="detail-label">N° SUPRA</span>
+                        <span class="detail-value">&nbsp;</span>
+                    </div>
+                    <div class="detail-column">
+                        <span class="detail-label">Date de session</span>
+                        <span class="detail-value">&nbsp;</span>
+                    </div>
+                    <div class="detail-column">
+                        <span class="detail-label">Dénomination sociale</span>
+                        <span class="detail-value">&nbsp;</span>
+                    </div>
+                    <div class="detail-column">
+                        <span class="detail-label">Lieu principal d'exercice</span>
+                        <span class="detail-value">&nbsp;</span>
+                    </div>
+                    <div class="detail-column">
+                        <span class="detail-label">Statut des pièces justificatives</span>
+                        <span class="detail-value">Aucune pièce</span>
+                    </div>
+                </div>
+
+                <!-- Path / Stepper -->
+                <div class="path-coaching">
+                    <div class="step completed">
+                        <svg class="step-check" width="16" height="16" viewBox="0 0 16 16" fill="#056764"><path d="M5.87692 13.0769L0.8 7.96923C0.615385 7.78462 0.615385 7.47692 0.8 7.29231L1.47692 6.61538C1.66154 6.43077 1.96923 6.43077 2.15385 6.61538L5.96923 10.4615C6.09231 10.5846 6.30769 10.5846 6.43077 10.4615L13.9077 2.92308C14.0923 2.73846 14.4 2.73846 14.5846 2.92308L15.2615 3.6C15.4462 3.78462 15.4462 4.09231 15.2615 4.27692L6.55385 13.0769C6.36923 13.2923 6.06154 13.2923 5.87692 13.0769Z"/></svg>
+                    </div>
+                    <div class="step">Affectée</div>
+                    <div class="step">En attente de pièces</div>
+                    <div class="step">Complète</div>
+                    <div class="step">Prête pour commission</div>
+                    <div class="step">Prête pour session</div>
+                    <div class="step">Fermée</div>
+                </div>
+
+                <!-- Status Button -->
+                <div class="status-button">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span class="status-button-text">Marquer Statut comme terminé(e)</span>
+                </div>
+            </div>
+          </div>
+
+          <div class="content-scroll">
+            <!-- ===== SPLIT CONTAINER ===== -->
+            <div class="split-container" id="splitContainer">
+            <div class="body-card">
+                <!-- Tabs -->
+                <div class="tabs-container">
+                    <div class="tab active">Détails</div>
+                    <div class="tab">Examen</div>
+                    <div class="tabs-fill"></div>
+                </div>
+
+                <!-- Accordion -->
+                <div class="accordion-section">
+
+                    <!-- Section 1: OPEN -->
+                    <div class="accordion-item-wrapper">
+                        <div class="accordion-item">
+                            <svg class="accordion-chevron open" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                            <span class="accordion-label">Information concernant la demande</span>
+                        </div>
+                        <div class="expand-content">
+                            <div class="field-row">
+                                <div class="field">
+                                    <div class="field-label">Type de demande</div>
+                                    <div class="field-value-row"><span class="field-value">Inscription principale PM</span><svg class="field-edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></div>
+                                </div>
+                                <div class="field">
+                                    <div class="field-label">Numéro de demande</div>
+                                    <div class="field-value-row"><span class="field-value">#043512844</span><svg class="field-edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></div>
+                                </div>
+                            </div>
+                            <div class="field-row">
+                                <div class="field">
+                                    <div class="field-label">Date de création</div>
+                                    <div class="field-value-row"><span class="field-value">12/03/2026</span><svg class="field-edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></div>
+                                </div>
+                                <div class="field">
+                                    <div class="field-label">Statut</div>
+                                    <div class="field-value-row"><span class="field-value">Affectée</span><svg class="field-edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></div>
+                                </div>
+                            </div>
+                            <div class="field-row">
+                                <div class="field">
+                                    <div class="field-label">Rapporteur</div>
+                                    <div class="field-value-row"><span class="field-value">Jean MARTIN</span><svg class="field-edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></div>
+                                </div>
+                                <div class="field">
+                                    <div class="field-label">Dossier</div>
+                                    <div class="field-value-row"><span class="field-value">INS-PM-2026-0344</span><svg class="field-edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></div>
+                                </div>
+                            </div>
+                            <div class="field-row">
+                                <div class="field">
+                                    <div class="field-label">Origine</div>
+                                    <div class="field-value-row"><span class="field-value">Portail</span><svg class="field-edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></div>
+                                </div>
+                                <div class="field">
+                                    <div class="field-label">Priorité</div>
+                                    <div class="field-value-row"><span class="field-value">Normale</span><svg class="field-edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: OPEN -->
+                    <div class="accordion-item-wrapper">
+                        <div class="accordion-item">
+                            <svg class="accordion-chevron open" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                            <span class="accordion-label">Qualité de la PM & CROEC</span>
+                        </div>
+                        <div class="expand-content">
+                            <div class="field-row">
+                                <div class="field">
+                                    <div class="field-label">Qualité PM</div>
+                                    <div class="field-value-row"><span class="field-value">Expert-comptable</span><svg class="field-edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></div>
+                                </div>
+                                <div class="field">
+                                    <div class="field-label">CROEC de rattachement</div>
+                                    <div class="field-value-row"><span class="field-value">CROEC Paris Île-de-France</span><svg class="field-edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></div>
+                                </div>
+                            </div>
+                            <div class="field-row">
+                                <div class="field">
+                                    <div class="field-label">N° d'inscription CROEC</div>
+                                    <div class="field-value-row"><span class="field-value">75-01234</span><svg class="field-edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></div>
+                                </div>
+                                <div class="field">
+                                    <div class="field-label">Date d'inscription</div>
+                                    <div class="field-value-row"><span class="field-value">01/09/2020</span><svg class="field-edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: OPEN -->
+                    <div class="accordion-item-wrapper">
+                        <div class="accordion-item">
+                            <svg class="accordion-chevron open" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                            <span class="accordion-label">Dates de sessions</span>
+                        </div>
+                        <div class="expand-content">
+                            <div class="field-row">
+                                <div class="field">
+                                    <div class="field-label">Date de session prévue</div>
+                                    <div class="field-value-row"><span class="field-value">15/06/2026</span><svg class="field-edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></div>
+                                </div>
+                                <div class="field">
+                                    <div class="field-label">Commission</div>
+                                    <div class="field-value-row"><span class="field-value">Commission Inscription</span><svg class="field-edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></div>
+                                </div>
+                            </div>
+                            <div class="field-row">
+                                <div class="field">
+                                    <div class="field-label">Date limite dépôt</div>
+                                    <div class="field-value-row"><span class="field-value">01/05/2026</span><svg class="field-edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></div>
+                                </div>
+                                <div class="field">
+                                    <div class="field-label">Type de session</div>
+                                    <div class="field-value-row"><span class="field-value">Ordinaire</span><svg class="field-edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 4: CLOSED -->
+                    <div class="accordion-item-wrapper">
+                        <div class="accordion-item">
+                            <svg class="accordion-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                            <span class="accordion-label">Caractéristiques de la société</span>
+                        </div>
+                    </div>
+
+                    <!-- Section 5: CLOSED -->
+                    <div class="accordion-item-wrapper">
+                        <div class="accordion-item">
+                            <svg class="accordion-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                            <span class="accordion-label">Représentants Légaux</span>
+                        </div>
+                    </div>
+
+                    <!-- Section 6: CLOSED -->
+                    <div class="accordion-item-wrapper">
+                        <div class="accordion-item">
+                            <svg class="accordion-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                            <span class="accordion-label">Personne de contact principal</span>
+                        </div>
+                    </div>
+
+                    <!-- Section 7: CLOSED -->
+                    <div class="accordion-item-wrapper">
+                        <div class="accordion-item">
+                            <svg class="accordion-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                            <span class="accordion-label">Liste des associés</span>
+                        </div>
+                    </div>
+
+                    <!-- Section 8: CLOSED -->
+                    <div class="accordion-item-wrapper">
+                        <div class="accordion-item">
+                            <svg class="accordion-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                            <span class="accordion-label">Liste des bénéficiaires effectifs</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <!-- S3 FILES PANEL -->
+            <div class="s3-panel" id="s3Panel">
+              <div class="s3-header">
+                <div class="tabs-container">
+                  <div class="tab active" style="pointer-events:none">Pièces justificatives</div>
+                  <div class="tabs-fill"></div>
+                </div>
+              </div>
+              <div class="s3-toolbar">
+                <div class="s3-toolbar-row">
+                  <input type="text" class="s3-search" id="s3Search" placeholder="Rechercher...">
+                  <button class="s3-action-btn" id="s3RequestBtn" title="Demander une pièce"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Demander une pièce</button>
+                  <button class="s3-action-btn primary" id="s3ImportBtn" title="Importer un fichier"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Importer</button>
+                </div>
+                <div class="s3-toolbar-row">
+                  <div class="s3-filter-tags" id="s3FilterTags">
+                    <button class="s3-filter-tag active" data-filter="all">Tous</button>
+                    <button class="s3-filter-tag" data-filter="pdf">PDF</button>
+                    <button class="s3-filter-tag" data-filter="docx">Word</button>
+                    <button class="s3-filter-tag" data-filter="xlsx">Excel</button>
+                    <button class="s3-filter-tag" data-filter="png">Image</button>
+                  </div>
+                  <span class="s3-file-count" id="s3FileCount">10 fichiers</span>
+                </div>
+              </div>
+              <!-- IMPORT OVERLAY -->
+              <div class="s3-import-overlay" id="s3ImportOverlay">
+                <div class="s3-import-topbar">
+                  <span class="s3-import-topbar-title">Importer des fichiers</span>
+                  <button class="s3-preview-close-x" id="s3ImportClose" title="Fermer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                </div>
+                <div class="s3-import-dropzone" id="s3ImportDropzone">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  <p><strong>Glissez vos fichiers ici</strong></p>
+                  <p>ou <span style="color:#2563eb;text-decoration:underline;cursor:pointer">parcourez</span></p>
+                  <p class="s3-import-hint">PDF, Word, Excel, Images — max 25 Mo</p>
+                  <input type="file" class="s3-import-file-input" id="s3ImportFileInput" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg">
+                </div>
+                <div class="s3-import-list" id="s3ImportList"></div>
+                <div class="s3-merge-result" id="s3MergeResult">
+                  <div class="s3-merge-result-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span id="s3MergeResultName"></span></div>
+                  <div class="s3-merge-result-info" id="s3MergeResultInfo"></div>
+                  <button class="s3-action-btn primary" id="s3MergeConfirm" style="align-self:stretch;justify-content:center;margin-top:4px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Ajouter à la liste</button>
+                </div>
+                <div class="s3-merge-bar" id="s3MergeBar">
+                  <div class="s3-merge-row">
+                    <span style="font-size:12px;font-weight:600;color:#374151;white-space:nowrap">Nom du fichier fusionné</span>
+                  </div>
+                  <div class="s3-merge-row">
+                    <input type="text" class="s3-merge-name-input" id="s3MergeName" placeholder="Document_Fusionne.pdf" value="Document_Fusionne.pdf">
+                    <button class="s3-action-btn primary" id="s3MergeBtn" style="flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="8" height="8" rx="1"/><rect x="14" y="14" width="8" height="8" rx="1"/><path d="M10 6h4v4"/><path d="M14 10V6"/><path d="M6 14v-4"/><path d="M6 10h4"/></svg>Fusionner</button>
+                  </div>
+                </div>
+                <!-- Footer: always visible when files staged -->
+                <div class="s3-import-footer" id="s3ImportFooter">
+                  <button class="s3-action-btn" id="s3ImportCancelBtn">Annuler</button>
+                  <button class="s3-action-btn primary" id="s3AddListBtn" style="margin-left:auto">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span id="s3AddListLabel">Ajouter à la liste</span>
+                  </button>
+                </div>
+              </div>
+              <!-- REQUEST OVERLAY -->
+              <div class="s3-import-overlay" id="s3RequestOverlay">
+                <div class="s3-import-topbar">
+                  <span class="s3-import-topbar-title">Demander une pièce</span>
+                  <button class="s3-preview-close-x" id="s3RequestClose" title="Fermer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                </div>
+                <div style="padding:16px;display:flex;flex-direction:column;gap:14px;flex:1;overflow-y:auto">
+                  <!-- Catégorie de la pièce -->
+                  <div>
+                    <label style="font-size:12px;font-weight:600;color:#374151;display:flex;align-items:center;gap:4px">Catégorie de la pièce</label>
+                    <div style="margin-top:6px">
+                      <select id="s3RequestCategory" class="req-select"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"%236b7280\" stroke-width=\"2\"><polyline points=\"6 9 12 15 18 9\"/></svg>');background-repeat:no-repeat;background-position:right 10px center;background-size:16px;padding-right:32px;cursor:pointer">
+                        <option value="">Sélectionner</option>
+                        <option value="identite">Identité</option>
+                        <option value="statuts">Statuts &amp; PV d'AG</option>
+                        <option value="administratif">Document administratif</option>
+                        <option value="assurance">Assurance</option>
+                        <option value="diplome">Diplôme</option>
+                        <option value="fiscal">Document fiscal</option>
+                        <option value="autre">Autre</option>
+                      </select>
+                    </div>
+                  </div>
+                  <!-- Nom de la pièce -->
+                  <div>
+                    <label style="font-size:12px;font-weight:600;color:#374151;display:flex;align-items:center;gap:4px">Nom de la pièce</label>
+                    <div style="margin-top:6px">
+                      <select id="s3RequestType" class="req-select"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"%236b7280\" stroke-width=\"2\"><polyline points=\"6 9 12 15 18 9\"/></svg>');background-repeat:no-repeat;background-position:right 10px center;background-size:16px;padding-right:32px;cursor:pointer">
+                        <option value="">Sélectionner</option>
+                        <option value="cni">Pièce d'identité (CNI / Passeport)</option>
+                        <option value="kbis">Extrait Kbis</option>
+                        <option value="attestation">Attestation d'assurance RCP</option>
+                        <option value="diplome">Diplôme / Certificat</option>
+                        <option value="moralite">Enquête de moralité</option>
+                        <option value="statuts">Statuts de la société</option>
+                        <option value="pv">PV d'assemblée générale</option>
+                        <option value="casier">Extrait de casier judiciaire</option>
+                        <option value="autre">Autre</option>
+                      </select>
+                    </div>
+                  </div>
+                  <!-- Statut de la pièce -->
+                  <div>
+                    <label style="font-size:12px;font-weight:600;color:#374151;display:flex;align-items:center;gap:4px">Statut de la pièce</label>
+                    <div style="margin-top:6px">
+                      <select id="s3RequestStatus" class="req-select"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"%236b7280\" stroke-width=\"2\"><polyline points=\"6 9 12 15 18 9\"/></svg>');background-repeat:no-repeat;background-position:right 10px center;background-size:16px;padding-right:32px;cursor:pointer">
+                        <option value="demandee" selected>Demandée</option>
+                        <option value="examiner">À examiner</option>
+                        <option value="conforme">Conforme</option>
+                        <option value="nonconforme">Non conforme</option>
+                      </select>
+                    </div>
+                  </div>
+                  <!-- Instructions de téléversement -->
+                  <div>
+                    <label style="font-size:12px;font-weight:600;color:#374151">Instructions de téléversement</label>
+                    <textarea id="s3RequestMsg" rows="2" placeholder="" style="margin-top:6px;width:100%;border:1.5px solid #e8eaef;border-radius:10px;padding:8px 12px;font-family:inherit;font-size:13px;outline:none;resize:vertical;color:#111827;line-height:1.5;box-sizing:border-box"></textarea>
+                  </div>
+                  <!-- Actions -->
+                  <div style="display:flex;gap:8px;padding-top:4px;flex-shrink:0">
+                    <button class="s3-action-btn" id="s3RequestCancel" style="flex:1;justify-content:center">Annuler</button>
+                    <button class="s3-action-btn primary" id="s3RequestSend" style="flex:1;justify-content:center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Envoyer la demande</button>
+                  </div>
+                </div>
+              </div>
+              <div class="s3-file-list-container">
+                <div class="s3-file-table-inner">
+                <div class="s3-file-list-header">
+                  <span></span>
+                  <span>Nom de la pièce</span>
+                  <span>Statut</span>
+                  <span>Soumise le</span>
+                  <span>Catégorie</span>
+                  <span>Instructions</span>
+                  <span>Dern. relance</span>
+                  <span></span>
+                </div>
+                <div id="s3FileList">
+                  <!-- Files will be rendered by JS -->
+                </div>
+                </div>
+              </div>
+              <!-- S3 PREVIEW OVERLAY (inside panel) -->
+              <div class="s3-preview-overlay" id="s3PreviewOverlay">
+                <div class="s3-preview-topbar">
+                  <div class="s3-preview-topbar-left">
+                    <button class="s3-preview-nav-btn" id="s3PrevBtn" title="Pièce précédente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+                    <button class="s3-preview-nav-btn" id="s3NextBtn" title="Pièce suivante"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+                    <span class="s3-preview-counter" id="s3Counter"></span>
+                  </div>
+                  <div class="s3-zoom-controls" id="s3ZoomControls" style="display:none">
+                    <button class="s3-zoom-btn" id="s3ZoomOut" title="Dézoomer">−</button>
+                    <span class="s3-zoom-label" id="s3ZoomLabel">100%</span>
+                    <button class="s3-zoom-btn" id="s3ZoomIn" title="Zoomer">+</button>
+                  </div>
+                  <button class="s3-preview-close-x" id="s3PreviewCloseX" title="Fermer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                </div>
+                <div class="s3-preview-area" id="s3PreviewArea"></div>
+              </div>
+            </div>
+            </div><!-- /split-container -->
+          </div>
+          </div><!-- /view-detail -->
+
+        </div>
+
+        <!-- Footer -->
+        <div class="footer-bar">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            To Do List
+        </div>
+
+    </div>
+
+
+    <script>
+    // Nav tab toggle
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            const text = this.querySelector('.nav-tab-text')?.textContent?.trim();
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+
+            const viewTable = document.getElementById('viewTable');
+            const viewDetail = document.getElementById('viewDetail');
+
+            if (text === 'Demandes') {
+                viewTable.classList.add('active');
+                viewDetail.classList.remove('active');
+            } else {
+                viewTable.classList.remove('active');
+                viewDetail.classList.add('active');
+            }
+        });
+    });
+
+    // Click on table row #043512844 → switch to detail view
+    document.querySelectorAll('.data-table .link').forEach(link => {
+        link.addEventListener('click', function() {
+            if (this.textContent.includes('#043512844')) {
+                document.getElementById('viewTable').classList.remove('active');
+                document.getElementById('viewDetail').classList.add('active');
+                document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.nav-tab').forEach(t => {
+                    if (t.querySelector('.nav-tab-text')?.textContent?.includes('#043512844')) t.classList.add('active');
+                });
+            }
+        });
+    });
+
+    // ===== TABS (Détails / Examen) — scoped to body-card only =====
+    const detailTabs = document.querySelectorAll('.body-card .tabs-container .tab');
+    detailTabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            detailTabs.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+
+    // ===== S3 FILE DATA =====
+    const S3_FILES = [
+        { id:1, name:"Piece_Identite_CNI.png", size:"2.8 MB", type:"png", date:"15/03/2026", preview:"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4NjAgNTQwIiB3aWR0aD0iODYwIiBoZWlnaHQ9IjU0MCI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImNuaV9iZyIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjMWEzYTZlIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzI2NGQ4ZSIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0idHJpY29sb3JlIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMCI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiMwMDI2NTQiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIzMyUiIHN0b3AtY29sb3I9IiMwMDI2NTQiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIzMyUiIHN0b3AtY29sb3I9IiNmZmYiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSI2NiUiIHN0b3AtY29sb3I9IiNmZmYiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSI2NiUiIHN0b3AtY29sb3I9IiNDRTExMjYiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjQ0UxMTI2Ii8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICA8IS0tIENhcmQgYm9keSAtLT4KICA8cmVjdCB3aWR0aD0iODYwIiBoZWlnaHQ9IjU0MCIgcng9IjIwIiBmaWxsPSJ1cmwoI2NuaV9iZykiLz4KICA8IS0tIFRyaWNvbG9yZSBzdHJpcGUgdG9wIC0tPgogIDxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSI4NjAiIGhlaWdodD0iOCIgcng9IjAiIGZpbGw9InVybCgjdHJpY29sb3JlKSIvPgogIDwhLS0gSGVhZGVyIC0tPgogIDx0ZXh0IHg9IjQzMCIgeT0iNTAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJzZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iI2MwZDBlOCIgbGV0dGVyLXNwYWNpbmc9IjMiPlLDiVBVQkxJUVVFIEZSQU7Dh0FJU0U8L3RleHQ+CiAgPHRleHQgeD0iNDMwIiB5PSI4MiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjIiIGZpbGw9IiNmZmZmZmYiIGZvbnQtd2VpZ2h0PSJib2xkIiBsZXR0ZXItc3BhY2luZz0iMiI+Q0FSVEUgTkFUSU9OQUxFIEQnSURFTlRJVMOJPC90ZXh0PgogIDxsaW5lIHgxPSIxMjAiIHkxPSI5NSIgeDI9Ijc0MCIgeTI9Ijk1IiBzdHJva2U9IiM0YTZkYTAiIHN0cm9rZS13aWR0aD0iMSIvPgogIDwhLS0gUGhvdG8gcGxhY2Vob2xkZXIgLS0+CiAgPHJlY3QgeD0iNDAiIHk9IjEyMCIgd2lkdGg9IjE4MCIgaGVpZ2h0PSIyMzAiIHJ4PSI4IiBmaWxsPSIjMWU0NDc4IiBzdHJva2U9IiM0YTZkYTAiIHN0cm9rZS13aWR0aD0iMiIvPgogIDxjaXJjbGUgY3g9IjEzMCIgY3k9IjE5NSIgcj0iNDAiIGZpbGw9IiMyYTU1OTAiLz4KICA8cmVjdCB4PSI5MCIgeT0iMjUwIiB3aWR0aD0iODAiIGhlaWdodD0iNjAiIHJ4PSI4IiBmaWxsPSIjMmE1NTkwIi8+CiAgPHRleHQgeD0iMTMwIiB5PSIzNzAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjEwIiBmaWxsPSIjNmE4YWI4Ij5QSE9UTzwvdGV4dD4KICA8IS0tIEZpZWxkcyAtLT4KICA8dGV4dCB4PSIyNTAiIHk9IjE0MCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTIiIGZpbGw9IiM3YTljYzgiPk5vbSAvIFN1cm5hbWU8L3RleHQ+CiAgPHRleHQgeD0iMjUwIiB5PSIxNjQiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjIyIiBmaWxsPSIjZmZmZmZmIiBmb250LXdlaWdodD0iYm9sZCI+TUFSVElOPC90ZXh0PgogIDx0ZXh0IHg9IjI1MCIgeT0iMTk2IiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzdhOWNjOCI+UHLDqW5vbXMgLyBHaXZlbiBuYW1lczwvdGV4dD4KICA8dGV4dCB4PSIyNTAiIHk9IjIyMCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiNmZmZmZmYiIGZvbnQtd2VpZ2h0PSI2MDAiPk1hw6tseXMtR2HDq2xsZSwgTWFyaWU8L3RleHQ+CiAgPHRleHQgeD0iMjUwIiB5PSIyNTYiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyIiBmaWxsPSIjN2E5Y2M4Ij5EYXRlIGRlIG5haXNzYW5jZSAvIERhdGUgb2YgYmlydGg8L3RleHQ+CiAgPHRleHQgeD0iMjUwIiB5PSIyNzgiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjE4IiBmaWxsPSIjZmZmZmZmIj4xNS4wNy4xOTg4PC90ZXh0PgogIDx0ZXh0IHg9IjU1MCIgeT0iMjU2IiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzdhOWNjOCI+U2V4ZSAvIFNleDwvdGV4dD4KICA8dGV4dCB4PSI1NTAiIHk9IjI3OCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IiNmZmZmZmYiPkY8L3RleHQ+CiAgPHRleHQgeD0iMjUwIiB5PSIzMTIiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyIiBmaWxsPSIjN2E5Y2M4Ij5MaWV1IGRlIG5haXNzYW5jZSAvIFBsYWNlIG9mIGJpcnRoPC90ZXh0PgogIDx0ZXh0IHg9IjI1MCIgeT0iMzM0IiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iI2ZmZmZmZiI+TFlPTiAoNjkpPC90ZXh0PgogIDx0ZXh0IHg9IjI1MCIgeT0iMzcwIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzdhOWNjOCI+TmF0aW9uYWxpdMOpIC8gTmF0aW9uYWxpdHk8L3RleHQ+CiAgPHRleHQgeD0iMjUwIiB5PSIzOTIiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjE4IiBmaWxsPSIjZmZmZmZmIj5GcmFuw6dhaXNlPC90ZXh0PgogIDx0ZXh0IHg9IjU1MCIgeT0iMzcwIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzdhOWNjOCI+VGFpbGxlIC8gSGVpZ2h0PC90ZXh0PgogIDx0ZXh0IHg9IjU1MCIgeT0iMzkyIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iI2ZmZmZmZiI+MSw2OCBtPC90ZXh0PgogIDwhLS0gRXhwaXJ5IC0tPgogIDx0ZXh0IHg9IjI1MCIgeT0iNDI4IiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzdhOWNjOCI+RGF0ZSBkJ2V4cGlyYXRpb24gLyBFeHBpcnkgZGF0ZTwvdGV4dD4KICA8dGV4dCB4PSIyNTAiIHk9IjQ1MCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IiNmZmZmZmYiPjE0LjA3LjIwMzM8L3RleHQ+CiAgPHRleHQgeD0iNTUwIiB5PSI0MjgiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyIiBmaWxsPSIjN2E5Y2M4Ij5OwrAgZGUgY2FydGUgLyBDYXJkIE5vLjwvdGV4dD4KICA8dGV4dCB4PSI1NTAiIHk9IjQ1MCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IiNmZmZmZmYiPkYyQTRYODcyMTwvdGV4dD4KICA8IS0tIE1SWiB6b25lIC0tPgogIDxyZWN0IHg9IjMwIiB5PSI0NzAiIHdpZHRoPSI4MDAiIGhlaWdodD0iNTUiIHJ4PSI0IiBmaWxsPSIjMGUyYTUwIi8+CiAgPHRleHQgeD0iNDUiIHk9IjQ5MiIgZm9udC1mYW1pbHk9Im1vbm9zcGFjZSIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzVhN2FhYSI+SURGUkFNQVJUSU4mbHQ7Jmx0O01BRUxZUyZsdDtHQUVMTEUmbHQ7Jmx0O01BUklFJmx0OyZsdDsmbHQ7Jmx0OyZsdDsmbHQ7Jmx0OyZsdDsmbHQ7Jmx0OyZsdDsmbHQ7Jmx0OyZsdDsmbHQ7Jmx0OzwvdGV4dD4KICA8dGV4dCB4PSI0NSIgeT0iNTEyIiBmb250LWZhbWlseT0ibW9ub3NwYWNlIiBmb250LXNpemU9IjE0IiBmaWxsPSIjNWE3YWFhIj5GMkE0WDg3MjEwRlJBODgwNzE1OEYzMzA3MTQ3Jmx0OyZsdDsmbHQ7Jmx0OyZsdDsmbHQ7Jmx0OyZsdDsmbHQ7Jmx0OyZsdDsmbHQ7Jmx0OyZsdDswNjwvdGV4dD4KICA8IS0tIEhvbG9ncmFtIGhpbnQgLS0+CiAgPGNpcmNsZSBjeD0iNzIwIiBjeT0iMTgwIiByPSI1MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNGE4MGMwIiBzdHJva2Utd2lkdGg9IjAuNSIgb3BhY2l0eT0iMC40Ii8+CiAgPGNpcmNsZSBjeD0iNzIwIiBjeT0iMTgwIiByPSIzNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNGE4MGMwIiBzdHJva2Utd2lkdGg9IjAuNSIgb3BhY2l0eT0iMC4zIi8+CiAgPGNpcmNsZSBjeD0iNzIwIiBjeT0iMTgwIiByPSIyMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNGE4MGMwIiBzdHJva2Utd2lkdGg9IjAuNSIgb3BhY2l0eT0iMC4yIi8+Cjwvc3ZnPg==", status:"examiner", category:"Identité", instructions:"Pièce d'identité en cours de validité, avec photo. CNI ou passeport", relance:"22/09/2025" },
+        { id:2, name:"Enquete_Moralite_Gendarmerie.pdf", size:"1.5 MB", type:"pdf", date:"15/03/2026", preview:"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1OTUgODQyIiB3aWR0aD0iNTk1IiBoZWlnaHQ9Ijg0MiI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImhlYWRlcl9iZyIgeDE9IjAiIHkxPSIwIiB4Mj0iMCIgeTI9IjEiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjMWEyMzdlIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzI4MzU5MyIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPCEtLSBQYWdlIC0tPgogIDxyZWN0IHdpZHRoPSI1OTUiIGhlaWdodD0iODQyIiBmaWxsPSIjZmZmIi8+CiAgPCEtLSBUb3AgYmx1ZSBiYW5uZXIgLS0+CiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjU5NSIgaGVpZ2h0PSIxMTAiIGZpbGw9InVybCgjaGVhZGVyX2JnKSIvPgogIDwhLS0gUkYgZW1ibGVtIC0tPgogIDxjaXJjbGUgY3g9IjcwIiBjeT0iNTUiIHI9IjMyIiBmaWxsPSJub25lIiBzdHJva2U9IiM1YzZiYzAiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPHRleHQgeD0iNzAiIHk9IjQ4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic2VyaWYiIGZvbnQtc2l6ZT0iMTEiIGZpbGw9IiM5ZmE4ZGEiPlJGPC90ZXh0PgogIDx0ZXh0IHg9IjcwIiB5PSI2NCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9InNlcmlmIiBmb250LXNpemU9IjciIGZpbGw9IiM3OTg2Y2IiPkxJQkVSVMOJPC90ZXh0PgogIDx0ZXh0IHg9IjcwIiB5PSI3MyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9InNlcmlmIiBmb250LXNpemU9IjciIGZpbGw9IiM3OTg2Y2IiPsOJR0FMSVTDiTwvdGV4dD4KICA8dGV4dCB4PSI3MCIgeT0iODIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJzZXJpZiIgZm9udC1zaXplPSI3IiBmaWxsPSIjNzk4NmNiIj5GUkFURVJOSVTDiTwvdGV4dD4KICA8IS0tIEdlbmRhcm1lcmllIHRpdGxlIC0tPgogIDx0ZXh0IHg9IjI5NyIgeT0iMzgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjEzIiBmaWxsPSIjOWZhOGRhIiBsZXR0ZXItc3BhY2luZz0iNCI+TUlOSVNUw4hSRSBERSBMJ0lOVMOJUklFVVI8L3RleHQ+CiAgPHRleHQgeD0iMjk3IiB5PSI2MiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTciIGZpbGw9IiNmZmZmZmYiIGZvbnQtd2VpZ2h0PSJib2xkIiBsZXR0ZXItc3BhY2luZz0iMiI+R0VOREFSTUVSSUUgTkFUSU9OQUxFPC90ZXh0PgogIDx0ZXh0IHg9IjI5NyIgeT0iODUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjExIiBmaWxsPSIjNzk4NmNiIj5EaXJlY3Rpb24gZ8OpbsOpcmFsZSDigJQgU291cy1kaXJlY3Rpb24gZGUgbGEgcG9saWNlIGp1ZGljaWFpcmU8L3RleHQ+CiAgPCEtLSBUcmljb2xvcmUgbGluZSAtLT4KICA8cmVjdCB4PSIwIiB5PSIxMTAiIHdpZHRoPSIxOTgiIGhlaWdodD0iMyIgZmlsbD0iIzAwMjY1NCIvPgogIDxyZWN0IHg9IjE5OCIgeT0iMTEwIiB3aWR0aD0iMTk5IiBoZWlnaHQ9IjMiIGZpbGw9IiNmZmYiLz4KICA8cmVjdCB4PSIzOTciIHk9IjExMCIgd2lkdGg9IjE5OCIgaGVpZ2h0PSIzIiBmaWxsPSIjQ0UxMTI2Ii8+CiAgPCEtLSBEb2N1bWVudCB0aXRsZSAtLT4KICA8cmVjdCB4PSIxMjAiIHk9IjE0MCIgd2lkdGg9IjM1NSIgaGVpZ2h0PSI0NSIgcng9IjQiIGZpbGw9IiNlOGVhZjYiIHN0cm9rZT0iIzM5NDlhYiIgc3Ryb2tlLXdpZHRoPSIxIi8+CiAgPHRleHQgeD0iMjk3IiB5PSIxNjgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjIwIiBmaWxsPSIjMWEyMzdlIiBmb250LXdlaWdodD0iYm9sZCIgbGV0dGVyLXNwYWNpbmc9IjEiPkVOUVXDilRFIERFIE1PUkFMSVTDiTwvdGV4dD4KICA8IS0tIFJlZmVyZW5jZSAtLT4KICA8dGV4dCB4PSI2MCIgeT0iMjE4IiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMSIgZmlsbD0iIzY2NiI+UsOpZi4gOiBFTS0yMDI2LTAwODQ3LUdOPC90ZXh0PgogIDx0ZXh0IHg9IjM5NSIgeT0iMjE4IiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMSIgZmlsbD0iIzY2NiI+RGF0ZSA6IDE1IG1hcnMgMjAyNjwvdGV4dD4KICA8IS0tIFNlY3Rpb24gMSAtLT4KICA8cmVjdCB4PSI1MCIgeT0iMjQwIiB3aWR0aD0iNDk1IiBoZWlnaHQ9IjI0IiByeD0iMyIgZmlsbD0iI2U4ZWFmNiIvPgogIDx0ZXh0IHg9IjYwIiB5PSIyNTciIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyIiBmaWxsPSIjMWEyMzdlIiBmb250LXdlaWdodD0iYm9sZCI+MS4gSURFTlRJVMOJIERFIExBIFBFUlNPTk5FIENPTkNFUk7DiUU8L3RleHQ+CiAgPHRleHQgeD0iNzAiIHk9IjI4NSIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTEiIGZpbGw9IiMzMzMiPk5vbSA6IDx0c3BhbiBmb250LXdlaWdodD0iNjAwIj5NQVJUSU48L3RzcGFuPjwvdGV4dD4KICA8dGV4dCB4PSIzMDAiIHk9IjI4NSIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTEiIGZpbGw9IiMzMzMiPlByw6lub21zIDogPHRzcGFuIGZvbnQtd2VpZ2h0PSI2MDAiPk1hw6tseXMtR2HDq2xsZSwgTWFyaWU8L3RzcGFuPjwvdGV4dD4KICA8dGV4dCB4PSI3MCIgeT0iMzA1IiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMSIgZmlsbD0iIzMzMyI+RGF0ZSBkZSBuYWlzc2FuY2UgOiA8dHNwYW4gZm9udC13ZWlnaHQ9IjYwMCI+MTUvMDcvMTk4ODwvdHNwYW4+PC90ZXh0PgogIDx0ZXh0IHg9IjMwMCIgeT0iMzA1IiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMSIgZmlsbD0iIzMzMyI+TGlldSA6IDx0c3BhbiBmb250LXdlaWdodD0iNjAwIj5MeW9uICg2OSk8L3RzcGFuPjwvdGV4dD4KICA8dGV4dCB4PSI3MCIgeT0iMzI1IiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMSIgZmlsbD0iIzMzMyI+QWRyZXNzZSA6IDx0c3BhbiBmb250LXdlaWdodD0iNjAwIj4xMiBydWUgZGVzIExpbGFzLCA2OTAwMyBMeW9uPC90c3Bhbj48L3RleHQ+CiAgPHRleHQgeD0iNzAiIHk9IjM0NSIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTEiIGZpbGw9IiMzMzMiPlByb2Zlc3Npb24gOiA8dHNwYW4gZm9udC13ZWlnaHQ9IjYwMCI+RXhwZXJ0LWNvbXB0YWJsZTwvdHNwYW4+PC90ZXh0PgogIDwhLS0gU2VjdGlvbiAyIC0tPgogIDxyZWN0IHg9IjUwIiB5PSIzNzIiIHdpZHRoPSI0OTUiIGhlaWdodD0iMjQiIHJ4PSIzIiBmaWxsPSIjZThlYWY2Ii8+CiAgPHRleHQgeD0iNjAiIHk9IjM4OSIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTIiIGZpbGw9IiMxYTIzN2UiIGZvbnQtd2VpZ2h0PSJib2xkIj4yLiBPQkpFVCBERSBMJ0VOUVXDilRFPC90ZXh0PgogIDx0ZXh0IHg9IjcwIiB5PSI0MTciIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjExIiBmaWxsPSIjMzMzIj5EZW1hbmRlIGRlIHbDqXJpZmljYXRpb24gZGFucyBsZSBjYWRyZSBkJ3VuZSBpbnNjcmlwdGlvbiBhdSB0YWJsZWF1IGRlIGwnT3JkcmU8L3RleHQ+CiAgPHRleHQgeD0iNzAiIHk9IjQzNSIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTEiIGZpbGw9IiMzMzMiPmRlcyBFeHBlcnRzLUNvbXB0YWJsZXMsIHNlY3Rpb24gcsOpZ2lvbmFsZSBBdXZlcmduZS1SaMO0bmUtQWxwZXMuPC90ZXh0PgogIDwhLS0gU2VjdGlvbiAzIC0tPgogIDxyZWN0IHg9IjUwIiB5PSI0NjIiIHdpZHRoPSI0OTUiIGhlaWdodD0iMjQiIHJ4PSIzIiBmaWxsPSIjZThlYWY2Ii8+CiAgPHRleHQgeD0iNjAiIHk9IjQ3OSIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTIiIGZpbGw9IiMxYTIzN2UiIGZvbnQtd2VpZ2h0PSJib2xkIj4zLiBSw4lTVUxUQVRTIERFUyBWw4lSSUZJQ0FUSU9OUzwvdGV4dD4KICA8dGV4dCB4PSI3MCIgeT0iNTA3IiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMSIgZmlsbD0iIzMzMyI+Q2FzaWVyIGp1ZGljaWFpcmUgKGJ1bGxldGluIG7CsDIpIDogPHRzcGFuIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiMyZTdkMzIiPk7DqWFudDwvdHNwYW4+PC90ZXh0PgogIDx0ZXh0IHg9IjcwIiB5PSI1MjciIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjExIiBmaWxsPSIjMzMzIj5GaWNoaWVyIGRlcyBwZXJzb25uZXMgcmVjaGVyY2jDqWVzIDogPHRzcGFuIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiMyZTdkMzIiPkF1Y3VuZSBtZW50aW9uPC90c3Bhbj48L3RleHQ+CiAgPHRleHQgeD0iNzAiIHk9IjU0NyIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTEiIGZpbGw9IiMzMzMiPkZpY2hpZXIgVEFKIChUcmFpdGVtZW50IGRlcyBBbnTDqWPDqWRlbnRzIEp1ZGljaWFpcmVzKSA6IDx0c3BhbiBmb250LXdlaWdodD0iNjAwIiBmaWxsPSIjMmU3ZDMyIj5BdWN1bmUgbWVudGlvbjwvdHNwYW4+PC90ZXh0PgogIDx0ZXh0IHg9IjcwIiB5PSI1NjciIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjExIiBmaWxsPSIjMzMzIj5FbnF1w6p0ZSBkZSB2b2lzaW5hZ2UgOiA8dHNwYW4gZm9udC13ZWlnaHQ9IjYwMCIgZmlsbD0iIzJlN2QzMiI+UmllbiDDoCBzaWduYWxlcjwvdHNwYW4+PC90ZXh0PgogIDx0ZXh0IHg9IjcwIiB5PSI1ODciIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjExIiBmaWxsPSIjMzMzIj5Ww6lyaWZpY2F0aW9uIGZpc2NhbGUgOiA8dHNwYW4gZm9udC13ZWlnaHQ9IjYwMCIgZmlsbD0iIzJlN2QzMiI+U2l0dWF0aW9uIHLDqWd1bGnDqHJlPC90c3Bhbj48L3RleHQ+CiAgPCEtLSBTZWN0aW9uIDQgLS0+CiAgPHJlY3QgeD0iNTAiIHk9IjYxNCIgd2lkdGg9IjQ5NSIgaGVpZ2h0PSIyNCIgcng9IjMiIGZpbGw9IiNlOGVhZjYiLz4KICA8dGV4dCB4PSI2MCIgeT0iNjMxIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzFhMjM3ZSIgZm9udC13ZWlnaHQ9ImJvbGQiPjQuIENPTkNMVVNJT048L3RleHQ+CiAgPHJlY3QgeD0iNjAiIHk9IjY0OCIgd2lkdGg9IjQ3NSIgaGVpZ2h0PSI1MCIgcng9IjQiIGZpbGw9IiNlOGY1ZTkiIHN0cm9rZT0iIzRjYWY1MCIgc3Ryb2tlLXdpZHRoPSIxIi8+CiAgPHRleHQgeD0iMjk3IiB5PSI2NzAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjEzIiBmaWxsPSIjMWI1ZTIwIiBmb250LXdlaWdodD0iYm9sZCI+QVZJUyBGQVZPUkFCTEU8L3RleHQ+CiAgPHRleHQgeD0iMjk3IiB5PSI2ODgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjEwIiBmaWxsPSIjMmU3ZDMyIj5BdWN1biDDqWzDqW1lbnQgZMOpZmF2b3JhYmxlIHJlbGV2w6kgw6AgbCdlbmNvbnRyZSBkZSBsJ2ludMOpcmVzc8OpZS48L3RleHQ+CiAgPCEtLSBTaWduYXR1cmUgem9uZSAtLT4KICA8dGV4dCB4PSIzODAiIHk9IjczNSIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTEiIGZpbGw9IiMzMzMiPkZhaXQgw6AgTHlvbiwgbGUgMTUgbWFycyAyMDI2PC90ZXh0PgogIDx0ZXh0IHg9IjM4MCIgeT0iNzU1IiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMSIgZmlsbD0iIzMzMyI+TGUgQ29tbWFuZGFudCBkZSBicmlnYWRlLDwvdGV4dD4KICA8IS0tIFNpZ25hdHVyZSBzY3JpYmJsZSAtLT4KICA8cGF0aCBkPSJNNDAwLDc3MCBjMTAsLTggMjAsNSAzMCwtMyBjMTAsLTggMTUsNCAyNSwtMiBjOCwtNSAxMiwzIDE4LDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzFhMjM3ZSIgc3Ryb2tlLXdpZHRoPSIxLjUiIG9wYWNpdHk9IjAuNyIvPgogIDx0ZXh0IHg9IjM4MCIgeT0iODAwIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMSIgZmlsbD0iIzMzMyIgZm9udC13ZWlnaHQ9IjYwMCI+Q2FwaXRhaW5lIERVQk9JUyBKZWFuLVBpZXJyZTwvdGV4dD4KICA8IS0tIFN0YW1wIGhpbnQgLS0+CiAgPGNpcmNsZSBjeD0iNDYwIiBjeT0iNzcwIiByPSIzMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMWEyMzdlIiBzdHJva2Utd2lkdGg9IjEiIG9wYWNpdHk9IjAuMTUiLz4KICA8Y2lyY2xlIGN4PSI0NjAiIGN5PSI3NzAiIHI9IjIyIiBmaWxsPSJub25lIiBzdHJva2U9IiMxYTIzN2UiIHN0cm9rZS13aWR0aD0iMC41IiBvcGFjaXR5PSIwLjEiLz4KICA8IS0tIENPTkZJREVOVElFTCB3YXRlcm1hcmsgLS0+CiAgPHRleHQgeD0iMjk3IiB5PSI1MDAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjYwIiBmaWxsPSIjZTBlMGUwIiBvcGFjaXR5PSIwLjE1IiB0cmFuc2Zvcm09InJvdGF0ZSgtMzAsMjk3LDUwMCkiIGZvbnQtd2VpZ2h0PSJib2xkIj5DT05GSURFTlRJRUw8L3RleHQ+Cjwvc3ZnPg==", status:"examiner", category:"Document administratif", instructions:"Enquête de moralité datant de moins de 3 mois, délivrée par la Gendarmerie", relance:"23/09/2025" },
+        { id:3, name:"Kbis_Societe_Exercice_2026.pdf", size:"1.2 MB", type:"pdf", date:"12/03/2026", status:"conforme", category:"Statuts & PV d'AG", instructions:"Extrait Kbis de moins de 3 mois daté et certifié", relance:"24/09/2025" },
+        { id:4, name:"Attestation_Assurance_RCP.pdf", size:"890 KB", type:"pdf", date:"10/03/2026", status:"nonconforme", category:"Assurance", instructions:"Attestation RCP en cours de validité couvrant l'exercice", relance:"25/09/2025" },
+        { id:5, name:"Diplome_Expertise_Comptable.pdf", size:"2.4 MB", type:"pdf", date:"08/03/2026", status:"examiner", category:"Diplôme", instructions:"Diplôme DEC ou certificat d'aptitude aux fonctions", relance:"—" },
+        { id:6, name:"Statuts_Societe_MAJ_2025.docx", size:"456 KB", type:"docx", date:"05/03/2026", status:"demandee", category:"Statuts & PV d'AG", instructions:"Statuts à jour signés et paraphés par tous les associés", relance:"20/02/2026" },
+        { id:7, name:"Liste_Associes_Mars2026.xlsx", size:"124 KB", type:"xlsx", date:"03/03/2026", status:"examiner", category:"Document administratif", instructions:"Liste des associés avec pourcentages de participation", relance:"—" },
+        { id:8, name:"PV_AG_Nomination_Dirigeant.pdf", size:"1.8 MB", type:"pdf", date:"28/02/2026", status:"conforme", category:"Statuts & PV d'AG", instructions:"PV d'AG actant la nomination du dirigeant actuel", relance:"18/02/2026" },
+        { id:9, name:"Justificatif_Domiciliation.pdf", size:"567 KB", type:"pdf", date:"25/02/2026", status:"examiner", category:"Document administratif", instructions:"Justificatif de domicile professionnel de moins de 3 mois", relance:"—" },
+        { id:10, name:"Photo_Identite_Representant.png", size:"3.1 MB", type:"png", date:"20/02/2026", status:"demandee", category:"Identité", instructions:"Photo d'identité récente sur fond blanc ou gris clair", relance:"15/02/2026" },
+    ];
+
+    let s3ActiveFilter = 'all';
+    const s3FileList = document.getElementById('s3FileList');
+    const s3FileCount = document.getElementById('s3FileCount');
+    const s3Search = document.getElementById('s3Search');
+
+    const S3_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="14" y2="12"/></svg>';
+
+    const STATUS_META = {
+        examiner:    { label: 'À examiner',   cls: 'examiner',    icon: '◷' },
+        demandee:    { label: 'Demandée',      cls: 'demandee',    icon: '↗' },
+        conforme:    { label: 'Conforme',      cls: 'conforme',    icon: '✓' },
+        nonconforme: { label: 'Non conforme',  cls: 'nonconforme', icon: '✕' },
+    };
+    function statusBadgeHTML(f) {
+        const s = STATUS_META[f.status || 'examiner'];
+        return '<button class="s3-status-badge ' + s.cls + '" title="Changer le statut">' + s.icon + ' ' + s.label + '</button>';
+    }
+    // Status dropdown
+    let activeStatusDropdown = null;
+    function closeStatusDropdown() {
+        if (activeStatusDropdown) { activeStatusDropdown.remove(); activeStatusDropdown = null; }
+    }
+    document.addEventListener('click', closeStatusDropdown);
+    function showStatusDropdown(file, btn) {
+        closeStatusDropdown();
+        const dd = document.createElement('div');
+        dd.className = 's3-status-dropdown';
+        const rect = btn.getBoundingClientRect();
+        const spaceBelow = window.innerHeight - rect.bottom;
+        if (spaceBelow < 170) { dd.style.bottom = (window.innerHeight - rect.top + 4) + 'px'; }
+        else { dd.style.top = (rect.bottom + 4) + 'px'; }
+        dd.style.left = rect.left + 'px';
+        Object.entries(STATUS_META).forEach(([val, s]) => {
+            const opt = document.createElement('button');
+            opt.className = 's3-status-option' + (val === (file.status || 'examiner') ? ' active' : '');
+            opt.innerHTML = '<span class="s3-status-badge ' + s.cls + '" style="pointer-events:none">' + s.icon + ' ' + s.label + '</span>';
+            opt.addEventListener('click', (e) => { e.stopPropagation(); file.status = val; closeStatusDropdown(); renderS3(); });
+            dd.appendChild(opt);
+        });
+        document.body.appendChild(dd);
+        activeStatusDropdown = dd;
+    }
+
+    function renderS3() {
+        const q = s3Search.value.toLowerCase().trim();
+        const filtered = S3_FILES.filter(f => {
+            if (s3ActiveFilter !== 'all' && f.type !== s3ActiveFilter) return false;
+            if (q && !f.name.toLowerCase().includes(q)) return false;
+            return true;
+        });
+
+        s3FileCount.textContent = filtered.length + ' fichier' + (filtered.length > 1 ? 's' : '');
+        s3FileList.innerHTML = '';
+
+        filtered.forEach(f => {
+            const row = document.createElement('div');
+            row.className = 's3-file-row';
+            row.dataset.id = f.id;
+            const instr = (f.instructions || '—');
+            row.innerHTML =
+                '<div style="display:flex;align-items:center;justify-content:center"><div class="s3-file-icon ' + f.type + '">' + S3_ICON + '</div></div>' +
+                '<div class="s3-file-name" title="' + f.name + '">' + f.name + '</div>' +
+                '<div>' + statusBadgeHTML(f) + '</div>' +
+                '<div class="s3-cell-date">' + (f.date || '—') + '</div>' +
+                '<div class="s3-cell-truncate" title="' + (f.category||'') + '">' + (f.category || '—') + '</div>' +
+                '<div class="s3-cell-truncate" title="' + instr + '">' + instr + '</div>' +
+                '<div class="s3-cell-date">' + (f.relance || '—') + '</div>' +
+                '<button class="s3-file-actions-btn" title="Actions"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button>';
+            row.addEventListener('click', (e) => {
+                if (e.target.closest('.s3-file-actions-btn') || e.target.closest('.s3-status-badge')) return;
+                openS3Modal(f);
+            });
+            row.querySelector('.s3-status-badge').addEventListener('click', (e) => {
+                e.stopPropagation(); showStatusDropdown(f, e.currentTarget);
+            });
+            row.querySelector('.s3-file-actions-btn').addEventListener('click', (e) => {
+                e.stopPropagation(); showS3CtxMenu(f, e);
+            });
+            s3FileList.appendChild(row);
+        });
+    }
+
+    document.querySelectorAll('.s3-filter-tag').forEach(tag => {
+        tag.addEventListener('click', () => {
+            s3ActiveFilter = tag.dataset.filter;
+            document.querySelectorAll('.s3-filter-tag').forEach(t => t.classList.remove('active'));
+            tag.classList.add('active');
+            renderS3();
+        });
+    });
+
+    s3Search.addEventListener('input', renderS3);
+
+    // Init S3
+    renderS3();
+
+    // ===== S3 CONTEXT MENU (rename / delete) =====
+    let activeCtxMenu = null;
+
+    function closeCtxMenu() {
+        if (activeCtxMenu) { activeCtxMenu.remove(); activeCtxMenu = null; }
+    }
+    document.addEventListener('click', closeCtxMenu);
+
+    function showS3CtxMenu(file, e) {
+        closeCtxMenu();
+        const menu = document.createElement('div');
+        menu.className = 's3-ctx-menu';
+        menu.innerHTML =
+            '<button class="s3-ctx-item" data-action="details"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Détails</button>' +
+            '<button class="s3-ctx-item" data-action="rename"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>Renommer</button>' +
+            '<div class="s3-ctx-separator"></div>' +
+            '<button class="s3-ctx-item danger" data-action="delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Supprimer</button>';
+
+        // Position near button
+        const rect = e.target.closest('.s3-file-actions-btn').getBoundingClientRect();
+        menu.style.top = rect.bottom + 4 + 'px';
+        menu.style.left = (rect.left - 130) + 'px';
+        document.body.appendChild(menu);
+        activeCtxMenu = menu;
+
+        // Keep inside viewport
+        const menuRect = menu.getBoundingClientRect();
+        if (menuRect.right > window.innerWidth) menu.style.left = (window.innerWidth - menuRect.width - 8) + 'px';
+        if (menuRect.bottom > window.innerHeight) menu.style.top = (rect.top - menuRect.height - 4) + 'px';
+
+        menu.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            const action = ev.target.closest('.s3-ctx-item')?.dataset.action;
+            if (action === 'details') { closeCtxMenu(); openS3Modal(file); }
+            if (action === 'rename') { closeCtxMenu(); startRename(file); }
+            if (action === 'delete') { closeCtxMenu(); deleteS3File(file); }
+        });
+    }
+
+    function startRename(file) {
+        const row = s3FileList.querySelector('[data-id="' + file.id + '"]');
+        if (!row) return;
+        const nameEl = row.querySelector('.s3-file-name');
+        const oldName = file.name;
+        const ext = oldName.includes('.') ? '.' + oldName.split('.').pop() : '';
+        const baseName = ext ? oldName.slice(0, -ext.length) : oldName;
+
+        const input = document.createElement('input');
+        input.className = 's3-rename-input';
+        input.value = baseName;
+        nameEl.textContent = '';
+        nameEl.appendChild(input);
+        input.focus();
+        input.select();
+
+        function finishRename() {
+            const newBase = input.value.trim();
+            if (newBase && newBase !== baseName) {
+                file.name = newBase + ext;
+            }
+            renderS3();
+        }
+        input.addEventListener('blur', finishRename);
+        input.addEventListener('keydown', (ev) => {
+            if (ev.key === 'Enter') { ev.preventDefault(); input.blur(); }
+            if (ev.key === 'Escape') { input.value = baseName; input.blur(); }
+        });
+    }
+
+    function deleteS3File(file) {
+        const idx = S3_FILES.findIndex(f => f.id === file.id);
+        if (idx === -1) return;
+        const removed = S3_FILES.splice(idx, 1)[0];
+        renderS3();
+
+        // Undo toast
+        const toast = document.createElement('div');
+        toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1f2937;color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:500;z-index:9999;display:flex;align-items:center;gap:12px;box-shadow:0 4px 16px rgba(0,0,0,0.2);animation:s3PreviewIn 200ms ease';
+        toast.innerHTML = '<span>' + removed.name + ' supprimé</span><button style="background:none;border:1px solid rgba(255,255,255,0.3);color:#fff;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit">Annuler</button>';
+        document.body.appendChild(toast);
+
+        const timer = setTimeout(() => toast.remove(), 5000);
+        toast.querySelector('button').addEventListener('click', () => {
+            clearTimeout(timer);
+            S3_FILES.splice(idx, 0, removed);
+            renderS3();
+            toast.remove();
+        });
+    }
+
+    // ===== S3 PREVIEW (in-panel, arrows nav) =====
+    const s3PreviewOverlay = document.getElementById('s3PreviewOverlay');
+    const s3PreviewArea = document.getElementById('s3PreviewArea');
+    const s3PrevBtn = document.getElementById('s3PrevBtn');
+    const s3NextBtn = document.getElementById('s3NextBtn');
+    const s3Counter = document.getElementById('s3Counter');
+    const s3PreviewCloseX = document.getElementById('s3PreviewCloseX');
+
+    const s3TypeColors = { pdf:'#dc2626', docx:'#2563eb', xlsx:'#16a34a', png:'#f59e0b', csv:'#059669', zip:'#6b7280', mp3:'#3b82f6', mov:'#8b5cf6', pptx:'#e04e2a' };
+    let s3CurrentIndex = 0;
+    let s3FilteredFiles = [];
+
+    function getS3Filtered() {
+        const q = s3Search.value.toLowerCase().trim();
+        return S3_FILES.filter(f => {
+            if (s3ActiveFilter !== 'all' && f.type !== s3ActiveFilter) return false;
+            if (q && !f.name.toLowerCase().includes(q)) return false;
+            return true;
+        });
+    }
+
+    let s3Zoom = 1;
+    const s3ZoomControls = document.getElementById('s3ZoomControls');
+    const s3ZoomIn = document.getElementById('s3ZoomIn');
+    const s3ZoomOut = document.getElementById('s3ZoomOut');
+    const s3ZoomLabel = document.getElementById('s3ZoomLabel');
+
+    function s3SetZoom(val) {
+        s3Zoom = Math.max(0.5, Math.min(4, val));
+        s3ZoomLabel.textContent = Math.round(s3Zoom * 100) + '%';
+        const wrap = s3PreviewArea.querySelector('.s3-preview-img-wrap');
+        if (wrap) wrap.style.transform = 'scale(' + s3Zoom + ')';
+        // Enable scroll overflow when zoomed
+        s3PreviewArea.style.overflow = s3Zoom > 1 ? 'auto' : 'hidden';
+        s3PreviewArea.style.cursor = s3Zoom > 1 ? 'grab' : 'default';
+    }
+
+    function showS3Preview(index) {
+        s3FilteredFiles = getS3Filtered();
+        if (index < 0 || index >= s3FilteredFiles.length) return;
+        s3CurrentIndex = index;
+        const file = s3FilteredFiles[index];
+        const color = s3TypeColors[file.type] || '#6b7280';
+
+        if (file.preview) {
+            s3PreviewArea.innerHTML = '<div class="s3-preview-img-wrap"><img src="' + file.preview + '" alt="' + file.name + '" draggable="false"/></div>' +
+                '<div class="s3-preview-filename" style="margin-top:12px">' + file.name + '</div>';
+            s3ZoomControls.style.display = 'flex';
+            s3Zoom = 1;
+            s3ZoomLabel.textContent = '100%';
+        } else {
+            s3PreviewArea.innerHTML = '<div class="s3-preview-big-icon" style="background:' + color + '">' + S3_ICON.replace(/14/g,'32') + '</div>' +
+                '<div class="s3-preview-filename">' + file.name + '</div>';
+            s3ZoomControls.style.display = 'none';
+        }
+
+        s3Counter.textContent = (index + 1) + ' / ' + s3FilteredFiles.length;
+        s3PrevBtn.disabled = index === 0;
+        s3NextBtn.disabled = index === s3FilteredFiles.length - 1;
+        s3PreviewOverlay.classList.add('active');
+    }
+
+    function openS3Modal(file) {
+        s3FilteredFiles = getS3Filtered();
+        const idx = s3FilteredFiles.findIndex(f => f.id === file.id);
+        showS3Preview(idx >= 0 ? idx : 0);
+    }
+
+    function closeS3Preview() {
+        s3PreviewOverlay.classList.remove('active');
+    }
+
+    // Zoom controls (soft increments)
+    s3ZoomIn.addEventListener('click', () => s3SetZoom(s3Zoom + 0.1));
+    s3ZoomOut.addEventListener('click', () => s3SetZoom(s3Zoom - 0.1));
+
+    // Scroll wheel zoom (smooth)
+    s3PreviewArea.addEventListener('wheel', (e) => {
+        if (!s3PreviewOverlay.classList.contains('active')) return;
+        const file = s3FilteredFiles[s3CurrentIndex];
+        if (!file || !file.preview) return;
+        e.preventDefault();
+        s3SetZoom(s3Zoom + (e.deltaY < 0 ? 0.06 : -0.06));
+    }, { passive: false });
+
+    // Pan / drag when zoomed
+    let s3PanActive = false, s3PanStart = {x:0,y:0}, s3PanScroll = {x:0,y:0};
+    s3PreviewArea.addEventListener('mousedown', (e) => {
+        const file = s3FilteredFiles[s3CurrentIndex];
+        if (!file || !file.preview) return;
+        if (s3Zoom <= 1) return;
+        s3PanActive = true;
+        s3PanStart = { x: e.clientX, y: e.clientY };
+        s3PanScroll = { x: s3PreviewArea.scrollLeft, y: s3PreviewArea.scrollTop };
+        s3PreviewArea.classList.add('dragging');
+        e.preventDefault();
+    });
+    document.addEventListener('mousemove', (e) => {
+        if (!s3PanActive) return;
+        s3PreviewArea.scrollLeft = s3PanScroll.x - (e.clientX - s3PanStart.x);
+        s3PreviewArea.scrollTop = s3PanScroll.y - (e.clientY - s3PanStart.y);
+    });
+    document.addEventListener('mouseup', () => {
+        if (s3PanActive) { s3PanActive = false; s3PreviewArea.classList.remove('dragging'); }
+    });
+
+    s3PrevBtn.addEventListener('click', () => showS3Preview(s3CurrentIndex - 1));
+    s3NextBtn.addEventListener('click', () => showS3Preview(s3CurrentIndex + 1));
+    s3PreviewCloseX.addEventListener('click', closeS3Preview);
+
+    document.addEventListener('keydown', (e) => {
+        if (!s3PreviewOverlay.classList.contains('active')) return;
+        if (e.key === 'ArrowLeft') showS3Preview(s3CurrentIndex - 1);
+        if (e.key === 'ArrowRight') showS3Preview(s3CurrentIndex + 1);
+        if (e.key === 'Escape') closeS3Preview();
+    });
+
+    // ===== IMPORT FUNCTIONALITY =====
+    const s3ImportBtn = document.getElementById('s3ImportBtn');
+    const s3ImportOverlay = document.getElementById('s3ImportOverlay');
+    const s3ImportClose = document.getElementById('s3ImportClose');
+    const s3ImportDropzone = document.getElementById('s3ImportDropzone');
+    const s3ImportFileInput = document.getElementById('s3ImportFileInput');
+    const s3ImportList = document.getElementById('s3ImportList');
+    const s3MergeBar = document.getElementById('s3MergeBar');
+    const s3MergeBtn = document.getElementById('s3MergeBtn');
+    const s3MergeName = document.getElementById('s3MergeName');
+    const s3MergeResult = document.getElementById('s3MergeResult');
+    const s3MergeResultName = document.getElementById('s3MergeResultName');
+    const s3MergeResultInfo = document.getElementById('s3MergeResultInfo');
+    const s3MergeConfirm = document.getElementById('s3MergeConfirm');
+
+    let importedFiles = []; // {name, size, sizeStr, type, ftype, dateStr}
+
+    s3ImportBtn.addEventListener('click', () => {
+        s3ImportOverlay.classList.add('active');
+        importedFiles = [];
+        renderImportList();
+        s3MergeResult.classList.remove('visible');
+    });
+    s3ImportClose.addEventListener('click', () => { s3ImportOverlay.classList.remove('active'); importedFiles = []; });
+
+    // Footer: Annuler
+    document.getElementById('s3ImportCancelBtn').addEventListener('click', () => {
+        s3ImportOverlay.classList.remove('active');
+        importedFiles = [];
+    });
+
+    // Footer: Ajouter à la liste — adds all staged files individually
+    document.getElementById('s3AddListBtn').addEventListener('click', () => {
+        if (importedFiles.length === 0) return;
+        const added = [];
+        importedFiles.forEach(f => {
+            if (!S3_FILES.find(s => s.name === f.name)) {
+                S3_FILES.unshift({ id: S3_FILES.length + 1, name: f.name, size: f.sizeStr, type: f.ftype, date: f.dateStr });
+                added.push(f.name);
+            }
+        });
+        renderS3();
+        s3ImportOverlay.classList.remove('active');
+        importedFiles = [];
+        // Toast
+        const count = added.length;
+        const toast = document.createElement('div');
+        toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#065f46;color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:9999;display:flex;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(0,0,0,0.15);animation:s3PreviewIn 200ms ease';
+        toast.innerHTML = '<span style="font-size:16px">✓</span> ' + (count === 1 ? '1 fichier ajouté' : count + ' fichiers ajoutés') + ' à la liste';
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    });
+
+    s3ImportDropzone.addEventListener('click', () => s3ImportFileInput.click());
+    s3ImportDropzone.addEventListener('dragover', (e) => { e.preventDefault(); s3ImportDropzone.classList.add('dragover'); });
+    s3ImportDropzone.addEventListener('dragleave', () => s3ImportDropzone.classList.remove('dragover'));
+    s3ImportDropzone.addEventListener('drop', (e) => { e.preventDefault(); s3ImportDropzone.classList.remove('dragover'); handleImportFiles(e.dataTransfer.files); });
+
+    s3ImportFileInput.addEventListener('change', (e) => { handleImportFiles(e.target.files); s3ImportFileInput.value = ''; });
+
+    function handleImportFiles(files) {
+        const today = new Date();
+        const dateStr = String(today.getDate()).padStart(2,'0')+'/'+String(today.getMonth()+1).padStart(2,'0')+'/'+today.getFullYear();
+        Array.from(files).forEach(file => {
+            const ext = file.name.split('.').pop().toLowerCase();
+            const typeMap = {pdf:'pdf',doc:'docx',docx:'docx',xls:'xlsx',xlsx:'xlsx',png:'png',jpg:'png',jpeg:'png'};
+            const ftype = typeMap[ext] || 'pdf';
+            const sizeStr = file.size > 1048576 ? (file.size/1048576).toFixed(1)+' MB' : Math.round(file.size/1024)+' KB';
+            importedFiles.push({ name: file.name, size: file.size, sizeStr: sizeStr, type: ext, ftype: ftype, dateStr: dateStr });
+        });
+        renderImportList();
+        s3MergeResult.classList.remove('visible');
+    }
+
+    let dragSrcIdx = null;
+
+    function renderImportList() {
+        s3ImportList.innerHTML = '';
+        importedFiles.forEach((f, i) => {
+            const item = document.createElement('div');
+            item.className = 's3-import-item';
+            item.draggable = true;
+            item.dataset.idx = i;
+            item.innerHTML =
+                '<span class="s3-import-item-grip" title="Glisser pour réorganiser"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="4" r="2"/><circle cx="16" cy="4" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="8" cy="20" r="2"/><circle cx="16" cy="20" r="2"/></svg></span>' +
+                '<span class="s3-import-item-num">' + (i + 1) + '</span>' +
+                '<span class="s3-import-item-name" title="' + f.name + '">' + f.name + '</span>' +
+                '<span class="s3-import-item-size">' + f.sizeStr + '</span>' +
+                '<button class="s3-import-item-remove" data-idx="' + i + '" title="Retirer">✕</button>';
+
+            // Drag events
+            item.addEventListener('dragstart', (e) => {
+                dragSrcIdx = i;
+                item.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', i);
+            });
+            item.addEventListener('dragend', () => {
+                item.classList.remove('dragging');
+                clearDragIndicators();
+            });
+            item.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                clearDragIndicators();
+                const rect = item.getBoundingClientRect();
+                const mid = rect.top + rect.height / 2;
+                if (e.clientY < mid) {
+                    item.classList.add('drag-over-above');
+                } else {
+                    item.classList.add('drag-over-below');
+                }
+            });
+            item.addEventListener('dragleave', () => {
+                item.classList.remove('drag-over-above', 'drag-over-below');
+            });
+            item.addEventListener('drop', (e) => {
+                e.preventDefault();
+                clearDragIndicators();
+                const fromIdx = dragSrcIdx;
+                let toIdx = i;
+                if (fromIdx === null || fromIdx === toIdx) return;
+                const rect = item.getBoundingClientRect();
+                const mid = rect.top + rect.height / 2;
+                if (e.clientY >= mid && toIdx < fromIdx) toIdx++;
+                if (e.clientY < mid && toIdx > fromIdx) toIdx--;
+                const moved = importedFiles.splice(fromIdx, 1)[0];
+                importedFiles.splice(toIdx, 0, moved);
+                dragSrcIdx = null;
+                renderImportList();
+            });
+
+            s3ImportList.appendChild(item);
+        });
+
+        // Attach remove events
+        s3ImportList.querySelectorAll('.s3-import-item-remove').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                importedFiles.splice(parseInt(btn.dataset.idx), 1);
+                renderImportList();
+                s3MergeResult.classList.remove('visible');
+            });
+        });
+
+        // Show/hide merge bar
+        s3MergeBar.classList.toggle('visible', importedFiles.length >= 2);
+        if (importedFiles.length >= 2) {
+            s3MergeName.value = 'Dossier_Fusionne_' + importedFiles.length + '_pieces.pdf';
+        }
+        // Show/hide footer + update label
+        const s3ImportFooter = document.getElementById('s3ImportFooter');
+        const s3AddListLabel = document.getElementById('s3AddListLabel');
+        if (importedFiles.length > 0) {
+            s3ImportFooter.classList.add('visible');
+            s3AddListLabel.textContent = importedFiles.length === 1
+                ? 'Ajouter 1 fichier à la liste'
+                : 'Ajouter ' + importedFiles.length + ' fichiers à la liste';
+        } else {
+            s3ImportFooter.classList.remove('visible');
+        }
+    }
+
+    function clearDragIndicators() {
+        s3ImportList.querySelectorAll('.s3-import-item').forEach(el => {
+            el.classList.remove('drag-over-above', 'drag-over-below');
+        });
+    }
+
+    // Merge action
+    s3MergeBtn.addEventListener('click', () => {
+        if (importedFiles.length < 2) return;
+        const mergeName = s3MergeName.value.trim() || 'Document_Fusionne.pdf';
+        const totalSize = importedFiles.reduce((s, f) => s + (f.size || 0), 0);
+        const totalSizeStr = totalSize > 1048576 ? (totalSize/1048576).toFixed(1)+' MB' : Math.round(totalSize/1024)+' KB';
+
+        s3MergeResultName.textContent = mergeName;
+        s3MergeResultInfo.textContent = importedFiles.length + ' documents fusionnés — ' + totalSizeStr;
+        s3MergeResult.classList.add('visible');
+        s3MergeBar.classList.remove('visible');
+    });
+
+    // Confirm merge → add to S3 list
+    s3MergeConfirm.addEventListener('click', () => {
+        const mergeName = s3MergeResultName.textContent;
+        const today = new Date();
+        const dateStr = String(today.getDate()).padStart(2,'0')+'/'+String(today.getMonth()+1).padStart(2,'0')+'/'+today.getFullYear();
+        const totalSize = importedFiles.reduce((s, f) => s + (f.size || 0), 0);
+        const totalSizeStr = totalSize > 1048576 ? (totalSize/1048576).toFixed(1)+' MB' : Math.round(totalSize/1024)+' KB';
+
+        S3_FILES.unshift({ id: S3_FILES.length + 1, name: mergeName, size: totalSizeStr, type: 'pdf', date: dateStr });
+        renderS3();
+
+        // Toast
+        const toast = document.createElement('div');
+        toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#065f46;color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:9999;display:flex;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(0,0,0,0.15);animation:s3PreviewIn 200ms ease';
+        toast.innerHTML = '<span style="font-size:16px">✓</span> ' + mergeName + ' ajouté à la liste';
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+
+        s3ImportOverlay.classList.remove('active');
+        importedFiles = [];
+    });
+
+    // ===== REQUEST FUNCTIONALITY =====
+    const s3RequestBtn = document.getElementById('s3RequestBtn');
+    const s3RequestOverlay = document.getElementById('s3RequestOverlay');
+    const s3RequestClose = document.getElementById('s3RequestClose');
+    const s3RequestCancel = document.getElementById('s3RequestCancel');
+    const s3RequestSend = document.getElementById('s3RequestSend');
+    const s3RequestType = document.getElementById('s3RequestType');
+    const s3RequestMsg = document.getElementById('s3RequestMsg');
+
+    s3RequestBtn.addEventListener('click', () => {
+        s3RequestOverlay.classList.add('active');
+        s3RequestType.value = '';
+        s3RequestMsg.value = '';
+        const s3ReqCat = document.getElementById('s3RequestCategory');
+        const s3ReqStatus = document.getElementById('s3RequestStatus');
+        if (s3ReqCat) s3ReqCat.value = '';
+        if (s3ReqStatus) s3ReqStatus.value = 'demandee';
+    });
+    s3RequestClose.addEventListener('click', () => s3RequestOverlay.classList.remove('active'));
+    s3RequestCancel.addEventListener('click', () => s3RequestOverlay.classList.remove('active'));
+
+    s3RequestSend.addEventListener('click', () => {
+        const type = s3RequestType.value;
+        const cat = document.getElementById('s3RequestCategory')?.value || '';
+        const status = document.getElementById('s3RequestStatus')?.value || 'demandee';
+        if (!type) { s3RequestType.style.borderColor = '#dc2626'; return; }
+        s3RequestType.style.borderColor = '';
+
+        // Show success toast
+        const toast = document.createElement('div');
+        toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#065f46;color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:9999;display:flex;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(0,0,0,0.15);animation:s3PreviewIn 200ms ease';
+        toast.innerHTML = '<span style="font-size:16px">✓</span> Demande envoyée avec succès';
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+
+        s3RequestOverlay.classList.remove('active');
+    });
+    </script>
+</body>
+</html>
