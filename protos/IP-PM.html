@@ -238,27 +238,9 @@
           const isLast = idx === steps.length - 1;
 
           return (
-            <div key={idx} style={{ display: 'flex', position: 'relative' }}>
-              {/* Connector line */}
-              {!isLast && (
-                <div style={{
-                  position: 'absolute',
-                  left: '11.5px',
-                  top: '28px',
-                  width: '2px',
-                  height: '40px',
-                  background: isCompleted ? T.color.primaryRed : T.color.border,
-                }} />
-              )}
-              {/* Circle + Label */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '16px',
-                paddingBottom: isLast ? 0 : '44px',
-                position: 'relative',
-                zIndex: 1,
-              }}>
+            <div key={idx} style={{ display: 'flex', flexDirection: 'row' }}>
+              {/* Left: circle + connector line stacked in flex-column */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '24px', flexShrink: 0 }}>
                 {/* Circle */}
                 <div style={{
                   width: '24px',
@@ -280,7 +262,21 @@
                     <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: T.color.white }} />
                   )}
                 </div>
-                {/* Label */}
+                {/* Connector line: flex:1 guarantees it fills exactly the remaining row height */}
+                {!isLast && (
+                  <div style={{
+                    flex: 1,
+                    width: '2px',
+                    background: isCompleted ? T.color.primaryRed : T.color.border,
+                  }} />
+                )}
+              </div>
+              {/* Right: label */}
+              <div style={{
+                paddingLeft: '16px',
+                paddingBottom: isLast ? 0 : '44px',
+                paddingTop: '2px',
+              }}>
                 <span style={{
                   fontSize: '14px',
                   fontWeight: isActive ? 600 : 400,
@@ -978,6 +974,17 @@
     const SocieteSearchAutocomplete = ({ onSelectSociete, onManual, onClear, searchMode, selectedLabel }) => {
       const [query, setQuery] = useState('');
       const [focused, setFocused] = useState(false);
+      const containerRef = React.useRef(null);
+
+      React.useEffect(() => {
+        const handler = (e) => {
+          if (containerRef.current && !containerRef.current.contains(e.target)) {
+            setFocused(false);
+          }
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+      }, []);
 
       const filtered = query.length >= 1
         ? MOCK_ENTREPRISES_MERE.filter(s =>
@@ -1013,7 +1020,7 @@
       };
 
       return (
-        <div style={{ position: 'relative', marginBottom: '16px' }}>
+        <div ref={containerRef} style={{ position: 'relative', marginBottom: '16px' }}>
           <p style={{ fontSize: '14px', fontWeight: 500, color: T.color.textDark, margin: '0 0 6px 0' }}>
             Recherchez la personne morale (SIREN ou dénomination)
           </p>
@@ -1026,7 +1033,6 @@
               value={searchMode ? (selectedLabel || query) : query}
               onChange={handleChange}
               onFocus={() => !searchMode && setFocused(true)}
-              onBlur={() => setTimeout(() => setFocused(false), 200)}
               readOnly={!!searchMode}
               placeholder="Saisissez un SIREN ou une dénomination sociale"
               style={{
@@ -1787,6 +1793,17 @@
     const PersonSearchAutocomplete = ({ onSelectPerson, onManual, onClear, searchMode, selectedLabel }) => {
       const [query, setQuery] = useState('');
       const [focused, setFocused] = useState(false);
+      const containerRef = React.useRef(null);
+
+      React.useEffect(() => {
+        const handler = (e) => {
+          if (containerRef.current && !containerRef.current.contains(e.target)) {
+            setFocused(false);
+          }
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+      }, []);
 
       const filtered = query.length >= 1
         ? MOCK_PERSONNES_PP.filter(p =>
@@ -1822,7 +1839,7 @@
       };
 
       return (
-        <div style={{ position: 'relative', marginBottom: '16px' }}>
+        <div ref={containerRef} style={{ position: 'relative', marginBottom: '16px' }}>
           <p style={{ fontSize: '14px', fontWeight: 500, color: T.color.textDark, margin: '0 0 6px 0' }}>
             <span style={{ color: '#C81E1E' }}>* </span>Recherchez la personne physique
           </p>
@@ -1835,7 +1852,6 @@
               value={searchMode ? (selectedLabel || query) : query}
               onChange={handleChange}
               onFocus={() => !searchMode && setFocused(true)}
-              onBlur={() => setTimeout(() => setFocused(false), 200)}
               readOnly={!!searchMode}
               placeholder="Saisir le NOM, Prénom, CROEC d'inscription principale"
               style={{
@@ -2490,9 +2506,31 @@
       );
     };
 
+    // Reusable checkbox component
+    const Checkbox = ({ checked, onChange, label }) => (
+      <label onClick={() => onChange(!checked)} style={{
+        display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer',
+      }}>
+        <div style={{
+          width: '16px', height: '16px', borderRadius: '4px', flexShrink: 0,
+          border: `2px solid ${checked ? T.color.primaryBlue : T.color.borderMedium}`,
+          background: checked ? T.color.primaryBlue : T.color.white,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          {checked && (
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={T.color.white} strokeWidth="3">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          )}
+        </div>
+        <span style={{ fontSize: '14px', color: T.color.textDark }}>{label}</span>
+      </label>
+    );
+
     // Step 4 main component
     const Step4Content = ({ data, update, profile }) => {
       const d = data || {};
+      const showPP = d.declarePersonnePhysique;
       const showPM = d.declarePersonneMorale;
 
       const updatePP = (k, v) => {
@@ -2504,27 +2542,30 @@
 
       return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          {/* Personne Physique section */}
-          <PersonnePhysiqueCard data={d.pp} update={updatePP} profile={profile} />
-
-          {/* Checkbox to declare personne morale */}
-          <label onClick={() => update('declarePersonneMorale', !showPM)} style={{
-            display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer',
-          }}>
-            <div style={{
-              width: '16px', height: '16px', borderRadius: '4px', flexShrink: 0,
-              border: `2px solid ${showPM ? T.color.primaryBlue : T.color.borderMedium}`,
-              background: showPM ? T.color.primaryBlue : T.color.white,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              {showPM && (
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={T.color.white} strokeWidth="3">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-              )}
+          {/* Step header */}
+          <div>
+            <h1 style={{ fontSize: '24px', fontWeight: 700, color: T.color.textDark, margin: '0 0 24px 0', lineHeight: '28.8px' }}>
+              Représentants Légaux
+            </h1>
+            {/* Checkboxes */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <Checkbox
+                checked={!!showPP}
+                onChange={(v) => update('declarePersonnePhysique', v)}
+                label="Déclarer un représentant légal personne physique"
+              />
+              <Checkbox
+                checked={!!showPM}
+                onChange={(v) => update('declarePersonneMorale', v)}
+                label="Déclarer un représentant légal personne morale"
+              />
             </div>
-            <span style={{ fontSize: '14px', color: T.color.textDark }}>Déclarer un représentant légal personne morale</span>
-          </label>
+          </div>
+
+          {/* Personne Physique section (conditional) */}
+          {showPP && (
+            <PersonnePhysiqueCard data={d.pp} update={updatePP} profile={profile} />
+          )}
 
           {/* Personne Morale section (conditional) */}
           {showPM && (
@@ -3381,7 +3422,7 @@
         }
       };
 
-      const canNext = currentStep === 1 ? isStep1Valid() : true;
+      const canNext = true;
 
       return (
         <div style={{ minHeight: '100vh', background: T.color.bg }}>
