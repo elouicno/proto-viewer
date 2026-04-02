@@ -2601,21 +2601,40 @@
             onChange={v => u('associee', v)}
           />
 
-          {/* Conditional: associée = OUI → Participation section */}
+          {/* Conditional: associée = OUI → Participation + Bénéficiaire effectif */}
           {associeeOui && (
-            <ParticipationSection
-              items={participationsPM}
-              onAdd={() => u('participations', [...participationsPM, {}])}
-              onUpdate={(idx, newData) => {
-                const next = [...participationsPM];
-                next[idx] = newData;
-                u('participations', next);
-              }}
-              onRemove={idx => {
-                const next = participationsPM.filter((_, i) => i !== idx);
-                u('participations', next);
-              }}
-            />
+            <>
+              <ParticipationSection
+                items={participationsPM}
+                onAdd={() => u('participations', [...participationsPM, {}])}
+                onUpdate={(idx, newData) => {
+                  const next = [...participationsPM];
+                  next[idx] = newData;
+                  u('participations', next);
+                }}
+                onRemove={idx => {
+                  const next = participationsPM.filter((_, i) => i !== idx);
+                  u('participations', next);
+                }}
+              />
+              <OuiNon
+                label="Ce représentant légal est-il un bénéficiaire effectif au sens de l'article R561-1 du code monétaire et financier de la société en cours d'inscription ?"
+                required
+                value={d.beneficiaire}
+                onChange={v => u('beneficiaire', v)}
+              />
+              {d.beneficiaire === 'Oui' && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: T.color.textDark }}>
+                      <span style={{ color: '#C81E1E', marginRight: '3px' }}>*</span>Date de naissance
+                    </label>
+                    <DatePicker value={d.dateNaissance} onChange={v => u('dateNaissance', v)} />
+                  </div>
+                  <FieldInput label="Lieu de naissance" required value={d.lieuNaissance} onChange={v => u('lieuNaissance', v)} placeholder="Saisissez une ville ou un pays" />
+                </div>
+              )}
+            </>
           )}
 
           {/* Conditional: associée = NON → Q2: Ce représentant légal est-il associé */}
@@ -2753,42 +2772,43 @@
             <h1 style={{ fontSize: '24px', fontWeight: 700, color: T.color.textDark, margin: '0 0 8px 0', lineHeight: '28.8px' }}>
               Représentants Légaux
             </h1>
-            {/* Instruction */}
             <p style={{ fontSize: '14px', color: T.color.gray, margin: '0 0 8px 0' }}>
               Sélectionnez au moins un type de représentant légal à déclarer. Les deux peuvent être cumulés.
             </p>
-            <p style={{ fontSize: '13px', color: T.color.gray, margin: '0 0 16px 0' }}>
+            <p style={{ fontSize: '13px', color: T.color.gray, margin: 0 }}>
               <span style={{ color: T.color.primaryRed }}>*</span> Champs obligatoires
             </p>
-            {/* Checkboxes */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <Checkbox
-                checked={!!showPP}
-                onChange={(v) => update('declarePersonnePhysique', v)}
-                label="Déclarer un représentant légal personne physique"
-              />
-              <Checkbox
-                checked={!!showPM}
-                onChange={(v) => update('declarePersonneMorale', v)}
-                label="Déclarer un représentant légal personne morale"
-              />
-            </div>
-            {/* Message d'erreur : affiché uniquement après tentative de navigation */}
-            {showError && !showPP && !showPM && (
-              <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: '#DC2626' }}>
-                Vous devez déclarer au moins un représentant légal.
-              </p>
+          </div>
+
+          {/* Checkbox PP + section inline */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <Checkbox
+              checked={!!showPP}
+              onChange={(v) => update('declarePersonnePhysique', v)}
+              label="Déclarer un représentant légal personne physique"
+            />
+            {showPP && (
+              <PersonnePhysiqueCard data={d.pp} update={updatePP} profile={profile} />
             )}
           </div>
 
-          {/* Personne Physique section (conditional) */}
-          {showPP && (
-            <PersonnePhysiqueCard data={d.pp} update={updatePP} profile={profile} />
-          )}
+          {/* Checkbox PM + section inline */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <Checkbox
+              checked={!!showPM}
+              onChange={(v) => update('declarePersonneMorale', v)}
+              label="Déclarer un représentant légal personne morale"
+            />
+            {showPM && (
+              <PersonneMoraleCard data={d.pm} update={updatePM} />
+            )}
+          </div>
 
-          {/* Personne Morale section (conditional) */}
-          {showPM && (
-            <PersonneMoraleCard data={d.pm} update={updatePM} />
+          {/* Message d'erreur : affiché uniquement après tentative de navigation */}
+          {showError && !showPP && !showPM && (
+            <p style={{ margin: '0', fontSize: '13px', color: '#DC2626' }}>
+              Vous devez déclarer au moins un représentant légal.
+            </p>
           )}
         </div>
       );
@@ -4049,164 +4069,158 @@
     ];
     const AUTRE_PP = "Une autre personne que celles proposées";
 
-    // ── Composant réutilisable pour chaque interlocuteur ──
-    const MEME_PREFIX = 'MÊME:';
+    // ── 4 fonctions avec criticité ──
+    const LBC_FUNCTIONS = [
+      { id: 'lbcMembre',      label: 'Membre de la direction en charge de la conformité LBC-FT',               required: true,  section: 'LBC-FT'  },
+      { id: 'lbcResponsable', label: 'Responsable de la conformité LBC-FT',                                     required: false, section: 'LBC-FT'  },
+      { id: 'qualMembre',     label: 'Membre de la direction en charge du système de management de la qualité',  required: true,  section: 'Qualité' },
+      { id: 'qualResponsable',label: 'Responsable du système de management de la qualité',                       required: false, section: 'Qualité' },
+    ];
 
-    const InterlocuteurSelect = ({ label, prefix, data, update, sameAsOptions = [] }) => {
-      const pfx = k => `${prefix}_${k}`;
-      const val = k => data[pfx(k)] ?? '';
-      const set = (k, v) => update(pfx(k), v);
+    // ── Badge criticité ──
+    const FunctionBadge = ({ required }) => (
+      <span style={{
+        display: 'inline-flex', alignItems: 'center',
+        fontSize: '11px', fontWeight: 600, padding: '2px 8px',
+        borderRadius: '20px', letterSpacing: '0.02em',
+        background: required ? '#FEF2F2' : '#F0F9FF',
+        color:      required ? '#DC2626'  : '#0369A1',
+        border:     `1px solid ${required ? '#FECACA' : '#BAE6FD'}`,
+        flexShrink: 0,
+      }}>
+        {required ? 'Obligatoire' : 'Optionnel'}
+      </span>
+    );
 
-      const selectedOption = val('selectedOption');
-      const isAutre = selectedOption === AUTRE_PP;
-      const knownPP = PREV_PP_LIST.find(p => p.label === selectedOption);
-      const searchMode = val('searchMode');
-
-      // "Même que" detection
-      const memeSource = sameAsOptions.find(o => selectedOption === `${MEME_PREFIX}${o.sourcePrefix}`);
-
-      // Build dropdown options
-      const hasMeme = sameAsOptions.length > 0;
-      const ppOptions = [
-        ...(hasMeme ? [{ value: '__sep_meme__', label: '─── Même interlocuteur que ───', disabled: true }] : []),
-        ...sameAsOptions.map(o => ({ value: `${MEME_PREFIX}${o.sourcePrefix}`, label: o.label })),
-        ...(hasMeme ? [{ value: '__sep_pp__', label: '─────────────────────────────', disabled: true }] : []),
-        ...PREV_PP_LIST.map(p => ({ value: p.label, label: p.label })),
-        { value: AUTRE_PP, label: AUTRE_PP },
-      ];
-
-      const handleOptionChange = v => {
-        if (!v || v.startsWith('__sep_')) return;
-        set('selectedOption', v);
-        set('searchMode', undefined); set('searchLabel', '');
-        set('civilite', ''); set('nomUsage', '');
-        set('prenom2', ''); set('prenom3', ''); set('prenom4', '');
-        const mSrc = sameAsOptions.find(o => v === `${MEME_PREFIX}${o.sourcePrefix}`);
-        if (mSrc) {
-          const sp = mSrc.sourcePrefix;
-          set('prenom', data[`${sp}_prenom`] ?? '');
-          set('nom', data[`${sp}_nom`] ?? '');
-          set('conseilRegional', data[`${sp}_conseilRegional`] ?? '');
-          set('emailPro', data[`${sp}_emailPro`] ?? '');
-          set('telephoneFixe', data[`${sp}_telephoneFixe`] ?? '');
-          set('portable', data[`${sp}_portable`] ?? '');
-        } else {
-          set('prenom', ''); set('nom', ''); set('conseilRegional', '');
-          set('emailPro', ''); set('telephoneFixe', ''); set('portable', '');
-        }
+    // ── Carte personne ──
+    const PersonneCard = ({ person, index, assignedByOthers, onChange, onRemove, canRemove, showError = false }) => {
+      const set = (k, v) => onChange({ ...person, [k]: v });
+      const toggleFn = (fnId) => {
+        const fns = person.functions || {};
+        onChange({ ...person, functions: { ...fns, [fnId]: !fns[fnId] } });
       };
 
-      // Bloc contact partagé (email + téléphone, éditable)
-      const ContactBlock = () => (
-        <div style={{ marginTop: '12px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <FieldInput
-              label="Adresse email professionnelle (qui vous est dédiée)"
-              required
-              value={val('emailPro')}
-              onChange={v => set('emailPro', v)}
-              placeholder="xxx@exemple.com"
-            />
-            <FieldInput label="Téléphone fixe" value={val('telephoneFixe')} onChange={v => set('telephoneFixe', v)} />
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '12px' }}>
-            <FieldInput label="Portable" required value={val('portable')} onChange={v => set('portable', v)} />
-          </div>
-        </div>
+      // Fonctions disponibles pour cette carte = non prises par les autres + déjà prises par cette carte
+      const availableFns = LBC_FUNCTIONS.filter(fn =>
+        !assignedByOthers.includes(fn.id) || (person.functions || {})[fn.id]
       );
 
+      const knownPP = PREV_PP_LIST.find(p => p.label === person.selectedOption);
+      const isAutre = person.selectedOption === AUTRE_PP;
+      const showFields = knownPP || person.searchMode === 'selected' || person.searchMode === 'manual';
+
+      const ppOptions = [
+        ...PREV_PP_LIST.map(p => ({ value: p.label, label: p.label })),
+        { value: AUTRE_PP, label: '+ Une autre personne' },
+      ];
+
+      const handlePickPP = (v) => {
+        const base = {
+          ...person,
+          selectedOption: v,
+          searchMode: undefined, searchLabel: '',
+          nom: '', prenom: '', conseilRegional: '', civilite: '',
+          prenom2: '', prenom3: '', prenom4: '', nomUsage: '',
+        };
+        onChange(base);
+      };
+
       return (
-        <div style={{ marginBottom: '28px' }}>
-          <FieldSelect
-            label={label}
-            required
-            value={selectedOption}
-            onChange={handleOptionChange}
-            options={ppOptions}
-            placeholder="Sélectionnez"
-          />
+        <div style={{
+          background: T.color.white,
+          border: `1px solid ${T.color.border}`,
+          borderRadius: T.radius,
+          boxShadow: T.shadow.card,
+          padding: '24px',
+          position: 'relative',
+        }}>
+          {/* Header carte */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+            <span style={{ fontSize: '14px', fontWeight: 700, color: T.color.primaryBlue }}>
+              Personne {index + 1}
+            </span>
+            {canRemove && (
+              <button onClick={onRemove} style={{
+                background: 'none', border: 'none', cursor: 'pointer',
+                fontSize: '13px', color: T.color.gray, padding: '4px 8px',
+                borderRadius: T.radius, fontFamily: T.font,
+              }}>
+                Retirer
+              </button>
+            )}
+          </div>
 
-          {/* PP connue (liste PREV_PP_LIST) → identité lecture seule + contact éditable */}
+          {/* Sélection de la personne */}
+          <div style={{ marginBottom: '20px' }}>
+            <FieldSelect
+              label="Sélectionnez la personne"
+              required
+              value={person.selectedOption || ''}
+              onChange={handlePickPP}
+              options={ppOptions}
+              placeholder="Sélectionnez"
+            />
+            {showError && !person.selectedOption && (
+              <p style={{ fontSize: '13px', color: '#DC2626', margin: '4px 0 0 0' }}>
+                Ce champ est obligatoire.
+              </p>
+            )}
+          </div>
+
+          {/* PP connue → identité en lecture seule */}
           {knownPP && (
-            <>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '12px' }}>
-                <ReadOnlyField label="Prénom" value={knownPP.prenom} />
-                <ReadOnlyField label="Nom" value={knownPP.nom} />
-              </div>
-              <ContactBlock />
-            </>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+              <ReadOnlyField label="Prénom" value={knownPP.prenom} />
+              <ReadOnlyField label="Nom" value={knownPP.nom} />
+            </div>
           )}
 
-          {/* Même interlocuteur que [X] → identité lecture seule + contact éditable */}
-          {memeSource && (
-            <>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginTop: '12px' }}>
-                <ReadOnlyField label="Prénom" value={val('prenom')} />
-                <ReadOnlyField label="Nom" value={val('nom')} />
-                <ReadOnlyField label="CRO d'inscription principale" value={val('conseilRegional')} />
-              </div>
-              <ContactBlock />
-            </>
-          )}
-
-          {/* "Autre personne" → recherche dans la base */}
+          {/* Autre personne → recherche */}
           {isAutre && (
-            <div style={{ marginTop: '12px' }}>
+            <div style={{ marginBottom: '20px' }}>
               <PersonSearchAutocomplete
-                searchMode={searchMode}
-                selectedLabel={val('searchLabel')}
-                onSelectPerson={(person) => {
-                  set('searchMode', 'selected');
-                  set('searchLabel', `${person.civilite} ${person.nom} ${person.prenom} - ${person.region}`);
-                  set('civilite', person.civilite);
-                  set('prenom', person.prenom); set('nom', person.nom);
-                  set('conseilRegional', person.conseilRegional);
-                }}
-                onManual={() => {
-                  set('searchMode', 'manual');
-                  set('searchLabel', '+ Renseignez manuellement');
-                  set('prenom', ''); set('nom', '');
-                  set('conseilRegional', ''); set('civilite', '');
-                }}
-                onClear={() => {
-                  set('searchMode', undefined); set('searchLabel', '');
-                  set('prenom', ''); set('nom', '');
-                  set('conseilRegional', ''); set('civilite', '');
-                }}
+                searchMode={person.searchMode}
+                selectedLabel={person.searchLabel}
+                onSelectPerson={(p) => onChange({
+                  ...person,
+                  searchMode: 'selected',
+                  searchLabel: `${p.civilite} ${p.nom} ${p.prenom} - ${p.region}`,
+                  civilite: p.civilite, nom: p.nom, prenom: p.prenom,
+                  conseilRegional: p.conseilRegional,
+                })}
+                onManual={() => onChange({
+                  ...person,
+                  searchMode: 'manual', searchLabel: '+ Renseignez manuellement',
+                  nom: '', prenom: '', conseilRegional: '', civilite: '',
+                })}
+                onClear={() => onChange({
+                  ...person,
+                  searchMode: undefined, searchLabel: '',
+                  nom: '', prenom: '', conseilRegional: '', civilite: '',
+                })}
               />
 
-              {/* Recherche OK → champs pré-remplis + contact */}
-              {searchMode === 'selected' && (
-                <>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginTop: '12px' }}>
-                    <ReadOnlyField label="Prénom" required value={val('prenom')} />
-                    <ReadOnlyField label="Nom" required value={val('nom')} />
-                    <ReadOnlyField label="CRO d'inscription principale" required value={val('conseilRegional')} />
-                  </div>
-                  <ContactBlock />
-                </>
+              {person.searchMode === 'selected' && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+                  <ReadOnlyField label="Prénom" value={person.prenom} />
+                  <ReadOnlyField label="Nom" value={person.nom} />
+                  <ReadOnlyField label="CRO d'inscription principale" value={person.conseilRegional} />
+                </div>
               )}
 
-              {/* Recherche KO → formulaire de création PP */}
-              {searchMode === 'manual' && (
-                <div style={{ marginTop: '16px', padding: '16px', background: T.color.bg, borderRadius: T.radius, border: `1px solid ${T.color.border}` }}>
-                  {/* Civilité */}
+              {person.searchMode === 'manual' && (
+                <div style={{ padding: '16px', background: T.color.bg, borderRadius: T.radius, border: `1px solid ${T.color.border}`, marginBottom: '20px' }}>
                   <div style={{ marginBottom: '16px' }}>
                     <p style={{ fontSize: '14px', fontWeight: 600, color: T.color.textDark, margin: '0 0 8px 0' }}>
-                      <span style={{ color: '#C81E1E' }}>* </span>État civil
+                      <span style={{ color: '#C81E1E' }}>* </span>Civilité
                     </p>
                     <div style={{ display: 'flex', gap: '24px' }}>
                       {CIVILITE_OPTIONS.map(opt => {
-                        const selected = val('civilite') === opt;
+                        const sel = person.civilite === opt;
                         return (
                           <label key={opt} onClick={() => set('civilite', opt)} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                            <div style={{
-                              width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0,
-                              border: `2px solid ${selected ? T.color.primaryBlue : T.color.borderMedium}`,
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              background: T.color.white,
-                            }}>
-                              {selected && <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: T.color.primaryBlue }} />}
+                            <div style={{ width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0, border: `2px solid ${sel ? T.color.primaryBlue : T.color.borderMedium}`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: T.color.white }}>
+                              {sel && <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: T.color.primaryBlue }} />}
                             </div>
                             <span style={{ fontSize: '14px', color: T.color.textDark }}>{opt}</span>
                           </label>
@@ -4214,123 +4228,195 @@
                       })}
                     </div>
                   </div>
-
-                  {/* Nom de famille + Nom d'usage */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-                    <FieldInput label="Nom de famille" required value={val('nom')} onChange={v => set('nom', v)} />
-                    <div>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: T.color.textDark }}>
-                        Nom d'usage
-                        <span title="Nom porté au quotidien, différent du nom de famille" style={{ width: '16px', height: '16px', borderRadius: '50%', background: T.color.borderMedium, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700, color: T.color.textDark, cursor: 'default', flexShrink: 0 }}>?</span>
-                      </label>
-                      <input
-                        value={val('nomUsage')}
-                        onChange={e => set('nomUsage', e.target.value)}
-                        style={{ width: '100%', height: '40px', border: `1px solid ${T.color.border}`, borderRadius: T.radius, padding: '0 14px', fontSize: '14px', color: T.color.textDark, fontFamily: T.font, background: T.color.white, outline: 'none', boxSizing: 'border-box' }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Prénoms */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-                    <FieldInput label="Prénom" required value={val('prenom')} onChange={v => set('prenom', v)} />
-                    <FieldInput label="Prénom 2" value={val('prenom2')} onChange={v => set('prenom2', v)} />
-                    <FieldInput label="Prénom 3" value={val('prenom3')} onChange={v => set('prenom3', v)} />
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 3fr', gap: '16px', marginBottom: '20px' }}>
-                    <FieldInput label="Prénom 4" value={val('prenom4')} onChange={v => set('prenom4', v)} />
-                  </div>
-
-                  {/* Section contact */}
-                  <p style={{ fontSize: '14px', fontWeight: 600, color: T.color.textDark, margin: '0 0 12px 0', paddingTop: '12px', borderTop: `1px solid ${T.color.border}` }}>
-                    Informations de contact
-                  </p>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-                    <FieldInput
-                      label="Adresse email professionnelle (qui vous est dédiée)"
-                      required
-                      value={val('emailPro')}
-                      onChange={v => set('emailPro', v)}
-                      placeholder="xxx@exemple.com"
-                    />
-                    <FieldInput label="Téléphone fixe" value={val('telephoneFixe')} onChange={v => set('telephoneFixe', v)} />
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                    <FieldInput label="Portable" required value={val('portable')} onChange={v => set('portable', v)} />
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '12px' }}>
+                    <FieldInput label="Nom de famille" required value={person.nom || ''} onChange={v => set('nom', v)} />
+                    <FieldInput label="Prénom" required value={person.prenom || ''} onChange={v => set('prenom', v)} />
+                    <FieldInput label="Nom d'usage" value={person.nomUsage || ''} onChange={v => set('nomUsage', v)} />
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Coordonnées de contact (si personne sélectionnée ou saisie) */}
+          {showFields && (
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '12px' }}>
+                <FieldInput label="Email professionnel" required value={person.emailPro || ''} onChange={v => set('emailPro', v)} placeholder="xxx@exemple.com" />
+                <FieldInput label="Téléphone fixe" value={person.telephoneFixe || ''} onChange={v => set('telephoneFixe', v)} />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <FieldInput label="Portable" required value={person.portable || ''} onChange={v => set('portable', v)} />
+              </div>
+            </div>
+          )}
+
+          {/* Fonctions assumées */}
+          {showFields && availableFns.length > 0 && (
+            <div style={{ borderTop: `1px solid ${T.color.border}`, paddingTop: '20px' }}>
+              <p style={{ fontSize: '14px', fontWeight: 600, color: T.color.textDark, margin: '0 0 14px 0' }}>
+                Fonctions assumées par cette personne
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {availableFns.map(fn => {
+                  const checked = !!(person.functions || {})[fn.id];
+                  return (
+                    <label key={fn.id} onClick={() => toggleFn(fn.id)} style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', padding: '10px 14px', borderRadius: T.radius, border: `1px solid ${checked ? T.color.primaryBlue : T.color.border}`, background: checked ? '#F0F4FA' : T.color.white, transition: 'all 0.15s' }}>
+                      {/* Custom checkbox */}
+                      <div style={{ width: '18px', height: '18px', borderRadius: '4px', flexShrink: 0, border: `2px solid ${checked ? T.color.primaryBlue : T.color.borderMedium}`, background: checked ? T.color.primaryBlue : T.color.white, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {checked && (
+                          <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                            <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        )}
+                      </div>
+                      <span style={{ fontSize: '14px', color: T.color.textDark, flex: 1, lineHeight: '20px' }}>{fn.label}</span>
+                      <FunctionBadge required={fn.required} />
+                    </label>
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>
       );
     };
 
-    const StepLBCContent = ({ data, update }) => {
-      const d = data || {};
-      const u = (k, v) => update(k, v);
+    const StepLBCContent = ({ data, update, showError = false }) => {
+      // persons = array of PersonneCard state objects
+      const persons = (data && data.persons) ? data.persons : [
+        { id: 1, selectedOption: '', functions: { lbcMembre: true, lbcResponsable: true, qualMembre: true, qualResponsable: true } }
+      ];
+
+      const setPersons = (newPersons) => update('persons', newPersons);
+
+      // Which function IDs are assigned by ALL OTHER persons (for a given person index)
+      const assignedByOthers = (myIndex) => {
+        const result = [];
+        persons.forEach((p, i) => {
+          if (i === myIndex) return;
+          LBC_FUNCTIONS.forEach(fn => {
+            if ((p.functions || {})[fn.id]) result.push(fn.id);
+          });
+        });
+        return result;
+      };
+
+      // Are the 2 required functions covered?
+      const coveredFnIds = new Set();
+      persons.forEach(p => {
+        LBC_FUNCTIONS.forEach(fn => {
+          if ((p.functions || {})[fn.id]) coveredFnIds.add(fn.id);
+        });
+      });
+      const requiredCovered = LBC_FUNCTIONS.filter(f => f.required).every(f => coveredFnIds.has(f.id));
+
+      // Are all 4 functions already assigned?
+      const allAssigned = LBC_FUNCTIONS.every(fn => coveredFnIds.has(fn.id));
+
+      // Remaining unassigned functions (to show in summary)
+      const unassigned = LBC_FUNCTIONS.filter(fn => !coveredFnIds.has(fn.id));
+
+      const addPerson = () => {
+        // Pre-check only the unassigned functions
+        const newFunctions = {};
+        unassigned.forEach(fn => { newFunctions[fn.id] = true; });
+        setPersons([...persons, { id: Date.now(), selectedOption: '', functions: newFunctions }]);
+      };
+
+      const removePerson = (index) => {
+        setPersons(persons.filter((_, i) => i !== index));
+      };
+
+      const updatePerson = (index, newPerson) => {
+        const updated = persons.map((p, i) => i === index ? newPerson : p);
+        setPersons(updated);
+      };
 
       return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           {/* Title */}
           <div>
-            <h2 style={{ fontSize: '24px', fontWeight: 700, color: T.color.textDark, margin: '0 0 8px 0', lineHeight: '36px' }}>
+            <h1 style={{ fontSize: '24px', fontWeight: 700, color: T.color.textDark, margin: '0 0 8px 0', lineHeight: '28.8px' }}>
               Interlocuteurs LBC-FT et Qualité
-            </h2>
-            <p style={{ fontSize: '13px', color: T.color.gray, margin: '0' }}>
+            </h1>
+            <p style={{ fontSize: '14px', color: T.color.gray, margin: '0 0 8px 0', lineHeight: '21px' }}>
+              Désignez la ou les personnes responsables des fonctions LBC-FT et Qualité. Dans une petite structure, une seule personne peut assumer l'ensemble des fonctions.
+            </p>
+            <p style={{ fontSize: '13px', color: T.color.gray, margin: 0 }}>
               <span style={{ color: T.color.primaryRed }}>*</span> Champs obligatoires
             </p>
           </div>
 
-          {/* Section LBC-FT */}
-          <SectionCard>
-            <SectionTitle>Lutte Contre le Blanchiment de capitaux et le Financement du Terrorisme (LBC-FT)</SectionTitle>
-            <div style={{ marginTop: '20px' }}>
-              <InterlocuteurSelect
-                label="Membre de la direction en charge de la conformité LBC-FT"
-                prefix="lbcMembre"
-                data={d}
-                update={u}
-              />
-              <InterlocuteurSelect
-                label="Responsable de la conformité LBC-FT"
-                prefix="lbcResponsable"
-                data={d}
-                update={u}
-                sameAsOptions={[
-                  { label: "Même interlocuteur que le membre LBC-FT", sourcePrefix: "lbcMembre" },
-                ]}
-              />
-            </div>
-          </SectionCard>
+          {/* Légende badges */}
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <FunctionBadge required={true} />
+            <span style={{ fontSize: '13px', color: T.color.gray }}>À désigner obligatoirement pour passer à l'étape suivante</span>
+            <FunctionBadge required={false} />
+            <span style={{ fontSize: '13px', color: T.color.gray }}>Non bloquant</span>
+          </div>
 
-          {/* Section Contrôle qualité */}
-          <SectionCard>
-            <SectionTitle>Contrôle qualité</SectionTitle>
-            <div style={{ marginTop: '20px' }}>
-              <InterlocuteurSelect
-                label="Membre de la direction en charge du système de management de la qualité"
-                prefix="qualMembre"
-                data={d}
-                update={u}
-                sameAsOptions={[
-                  { label: "Même interlocuteur que le membre LBC-FT", sourcePrefix: "lbcMembre" },
-                  { label: "Même interlocuteur que le responsable LBC-FT", sourcePrefix: "lbcResponsable" },
-                ]}
-              />
-              <InterlocuteurSelect
-                label="Responsable du système de management de la qualité"
-                prefix="qualResponsable"
-                data={d}
-                update={u}
-                sameAsOptions={[
-                  { label: "Même interlocuteur que le membre LBC-FT", sourcePrefix: "lbcMembre" },
-                  { label: "Même interlocuteur que le responsable LBC-FT", sourcePrefix: "lbcResponsable" },
-                  { label: "Même interlocuteur que le membre qualité", sourcePrefix: "qualMembre" },
-                ]}
-              />
+          {/* Cartes personnes */}
+          {persons.map((person, index) => (
+            <PersonneCard
+              key={person.id || index}
+              person={person}
+              index={index}
+              assignedByOthers={assignedByOthers(index)}
+              onChange={(updated) => updatePerson(index, updated)}
+              onRemove={() => removePerson(index)}
+              canRemove={persons.length > 1}
+              showError={showError}
+            />
+          ))}
+
+          {/* Bouton ajouter une personne — masqué si toutes les fonctions sont couvertes */}
+          {!allAssigned && (
+            <button
+              onClick={addPerson}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '8px',
+                background: T.color.white, border: `1px dashed ${T.color.borderMedium}`,
+                borderRadius: T.radius, padding: '14px 20px', cursor: 'pointer',
+                fontSize: '14px', fontWeight: 500, color: T.color.primaryBlue,
+                fontFamily: T.font, width: '100%', justifyContent: 'center',
+                transition: 'background 0.15s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = T.color.bg}
+              onMouseLeave={e => e.currentTarget.style.background = T.color.white}
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M8 3V13M3 8H13" stroke={T.color.primaryBlue} strokeWidth="1.8" strokeLinecap="round"/>
+              </svg>
+              Ajouter une personne pour les fonctions restantes
+            </button>
+          )}
+
+          {/* Récapitulatif fonctions non couvertes */}
+          {unassigned.length > 0 && (
+            <div style={{ padding: '16px', background: '#FEF9EC', border: '1px solid #FDE68A', borderRadius: T.radius }}>
+              <p style={{ fontSize: '13px', fontWeight: 600, color: '#92400E', margin: '0 0 8px 0' }}>
+                {unassigned.some(f => f.required) ? '⚠ Fonctions obligatoires non encore désignées' : 'Fonctions optionnelles non désignées'}
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {unassigned.map(fn => (
+                  <div key={fn.id} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '13px', color: '#78350F' }}>•</span>
+                    <span style={{ fontSize: '13px', color: '#78350F', flex: 1 }}>{fn.label}</span>
+                    <FunctionBadge required={fn.required} />
+                  </div>
+                ))}
+              </div>
             </div>
-          </SectionCard>
+          )}
+
+          {/* Message d'erreur : affiché uniquement après tentative de navigation */}
+          {showError && !requiredCovered && (
+            <p style={{ margin: '0', fontSize: '13px', color: '#DC2626' }}>
+              Vous devez désigner un responsable pour chaque fonction obligatoire.
+            </p>
+          )}
+
         </div>
       );
     };
@@ -4610,6 +4696,7 @@
       const [stepLBC, setStepLBC] = useState({});
       const [stepAdmin, setStepAdmin] = useState({});
       const [step4Attempted, setStep4Attempted] = useState(false);
+      const [lbcAttempted, setLbcAttempted] = useState(false);
 
       const updateStep1 = useCallback((path, value) => {
         setStep1(prev => {
@@ -4650,12 +4737,21 @@
           setStep4Attempted(true);
           return;
         }
+        if (stepName === LBC_STEP) {
+          const persons = (stepLBC && stepLBC.persons) ? stepLBC.persons : [];
+          const covered = new Set();
+          persons.forEach(p => { LBC_FUNCTIONS.forEach(fn => { if ((p.functions || {})[fn.id]) covered.add(fn.id); }); });
+          const valid = LBC_FUNCTIONS.filter(f => f.required).every(f => covered.has(f.id));
+          if (!valid) { setLbcAttempted(true); return; }
+        }
         setStep4Attempted(false);
+        setLbcAttempted(false);
         window.scrollTo(0, 0);
         setCurrentStep(prev => Math.min(prev + 1, steps.length));
       };
       const goPrev = () => {
         setStep4Attempted(false);
+        setLbcAttempted(false);
         window.scrollTo(0, 0);
         setCurrentStep(prev => Math.max(prev - 1, 1));
       };
@@ -4690,7 +4786,7 @@
           case EXTRA_STEP: return <Step5Content data={step5} update={updateStep5} />;
           case ADMIN_STEP: return <StepAdminContent data={stepAdmin} update={updateStepAdmin} formeJuridique={step3.formeJuridique} />;
           case "Personne de contact principal": return <StepPCPContent data={stepPCP} update={updateStepPCP} />;
-          case LBC_STEP: return <StepLBCContent data={stepLBC} update={updateStepLBC} />;
+          case LBC_STEP: return <StepLBCContent data={stepLBC} update={updateStepLBC} showError={lbcAttempted} />;
           case "Liste des associés": return <StepAssociesContent />;
           default: return (
             <div style={{ padding: '40px', textAlign: 'center', color: T.color.gray }}>
