@@ -989,7 +989,7 @@
 
     const FORMES_JURIDIQUES_PM = [
       "Association loi de 1901", "EURL",
-      "SA à conseil d'administration", "SA à directoire", "SARL", "SAS", "Autre - Précisez"
+      "SA à conseil d'administration", "SA à directoire", "SARL", "SAS", "Autre"
     ];
 
     const LOCAUX_OPTIONS = [
@@ -1167,7 +1167,7 @@
               onChange={handleChange}
               onFocus={() => !searchMode && setFocused(true)}
               readOnly={!!searchMode}
-              placeholder="Saisissez un SIREN ou une dénomination sociale"
+              placeholder="Saisissez le SIREN ou la dénomination sociale ou le sigle"
               style={{
                 flex: 1, border: 'none', outline: 'none', fontSize: '14px',
                 color: T.color.textDark, background: 'transparent', fontFamily: T.font,
@@ -2329,7 +2329,7 @@
           {associeNon && (profile === 'SEC' || profile === 'SPEC') && (
             <div style={{ borderTop: `1px solid ${T.color.border}`, paddingTop: '24px', marginTop: '8px' }}>
               <OuiNon
-                label="Ce représentant légal est-il associé de la société, inscrite à l'Ordre, mère ou filiale de la société en cours d'inscription ?"
+                label="Cette société représentant légal est-elle associée d'une société, inscrite à l'Ordre, mère ou filiale de la société en cours d'inscription ?"
                 required
                 value={d.associeOrdreMereFiliale}
                 onChange={v => u('associeOrdreMereFiliale', v)}
@@ -2384,13 +2384,13 @@
 
     // Step 5 radio options: "Précisez la situation de ce représentant légal :"
     const STEP5_SITUATION_OPTIONS = [
-      "Il est en cours d'inscription au Tableau de l'ordre des experts-comptables",
-      "Il exerce la profession d'expert-comptable dans un pays de l'UE ou de l'EEE (ou en Suisse)",
-      "Il n'exerce pas la profession d'expert-comptable",
+      "Est en cours d'inscription au Tableau de l'ordre des experts-comptables",
+      "Exerce la profession d'expert-comptable dans un pays de l'UE ou de l'EEE (ou en Suisse)",
+      "N'exerce pas la profession d'expert-comptable",
     ];
 
     // Personne Morale sub-card
-    const PersonneMoraleCard = ({ data, update }) => {
+    const PersonneMoraleCard = ({ data, update, profile }) => {
       const d = data || {};
       const u = (k, v) => update(k, v);
       const associeeOui = d.associee === 'Oui';
@@ -2446,9 +2446,9 @@
             <div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
                 <ReadOnlyField label="Dénomination sociale" required value={d.denomination} />
-                <FieldSelect label="Forme juridique" required value={d.formeJuridique} onChange={v => { u('formeJuridique', v); if (v !== 'Autre - Précisez') u('formeJuridiqueAutre', ''); }} options={FORMES_JURIDIQUES_PM} placeholder="Sélectionnez" />
+                <FieldSelect label="Forme juridique" required value={d.formeJuridique} onChange={v => { u('formeJuridique', v); if (v !== 'Autre') u('formeJuridiqueAutre', ''); }} options={FORMES_JURIDIQUES_PM} placeholder="Sélectionnez" />
               </div>
-              {d.formeJuridique === 'Autre - Précisez' && (
+              {d.formeJuridique === 'Autre' && (
                 <div style={{ marginBottom: '16px' }}>
                   <FieldInput label="Autre - précisez" required value={d.formeJuridiqueAutre} onChange={v => u('formeJuridiqueAutre', v)} />
                 </div>
@@ -2468,9 +2468,9 @@
             <div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
                 <FieldInput label="Dénomination sociale" required value={d.denomination} onChange={v => u('denomination', v)} />
-                <FieldSelect label="Forme juridique" required value={d.formeJuridique} onChange={v => { u('formeJuridique', v); if (v !== 'Autre - Précisez') u('formeJuridiqueAutre', ''); }} options={FORMES_JURIDIQUES_PM} placeholder="Sélectionnez" />
+                <FieldSelect label="Forme juridique" required value={d.formeJuridique} onChange={v => { u('formeJuridique', v); if (v !== 'Autre') u('formeJuridiqueAutre', ''); }} options={FORMES_JURIDIQUES_PM} placeholder="Sélectionnez" />
               </div>
-              {d.formeJuridique === 'Autre - Précisez' && (
+              {d.formeJuridique === 'Autre' && (
                 <div style={{ marginBottom: '16px' }}>
                   <FieldInput label="Autre - précisez" required value={d.formeJuridiqueAutre} onChange={v => u('formeJuridiqueAutre', v)} />
                 </div>
@@ -2601,7 +2601,7 @@
             onChange={v => u('associee', v)}
           />
 
-          {/* Conditional: associée = OUI → Participation + Bénéficiaire effectif */}
+          {/* Conditional: associée = OUI → Participation uniquement (bénéficiaire effectif non affiché à l'étape 4 pour PM) */}
           {associeeOui && (
             <>
               <ParticipationSection
@@ -2617,31 +2617,14 @@
                   u('participations', next);
                 }}
               />
-              <OuiNon
-                label="Ce représentant légal est-il un bénéficiaire effectif au sens de l'article R561-1 du code monétaire et financier de la société en cours d'inscription ?"
-                required
-                value={d.beneficiaire}
-                onChange={v => u('beneficiaire', v)}
-              />
-              {d.beneficiaire === 'Oui' && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: T.color.textDark }}>
-                      <span style={{ color: '#C81E1E', marginRight: '3px' }}>*</span>Date de naissance
-                    </label>
-                    <DatePicker value={d.dateNaissance} onChange={v => u('dateNaissance', v)} />
-                  </div>
-                  <FieldInput label="Lieu de naissance" required value={d.lieuNaissance} onChange={v => u('lieuNaissance', v)} placeholder="Saisissez une ville ou un pays" />
-                </div>
-              )}
             </>
           )}
 
-          {/* Conditional: associée = NON → Q2: Ce représentant légal est-il associé */}
-          {associeeNon && (
+          {/* Conditional: associée = NON → Q2: Ce représentant légal est-il associé (SEC/SPEC uniquement) */}
+          {associeeNon && (profile === 'SEC' || profile === 'SPEC') && (
             <div style={{ borderTop: `1px solid ${T.color.border}`, paddingTop: '24px', marginTop: '8px' }}>
               <OuiNon
-                label="Ce représentant légal est-il associé de la société, inscrite à l'Ordre, mère ou filiale de la société en cours d'inscription ?"
+                label="Cette société représentant légal est-elle associée d'une société, inscrite à l'Ordre, mère ou filiale de la société en cours d'inscription ?"
                 required
                 value={d.associeOrdreMere}
                 onChange={v => u('associeOrdreMere', v)}
@@ -2685,9 +2668,9 @@
                     <div style={{ marginTop: '12px' }}>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
                         <ReadOnlyField label="Dénomination sociale" required value={d.amDenomination} />
-                        <FieldSelect label="Forme juridique" required value={d.amFormeJuridique} onChange={v => { u('amFormeJuridique', v); if (v !== 'Autre - Précisez') u('amFormeJuridiqueAutre', ''); }} options={FORMES_JURIDIQUES_PM} placeholder="Sélectionnez" />
+                        <FieldSelect label="Forme juridique" required value={d.amFormeJuridique} onChange={v => { u('amFormeJuridique', v); if (v !== 'Autre') u('amFormeJuridiqueAutre', ''); }} options={FORMES_JURIDIQUES_PM} placeholder="Sélectionnez" />
                       </div>
-                      {d.amFormeJuridique === 'Autre - Précisez' && (
+                      {d.amFormeJuridique === 'Autre' && (
                         <div style={{ marginBottom: '16px' }}>
                           <FieldInput label="Autre - précisez" required value={d.amFormeJuridiqueAutre} onChange={v => u('amFormeJuridiqueAutre', v)} />
                         </div>
@@ -2707,9 +2690,9 @@
                     <div style={{ marginTop: '12px' }}>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
                         <FieldInput label="Dénomination sociale" required value={d.amDenomination} onChange={v => u('amDenomination', v)} />
-                        <FieldSelect label="Forme juridique" required value={d.amFormeJuridique} onChange={v => { u('amFormeJuridique', v); if (v !== 'Autre - Précisez') u('amFormeJuridiqueAutre', ''); }} options={FORMES_JURIDIQUES_PM} placeholder="Sélectionnez" />
+                        <FieldSelect label="Forme juridique" required value={d.amFormeJuridique} onChange={v => { u('amFormeJuridique', v); if (v !== 'Autre') u('amFormeJuridiqueAutre', ''); }} options={FORMES_JURIDIQUES_PM} placeholder="Sélectionnez" />
                       </div>
-                      {d.amFormeJuridique === 'Autre - Précisez' && (
+                      {d.amFormeJuridique === 'Autre' && (
                         <div style={{ marginBottom: '16px' }}>
                           <FieldInput label="Autre - précisez" required value={d.amFormeJuridiqueAutre} onChange={v => u('amFormeJuridiqueAutre', v)} />
                         </div>
@@ -2800,7 +2783,7 @@
               label="Déclarer un représentant légal personne morale"
             />
             {showPM && (
-              <PersonneMoraleCard data={d.pm} update={updatePM} />
+              <PersonneMoraleCard data={d.pm} update={updatePM} profile={profile} />
             )}
           </div>
 
@@ -2925,9 +2908,6 @@
                     <FieldInput label="Prénom 3" value={d.prenom3} onChange={v => u('prenom3', v)} />
                     <FieldInput label="Prénom 4" value={d.prenom4} onChange={v => u('prenom4', v)} />
                     <FieldSelect label="Nationalité" required value={d.nationalite} onChange={v => u('nationalite', v)} options={PAYS_OPTIONS} placeholder="Sélectionnez" />
-                  </div>
-                  <div style={{ marginBottom: '16px' }}>
-                    <FieldSelect label="Conseil régional d'inscription principale" required value={d.conseilRegional} onChange={v => u('conseilRegional', v)} options={CROEC_OPTIONS} placeholder="Sélectionnez" />
                   </div>
                   <AddressBlock data={d} onChange={(k, v) => u(k, v)} />
                 </>
@@ -3119,9 +3099,6 @@
       // Sub-state helpers for the PP form inside PCP
       const pp = d.pp || {};
       const updatePP = (k, v) => update('pp', prev => ({ ...(prev || {}), [k]: v }));
-      const exerceOui = pp.exerce === 'Oui';
-      const associeOui = pp.associe === 'Oui';
-      const ppParticipations = pp.participations || [{}];
 
       // PCP-specific questions state
       const pcpAssocieeOui = d.pcpAssociee === 'Oui';
@@ -3251,81 +3228,6 @@
                   </>
                 )}
 
-                {/* Q1: exerce */}
-                <OuiNon
-                  label="Ce représentant légal exerce-t-il la profession d'expert-comptable dans un pays de l'UE ou de l'EEE (voire en Suisse - possibilité uniquement pour les SEL) ?"
-                  required
-                  value={pp.exerce}
-                  onChange={v => updatePP('exerce', v)}
-                />
-
-                {/* Conditional: Pays d'exercice */}
-                {exerceOui && (
-                  <div style={{ marginBottom: '16px' }}>
-                    <FieldSelect label="Pays d'exercice" required value={pp.paysExercice} onChange={v => updatePP('paysExercice', v)} options={PAYS_EXERCICE_UE_EEE} placeholder="Sélectionnez" />
-                  </div>
-                )}
-
-                {/* Statut */}
-                {pp.exerce && (
-                  <StatutSelect value={pp.statut} onChange={v => updatePP('statut', v)} autreValue={pp.statutAutre} onAutreChange={v => updatePP('statutAutre', v)} />
-                )}
-
-                {/* Q2: exercera */}
-                <OuiNon
-                  label="Ce représentant légal exercera-t-il au sein de la société en cours d'inscription ?"
-                  required
-                  value={pp.exerceAuSein}
-                  onChange={v => updatePP('exerceAuSein', v)}
-                />
-
-                {/* Q3: associé */}
-                <OuiNon
-                  label="Ce représentant légal est-il ou sera t-il associé au sein de la société en cours d'inscription ?"
-                  required
-                  value={pp.associe}
-                  onChange={v => updatePP('associe', v)}
-                />
-
-                {/* Conditional: associé = Oui → Participation + Bénéficiaire */}
-                {associeOui && (
-                  <>
-                    <ParticipationSection
-                      items={ppParticipations}
-                      onAdd={() => updatePP('participations', [...ppParticipations, {}])}
-                      onUpdate={(idx, newData) => {
-                        const next = [...ppParticipations];
-                        next[idx] = newData;
-                        updatePP('participations', next);
-                      }}
-                      onRemove={idx => {
-                        const next = ppParticipations.filter((_, i) => i !== idx);
-                        updatePP('participations', next);
-                      }}
-                    />
-
-                    <div style={{ marginTop: '16px' }}>
-                      <OuiNon
-                        label="Ce représentant légal est-il un bénéficiaire effectif au sens de l'article R561-1 du code monétaire et financier de la société en cours d'inscription ?"
-                        required
-                        value={pp.beneficiaire}
-                        onChange={v => updatePP('beneficiaire', v)}
-                      />
-                    </div>
-
-                    {pp.beneficiaire === 'Oui' && (
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-                        <div>
-                          <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: T.color.textDark }}>
-                            <span style={{ color: '#C81E1E', marginRight: '3px' }}>*</span>Date de naissance
-                          </label>
-                          <DatePicker value={pp.dateNaissance} onChange={v => updatePP('dateNaissance', v)} />
-                        </div>
-                        <FieldInput label="Lieu de naissance" required value={pp.lieuNaissance} onChange={v => updatePP('lieuNaissance', v)} placeholder="Saisissez une ville ou un pays" />
-                      </div>
-                    )}
-                  </>
-                )}
               </SectionCard>
 
               {/* PCP-specific questions */}
@@ -3665,9 +3567,9 @@
             <div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
                 <ReadOnlyField label="Dénomination sociale" required value={d.denomination} />
-                <FieldSelect label="Forme juridique" required value={d.formeJuridique} onChange={v => { u('formeJuridique', v); if (v !== 'Autre - Précisez') u('formeJuridiqueAutre', ''); }} options={FORMES_JURIDIQUES_PM} placeholder="Sélectionnez" />
+                <FieldSelect label="Forme juridique" required value={d.formeJuridique} onChange={v => { u('formeJuridique', v); if (v !== 'Autre') u('formeJuridiqueAutre', ''); }} options={FORMES_JURIDIQUES_PM} placeholder="Sélectionnez" />
               </div>
-              {d.formeJuridique === 'Autre - Précisez' && (
+              {d.formeJuridique === 'Autre' && (
                 <div style={{ marginBottom: '16px' }}>
                   <FieldInput label="Autre - précisez" required value={d.formeJuridiqueAutre} onChange={v => u('formeJuridiqueAutre', v)} />
                 </div>
@@ -3685,9 +3587,9 @@
             <div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
                 <FieldInput label="Dénomination sociale" required value={d.denomination} onChange={v => u('denomination', v)} />
-                <FieldSelect label="Forme juridique" required value={d.formeJuridique} onChange={v => { u('formeJuridique', v); if (v !== 'Autre - Précisez') u('formeJuridiqueAutre', ''); }} options={FORMES_JURIDIQUES_PM} placeholder="Sélectionnez" />
+                <FieldSelect label="Forme juridique" required value={d.formeJuridique} onChange={v => { u('formeJuridique', v); if (v !== 'Autre') u('formeJuridiqueAutre', ''); }} options={FORMES_JURIDIQUES_PM} placeholder="Sélectionnez" />
               </div>
-              {d.formeJuridique === 'Autre - Précisez' && (
+              {d.formeJuridique === 'Autre' && (
                 <div style={{ marginBottom: '16px' }}>
                   <FieldInput label="Autre - précisez" required value={d.formeJuridiqueAutre} onChange={v => u('formeJuridiqueAutre', v)} />
                 </div>
@@ -3776,7 +3678,7 @@
               {associeeNon && (
                 <div style={{ borderTop: `1px solid ${T.color.border}`, paddingTop: '24px', marginTop: '8px' }}>
                   <OuiNon
-                    label="Ce représentant légal est-il associé de la société, inscrite à l'Ordre, mère ou filiale de la société en cours d'inscription ?"
+                    label="Cette société représentant légal est-elle associée d'une société, inscrite à l'Ordre, mère ou filiale de la société en cours d'inscription ?"
                     required
                     value={d.associeOrdreMere}
                     onChange={v => u('associeOrdreMere', v)}
@@ -3816,9 +3718,9 @@
                         <div style={{ marginTop: '12px' }}>
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
                             <ReadOnlyField label="Dénomination sociale" required value={d.amDenomination} />
-                            <FieldSelect label="Forme juridique" required value={d.amFormeJuridique} onChange={v => { u('amFormeJuridique', v); if (v !== 'Autre - Précisez') u('amFormeJuridiqueAutre', ''); }} options={FORMES_JURIDIQUES_PM} placeholder="Sélectionnez" />
+                            <FieldSelect label="Forme juridique" required value={d.amFormeJuridique} onChange={v => { u('amFormeJuridique', v); if (v !== 'Autre') u('amFormeJuridiqueAutre', ''); }} options={FORMES_JURIDIQUES_PM} placeholder="Sélectionnez" />
                           </div>
-                          {d.amFormeJuridique === 'Autre - Précisez' && (
+                          {d.amFormeJuridique === 'Autre' && (
                             <div style={{ marginBottom: '16px' }}>
                               <FieldInput label="Autre - précisez" required value={d.amFormeJuridiqueAutre} onChange={v => u('amFormeJuridiqueAutre', v)} />
                             </div>
@@ -3834,9 +3736,9 @@
                         <div style={{ marginTop: '12px' }}>
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
                             <FieldInput label="Dénomination sociale" required value={d.amDenomination} onChange={v => u('amDenomination', v)} />
-                            <FieldSelect label="Forme juridique" required value={d.amFormeJuridique} onChange={v => { u('amFormeJuridique', v); if (v !== 'Autre - Précisez') u('amFormeJuridiqueAutre', ''); }} options={FORMES_JURIDIQUES_PM} placeholder="Sélectionnez" />
+                            <FieldSelect label="Forme juridique" required value={d.amFormeJuridique} onChange={v => { u('amFormeJuridique', v); if (v !== 'Autre') u('amFormeJuridiqueAutre', ''); }} options={FORMES_JURIDIQUES_PM} placeholder="Sélectionnez" />
                           </div>
-                          {d.amFormeJuridique === 'Autre - Précisez' && (
+                          {d.amFormeJuridique === 'Autre' && (
                             <div style={{ marginBottom: '16px' }}>
                               <FieldInput label="Autre - précisez" required value={d.amFormeJuridiqueAutre} onChange={v => u('amFormeJuridiqueAutre', v)} />
                             </div>
