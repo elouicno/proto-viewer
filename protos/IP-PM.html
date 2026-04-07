@@ -3252,43 +3252,45 @@
                   onChange={v => u('pcpAssociee', v)}
                 />
 
-                {/* Conditional: pcpAssociée = Oui → Participation */}
+                {/* Conditional: pcpAssociée = Oui → Participation + Bénéficiaire effectif */}
                 {pcpAssocieeOui && (
-                  <ParticipationSection
-                    items={pcpParticipations}
-                    onAdd={() => u('pcpParticipations', [...pcpParticipations, {}])}
-                    onUpdate={(idx, newData) => {
-                      const next = [...pcpParticipations];
-                      next[idx] = newData;
-                      u('pcpParticipations', next);
-                    }}
-                    onRemove={idx => {
-                      const next = pcpParticipations.filter((_, i) => i !== idx);
-                      u('pcpParticipations', next);
-                    }}
-                  />
-                )}
+                  <>
+                    <ParticipationSection
+                      items={pcpParticipations}
+                      onAdd={() => u('pcpParticipations', [...pcpParticipations, {}])}
+                      onUpdate={(idx, newData) => {
+                        const next = [...pcpParticipations];
+                        next[idx] = newData;
+                        u('pcpParticipations', next);
+                      }}
+                      onRemove={idx => {
+                        const next = pcpParticipations.filter((_, i) => i !== idx);
+                        u('pcpParticipations', next);
+                      }}
+                    />
 
-                {/* Bénéficiaire PCP */}
-                <div style={{ marginTop: '16px' }}>
-                  <OuiNon
-                    label="Cette personne de contact principal est-elle un bénéficiaire effectif au sens de l'article R561-1 du code monétaire et financier de la société en cours d'inscription ?"
-                    required
-                    value={d.pcpBeneficiaire}
-                    onChange={v => u('pcpBeneficiaire', v)}
-                  />
-                </div>
-
-                {d.pcpBeneficiaire === 'Oui' && (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: T.color.textDark }}>
-                        <span style={{ color: '#C81E1E', marginRight: '3px' }}>*</span>Date de naissance
-                      </label>
-                      <DatePicker value={d.pcpDateNaissance} onChange={v => u('pcpDateNaissance', v)} />
+                    {/* Bénéficiaire PCP — affiché uniquement si associée = Oui */}
+                    <div style={{ marginTop: '16px' }}>
+                      <OuiNon
+                        label="Cette personne de contact principal est-elle un bénéficiaire effectif au sens de l'article R561-1 du code monétaire et financier de la société en cours d'inscription ?"
+                        required
+                        value={d.pcpBeneficiaire}
+                        onChange={v => u('pcpBeneficiaire', v)}
+                      />
                     </div>
-                    <FieldInput label="Lieu de naissance" required value={d.pcpLieuNaissance} onChange={v => u('pcpLieuNaissance', v)} placeholder="Saisissez une ville ou un pays" />
-                  </div>
+
+                    {d.pcpBeneficiaire === 'Oui' && (
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: T.color.textDark }}>
+                            <span style={{ color: '#C81E1E', marginRight: '3px' }}>*</span>Date de naissance
+                          </label>
+                          <DatePicker value={d.pcpDateNaissance} onChange={v => u('pcpDateNaissance', v)} />
+                        </div>
+                        <FieldInput label="Lieu de naissance" required value={d.pcpLieuNaissance} onChange={v => u('pcpLieuNaissance', v)} placeholder="Saisissez une ville ou un pays" />
+                      </div>
+                    )}
+                  </>
                 )}
               </SectionCard>
             </>
