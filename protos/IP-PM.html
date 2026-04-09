@@ -1752,7 +1752,7 @@
     };
 
     // ── Reusable Address Block ──
-    const AddressBlock = ({ data, onChange, prefix, noRequired }) => {
+    const AddressBlock = ({ data, onChange, onSelectAddress, prefix, noRequired }) => {
       const pfx = (k) => prefix ? `${prefix}${k.charAt(0).toUpperCase()}${k.slice(1)}` : k;
       const val = (k) => data[pfx(k)] || '';
       const set = (k, v) => onChange(pfx(k), v);
@@ -1779,10 +1779,17 @@
       };
 
       const selectAddr = (addr) => {
-        set('rue', addr.rue);
-        set('codePostal', addr.codePostal);
-        set('ville', addr.ville);
-        set('pays', addr.pays);
+        if (onSelectAddress) {
+          // Batch update : tous les champs en un seul appel pour éviter les mises à jour écrasées
+          const batch = {};
+          ['rue', 'codePostal', 'ville', 'pays'].forEach(k => { batch[pfx(k)] = addr[k] || ''; });
+          onSelectAddress(batch);
+        } else {
+          set('rue', addr.rue);
+          set('codePostal', addr.codePostal);
+          set('ville', addr.ville);
+          set('pays', addr.pays);
+        }
         setAddrQuery(addr.label);
         setAddrOpen(false);
       };
@@ -3082,7 +3089,7 @@
     // ============================================================
     // Step: Personne de contact principal
     // ============================================================
-    const PCP_OPTIONS = ["Maude Dubois", "Une autre personne qu'un représentant légal"];
+    const PCP_OPTIONS = ["Maude Dubois", "Dupont Jean", "Une autre personne qu'un représentant légal"];
 
     const FONCTION_PCP_OPTIONS = [
       "Administrateur",
@@ -4113,7 +4120,8 @@
               )}
 
               {person.searchMode === 'manual' && (
-                <div style={{ padding: '16px', background: T.color.bg, borderRadius: T.radius, border: `1px solid ${T.color.border}`, marginBottom: '20px' }}>
+                <div style={{ marginBottom: '20px' }}>
+                  {/* Civilité */}
                   <div style={{ marginBottom: '16px' }}>
                     <p style={{ fontSize: '14px', fontWeight: 600, color: T.color.textDark, margin: '0 0 8px 0' }}>
                       <span style={{ color: '#C81E1E' }}>* </span>Civilité
@@ -4132,11 +4140,24 @@
                       })}
                     </div>
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '12px' }}>
+                  {/* Nom / Prénom / Prénom 2 */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '16px' }}>
                     <FieldInput label="Nom de famille" required value={person.nom || ''} onChange={v => set('nom', v)} />
                     <FieldInput label="Prénom" required value={person.prenom || ''} onChange={v => set('prenom', v)} />
-                    <FieldInput label="Nom d'usage" value={person.nomUsage || ''} onChange={v => set('nomUsage', v)} />
+                    <FieldInput label="Prénom 2" value={person.prenom2 || ''} onChange={v => set('prenom2', v)} />
                   </div>
+                  {/* Prénom 3 / Prénom 4 / Nationalité */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                    <FieldInput label="Prénom 3" value={person.prenom3 || ''} onChange={v => set('prenom3', v)} />
+                    <FieldInput label="Prénom 4" value={person.prenom4 || ''} onChange={v => set('prenom4', v)} />
+                    <FieldSelect label="Nationalité" required value={person.nationalite || ''} onChange={v => set('nationalite', v)} options={PAYS_OPTIONS} placeholder="Sélectionnez" />
+                  </div>
+                  {/* Adresse */}
+                  <AddressBlock
+                    data={person}
+                    onChange={(k, v) => set(k, v)}
+                    onSelectAddress={(fields) => onChange({ ...person, ...fields })}
+                  />
                 </div>
               )}
             </div>
@@ -4245,7 +4266,7 @@
               Interlocuteurs LBC-FT et Qualité
             </h1>
             <p style={{ fontSize: '14px', color: T.color.gray, margin: '0 0 8px 0', lineHeight: '21px' }}>
-              Désignez la ou les personnes responsables des fonctions LBC-FT et Qualité. Dans une petite structure, une seule personne peut assumer l'ensemble des fonctions.
+              Désignez un responsable pour chacune des fonctions ci-dessous. Vous pouvez attribuer plusieurs fonctions à la même personne.
             </p>
             <p style={{ fontSize: '13px', color: T.color.gray, margin: 0 }}>
               <span style={{ color: T.color.primaryRed }}>*</span> Champs obligatoires
@@ -4325,79 +4346,1023 @@
       );
     };
 
+    // Step: Pièces justificatives
+    // ============================================================
+    const PIECES_DOCS = [
+      {
+        id: 'acteNaissance',
+        titre: "Extrait de l'acte de naissance comportant la filiation",
+        description: "Document officiel attestant de la filiation, délivré par l'autorité compétente. (Pour les ressortissants étrangers)",
+        modele: true,
+      },
+      {
+        id: 'attestationFiscale',
+        titre: "Attestation des services fiscaux justifiant le paiement des impôts",
+        description: "pour les personnes dont la résidence fiscale est à l'étranger (au titre de la dernière année fiscale)",
+        modele: false,
+      },
+      {
+        id: 'casierJudiciaire',
+        titre: "Extrait du casier judiciaire du pays de sa nationalité",
+        description: "Extrait de casier judiciaire datant de moins de 3 mois. (Pour les ressortissants étrangers)",
+        modele: true,
+      },
+    ];
+
+    const StepPiecesContent = ({ data, update }) => {
+      const d = data || {};
+      const files = d.files || {};
+
+      const UploadZone = ({ docId }) => {
+        const [dragging, setDragging] = React.useState(false);
+        const uploaded = files[docId];
+
+        const handleDrop = (e) => {
+          e.preventDefault();
+          setDragging(false);
+          const file = e.dataTransfer.files[0];
+          if (file) update('files', prev => ({ ...(prev || {}), [docId]: file.name }));
+        };
+
+        const handleChange = (e) => {
+          const file = e.target.files[0];
+          if (file) update('files', prev => ({ ...(prev || {}), [docId]: file.name }));
+        };
+
+        const handleRemove = () => {
+          update('files', prev => {
+            const next = { ...(prev || {}) };
+            delete next[docId];
+            return next;
+          });
+        };
+
+        if (uploaded) {
+          return (
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '14px 16px', background: '#F0FDF4', border: '1px solid #BBF7D0',
+              borderRadius: T.radius,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#047857" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+                </svg>
+                <span style={{ fontSize: '14px', color: '#047857', fontWeight: 500 }}>{uploaded}</span>
+              </div>
+              <button onClick={handleRemove} style={{
+                background: 'none', border: 'none', cursor: 'pointer', padding: '4px',
+                color: T.color.gray, fontSize: '18px', lineHeight: 1, fontFamily: T.font,
+              }}>×</button>
+            </div>
+          );
+        }
+
+        return (
+          <label
+            onDragOver={e => { e.preventDefault(); setDragging(true); }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={handleDrop}
+            style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              gap: '8px', padding: '28px 20px', cursor: 'pointer',
+              border: `1px ${dragging ? 'solid' : 'dashed'} ${dragging ? T.color.primaryBlue : T.color.borderMedium}`,
+              borderRadius: T.radius,
+              background: dragging ? T.color.infoBg : T.color.bg,
+              transition: 'all 0.15s',
+            }}
+          >
+            <input type="file" accept=".jpg,.jpeg,.png,.pdf" onChange={handleChange} style={{ display: 'none' }} />
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={T.color.primaryBlue} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            <span style={{ fontSize: '14px', color: T.color.textDark }}>
+              <span style={{ color: T.color.primaryBlue, fontWeight: 500, cursor: 'pointer', textDecoration: 'underline' }}>Parcourir</span>
+              {' '}ou Glisser-déposer
+            </span>
+            <span style={{ fontSize: '13px', color: T.color.gray }}>
+              Formats acceptés jpg, jpeg, png, pdf (Taille max 2 Mo)
+            </span>
+          </label>
+        );
+      };
+
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+
+          {/* Title */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <h2 style={{ fontSize: '24px', fontWeight: 700, color: T.color.textDark, margin: '0 0 6px 0', lineHeight: '1.3' }}>
+                Liste des pièces justificatives à fournir
+              </h2>
+              <p style={{ fontSize: '14px', color: T.color.gray, margin: 0 }}>
+                Documents requis pour votre dossier d'inscription
+              </p>
+            </div>
+            <span style={{ fontSize: '13px', color: T.color.gray, whiteSpace: 'nowrap', marginTop: '4px' }}>
+              *Champs obligatoires
+            </span>
+          </div>
+
+          {/* Bandeau info */}
+          <div style={{
+            background: T.color.infoBg, border: `1px solid ${T.color.infoBorder}`,
+            borderRadius: T.radius, padding: '16px 20px',
+          }}>
+            <p style={{ fontSize: '14px', fontWeight: 700, color: T.color.textDark, margin: '0 0 10px 0' }}>
+              Préparez vos documents avant de commencer
+            </p>
+            <ul style={{ margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              {[
+                'Formats acceptés : PDF, JPG, JPEG, PNG',
+                'Taille maximale par fichier : 2 Mo',
+                'Assurez-vous que vos documents sont lisibles et complets',
+                "Les champs marqués d'un astérisque (*) sont obligatoires",
+              ].map((item, i) => (
+                <li key={i} style={{ fontSize: '14px', color: T.color.textDark, lineHeight: '22px' }}>{item}</li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Cartes documents */}
+          {PIECES_DOCS.map(doc => (
+            <div key={doc.id} style={{
+              background: T.color.white, border: `1px solid ${T.color.border}`,
+              borderRadius: T.radius, boxShadow: T.shadow.card, padding: '24px',
+            }}>
+              <p style={{ fontSize: '15px', fontWeight: 600, color: T.color.textDark, margin: '0 0 6px 0', lineHeight: '22px' }}>
+                {doc.titre}
+              </p>
+              <p style={{ fontSize: '14px', color: T.color.gray, margin: '0 0 12px 0', lineHeight: '21px' }}>
+                {doc.description}
+              </p>
+              {doc.modele && (
+                <a href="#" style={{
+                  display: 'inline-block', fontSize: '14px', color: T.color.primaryBlue,
+                  fontWeight: 500, textDecoration: 'underline', marginBottom: '16px',
+                }}>
+                  Télécharger le modèle
+                </a>
+              )}
+              <UploadZone docId={doc.id} />
+            </div>
+          ))}
+
+        </div>
+      );
+    };
+
+    // Step: Consentement et RGPD
+    // ============================================================
+    const StepConsentementContent = ({ data, update }) => {
+      const d = data || {};
+      const u = (k, v) => update(k, v);
+      const engagementChecked = !!d.engagement;
+      const rgpdChecked       = !!d.rgpd;
+
+      const InfoBlock = ({ icon, title, color, bg, border, children }) => (
+        <div style={{
+          display: 'flex', gap: '16px', padding: '20px 24px',
+          background: bg, border: `1px solid ${border}`,
+          borderRadius: T.radius, lineHeight: '22px',
+        }}>
+          <div style={{
+            flexShrink: 0, width: '40px', height: '40px', borderRadius: '10px',
+            background: color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            {icon}
+          </div>
+          <div style={{ flex: 1 }}>
+            <p style={{ fontSize: '14px', fontWeight: 700, color: T.color.textDark, margin: '0 0 6px 0' }}>{title}</p>
+            <div style={{ fontSize: '14px', color: T.color.textDark, lineHeight: '22px' }}>{children}</div>
+          </div>
+        </div>
+      );
+
+      const CheckRow = ({ checked, onChange, required, children, hasError }) => (
+        <label style={{
+          display: 'flex', gap: '14px', alignItems: 'flex-start', cursor: 'pointer',
+          padding: '18px 20px', background: T.color.white,
+          border: `1px solid ${hasError ? '#FF2B44' : checked ? '#1B324F' : T.color.border}`,
+          borderRadius: T.radius, transition: 'border-color 0.15s',
+        }}>
+          <div
+            onClick={onChange}
+            style={{
+              flexShrink: 0, marginTop: '2px',
+              width: '20px', height: '20px', borderRadius: '4px',
+              border: `2px solid ${checked ? T.color.primaryBlue : hasError ? T.color.primaryRed : T.color.borderMedium}`,
+              background: checked ? T.color.primaryBlue : T.color.white,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'all 0.15s', cursor: 'pointer',
+            }}
+          >
+            {checked && (
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M2 6L5 9L10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            )}
+          </div>
+          <span style={{ fontSize: '14px', color: T.color.textDark, lineHeight: '22px', userSelect: 'none' }}>
+            {required && <span style={{ color: T.color.primaryRed, marginRight: '3px' }}>*</span>}
+            {children}
+          </span>
+        </label>
+      );
+
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+
+          {/* Title */}
+          <div>
+            <h2 style={{ fontSize: '24px', fontWeight: 700, color: T.color.textDark, margin: '0 0 8px 0', lineHeight: '36px' }}>
+              Consentement et RGPD
+            </h2>
+            <p style={{ fontSize: '14px', color: T.color.gray, margin: 0 }}>
+              Avant de soumettre votre dossier, veuillez prendre connaissance des informations suivantes et confirmer votre engagement.
+            </p>
+          </div>
+
+          {/* Info blocks */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+
+            {/* Bloc 1 — Utilisation des données */}
+            <InfoBlock
+              title="Utilisation de vos données"
+              color="#1B324F"
+              bg={T.color.infoBg}
+              border={T.color.infoBorder}
+              icon={
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1B324F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+              }
+            >
+              L'ensemble des informations recueillies dans ce formulaire sont nécessaires pour votre inscription à l'Ordre et votre participation aux évènements de l'Ordre (Assemblées générales, Congrès, etc.). Elles font l'objet d'un traitement automatisé et sont destinées aux Conseils régionaux et au Conseil national de l'Ordre des experts-comptables.
+            </InfoBlock>
+
+            {/* Bloc 2 — Conservation */}
+            <InfoBlock
+              title="Durée de conservation"
+              color="#0369A1"
+              bg="#F0F9FF"
+              border="#BAE6FD"
+              icon={
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0369A1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                </svg>
+              }
+            >
+              <ul style={{ margin: '0', paddingLeft: '18px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <li>Vos données seront conservées <strong>jusqu'à 5 ans après votre radiation</strong>.</li>
+                <li>La dernière attestation d'assurance sera archivée <strong>sans limitation de durée</strong> en cas de mise en cause de responsabilité.</li>
+                <li>Vos données anonymisées seront archivées sans limitation de durée aux fins de statistiques professionnelles dans le respect de l'article 29 7° du décret du 30 mars 2012.</li>
+              </ul>
+            </InfoBlock>
+
+            {/* Bloc 3 — Vos droits */}
+            <InfoBlock
+              title="Vos droits sur vos données personnelles"
+              color="#7C3AED"
+              bg="#F5F3FF"
+              border="#DDD6FE"
+              icon={
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/>
+                </svg>
+              }
+            >
+              Nous vous rappelons que vous disposez d'un droit à la portabilité de vos données, de droits d'accès, de rectification, de limitation et d'opposition pour motifs légitimes, ainsi que du droit de définir des directives relatives au sort de vos données personnelles après votre mort sous réserves des dispositions légales et réglementaires applicables. Vous avez la possibilité d'introduire une réclamation auprès de la Commission nationale de l'informatique et des libertés, autorité de contrôle en charge du respect des obligations en matière des données à caractère personnel : 3 Place de Fontenoy – TSA 80715 – 75334 Paris 07.
+            </InfoBlock>
+
+            {/* Bloc 4 — Exercer ses droits */}
+            <InfoBlock
+              title="Comment exercer vos droits ?"
+              color="#047857"
+              bg="#F0FDF4"
+              border="#BBF7D0"
+              icon={
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#047857" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/>
+                </svg>
+              }
+            >
+              Pour exercer vos droits, vous pouvez formuler votre demande directement depuis <strong>PEP Assist</strong>.
+            </InfoBlock>
+          </div>
+
+          {/* Separator */}
+          <div style={{ height: '1px', background: T.color.border }} />
+
+          {/* Checkboxes */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <p style={{ fontSize: '13px', color: T.color.gray, margin: 0 }}>
+              <span style={{ color: T.color.primaryRed }}>*</span> Champs obligatoires
+            </p>
+
+            <CheckRow
+              checked={engagementChecked}
+              onChange={() => u('engagement', !engagementChecked)}
+              required
+            >
+              Je m'engage à communiquer au Conseil régional de l'Ordre, dans un délai maximum de deux mois, tout changement intervenu dans mon adresse ou ma situation professionnelle, et à joindre les justificatifs correspondants.
+            </CheckRow>
+
+            <CheckRow
+              checked={rgpdChecked}
+              onChange={() => u('rgpd', !rgpdChecked)}
+              required
+            >
+              J'ai pris connaissance des informations ci-dessus relatives au traitement de mes données personnelles et j'accepte les conditions d'utilisation.
+            </CheckRow>
+          </div>
+
+        </div>
+      );
+    };
+
+    // ============================================================
+    // Drawer: Ajouter un associé
+    // ============================================================
+    const NATURE_DROITS_DRAWER = ["Pleine propriété", "Nue-propriété", "Usufruit", "Indivision"];
+
+    const DrawerAjoutAssocie = ({ isOpen, onClose, onAdd }) => {
+      const [type, setType]               = useState('');
+      const [ppSearchMode, setPpSearchMode] = useState(null);
+      const [ppSearchLabel, setPpSearchLabel] = useState('');
+      const [ppData, setPpData]           = useState({});
+      const [pmSearchMode, setPmSearchMode] = useState(null);
+      const [pmSearchLabel, setPmSearchLabel] = useState('');
+      const [pmData, setPmData]           = useState({});
+      const [statut, setStatut]           = useState('');
+      const [croec, setCroec]             = useState('');
+      const [pays, setPays]               = useState('');
+      const [organisation, setOrganisation] = useState('');
+      const [numeroImmat, setNumeroImmat] = useState('');
+      const [profession, setProfession]   = useState('');
+      const [exerceSociete, setExerceSociete] = useState('');
+      const [participations, setParticipations] = useState([{}]);
+      const [success, setSuccess]         = useState(false);
+
+      const reset = () => {
+        setType(''); setPpSearchMode(null); setPpSearchLabel(''); setPpData({});
+        setPmSearchMode(null); setPmSearchLabel(''); setPmData({});
+        setStatut(''); setCroec(''); setPays(''); setOrganisation(''); setNumeroImmat(''); setProfession('');
+        setExerceSociete(''); setParticipations([{}]);
+        setSuccess(false);
+      };
+
+      const handleClose = () => { reset(); onClose(); };
+
+      // Progressive disclosure
+      const ppFicheVisible  = type === 'pp' && (ppSearchMode === 'selected' || ppSearchMode === 'manual');
+      const pmFicheVisible  = type === 'pm' && (pmSearchMode === 'selected' || pmSearchMode === 'manual');
+      const ficheVisible    = ppFicheVisible || pmFicheVisible;
+      const isSelectedMode  = (type === 'pp' && ppSearchMode === 'selected') || (type === 'pm' && pmSearchMode === 'selected');
+      const isManualMode    = (type === 'pp' && ppSearchMode === 'manual')   || (type === 'pm' && pmSearchMode === 'manual');
+      // "Cet associé :" radios : manual mode only (PP & PM)
+      const questionsVisible = isManualMode;
+      // OuiNon apparaît : en selected (direct) ou en manual quand statut rempli
+      const conditionQMet   = isSelectedMode
+        || (statut === 'ec_france'     && croec !== '')
+        || (statut === 'ec_hors_france' && pays !== '')
+        || (statut === 'non_ec'        && profession.trim() !== '');
+      const exerciceVisible     = ficheVisible && conditionQMet;
+      // Participation : uniquement si OUI
+      const participationVisible = exerciceVisible && exerceSociete === 'Oui';
+      // Peut valider : OUI + au moins une ligne avec natureDroits remplie, OU Non
+      const participationValid = participations.some(p => p.natureDroits);
+      const canAdd = exerciceVisible && exerceSociete !== ''
+        && (exerceSociete === 'Non' || participationValid);
+
+      const getLabel = () => {
+        if (type === 'pp') return `${ppData.civilite || ''} ${ppData.nom || ''} ${ppData.prenom || ''}`.trim();
+        if (type === 'pm') return pmData.denomination || '';
+        return '';
+      };
+
+      const handleAdd = () => {
+        if (!canAdd) return;
+        onAdd({ type, label: getLabel(), participations, exerceSociete });
+        setSuccess(true);
+      };
+
+      // Inline radio row helper
+      const RadioRow = ({ label, value, selected, onSelect }) => (
+        <label onClick={() => onSelect(value)} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', marginBottom: '10px' }}>
+          <div style={{ width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0,
+            border: `2px solid ${selected ? T.color.primaryBlue : T.color.borderMedium}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', background: T.color.white }}>
+            {selected && <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: T.color.primaryBlue }} />}
+          </div>
+          <span style={{ fontSize: '14px', color: T.color.textDark, lineHeight: 1.5 }}>{label}</span>
+        </label>
+      );
+
+      if (!isOpen) return null;
+
+      return (
+        <>
+          {/* Backdrop */}
+          <div onClick={handleClose} style={{
+            position: 'fixed', inset: 0, background: 'rgba(17,24,39,0.35)', zIndex: 1000,
+          }} />
+
+          {/* Panel latéral droit */}
+          <div style={{
+            position: 'fixed', top: 0, right: 0, bottom: 0, width: '520px',
+            background: T.color.white, zIndex: 1001, display: 'flex', flexDirection: 'column',
+            boxShadow: '-6px 0 32px rgba(0,0,0,0.14)', fontFamily: T.font,
+          }}>
+
+            {/* En-tête */}
+            <div style={{
+              padding: '20px 24px', borderBottom: `1px solid ${T.color.border}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0,
+            }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: T.color.textDark }}>
+                  Ajouter un associé
+                </h3>
+                <p style={{ margin: '2px 0 0', fontSize: '13px', color: T.color.gray }}>
+                  Renseignez les informations de l'associé à déclarer
+                </p>
+              </div>
+              <button onClick={handleClose} style={{
+                background: 'none', border: `1px solid ${T.color.border}`, borderRadius: T.radius,
+                cursor: 'pointer', padding: '6px 10px', fontSize: '16px', color: T.color.gray, lineHeight: 1,
+              }}>✕</button>
+            </div>
+
+            {/* Corps — scrollable */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+
+              {success ? (
+                /* ── État succès ── */
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '48px', gap: '16px' }}>
+                  <div style={{ width: '60px', height: '60px', borderRadius: '50%',
+                    background: '#F0FDF4', border: '1px solid #BBF7D0',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2.5">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </div>
+                  <p style={{ fontSize: '16px', fontWeight: 700, color: T.color.textDark, margin: 0, textAlign: 'center' }}>
+                    Associé ajouté avec succès
+                  </p>
+                  <p style={{ fontSize: '14px', color: T.color.gray, margin: 0, textAlign: 'center', maxWidth: '300px', lineHeight: 1.5 }}>
+                    {getLabel()}{exerceSociete === 'Oui' && participations[0]?.natureDroits ? ` — ${participations[0].natureDroits}` : ''}
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%', marginTop: '24px' }}>
+                    <button onClick={reset} style={{
+                      width: '100%', padding: '11px', border: `1px solid ${T.color.primaryBlue}`,
+                      borderRadius: T.radius, background: 'none', color: T.color.primaryBlue,
+                      fontSize: '14px', fontWeight: 600, cursor: 'pointer',
+                    }}>
+                      + Ajouter un autre associé
+                    </button>
+                    <button onClick={handleClose} style={{
+                      width: '100%', padding: '11px', border: 'none',
+                      borderRadius: T.radius, background: T.color.primaryBlue, color: T.color.white,
+                      fontSize: '14px', fontWeight: 600, cursor: 'pointer',
+                    }}>
+                      Fermer
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* ─── Section 1 : Type de personne ─── */}
+                  <div style={{ marginBottom: '28px' }}>
+                    <p style={{ fontSize: '14px', fontWeight: 600, color: T.color.textDark, margin: '0 0 14px 0' }}>
+                      <span style={{ color: T.color.primaryRed }}>* </span>Type de personne à ajouter
+                    </p>
+                    <RadioRow label="Personne physique" value="pp" selected={type === 'pp'}
+                      onSelect={(v) => { setType(v); setPpSearchMode(null); setPpSearchLabel(''); setPpData({}); setPmSearchMode(null); setPmSearchLabel(''); setPmData({}); setStatut(''); setCroec(''); setPays(''); setProfession(''); setExerceSociete(''); setParticipations([{}]); }} />
+                    <RadioRow label="Personne morale" value="pm" selected={type === 'pm'}
+                      onSelect={(v) => { setType(v); setPpSearchMode(null); setPpSearchLabel(''); setPpData({}); setPmSearchMode(null); setPmSearchLabel(''); setPmData({}); setStatut(''); setCroec(''); setPays(''); setProfession(''); setExerceSociete(''); setParticipations([{}]); }} />
+                  </div>
+
+                  {/* ─── Section 2a : Recherche Personne Physique ─── */}
+                  {type === 'pp' && (
+                    <div style={{ marginBottom: '24px', paddingTop: '20px', borderTop: `1px solid ${T.color.border}` }}>
+                      <PersonSearchAutocomplete
+                        searchMode={ppSearchMode}
+                        selectedLabel={ppSearchLabel}
+                        onSelectPerson={(p) => {
+                          setPpSearchMode('selected');
+                          setPpSearchLabel(`${p.civilite} ${p.nom} ${p.prenom} - ${p.region}`);
+                          setPpData({ ...p });
+                          setStatut(''); setCroec(''); setPays(''); setProfession('');
+                          setExerceSociete(''); setParticipations([{}]);
+                        }}
+                        onManual={() => {
+                          setPpSearchMode('manual');
+                          setPpSearchLabel('+ Renseignez manuellement');
+                          setPpData({});
+                          setStatut(''); setCroec(''); setPays(''); setProfession('');
+                          setExerceSociete(''); setParticipations([{}]);
+                        }}
+                        onClear={() => {
+                          setPpSearchMode(null); setPpSearchLabel(''); setPpData({});
+                          setStatut(''); setCroec(''); setPays(''); setProfession('');
+                          setExerceSociete(''); setParticipations([{}]);
+                        }}
+                      />
+
+                      {/* Résultat trouvé → lecture seule */}
+                      {ppSearchMode === 'selected' && (
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+                          <ReadOnlyField label="Prénom" value={ppData.prenom} />
+                          <ReadOnlyField label="Nom" value={ppData.nom} />
+                          <ReadOnlyField label="CRO principal" value={ppData.conseilRegional} />
+                        </div>
+                      )}
+
+                      {/* Mode manuel PP */}
+                      {ppSearchMode === 'manual' && (
+                        <div>
+                          <div style={{ marginBottom: '14px' }}>
+                            <p style={{ fontSize: '14px', fontWeight: 600, color: T.color.textDark, margin: '0 0 8px 0' }}>
+                              <span style={{ color: '#C81E1E' }}>* </span>Civilité
+                            </p>
+                            <div style={{ display: 'flex', gap: '24px' }}>
+                              {CIVILITE_OPTIONS.map(opt => {
+                                const sel = ppData.civilite === opt;
+                                return (
+                                  <label key={opt} onClick={() => setPpData(prev => ({ ...prev, civilite: opt }))}
+                                    style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                                    <div style={{ width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0,
+                                      border: `2px solid ${sel ? T.color.primaryBlue : T.color.borderMedium}`,
+                                      display: 'flex', alignItems: 'center', justifyContent: 'center', background: T.color.white }}>
+                                      {sel && <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: T.color.primaryBlue }} />}
+                                    </div>
+                                    <span style={{ fontSize: '14px', color: T.color.textDark }}>{opt}</span>
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          </div>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+                            <FieldInput label="Nom de famille" required value={ppData.nom || ''} onChange={v => setPpData(prev => ({ ...prev, nom: v }))} />
+                            <FieldInput label="Prénom" required value={ppData.prenom || ''} onChange={v => setPpData(prev => ({ ...prev, prenom: v }))} />
+                          </div>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+                            <FieldInput label="Prénom 2" value={ppData.prenom2 || ''} onChange={v => setPpData(prev => ({ ...prev, prenom2: v }))} />
+                            <FieldInput label="Prénom 3" value={ppData.prenom3 || ''} onChange={v => setPpData(prev => ({ ...prev, prenom3: v }))} />
+                          </div>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+                            <FieldInput label="Prénom 4" value={ppData.prenom4 || ''} onChange={v => setPpData(prev => ({ ...prev, prenom4: v }))} />
+                            <FieldSelect label="Nationalité" required value={ppData.nationalite || ''} onChange={v => setPpData(prev => ({ ...prev, nationalite: v }))} options={PAYS_OPTIONS} placeholder="Sélectionnez" />
+                          </div>
+                          <AddressBlock
+                            data={ppData}
+                            onChange={(k, v) => setPpData(prev => ({ ...prev, [k]: v }))}
+                            onSelectAddress={(fields) => setPpData(prev => ({ ...prev, ...fields }))}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* ─── Section 2b : Recherche Personne Morale ─── */}
+                  {type === 'pm' && (
+                    <div style={{ marginBottom: '24px', paddingTop: '20px', borderTop: `1px solid ${T.color.border}` }}>
+                      <SocieteSearchAutocomplete
+                        searchMode={pmSearchMode}
+                        selectedLabel={pmSearchLabel}
+                        onSelectSociete={(s) => {
+                          setPmSearchMode('selected');
+                          setPmSearchLabel(`${s.siren} - ${s.denomination}`);
+                          setPmData({ ...s });
+                          setExerceSociete(''); setParticipations([{}]);
+                        }}
+                        onManual={() => {
+                          setPmSearchMode('manual');
+                          setPmSearchLabel('+ Renseignez manuellement');
+                          setPmData({});
+                          setExerceSociete(''); setParticipations([{}]);
+                        }}
+                        onClear={() => {
+                          setPmSearchMode(null); setPmSearchLabel(''); setPmData({});
+                          setExerceSociete(''); setParticipations([{}]);
+                        }}
+                      />
+
+                      {/* Résultat trouvé PM → lecture seule */}
+                      {pmSearchMode === 'selected' && (
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                          <ReadOnlyField label="Dénomination sociale" value={pmData.denomination} />
+                          <ReadOnlyField label="SIREN" value={pmData.siren} />
+                        </div>
+                      )}
+
+                      {/* Mode manuel PM */}
+                      {pmSearchMode === 'manual' && (
+                        <div>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+                            <FieldInput label="Dénomination sociale" required value={pmData.denomination || ''} onChange={v => setPmData(prev => ({ ...prev, denomination: v }))} />
+                            <FieldSelect label="Forme juridique" required value={pmData.formeJuridique || ''} onChange={v => setPmData(prev => ({ ...prev, formeJuridique: v }))} options={FORMES_JURIDIQUES_PM} placeholder="Sélectionnez" />
+                          </div>
+                          {pmData.formeJuridique === 'Autre' && (
+                            <div style={{ marginBottom: '12px' }}>
+                              <FieldInput label="Autre — précisez" required value={pmData.formeJuridiqueAutre || ''} onChange={v => setPmData(prev => ({ ...prev, formeJuridiqueAutre: v }))} />
+                            </div>
+                          )}
+                          <div style={{ marginBottom: '12px' }}>
+                            <FieldInput label="SIREN" required value={pmData.siren || ''} onChange={v => setPmData(prev => ({ ...prev, siren: v }))} />
+                          </div>
+                          <p style={{ fontSize: '14px', fontWeight: 600, color: T.color.textDark, margin: '0 0 12px 0' }}>Adresse du siège social</p>
+                          <AddressBlock
+                            data={pmData}
+                            onChange={(k, v) => setPmData(prev => ({ ...prev, [k]: v }))}
+                            onSelectAddress={(fields) => setPmData(prev => ({ ...prev, ...fields }))}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* ─── Section 3 : Questions complémentaires (PP uniquement) ─── */}
+                  {questionsVisible && (
+                    <div style={{ marginBottom: '24px', paddingTop: '20px', borderTop: `1px solid ${T.color.border}` }}>
+                      <p style={{ fontSize: '14px', fontWeight: 600, color: T.color.textDark, margin: '0 0 12px 0' }}>
+                        <span style={{ color: T.color.primaryRed }}>* </span>Cet associé :
+                      </p>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+
+                        {/* Option 0 — En cours d'inscription */}
+                        {[
+                          { val: 'ec_france',      label: "Il est en cours d'inscription au Tableau de l'ordre des experts-comptables" },
+                          { val: 'ec_hors_france',  label: "Il exerce la profession d'expert-comptable dans un pays de l'UE ou de l'EEE (voire en Suisse - possibilité uniquement pour les SEL)" },
+                          { val: 'non_ec',          label: "Il n'exerce pas la profession d'expert-comptable" },
+                        ].map(({ val, label }, optIdx) => {
+                          const sel = statut === val;
+                          return (
+                            <div key={val}>
+                              <label onClick={() => { setStatut(val); setCroec(''); setPays(''); setOrganisation(''); setNumeroImmat(''); setProfession(''); setExerceSociete(''); setParticipations([{}]); }} style={{
+                                display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer',
+                                background: sel ? T.color.radioBg : 'transparent',
+                                border: `1px solid ${sel ? T.color.primaryBlue : T.color.border}`,
+                                borderRadius: T.radius,
+                                borderBottomLeftRadius: sel ? '0' : T.radius,
+                                borderBottomRightRadius: sel ? '0' : T.radius,
+                                padding: '12px 14px',
+                              }}>
+                                <div style={{
+                                  width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0, marginTop: '2px',
+                                  border: `2px solid ${sel ? T.color.primaryBlue : T.color.borderMedium}`,
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center', background: T.color.white,
+                                }}>
+                                  {sel && <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: T.color.primaryBlue }} />}
+                                </div>
+                                <span style={{ fontSize: '14px', color: T.color.textDark, lineHeight: '1.4' }}>{label}</span>
+                              </label>
+
+                              {/* Panel inline — option 0 : CROEC */}
+                              {optIdx === 0 && sel && (
+                                <div style={{
+                                  padding: '14px', background: T.color.radioBg,
+                                  border: `1px solid ${T.color.primaryBlue}`, borderTop: 'none',
+                                  borderBottomLeftRadius: T.radius, borderBottomRightRadius: T.radius,
+                                }}>
+                                  <FieldSelect
+                                    label="Conseil régional de l'Ordre d'inscription en cours"
+                                    required value={croec}
+                                    onChange={v => { setCroec(v); setExerceSociete(''); setParticipations([{}]); }}
+                                    options={CROEC_OPTIONS} placeholder="Sélectionnez"
+                                  />
+                                </div>
+                              )}
+
+                              {/* Panel inline — option 1 : Pays UE/EEE + Organisation + N° */}
+                              {optIdx === 1 && sel && (
+                                <div style={{
+                                  padding: '14px', background: T.color.radioBg,
+                                  border: `1px solid ${T.color.primaryBlue}`, borderTop: 'none',
+                                  borderBottomLeftRadius: T.radius, borderBottomRightRadius: T.radius,
+                                  display: 'flex', flexDirection: 'column', gap: '14px',
+                                }}>
+                                  <FieldSelect
+                                    label="Pays d'exercice"
+                                    required value={pays}
+                                    onChange={v => { setPays(v); setExerceSociete(''); setParticipations([{}]); }}
+                                    options={PAYS_EXERCICE_UE_EEE} placeholder="Sélectionnez"
+                                  />
+                                  <FieldInput
+                                    label="À quelle organisation de la profession comptable adhère cet associé dans ce pays ?"
+                                    value={organisation} onChange={setOrganisation}
+                                  />
+                                  <FieldInput
+                                    label="Numéro d'immatriculation étranger"
+                                    value={numeroImmat} onChange={setNumeroImmat}
+                                  />
+                                </div>
+                              )}
+
+                              {/* Panel inline — option 2 : Profession libre */}
+                              {optIdx === 2 && sel && (
+                                <div style={{
+                                  padding: '14px', background: T.color.radioBg,
+                                  border: `1px solid ${T.color.primaryBlue}`, borderTop: 'none',
+                                  borderBottomLeftRadius: T.radius, borderBottomRightRadius: T.radius,
+                                }}>
+                                  <FieldInput
+                                    label="Quelle est la profession de cet associé ?"
+                                    required value={profession}
+                                    onChange={v => { setProfession(v); }}
+                                    placeholder="Saisissez la profession"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ─── Section 4 : Exercice dans la société ─── */}
+                  {exerciceVisible && (
+                    <div style={{ paddingTop: '20px', borderTop: `1px solid ${T.color.border}`, marginBottom: participationVisible ? '0' : '0' }}>
+                      <OuiNon
+                        label="Cet associé exercera-t-il au sein de la société en cours d'inscription ?"
+                        required
+                        value={exerceSociete}
+                        onChange={(v) => { setExerceSociete(v); setParticipations([{}]); }}
+                      />
+                    </div>
+                  )}
+
+                  {/* ─── Section 5 : Participation ─── */}
+                  {participationVisible && (
+                    <ParticipationSection
+                      items={participations}
+                      onAdd={() => setParticipations(prev => [...prev, {}])}
+                      onUpdate={(idx, data) => setParticipations(prev => prev.map((p, i) => i === idx ? data : p))}
+                      onRemove={(idx) => setParticipations(prev => prev.filter((_, i) => i !== idx))}
+                    />
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Pied de page fixe */}
+            {!success && (
+              <div style={{
+                padding: '16px 24px', borderTop: `1px solid ${T.color.border}`,
+                display: 'flex', gap: '12px', flexShrink: 0, background: T.color.white,
+              }}>
+                <button onClick={handleClose} style={{
+                  flex: 1, padding: '10px 0', border: `1px solid ${T.color.border}`,
+                  borderRadius: T.radius, background: 'none', color: T.color.textDark,
+                  fontSize: '14px', fontWeight: 500, cursor: 'pointer', fontFamily: T.font,
+                }}>
+                  Annuler
+                </button>
+                <button onClick={handleAdd} disabled={!canAdd} style={{
+                  flex: 2, padding: '10px 0', border: 'none', borderRadius: T.radius,
+                  background: canAdd ? T.color.primaryBlue : '#D1D5DB',
+                  color: T.color.white,
+                  fontSize: '14px', fontWeight: 600,
+                  cursor: canAdd ? 'pointer' : 'default', fontFamily: T.font,
+                  transition: 'background 0.15s',
+                }}>
+                  Ajouter l'associé →
+                </button>
+              </div>
+            )}
+          </div>
+        </>
+      );
+    };
+
     // Step: Liste des associés
     // ============================================================
     const ASSOCIES_DATA = [
-      { nom: 'A', capNombre: '4 000', capPct: '34,78%', voteNombre: '7 500', votePct: '40,54%', type: 'ec' },
-      { nom: 'B', capNombre: '2 500', capPct: '21,74%', voteNombre: '5 000', votePct: '27,03%', type: 'ec' },
-      { nom: 'PM1', capNombre: '700', capPct: '6,09%', voteNombre: '1 200', votePct: '6,49%', type: 'ec' },
-      { nom: 'D', capNombre: '400', capPct: '3,48%', voteNombre: '700', votePct: '3,78%', type: 'ec' },
-      { nom: 'PM2', capNombre: '200', capPct: '1,74%', voteNombre: '400', votePct: '2,16%', type: 'ec' },
-      { nom: 'E', capNombre: '2 200', capPct: '19,13%', voteNombre: '2 200', votePct: '11,89%', type: 'nonec' },
-      { nom: 'F', capNombre: '700', capPct: '6,09%', voteNombre: '700', votePct: '3,78%', type: 'nonec' },
-      { nom: 'G', capNombre: '200', capPct: '1,74%', voteNombre: '200', votePct: '1,08%', type: 'nonec' },
-      { nom: 'H', capNombre: '100', capPct: '0,87%', voteNombre: '100', votePct: '0,54%', type: 'nonec' },
-      { nom: 'PM3', capNombre: '500', capPct: '4,35%', voteNombre: '500', votePct: '2,70%', type: 'nonec' },
+      { nom: 'A',   fonction: 'Représentant légal',            capNombre: '3 000', capPct: '30,00%', voteNombre: '6 000', votePct: '36,36%', type: 'ec' },
+      { nom: 'B',   fonction: 'Personne de contact principal', capNombre: '2 000', capPct: '20,00%', voteNombre: '4 000', votePct: '24,24%', type: 'ec' },
+      { nom: 'PM1', fonction: 'Représentant légal',            capNombre: '500',   capPct: '5,00%',  voteNombre: '1 000', votePct: '6,06%',  type: 'ec' },
+      { nom: 'D',   fonction: 'Associé',                       capNombre: '300',   capPct: '3,00%',  voteNombre: '600',   votePct: '3,64%',  type: 'ec' },
+      { nom: 'PM2', fonction: 'Administrateur',                capNombre: '200',   capPct: '2,00%',  voteNombre: '400',   votePct: '2,42%',  type: 'ec' },
+      { nom: 'E',   fonction: 'Représentant légal',            capNombre: '2 000', capPct: '20,00%', voteNombre: '2 000', votePct: '12,12%', type: 'nonec' },
+      { nom: 'F',   fonction: 'Administrateur',                capNombre: '',      capPct: '',        voteNombre: '',      votePct: '',        type: 'nonec' },
+      { nom: 'G',   fonction: 'Administrateur',                capNombre: '',      capPct: '',        voteNombre: '',      votePct: '',        type: 'nonec' },
+      { nom: 'H',   fonction: 'Associé',                       capNombre: '',      capPct: '',        voteNombre: '',      votePct: '',        type: 'nonec' },
+      { nom: 'PM3', fonction: 'Associé',                       capNombre: '500',   capPct: '5,00%',  voteNombre: '500',   votePct: '3,03%',  type: 'nonec' },
     ];
 
-    const StepAssociesContent = () => {
-      const ecRows = ASSOCIES_DATA.filter(r => r.type === 'ec');
-      const nonEcRows = ASSOCIES_DATA.filter(r => r.type === 'nonec');
+    // Données étendues (Dupont Jean) : PP + nue-propriété + usufruit
+    const ASSOCIES_DATA_EXTENDED = [
+      { nom: 'A',   fonction: 'Représentant légal',            capPpNb: '3 000', capPpPct: '30,00%', capNpNb: '1 000', capNpPct: '10,00%', capUsNb: '',      capUsPct: '',       votePpNb: '6 000',  votePpPct: '36,36%', voteNpNb: '1 500', voteNpPct: '9,09%',  voteUsNb: '',      voteUsPct: '',      type: 'ec' },
+      { nom: 'B',   fonction: 'Personne de contact principal', capPpNb: '2 000', capPpPct: '20,00%', capNpNb: '',      capNpPct: '',        capUsNb: '500',   capUsPct: '5,00%',  votePpNb: '4 000',  votePpPct: '24,24%', voteNpNb: '',      voteNpPct: '',       voteUsNb: '1 000', voteUsPct: '6,06%', type: 'ec' },
+      { nom: 'PM1', fonction: 'Représentant légal',            capPpNb: '500',   capPpPct: '5,00%',  capNpNb: '200',   capNpPct: '2,00%',   capUsNb: '',      capUsPct: '',       votePpNb: '1 000',  votePpPct: '6,06%',  voteNpNb: '200',   voteNpPct: '1,21%',  voteUsNb: '',      voteUsPct: '',      type: 'ec' },
+      { nom: 'D',   fonction: 'Associé',                       capPpNb: '300',   capPpPct: '3,00%',  capNpNb: '100',   capNpPct: '1,00%',   capUsNb: '',      capUsPct: '',       votePpNb: '600',    votePpPct: '3,64%',  voteNpNb: '100',   voteNpPct: '0,61%',  voteUsNb: '',      voteUsPct: '',      type: 'ec' },
+      { nom: 'PM2', fonction: 'Administrateur',                capPpNb: '200',   capPpPct: '2,00%',  capNpNb: '',      capNpPct: '',        capUsNb: '',      capUsPct: '',       votePpNb: '400',    votePpPct: '2,42%',  voteNpNb: '',      voteNpPct: '',       voteUsNb: '',      voteUsPct: '',      type: 'ec' },
+      { nom: 'E',   fonction: 'Représentant légal',            capPpNb: '2 000', capPpPct: '20,00%', capNpNb: '200',   capNpPct: '2,00%',   capUsNb: '',      capUsPct: '',       votePpNb: '2 000',  votePpPct: '12,12%', voteNpNb: '200',   voteNpPct: '1,21%',  voteUsNb: '',      voteUsPct: '',      type: 'nonec' },
+      { nom: 'F',   fonction: 'Administrateur',                capPpNb: '',      capPpPct: '',       capNpNb: '',      capNpPct: '',        capUsNb: '700',   capUsPct: '7,00%',  votePpNb: '',       votePpPct: '',       voteNpNb: '',      voteNpPct: '',       voteUsNb: '700',   voteUsPct: '4,24%', type: 'nonec' },
+      { nom: 'G',   fonction: 'Administrateur',                capPpNb: '',      capPpPct: '',       capNpNb: '',      capNpPct: '',        capUsNb: '200',   capUsPct: '2,00%',  votePpNb: '',       votePpPct: '',       voteNpNb: '',      voteNpPct: '',       voteUsNb: '200',   voteUsPct: '1,21%', type: 'nonec' },
+      { nom: 'H',   fonction: 'Associé',                       capPpNb: '',      capPpPct: '',       capNpNb: '',      capNpPct: '',        capUsNb: '100',   capUsPct: '1,00%',  votePpNb: '',       votePpPct: '',       voteNpNb: '',      voteNpPct: '',       voteUsNb: '100',   voteUsPct: '0,61%', type: 'nonec' },
+      { nom: 'PM3', fonction: 'Associé',                       capPpNb: '500',   capPpPct: '5,00%',  capNpNb: '',      capNpPct: '',        capUsNb: '',      capUsPct: '',       votePpNb: '500',    votePpPct: '3,03%',  voteNpNb: '',      voteNpPct: '',       voteUsNb: '',      voteUsPct: '',      type: 'nonec' },
+    ];
 
-      const bdr = `1px solid ${T.color.border}`;
+    const StepAssociesContent = ({ pcpSelection, lbcPersons }) => {
+      const [drawerOpen, setDrawerOpen]     = useState(false);
+      const [addedAssocies, setAddedAssocies] = useState([]);
+
+      const lbcHasDupont = (lbcPersons || []).some(p => p.selectedOption === 'M. DUPONT Jean');
+      const isExtended = pcpSelection === 'Dupont Jean' || lbcHasDupont;
+      const data     = isExtended ? ASSOCIES_DATA_EXTENDED : ASSOCIES_DATA;
+      const ecRows   = data.filter(r => r.type === 'ec');
+      const nonEcRows = data.filter(r => r.type === 'nonec');
+
+      // ── Tri multi-critères (descendant) ──────────────────────────────────
+      const parseNum = (str) => parseInt((str || '').replace(/[\s\u00a0]/g, '')) || 0;
+      const sortRows = (rows) => [...rows].sort((a, b) => {
+        if (isExtended) {
+          const d1 = parseNum(b.capPpNb) - parseNum(a.capPpNb);   // N°1 : PP
+          if (d1 !== 0) return d1;
+          const d2 = parseNum(b.capNpNb) - parseNum(a.capNpNb);   // N°2 : nue-propriété
+          if (d2 !== 0) return d2;
+          return parseNum(b.capUsNb) - parseNum(a.capUsNb);        // N°3 : usufruit
+        } else {
+          return parseNum(b.capNombre) - parseNum(a.capNombre);    // N°1 : PP uniquement
+        }
+      });
+      const sortedEc    = sortRows(ecRows);
+      const sortedNonEc = sortRows(nonEcRows);
+
+      const bdr  = `1px solid ${T.color.border}`;
       const bdrV = `1px solid ${T.color.border}`;
-      const fs = '14px';
+      const bdrW = `1px solid rgba(255,255,255,0.2)`;
+      const fs   = '14px';
 
-      // Data cell
-      const cell = {
-        padding: '11px 16px', fontSize: fs, color: T.color.textDark,
-        borderBottom: bdr, fontFamily: T.font, lineHeight: '20px',
-      };
+      const cell  = { padding: '11px 12px', fontSize: fs, color: T.color.textDark, borderBottom: bdr, fontFamily: T.font, lineHeight: '20px' };
       const cellR = { ...cell, textAlign: 'right', fontVariantNumeric: 'tabular-nums' };
+      const hGroup = { padding: '10px 12px', fontSize: fs, fontWeight: 700, textAlign: 'center', lineHeight: '20px', fontFamily: T.font, borderBottom: bdr, background: T.color.white };
+      const hSub   = { padding: '8px 12px', fontSize: '13px', fontWeight: 600, textAlign: 'center', color: T.color.gray, borderBottom: bdr, background: T.color.white, fontFamily: T.font, lineHeight: '20px' };
+      const sub    = { padding: '11px 12px', fontSize: fs, fontWeight: 700, color: T.color.primaryRed, background: T.color.redBg, borderBottom: bdr, fontFamily: T.font, lineHeight: '20px' };
+      const subR   = { ...sub, textAlign: 'right', fontVariantNumeric: 'tabular-nums' };
+      const tot    = { padding: '11px 12px', fontSize: fs, fontWeight: 700, color: T.color.white, background: T.color.primaryBlue, borderBottom: 'none', fontFamily: T.font, lineHeight: '20px' };
+      const totR   = { ...tot, textAlign: 'right', fontVariantNumeric: 'tabular-nums' };
 
-      // Header group (Participation / Droits de vote)
-      const hGroup = {
-        padding: '12px 16px', fontSize: fs, fontWeight: 700, textAlign: 'center',
-        lineHeight: '20px', fontFamily: T.font,
-        borderBottom: bdr, background: T.color.white,
-      };
-
-      // Sub-header (Nombre / %)
-      const hSub = {
-        padding: '9px 16px', fontSize: fs, fontWeight: 600, textAlign: 'center',
-        color: T.color.gray, borderBottom: bdr, background: T.color.white,
-        fontFamily: T.font, lineHeight: '20px',
-      };
-
-      // Sub-total row
-      const sub = {
-        padding: '11px 16px', fontSize: fs, fontWeight: 700, color: T.color.primaryRed,
-        background: T.color.redBg, borderBottom: bdr, fontFamily: T.font, lineHeight: '20px',
-      };
-      const subR = { ...sub, textAlign: 'right', fontVariantNumeric: 'tabular-nums' };
-
-      // Total row
-      const tot = {
-        padding: '11px 16px', fontSize: fs, fontWeight: 700, color: T.color.white,
-        background: T.color.primaryBlue, borderBottom: 'none', fontFamily: T.font, lineHeight: '20px',
-      };
-      const totR = { ...tot, textAlign: 'right', fontVariantNumeric: 'tabular-nums' };
-
-      // Empty/spacer row
-      const emp = {
-        padding: '9px 16px', fontSize: fs, color: T.color.gray,
-        borderBottom: bdr, fontFamily: T.font, background: T.color.white, lineHeight: '20px',
-      };
-      const empR = { ...emp, textAlign: 'right', fontVariantNumeric: 'tabular-nums' };
-
-      const renderRow = (r, idx) => (
+      // ── Tableau simple (Maude Dubois) : PP uniquement ─────────────────────
+      const renderRowSimple = (r, idx) => (
         <tr key={idx}>
           <td style={{ ...cell, fontWeight: 500, borderRight: bdrV }}>{r.nom}</td>
+          <td style={{ ...cell, borderRight: bdrV }}>{r.fonction}</td>
           <td style={cellR}>{r.capNombre}</td>
           <td style={{ ...cellR, borderRight: bdrV }}>{r.capPct}</td>
           <td style={cellR}>{r.voteNombre}</td>
           <td style={cellR}>{r.votePct}</td>
         </tr>
+      );
+
+      // ── Tableau étendu (Dupont Jean) : PP + NP + Usufruit ────────────────
+      const renderRowExtended = (r, idx) => (
+        <tr key={idx}>
+          <td style={{ ...cell, fontWeight: 500, borderRight: bdrV }}>{r.nom}</td>
+          <td style={{ ...cell, borderRight: bdrV }}>{r.fonction}</td>
+          <td style={cellR}>{r.capPpNb}</td>
+          <td style={{ ...cellR }}>{r.capPpPct}</td>
+          <td style={cellR}>{r.capNpNb}</td>
+          <td style={{ ...cellR }}>{r.capNpPct}</td>
+          <td style={cellR}>{r.capUsNb}</td>
+          <td style={{ ...cellR, borderRight: bdrV }}>{r.capUsPct}</td>
+          <td style={cellR}>{r.votePpNb}</td>
+          <td style={cellR}>{r.votePpPct}</td>
+          <td style={cellR}>{r.voteNpNb}</td>
+          <td style={cellR}>{r.voteNpPct}</td>
+          <td style={cellR}>{r.voteUsNb}</td>
+          <td style={cellR}>{r.voteUsPct}</td>
+        </tr>
+      );
+
+      const tableSimple = (
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr>
+              <th rowSpan="3" style={{ ...hGroup, textAlign: 'left', width: '20%', borderRight: bdrV, borderBottom: bdr, verticalAlign: 'bottom', paddingBottom: '9px' }}>
+                <span style={{ fontSize: fs, color: T.color.textDark }}>Nom Prénom</span><br/>
+                <span style={{ fontWeight: 400, fontSize: fs, color: T.color.gray }}>ou</span><br/>
+                <span style={{ fontSize: fs, color: T.color.textDark }}>Dénomination sociale</span>
+              </th>
+              <th rowSpan="3" style={{ ...hGroup, textAlign: 'left', width: '20%', borderRight: bdrV, borderBottom: bdr, verticalAlign: 'bottom', paddingBottom: '9px' }}>
+                <span style={{ fontSize: fs, color: T.color.textDark }}>Fonction</span>
+              </th>
+              <th colSpan="2" style={{ ...hGroup, color: T.color.primaryRed, borderRight: bdrV, borderBottom: bdr }}>Participation au capital</th>
+              <th colSpan="2" style={{ ...hGroup, color: T.color.primaryRed, borderBottom: bdr }}>Droits de vote</th>
+            </tr>
+            <tr>
+              <th colSpan="2" style={{ ...hSub, borderRight: bdrV, borderBottom: bdr }}>En pleine propriété</th>
+              <th colSpan="2" style={{ ...hSub, borderBottom: bdr }}>En pleine propriété</th>
+            </tr>
+            <tr>
+              <th style={hSub}>Nombre</th>
+              <th style={{ ...hSub, borderRight: bdrV }}>%</th>
+              <th style={hSub}>Nombre</th>
+              <th style={hSub}>%</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sortedEc.map(renderRowSimple)}
+            <tr>
+              <td style={{ ...sub, borderRight: bdrV }}>Sous-total EC</td>
+              <td style={{ ...sub, borderRight: bdrV }}></td>
+              <td style={subR}>6 000</td>
+              <td style={{ ...subR, borderRight: bdrV }}>60,00%</td>
+              <td style={subR}>12 000</td>
+              <td style={subR}>72,73%</td>
+            </tr>
+            {sortedNonEc.map(renderRowSimple)}
+            <tr>
+              <td style={{ ...sub, borderRight: bdrV }}>Sous-total non EC</td>
+              <td style={{ ...sub, borderRight: bdrV }}></td>
+              <td style={subR}>2 500</td>
+              <td style={{ ...subR, borderRight: bdrV }}>25,00%</td>
+              <td style={subR}>2 500</td>
+              <td style={subR}>15,15%</td>
+            </tr>
+            <tr>
+              <td style={{ ...tot, borderRight: bdrW }}>Total</td>
+              <td style={{ ...tot, borderRight: bdrW }}></td>
+              <td style={totR}>8 500</td>
+              <td style={{ ...totR, borderRight: bdrW }}>85,00%</td>
+              <td style={totR}>14 500</td>
+              <td style={totR}>87,88%</td>
+            </tr>
+          </tbody>
+        </table>
+      );
+
+      const tableExtended = (
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr>
+              <th rowSpan="3" style={{ ...hGroup, textAlign: 'left', width: '12%', borderRight: bdrV, borderBottom: bdr, verticalAlign: 'bottom', paddingBottom: '9px' }}>
+                <span style={{ fontSize: fs, color: T.color.textDark }}>Nom Prénom</span><br/>
+                <span style={{ fontWeight: 400, fontSize: fs, color: T.color.gray }}>ou</span><br/>
+                <span style={{ fontSize: fs, color: T.color.textDark }}>Dénomination sociale</span>
+              </th>
+              <th rowSpan="3" style={{ ...hGroup, textAlign: 'left', width: '14%', borderRight: bdrV, borderBottom: bdr, verticalAlign: 'bottom', paddingBottom: '9px' }}>
+                <span style={{ fontSize: fs, color: T.color.textDark }}>Fonction</span>
+              </th>
+              <th colSpan="6" style={{ ...hGroup, color: T.color.primaryRed, borderRight: bdrV, borderBottom: bdr }}>Participation au capital</th>
+              <th colSpan="6" style={{ ...hGroup, color: T.color.primaryRed, borderBottom: bdr }}>Droits de vote</th>
+            </tr>
+            <tr>
+              <th colSpan="2" style={{ ...hSub, borderBottom: bdr }}>En pleine propriété</th>
+              <th colSpan="2" style={{ ...hSub, borderBottom: bdr }}>En nue-propriété</th>
+              <th colSpan="2" style={{ ...hSub, borderRight: bdrV, borderBottom: bdr }}>En usufruit</th>
+              <th colSpan="2" style={{ ...hSub, borderBottom: bdr }}>En pleine propriété</th>
+              <th colSpan="2" style={{ ...hSub, borderBottom: bdr }}>En nue-propriété</th>
+              <th colSpan="2" style={{ ...hSub, borderBottom: bdr }}>En usufruit</th>
+            </tr>
+            <tr>
+              <th style={hSub}>Nombre</th><th style={hSub}>%</th>
+              <th style={hSub}>Nombre</th><th style={hSub}>%</th>
+              <th style={hSub}>Nombre</th><th style={{ ...hSub, borderRight: bdrV }}>%</th>
+              <th style={hSub}>Nombre</th><th style={hSub}>%</th>
+              <th style={hSub}>Nombre</th><th style={hSub}>%</th>
+              <th style={hSub}>Nombre</th><th style={hSub}>%</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sortedEc.map(renderRowExtended)}
+            <tr>
+              <td style={{ ...sub, borderRight: bdrV }}>Sous-total EC</td>
+              <td style={{ ...sub, borderRight: bdrV }}></td>
+              <td style={subR}>6 000</td><td style={subR}>60,00%</td>
+              <td style={subR}>1 300</td><td style={subR}>13,00%</td>
+              <td style={subR}>500</td><td style={{ ...subR, borderRight: bdrV }}>5,00%</td>
+              <td style={subR}>12 000</td><td style={subR}>72,73%</td>
+              <td style={subR}>1 800</td><td style={subR}>10,91%</td>
+              <td style={subR}>1 000</td><td style={subR}>6,06%</td>
+            </tr>
+            {sortedNonEc.map(renderRowExtended)}
+            <tr>
+              <td style={{ ...sub, borderRight: bdrV }}>Sous-total non EC</td>
+              <td style={{ ...sub, borderRight: bdrV }}></td>
+              <td style={subR}>2 500</td><td style={subR}>25,00%</td>
+              <td style={subR}>200</td><td style={subR}>2,00%</td>
+              <td style={subR}>1 000</td><td style={{ ...subR, borderRight: bdrV }}>10,00%</td>
+              <td style={subR}>2 500</td><td style={subR}>15,15%</td>
+              <td style={subR}>200</td><td style={subR}>1,21%</td>
+              <td style={subR}>1 000</td><td style={subR}>6,06%</td>
+            </tr>
+            <tr>
+              <td style={{ ...tot, borderRight: bdrW }}>Total</td>
+              <td style={{ ...tot, borderRight: bdrW }}></td>
+              <td style={totR}>8 500</td><td style={totR}>85,00%</td>
+              <td style={totR}>1 500</td><td style={totR}>15,00%</td>
+              <td style={totR}>1 500</td><td style={{ ...totR, borderRight: bdrW }}>15,00%</td>
+              <td style={totR}>14 500</td><td style={totR}>87,88%</td>
+              <td style={totR}>2 000</td><td style={totR}>12,12%</td>
+              <td style={totR}>2 000</td><td style={totR}>12,12%</td>
+            </tr>
+          </tbody>
+        </table>
       );
 
       return (
@@ -4412,80 +5377,66 @@
             <span style={{ color: T.color.primaryRed }}>*</span> Champs obligatoires
           </p>
 
-          <div style={{
-            background: T.color.white, borderRadius: T.radius, overflow: 'hidden',
-            boxShadow: T.shadow.card, border: bdr,
-          }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ borderBottom: bdr }}>
-                  <th rowSpan="2" style={{ ...hGroup, textAlign: 'left', width: '28%', borderRight: bdrV, borderBottom: bdr, verticalAlign: 'bottom', paddingBottom: '9px' }}>
-                    <span style={{ fontSize: fs, color: T.color.textDark }}>Nom Prénom</span><br/>
-                    <span style={{ fontWeight: 400, fontSize: fs, color: T.color.gray }}>ou</span>
-                  </th>
-                  <th colSpan="2" style={{ ...hGroup, color: T.color.primaryBlue, borderRight: bdrV, borderBottom: bdr }}>
-                    Participation<br/>au capital
-                  </th>
-                  <th colSpan="2" style={{ ...hGroup, color: T.color.primaryRed, borderBottom: bdr }}>
-                    Droits de vote
-                  </th>
-                </tr>
-                <tr>
-                  <th style={{ ...hSub }}>Nombre</th>
-                  <th style={{ ...hSub, borderRight: bdrV }}>%</th>
-                  <th style={{ ...hSub }}>Nombre</th>
-                  <th style={{ ...hSub }}>%</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ecRows.map(renderRow)}
-                <tr>
-                  <td style={{ ...sub, borderRight: bdrV }}>Sous-total EC</td>
-                  <td style={subR}>7 800</td>
-                  <td style={{ ...subR, borderRight: bdrV }}>67,83%</td>
-                  <td style={subR}>14 800</td>
-                  <td style={subR}>80,00%</td>
-                </tr>
-                {nonEcRows.map(renderRow)}
-                <tr>
-                  <td style={{ ...sub, borderRight: bdrV }}>Sous-total non EC</td>
-                  <td style={subR}>3 700</td>
-                  <td style={{ ...subR, borderRight: bdrV }}>32,17%</td>
-                  <td style={subR}>3 700</td>
-                  <td style={subR}>20,00%</td>
-                </tr>
-                <tr>
-                  <td style={{ ...emp, borderRight: bdrV }}></td>
-                  <td style={empR}>0</td>
-                  <td style={{ ...empR, borderRight: bdrV }}>0,00%</td>
-                  <td style={empR}>0</td>
-                  <td style={empR}>0,00%</td>
-                </tr>
-                <tr>
-                  <td style={{ ...tot, borderRight: `1px solid rgba(255,255,255,0.2)` }}>Total</td>
-                  <td style={totR}>11 500</td>
-                  <td style={{ ...totR, borderRight: `1px solid rgba(255,255,255,0.2)` }}>100,00%</td>
-                  <td style={totR}>18 500</td>
-                  <td style={totR}>100,00%</td>
-                </tr>
-                <tr>
-                  <td style={{ ...emp, borderRight: bdrV, borderBottom: 'none' }}></td>
-                  <td style={{ ...empR, borderBottom: 'none' }}>0</td>
-                  <td style={{ ...empR, borderRight: bdrV, borderBottom: 'none' }}>0,00%</td>
-                  <td style={{ ...empR, borderBottom: 'none' }}>0</td>
-                  <td style={{ ...empR, borderBottom: 'none' }}>0,00%</td>
-                </tr>
-              </tbody>
-            </table>
+          <div style={{ background: T.color.white, borderRadius: T.radius, overflowX: 'auto', boxShadow: T.shadow.card, border: bdr }}>
+            {isExtended ? tableExtended : tableSimple}
           </div>
 
-          <button style={{
+          {/* Associés ajoutés via le drawer */}
+          {addedAssocies.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <p style={{ fontSize: '13px', fontWeight: 600, color: T.color.gray, margin: 0 }}>
+                Associés ajoutés ({addedAssocies.length})
+              </p>
+              {addedAssocies.map((a, idx) => (
+                <div key={idx} style={{
+                  background: T.color.white, border: `1px solid ${T.color.border}`,
+                  borderRadius: T.radius, padding: '12px 16px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  boxShadow: T.shadow.card,
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{
+                      width: '32px', height: '32px', borderRadius: '50%', flexShrink: 0,
+                      background: a.type === 'pp' ? '#EFF6FF' : '#F5F3FF',
+                      border: `1px solid ${a.type === 'pp' ? '#BFDBFE' : '#DDD6FE'}`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '12px', fontWeight: 700,
+                      color: a.type === 'pp' ? T.color.primaryBlue : '#7C3AED',
+                    }}>
+                      {a.type === 'pp' ? 'PP' : 'PM'}
+                    </div>
+                    <div>
+                      <p style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: T.color.textDark }}>{a.label || '—'}</p>
+                      <p style={{ margin: '2px 0 0', fontSize: '12px', color: T.color.gray }}>
+                        {a.exerceSociete === 'Oui' ? `${(a.participations || []).map(p => p.natureDroits).filter(Boolean).join(', ')} · Exerce dans la société` : "N'exerce pas dans la société"}
+                      </p>
+                    </div>
+                  </div>
+                  <button onClick={() => setAddedAssocies(prev => prev.filter((_, i) => i !== idx))} style={{
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    fontSize: '13px', color: T.color.gray, fontFamily: T.font, padding: '4px 8px',
+                  }}>
+                    Retirer
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <button onClick={() => setDrawerOpen(true)} style={{
             background: 'none', border: `1px solid ${T.color.border}`, borderRadius: T.radius,
             padding: '8px 20px', cursor: 'pointer', alignSelf: 'flex-start',
             fontSize: '14px', fontWeight: 500, color: T.color.primaryBlue, fontFamily: T.font,
+            display: 'flex', alignItems: 'center', gap: '6px',
           }}>
             + Ajouter un associé
           </button>
+
+          <DrawerAjoutAssocie
+            isOpen={drawerOpen}
+            onClose={() => setDrawerOpen(false)}
+            onAdd={(assoc) => setAddedAssocies(prev => [...prev, assoc])}
+          />
         </div>
       );
     };
@@ -4598,6 +5549,8 @@
       const [step5, setStep5] = useState({});
       const [stepPCP, setStepPCP] = useState({});
       const [stepLBC, setStepLBC] = useState({});
+      const [stepConsent, setStepConsent] = useState({});
+      const [stepPieces, setStepPieces] = useState({});
       const [stepAdmin, setStepAdmin] = useState({});
       const [step4Attempted, setStep4Attempted] = useState(false);
       const [lbcAttempted, setLbcAttempted] = useState(false);
@@ -4676,6 +5629,12 @@
         setStepPCP(prev => ({ ...prev, [key]: typeof value === 'function' ? value(prev[key]) : value }));
       }, []);
 
+      const updateStepPieces = useCallback((key, value) => {
+        setStepPieces(prev => ({ ...prev, [key]: typeof value === 'function' ? value(prev[key]) : value }));
+      }, []);
+      const updateStepConsent = useCallback((key, value) => {
+        setStepConsent(prev => ({ ...prev, [key]: typeof value === 'function' ? value(prev[key]) : value }));
+      }, []);
       const updateStepLBC = useCallback((key, value) => {
         setStepLBC(prev => ({ ...prev, [key]: typeof value === 'function' ? value(prev[key]) : value }));
       }, []);
@@ -4691,7 +5650,9 @@
           case ADMIN_STEP: return <StepAdminContent data={stepAdmin} update={updateStepAdmin} formeJuridique={step3.formeJuridique} />;
           case "Personne de contact principal": return <StepPCPContent data={stepPCP} update={updateStepPCP} />;
           case LBC_STEP: return <StepLBCContent data={stepLBC} update={updateStepLBC} showError={lbcAttempted} />;
-          case "Liste des associés": return <StepAssociesContent />;
+          case "Liste des associés": return <StepAssociesContent pcpSelection={stepPCP?.pcp} lbcPersons={stepLBC?.persons} />;
+          case "Pièces justificatives": return <StepPiecesContent data={stepPieces} update={updateStepPieces} />;
+          case "Consentement et RGPD": return <StepConsentementContent data={stepConsent} update={updateStepConsent} />;
           default: return (
             <div style={{ padding: '40px', textAlign: 'center', color: T.color.gray }}>
               <h2 style={{ fontSize: '24px', fontWeight: 700, color: T.color.textDark, marginBottom: '16px' }}>
