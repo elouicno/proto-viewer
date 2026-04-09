@@ -4685,56 +4685,17 @@
     // ============================================================
     // Drawer: Ajouter un associé
     // ============================================================
-    const NATURE_DROITS_DRAWER = ["Pleine propriété", "Nue-propriété", "Usufruit", "Indivision"];
-
     const DrawerAjoutAssocie = ({ isOpen, onClose, onAdd }) => {
-      const [type, setType]               = useState('');
-      const [ppSearchMode, setPpSearchMode] = useState(null);
-      const [ppSearchLabel, setPpSearchLabel] = useState('');
-      const [ppData, setPpData]           = useState({});
-      const [pmSearchMode, setPmSearchMode] = useState(null);
-      const [pmSearchLabel, setPmSearchLabel] = useState('');
-      const [pmData, setPmData]           = useState({});
-      const [statut, setStatut]           = useState('');
-      const [croec, setCroec]             = useState('');
-      const [pays, setPays]               = useState('');
-      const [organisation, setOrganisation] = useState('');
-      const [numeroImmat, setNumeroImmat] = useState('');
-      const [profession, setProfession]   = useState('');
-      const [exerceSociete, setExerceSociete] = useState('');
-      const [participations, setParticipations] = useState([{}]);
-      const [success, setSuccess]         = useState(false);
+      const [type, setType]     = useState('');
+      const [ppData, setPpData] = useState({});
+      const [pmData, setPmData] = useState({});
+      const [success, setSuccess] = useState(false);
 
-      const reset = () => {
-        setType(''); setPpSearchMode(null); setPpSearchLabel(''); setPpData({});
-        setPmSearchMode(null); setPmSearchLabel(''); setPmData({});
-        setStatut(''); setCroec(''); setPays(''); setOrganisation(''); setNumeroImmat(''); setProfession('');
-        setExerceSociete(''); setParticipations([{}]);
-        setSuccess(false);
-      };
-
+      const reset = () => { setType(''); setPpData({}); setPmData({}); setSuccess(false); };
       const handleClose = () => { reset(); onClose(); };
 
-      // Progressive disclosure
-      const ppFicheVisible  = type === 'pp' && (ppSearchMode === 'selected' || ppSearchMode === 'manual');
-      const pmFicheVisible  = type === 'pm' && (pmSearchMode === 'selected' || pmSearchMode === 'manual');
-      const ficheVisible    = ppFicheVisible || pmFicheVisible;
-      const isSelectedMode  = (type === 'pp' && ppSearchMode === 'selected') || (type === 'pm' && pmSearchMode === 'selected');
-      const isManualMode    = (type === 'pp' && ppSearchMode === 'manual')   || (type === 'pm' && pmSearchMode === 'manual');
-      // "Cet associé :" radios : manual mode only (PP & PM)
-      const questionsVisible = isManualMode;
-      // OuiNon apparaît : en selected (direct) ou en manual quand statut rempli
-      const conditionQMet   = isSelectedMode
-        || (statut === 'ec_france'     && croec !== '')
-        || (statut === 'ec_hors_france' && pays !== '')
-        || (statut === 'non_ec'        && profession.trim() !== '');
-      const exerciceVisible     = ficheVisible && conditionQMet;
-      // Participation : uniquement si OUI
-      const participationVisible = exerciceVisible && exerceSociete === 'Oui';
-      // Peut valider : OUI + au moins une ligne avec natureDroits remplie, OU Non
-      const participationValid = participations.some(p => p.natureDroits);
-      const canAdd = exerciceVisible && exerceSociete !== ''
-        && (exerceSociete === 'Non' || participationValid);
+      const updatePP = (k, v) => setPpData(prev => ({ ...prev, [k]: v }));
+      const updatePM = (k, v) => setPmData(prev => ({ ...prev, [k]: v }));
 
       const getLabel = () => {
         if (type === 'pp') return `${ppData.civilite || ''} ${ppData.nom || ''} ${ppData.prenom || ''}`.trim();
@@ -4742,23 +4703,16 @@
         return '';
       };
 
+      // Peut valider dès qu'une recherche a abouti (selected ou manual)
+      const canAdd = type !== '' && (
+        type === 'pp' ? ppData.searchMode !== undefined : pmData.pmSearchMode !== undefined
+      );
+
       const handleAdd = () => {
         if (!canAdd) return;
-        onAdd({ type, label: getLabel(), participations, exerceSociete });
+        onAdd({ type, label: getLabel() });
         setSuccess(true);
       };
-
-      // Inline radio row helper
-      const RadioRow = ({ label, value, selected, onSelect }) => (
-        <label onClick={() => onSelect(value)} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', marginBottom: '10px' }}>
-          <div style={{ width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0,
-            border: `2px solid ${selected ? T.color.primaryBlue : T.color.borderMedium}`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', background: T.color.white }}>
-            {selected && <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: T.color.primaryBlue }} />}
-          </div>
-          <span style={{ fontSize: '14px', color: T.color.textDark, lineHeight: 1.5 }}>{label}</span>
-        </label>
-      );
 
       if (!isOpen) return null;
 
@@ -4771,7 +4725,7 @@
 
           {/* Panel latéral droit */}
           <div style={{
-            position: 'fixed', top: 0, right: 0, bottom: 0, width: '520px',
+            position: 'fixed', top: 0, right: 0, bottom: 0, width: '50%',
             background: T.color.white, zIndex: 1001, display: 'flex', flexDirection: 'column',
             boxShadow: '-6px 0 32px rgba(0,0,0,0.14)', fontFamily: T.font,
           }}>
@@ -4812,297 +4766,56 @@
                     Associé ajouté avec succès
                   </p>
                   <p style={{ fontSize: '14px', color: T.color.gray, margin: 0, textAlign: 'center', maxWidth: '300px', lineHeight: 1.5 }}>
-                    {getLabel()}{exerceSociete === 'Oui' && participations[0]?.natureDroits ? ` — ${participations[0].natureDroits}` : ''}
+                    {getLabel()}
                   </p>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%', marginTop: '24px' }}>
                     <button onClick={reset} style={{
                       width: '100%', padding: '11px', border: `1px solid ${T.color.primaryBlue}`,
                       borderRadius: T.radius, background: 'none', color: T.color.primaryBlue,
                       fontSize: '14px', fontWeight: 600, cursor: 'pointer',
-                    }}>
-                      + Ajouter un autre associé
-                    </button>
+                    }}>+ Ajouter un autre associé</button>
                     <button onClick={handleClose} style={{
                       width: '100%', padding: '11px', border: 'none',
                       borderRadius: T.radius, background: T.color.primaryBlue, color: T.color.white,
                       fontSize: '14px', fontWeight: 600, cursor: 'pointer',
-                    }}>
-                      Fermer
-                    </button>
+                    }}>Fermer</button>
                   </div>
                 </div>
               ) : (
                 <>
-                  {/* ─── Section 1 : Type de personne ─── */}
-                  <div style={{ marginBottom: '28px' }}>
-                    <p style={{ fontSize: '14px', fontWeight: 600, color: T.color.textDark, margin: '0 0 14px 0' }}>
+                  {/* ─── Type de personne ─── */}
+                  <div style={{ marginBottom: '24px' }}>
+                    <p style={{ fontSize: '14px', fontWeight: 600, color: T.color.textDark, margin: '0 0 12px 0' }}>
                       <span style={{ color: T.color.primaryRed }}>* </span>Type de personne à ajouter
                     </p>
-                    <RadioRow label="Personne physique" value="pp" selected={type === 'pp'}
-                      onSelect={(v) => { setType(v); setPpSearchMode(null); setPpSearchLabel(''); setPpData({}); setPmSearchMode(null); setPmSearchLabel(''); setPmData({}); setStatut(''); setCroec(''); setPays(''); setProfession(''); setExerceSociete(''); setParticipations([{}]); }} />
-                    <RadioRow label="Personne morale" value="pm" selected={type === 'pm'}
-                      onSelect={(v) => { setType(v); setPpSearchMode(null); setPpSearchLabel(''); setPpData({}); setPmSearchMode(null); setPmSearchLabel(''); setPmData({}); setStatut(''); setCroec(''); setPays(''); setProfession(''); setExerceSociete(''); setParticipations([{}]); }} />
+                    {[{ val: 'pp', label: 'Personne physique' }, { val: 'pm', label: 'Personne morale' }].map(({ val, label }) => {
+                      const sel = type === val;
+                      return (
+                        <label key={val} onClick={() => { setType(val); setPpData({}); setPmData({}); }}
+                          style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', marginBottom: '10px' }}>
+                          <div style={{ width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0,
+                            border: `2px solid ${sel ? T.color.primaryBlue : T.color.borderMedium}`,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', background: T.color.white }}>
+                            {sel && <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: T.color.primaryBlue }} />}
+                          </div>
+                          <span style={{ fontSize: '14px', color: T.color.textDark }}>{label}</span>
+                        </label>
+                      );
+                    })}
                   </div>
 
-                  {/* ─── Section 2a : Recherche Personne Physique ─── */}
+                  {/* ─── Personne Physique : comportement iso RL PP ─── */}
                   {type === 'pp' && (
-                    <div style={{ marginBottom: '24px', paddingTop: '20px', borderTop: `1px solid ${T.color.border}` }}>
-                      <PersonSearchAutocomplete
-                        searchMode={ppSearchMode}
-                        selectedLabel={ppSearchLabel}
-                        onSelectPerson={(p) => {
-                          setPpSearchMode('selected');
-                          setPpSearchLabel(`${p.civilite} ${p.nom} ${p.prenom} - ${p.region}`);
-                          setPpData({ ...p });
-                          setStatut(''); setCroec(''); setPays(''); setProfession('');
-                          setExerceSociete(''); setParticipations([{}]);
-                        }}
-                        onManual={() => {
-                          setPpSearchMode('manual');
-                          setPpSearchLabel('+ Renseignez manuellement');
-                          setPpData({});
-                          setStatut(''); setCroec(''); setPays(''); setProfession('');
-                          setExerceSociete(''); setParticipations([{}]);
-                        }}
-                        onClear={() => {
-                          setPpSearchMode(null); setPpSearchLabel(''); setPpData({});
-                          setStatut(''); setCroec(''); setPays(''); setProfession('');
-                          setExerceSociete(''); setParticipations([{}]);
-                        }}
-                      />
-
-                      {/* Résultat trouvé → lecture seule */}
-                      {ppSearchMode === 'selected' && (
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
-                          <ReadOnlyField label="Prénom" value={ppData.prenom} />
-                          <ReadOnlyField label="Nom" value={ppData.nom} />
-                          <ReadOnlyField label="CRO principal" value={ppData.conseilRegional} />
-                        </div>
-                      )}
-
-                      {/* Mode manuel PP */}
-                      {ppSearchMode === 'manual' && (
-                        <div>
-                          <div style={{ marginBottom: '14px' }}>
-                            <p style={{ fontSize: '14px', fontWeight: 600, color: T.color.textDark, margin: '0 0 8px 0' }}>
-                              <span style={{ color: '#C81E1E' }}>* </span>Civilité
-                            </p>
-                            <div style={{ display: 'flex', gap: '24px' }}>
-                              {CIVILITE_OPTIONS.map(opt => {
-                                const sel = ppData.civilite === opt;
-                                return (
-                                  <label key={opt} onClick={() => setPpData(prev => ({ ...prev, civilite: opt }))}
-                                    style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                                    <div style={{ width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0,
-                                      border: `2px solid ${sel ? T.color.primaryBlue : T.color.borderMedium}`,
-                                      display: 'flex', alignItems: 'center', justifyContent: 'center', background: T.color.white }}>
-                                      {sel && <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: T.color.primaryBlue }} />}
-                                    </div>
-                                    <span style={{ fontSize: '14px', color: T.color.textDark }}>{opt}</span>
-                                  </label>
-                                );
-                              })}
-                            </div>
-                          </div>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-                            <FieldInput label="Nom de famille" required value={ppData.nom || ''} onChange={v => setPpData(prev => ({ ...prev, nom: v }))} />
-                            <FieldInput label="Prénom" required value={ppData.prenom || ''} onChange={v => setPpData(prev => ({ ...prev, prenom: v }))} />
-                          </div>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-                            <FieldInput label="Prénom 2" value={ppData.prenom2 || ''} onChange={v => setPpData(prev => ({ ...prev, prenom2: v }))} />
-                            <FieldInput label="Prénom 3" value={ppData.prenom3 || ''} onChange={v => setPpData(prev => ({ ...prev, prenom3: v }))} />
-                          </div>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-                            <FieldInput label="Prénom 4" value={ppData.prenom4 || ''} onChange={v => setPpData(prev => ({ ...prev, prenom4: v }))} />
-                            <FieldSelect label="Nationalité" required value={ppData.nationalite || ''} onChange={v => setPpData(prev => ({ ...prev, nationalite: v }))} options={PAYS_OPTIONS} placeholder="Sélectionnez" />
-                          </div>
-                          <AddressBlock
-                            data={ppData}
-                            onChange={(k, v) => setPpData(prev => ({ ...prev, [k]: v }))}
-                            onSelectAddress={(fields) => setPpData(prev => ({ ...prev, ...fields }))}
-                          />
-                        </div>
-                      )}
+                    <div style={{ paddingTop: '20px', borderTop: `1px solid ${T.color.border}` }}>
+                      <PersonnePhysiqueCard data={ppData} update={updatePP} profile="SEC" />
                     </div>
                   )}
 
-                  {/* ─── Section 2b : Recherche Personne Morale ─── */}
+                  {/* ─── Personne Morale : comportement iso RL PM ─── */}
                   {type === 'pm' && (
-                    <div style={{ marginBottom: '24px', paddingTop: '20px', borderTop: `1px solid ${T.color.border}` }}>
-                      <SocieteSearchAutocomplete
-                        searchMode={pmSearchMode}
-                        selectedLabel={pmSearchLabel}
-                        onSelectSociete={(s) => {
-                          setPmSearchMode('selected');
-                          setPmSearchLabel(`${s.siren} - ${s.denomination}`);
-                          setPmData({ ...s });
-                          setExerceSociete(''); setParticipations([{}]);
-                        }}
-                        onManual={() => {
-                          setPmSearchMode('manual');
-                          setPmSearchLabel('+ Renseignez manuellement');
-                          setPmData({});
-                          setExerceSociete(''); setParticipations([{}]);
-                        }}
-                        onClear={() => {
-                          setPmSearchMode(null); setPmSearchLabel(''); setPmData({});
-                          setExerceSociete(''); setParticipations([{}]);
-                        }}
-                      />
-
-                      {/* Résultat trouvé PM → lecture seule */}
-                      {pmSearchMode === 'selected' && (
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                          <ReadOnlyField label="Dénomination sociale" value={pmData.denomination} />
-                          <ReadOnlyField label="SIREN" value={pmData.siren} />
-                        </div>
-                      )}
-
-                      {/* Mode manuel PM */}
-                      {pmSearchMode === 'manual' && (
-                        <div>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-                            <FieldInput label="Dénomination sociale" required value={pmData.denomination || ''} onChange={v => setPmData(prev => ({ ...prev, denomination: v }))} />
-                            <FieldSelect label="Forme juridique" required value={pmData.formeJuridique || ''} onChange={v => setPmData(prev => ({ ...prev, formeJuridique: v }))} options={FORMES_JURIDIQUES_PM} placeholder="Sélectionnez" />
-                          </div>
-                          {pmData.formeJuridique === 'Autre' && (
-                            <div style={{ marginBottom: '12px' }}>
-                              <FieldInput label="Autre — précisez" required value={pmData.formeJuridiqueAutre || ''} onChange={v => setPmData(prev => ({ ...prev, formeJuridiqueAutre: v }))} />
-                            </div>
-                          )}
-                          <div style={{ marginBottom: '12px' }}>
-                            <FieldInput label="SIREN" required value={pmData.siren || ''} onChange={v => setPmData(prev => ({ ...prev, siren: v }))} />
-                          </div>
-                          <p style={{ fontSize: '14px', fontWeight: 600, color: T.color.textDark, margin: '0 0 12px 0' }}>Adresse du siège social</p>
-                          <AddressBlock
-                            data={pmData}
-                            onChange={(k, v) => setPmData(prev => ({ ...prev, [k]: v }))}
-                            onSelectAddress={(fields) => setPmData(prev => ({ ...prev, ...fields }))}
-                          />
-                        </div>
-                      )}
+                    <div style={{ paddingTop: '20px', borderTop: `1px solid ${T.color.border}` }}>
+                      <PersonneMoraleCard data={pmData} update={updatePM} profile="SEC" />
                     </div>
-                  )}
-
-                  {/* ─── Section 3 : Questions complémentaires (PP uniquement) ─── */}
-                  {questionsVisible && (
-                    <div style={{ marginBottom: '24px', paddingTop: '20px', borderTop: `1px solid ${T.color.border}` }}>
-                      <p style={{ fontSize: '14px', fontWeight: 600, color: T.color.textDark, margin: '0 0 12px 0' }}>
-                        <span style={{ color: T.color.primaryRed }}>* </span>Cet associé :
-                      </p>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-
-                        {/* Option 0 — En cours d'inscription */}
-                        {[
-                          { val: 'ec_france',      label: "Il est en cours d'inscription au Tableau de l'ordre des experts-comptables" },
-                          { val: 'ec_hors_france',  label: "Il exerce la profession d'expert-comptable dans un pays de l'UE ou de l'EEE (voire en Suisse - possibilité uniquement pour les SEL)" },
-                          { val: 'non_ec',          label: "Il n'exerce pas la profession d'expert-comptable" },
-                        ].map(({ val, label }, optIdx) => {
-                          const sel = statut === val;
-                          return (
-                            <div key={val}>
-                              <label onClick={() => { setStatut(val); setCroec(''); setPays(''); setOrganisation(''); setNumeroImmat(''); setProfession(''); setExerceSociete(''); setParticipations([{}]); }} style={{
-                                display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer',
-                                background: sel ? T.color.radioBg : 'transparent',
-                                border: `1px solid ${sel ? T.color.primaryBlue : T.color.border}`,
-                                borderRadius: T.radius,
-                                borderBottomLeftRadius: sel ? '0' : T.radius,
-                                borderBottomRightRadius: sel ? '0' : T.radius,
-                                padding: '12px 14px',
-                              }}>
-                                <div style={{
-                                  width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0, marginTop: '2px',
-                                  border: `2px solid ${sel ? T.color.primaryBlue : T.color.borderMedium}`,
-                                  display: 'flex', alignItems: 'center', justifyContent: 'center', background: T.color.white,
-                                }}>
-                                  {sel && <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: T.color.primaryBlue }} />}
-                                </div>
-                                <span style={{ fontSize: '14px', color: T.color.textDark, lineHeight: '1.4' }}>{label}</span>
-                              </label>
-
-                              {/* Panel inline — option 0 : CROEC */}
-                              {optIdx === 0 && sel && (
-                                <div style={{
-                                  padding: '14px', background: T.color.radioBg,
-                                  border: `1px solid ${T.color.primaryBlue}`, borderTop: 'none',
-                                  borderBottomLeftRadius: T.radius, borderBottomRightRadius: T.radius,
-                                }}>
-                                  <FieldSelect
-                                    label="Conseil régional de l'Ordre d'inscription en cours"
-                                    required value={croec}
-                                    onChange={v => { setCroec(v); setExerceSociete(''); setParticipations([{}]); }}
-                                    options={CROEC_OPTIONS} placeholder="Sélectionnez"
-                                  />
-                                </div>
-                              )}
-
-                              {/* Panel inline — option 1 : Pays UE/EEE + Organisation + N° */}
-                              {optIdx === 1 && sel && (
-                                <div style={{
-                                  padding: '14px', background: T.color.radioBg,
-                                  border: `1px solid ${T.color.primaryBlue}`, borderTop: 'none',
-                                  borderBottomLeftRadius: T.radius, borderBottomRightRadius: T.radius,
-                                  display: 'flex', flexDirection: 'column', gap: '14px',
-                                }}>
-                                  <FieldSelect
-                                    label="Pays d'exercice"
-                                    required value={pays}
-                                    onChange={v => { setPays(v); setExerceSociete(''); setParticipations([{}]); }}
-                                    options={PAYS_EXERCICE_UE_EEE} placeholder="Sélectionnez"
-                                  />
-                                  <FieldInput
-                                    label="À quelle organisation de la profession comptable adhère cet associé dans ce pays ?"
-                                    value={organisation} onChange={setOrganisation}
-                                  />
-                                  <FieldInput
-                                    label="Numéro d'immatriculation étranger"
-                                    value={numeroImmat} onChange={setNumeroImmat}
-                                  />
-                                </div>
-                              )}
-
-                              {/* Panel inline — option 2 : Profession libre */}
-                              {optIdx === 2 && sel && (
-                                <div style={{
-                                  padding: '14px', background: T.color.radioBg,
-                                  border: `1px solid ${T.color.primaryBlue}`, borderTop: 'none',
-                                  borderBottomLeftRadius: T.radius, borderBottomRightRadius: T.radius,
-                                }}>
-                                  <FieldInput
-                                    label="Quelle est la profession de cet associé ?"
-                                    required value={profession}
-                                    onChange={v => { setProfession(v); }}
-                                    placeholder="Saisissez la profession"
-                                  />
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* ─── Section 4 : Exercice dans la société ─── */}
-                  {exerciceVisible && (
-                    <div style={{ paddingTop: '20px', borderTop: `1px solid ${T.color.border}`, marginBottom: participationVisible ? '0' : '0' }}>
-                      <OuiNon
-                        label="Cet associé exercera-t-il au sein de la société en cours d'inscription ?"
-                        required
-                        value={exerceSociete}
-                        onChange={(v) => { setExerceSociete(v); setParticipations([{}]); }}
-                      />
-                    </div>
-                  )}
-
-                  {/* ─── Section 5 : Participation ─── */}
-                  {participationVisible && (
-                    <ParticipationSection
-                      items={participations}
-                      onAdd={() => setParticipations(prev => [...prev, {}])}
-                      onUpdate={(idx, data) => setParticipations(prev => prev.map((p, i) => i === idx ? data : p))}
-                      onRemove={(idx) => setParticipations(prev => prev.filter((_, i) => i !== idx))}
-                    />
                   )}
                 </>
               )}
