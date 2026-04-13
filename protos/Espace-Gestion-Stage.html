@@ -846,13 +846,6 @@ function FormationsTable({ data }) {
     return null;
   };
 
-  const ELearningIcon = () => (
-    <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-  );
-  const PresentielIcon = () => (
-    <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
-  );
-
   const thClass = "px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-[#9AA3B2] bg-[#FAFBFC]";
 
   return (
@@ -880,7 +873,9 @@ function FormationsTable({ data }) {
                 <div className="flex flex-col gap-1">
                   {row.dates.map((d, di) => (
                     <span key={di} className={`inline-flex items-center gap-1 text-[12px] font-medium whitespace-nowrap ${d.fmt === "E-learning" ? "text-[#2B5BA8]" : "text-[#9B3A2E]"}`}>
-                      {d.fmt === "E-learning" ? <ELearningIcon /> : <PresentielIcon />}
+                      {d.fmt === "E-learning"
+                        ? <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+                        : <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>}
                       {d.fmt === "E-learning" ? "E-learning" : "Présentiel"}
                     </span>
                   ))}
@@ -1323,6 +1318,92 @@ function DiplomesTab({ data }) {
 // ══════════════════════════════════════════════════════════════
 // RECORD PAGE (existing Fiche Stagiaire)
 // ══════════════════════════════════════════════════════════════
+
+// ══════════════════════════════════════════════════════════════
+// FORMATIONS PAGE — vue dédiée formations d'un stagiaire
+// Header identique à RecordPage, titre = "Formations"
+// ══════════════════════════════════════════════════════════════
+function FormationsPage({ row }) {
+  const data = buildRecordData(row);
+  const [filterStatut, setFilterStatut] = useState("Tous");
+  const [filterFormat, setFilterFormat] = useState("Tous");
+
+  const statuts = ["Tous", "Validée", "En cours", "À venir", "Invalidée"];
+  const formats = ["Tous", "E-learning", "Présentiel"];
+
+  const filtered = data.formations
+    .filter(f => {
+      const statutOk = filterStatut === "Tous" || f.statut === filterStatut;
+      const formatOk = filterFormat === "Tous" || f.dates.some(d => d.fmt === filterFormat);
+      return statutOk && formatOk;
+    })
+    .map(f => ({
+      ...f,
+      dates: filterFormat === "Tous" ? f.dates : f.dates.filter(d => d.fmt === filterFormat),
+    }));
+
+  const chipBase = "px-3 py-1 rounded-full text-[12px] font-medium border transition-colors cursor-pointer whitespace-nowrap";
+  const chipActive = "bg-[#03234D] text-white border-[#03234D]";
+  const chipInactive = "bg-white text-[#5C5C5C] border-[#C9C9C9] hover:border-[#03234D] hover:text-[#03234D]";
+
+  return (
+    <>
+      <div className="bg-[#F3F3F3] px-4 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded bg-[#FF5D2D] flex items-center justify-center">
+              <GraduationCap size={16} className="text-white" />
+            </div>
+            <div>
+              <p className="text-[13px] text-[#5C5C5C] leading-[18px]">Stagiaire</p>
+              <p className="text-[28px] text-[#03234D] leading-[35px]">Formations</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="flex border border-[#5C5C5C] rounded-full overflow-hidden">
+              <button className="px-4 h-8 text-[14px] text-[#0250D9] bg-white border-r border-[#5C5C5C]">Modifier</button>
+              <button className="px-4 h-8 text-[14px] text-[#0250D9] bg-white">Supprimer</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <HighlightsPanel fields={data.highlights} />
+      <div className="flex-1 overflow-auto px-4 pt-4">
+        <div className="max-w-[1408px]">
+          <div className="bg-white rounded-[20px] overflow-hidden">
+            {/* Header + filtres */}
+            <div className="px-4 py-3 border-b border-[#F3F3F3]">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded bg-[#FF5D2D] flex items-center justify-center">
+                    <GraduationCap size={12} className="text-white" />
+                  </div>
+                  <span className="text-[16px] font-semibold text-[#03234D]">Formations</span>
+                  <span className="text-[13px] text-[#5C5C5C]">({filtered.length} / {data.formations.length})</span>
+                </div>
+              </div>
+              {/* Filtres Statut */}
+              <div className="flex items-center gap-2 flex-wrap mb-2">
+                <span className="text-[12px] text-[#5C5C5C] font-medium w-[52px]">Statut</span>
+                {statuts.map(s => (
+                  <button key={s} onClick={() => setFilterStatut(s)} className={`${chipBase} ${filterStatut === s ? chipActive : chipInactive}`}>{s}</button>
+                ))}
+              </div>
+              {/* Filtres Format */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[12px] text-[#5C5C5C] font-medium w-[52px]">Format</span>
+                {formats.map(f => (
+                  <button key={f} onClick={() => setFilterFormat(f)} className={`${chipBase} ${filterFormat === f ? chipActive : chipInactive}`}>{f}</button>
+                ))}
+              </div>
+            </div>
+            <FormationsTable data={filtered} />
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
 
 function RecordPage({ row }) {
   const [activeTab, setActiveTab] = useState("stage");
@@ -2467,9 +2548,14 @@ function App() {
 
   const handleNavigateToRecord = (row) => {
     const tabId = "record:" + row.numInscription;
+    const formationsTabId = "formations:" + row.numInscription;
     setOpenTabs(prev => {
       const exists = prev.find(t => t.id === tabId);
-      if (!exists) return [...prev, { type: "record", id: tabId, label: row.stagiaire, data: row }];
+      if (!exists) return [
+        ...prev,
+        { type: "record", id: tabId, label: row.stagiaire, data: row },
+        { type: "formations", id: formationsTabId, label: "Formations", data: row },
+      ];
       return prev;
     });
     setActivePage(tabId);
@@ -2487,8 +2573,12 @@ function App() {
 
   const handleCloseTab = (e, tabId) => {
     e.stopPropagation();
-    setOpenTabs(prev => prev.filter(t => t.id !== tabId));
-    if (activePage === tabId) {
+    // If closing a record tab, also close its formations companion, and vice versa
+    let companionId = null;
+    if (tabId.startsWith("record:")) companionId = "formations:" + tabId.replace("record:", "");
+    if (tabId.startsWith("formations:")) companionId = "record:" + tabId.replace("formations:", "");
+    setOpenTabs(prev => prev.filter(t => t.id !== tabId && t.id !== companionId));
+    if (activePage === tabId || activePage === companionId) {
       setActivePage("list");
     }
   };
@@ -2554,6 +2644,7 @@ function App() {
       {isListActive && <ListViewPage onNavigateToRecord={handleNavigateToRecord} />}
       {isGroupesActive && <GroupesListViewPage onNavigateToGroupe={handleNavigateToGroupe} />}
       {activeTab && activeTab.type === "record" && <RecordPage row={activeTab.data} />}
+      {activeTab && activeTab.type === "formations" && <FormationsPage row={activeTab.data} />}
       {activeTab && activeTab.type === "groupe" && <GroupeRecordPage groupe={activeTab.data} onNavigateToRecord={handleNavigateToRecord} />}
 
       <DockedUtilityBar />
