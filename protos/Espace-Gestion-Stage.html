@@ -242,7 +242,7 @@ function buildRecordData(row) {
     [{ label: "Type de stage", value: "CABINET OU SOCIETE D'EXPERTISE COMPTABLE", readOnly: ro }, { label: "Mois validés", value: String(moisValides), readOnly: ro }],
     [{ label: "Mois invalidés", value: "0", readOnly: ro }, { label: "Mois suspension", value: row.statut === "Suspendu" ? "3" : "0", readOnly: ro }],
     [{ label: "Total", value: String(moisValides), readOnly: ro }, { label: "Durée de stage", value: String(moisValides), readOnly: ro }],
-    [{ label: "Situation", value: statutUpper, readOnly: ro }],
+    [{ label: "Situation", value: statutUpper, readOnly: ro }, { label: "Accès E-learning", value: "OUI" }],
   ];
 
   const encadrement = [
