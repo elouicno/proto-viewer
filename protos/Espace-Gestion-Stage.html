@@ -90,13 +90,13 @@ const CP_MAP = {
 };
 
 const ALL_FORMATIONS = [
-  { ref: "MP110", intitule: "Découverte de la profession comptable", format: "Mixte : EL (7h) + Présentiel (1j)" },
-  { ref: "MP120", intitule: "Communication", format: "Mixte : EL (7h) + Présentiel (1j)" },
-  { ref: "MP130", intitule: "Audit 1 – Découvrir la mission d'audit", format: "Mixte : Présentiel (1j) + EL (7h) + Présentiel (1j)" },
-  { ref: "MP140", intitule: "Missions comptes annuels : approche normative", format: "Mixte : EL (7h) + Présentiel (1j)" },
-  { ref: "MP150", intitule: "Autres prestations récurrentes de l'expert-comptable", format: "Mixte : EL (7h) + Présentiel (1j)" },
-  { ref: "ME160", intitule: "Présentation des trois épreuves du DEC", format: "Présentiel (1j) uniquement" },
-  { ref: "MR160", intitule: "Confirmation des tiers et assistance aux inventaires", format: "Présentiel (1j) uniquement (Délégable)" },
+  { ref: "MP110", intitule: "Découverte de la profession comptable", formats: ["E-learning", "Présentiel"], description: "Introduction à la profession d'expert-comptable : organisation de l'Ordre, missions de l'EC, rôle du stagiaire et cadre réglementaire du stage." },
+  { ref: "MP120", intitule: "Communication et développement personnel", formats: ["E-learning", "Présentiel"], description: "Techniques de communication professionnelle, développement des soft skills et posture relationnelle en cabinet." },
+  { ref: "MP130", intitule: "Audit 1 – Découvrir la mission d'audit légal", formats: ["E-learning", "Présentiel"], description: "Découverte de la mission d'audit légal : normes ISA, planification, évaluation des risques et premiers travaux de vérification." },
+  { ref: "MP140", intitule: "Missions comptes annuels : approche normative", formats: ["E-learning", "Présentiel"], description: "Missions de présentation et d'examen limité des comptes annuels : approche normative, lettre de mission et rédaction du rapport." },
+  { ref: "MP150", intitule: "Autres prestations récurrentes de l'expert-comptable", formats: ["E-learning", "Présentiel"], description: "Missions récurrentes de l'expert-comptable : conseil juridique, fiscal, social et accompagnement de la vie courante de l'entreprise." },
+  { ref: "ME160", intitule: "Présentation des trois épreuves du DEC", formats: ["Présentiel"], description: "Présentation de la structure, des épreuves et des modalités du Diplôme d'Expertise Comptable (DEC)." },
+  { ref: "MR160", intitule: "Confirmation des tiers et assistance aux inventaires", formats: ["Présentiel"], description: "Mise en œuvre des procédures de confirmation des tiers et assistance aux inventaires physiques dans le cadre d'une mission d'audit." },
 ];
 
 // ══════════════════════════════════════════════════════════════
@@ -359,12 +359,24 @@ function buildRecordData(row) {
     obligations.push({ name: "Fiche entretien 2ème année", statut: `À remettre le 31/01/${yEff + 2}` });
   }
 
-  // Formations: mark as Réalisé based on année
+  // Formations: generate dates and statut based on année de stage
   const completedCount = annee === 1 ? 3 : annee === 2 ? 5 : 7;
-  const formations = ALL_FORMATIONS.map((f, i) => ({
-    ...f,
-    statut: i < completedCount ? "Réalisé" : "",
-  }));
+  const baseDates = [
+    ["10/02", "15/03"], ["05/04", "20/05"], ["01/06", "18/06"],
+    ["25/08", "12/09"], ["01/10", "15/10"], ["08/11", ""], ["05/12", ""],
+  ];
+  const formations = ALL_FORMATIONS.map((f, i) => {
+    const completed = i < completedCount;
+    const inProgress = i === completedCount;
+    const dates = f.formats.length === 2
+      ? [{ fmt: "E-learning", date: `${baseDates[i][0]}/${yEff}` }, { fmt: "Présentiel", date: `${baseDates[i][1]}/${yEff}` }]
+      : [{ fmt: "Présentiel", date: `${baseDates[i][0]}/${yEff}` }];
+    return {
+      ...f,
+      dates,
+      statut: completed ? "Validée" : inProgress ? "En cours" : "À venir",
+    };
+  });
 
   return { highlights, identite, dossier, adresses, diplomes, modeExercice, motifsHistorique, motifsEnAttente, stageGeneral, encadrement, groupes, periodes, employeurFields, obligations, formations, attestation, diplomesTab };
 }
@@ -819,32 +831,77 @@ function SuiviPanel({ data }) {
 }
 
 function FormationsTable({ data }) {
-  const thClass = "px-2 py-2 text-left text-[12px] font-semibold text-white leading-[16px] whitespace-nowrap";
-  const tdClass = "px-2 py-2 text-[13px] text-[#2E2E2E] leading-[18px] border-b border-[#C9C9C9]";
+  const statutStyle = (s) => {
+    if (s === "Validée") return "bg-[#E6F4ED] text-[#1A7A45]";
+    if (s === "En cours") return "bg-[#FEF4E7] text-[#B05E0A]";
+    if (s === "À venir") return "bg-[#FEF3E2] text-[#B05E0A]";
+    if (s === "Invalidée") return "bg-[#FDE8EA] text-[#C8102E]";
+    return "bg-[#F3F3F3] text-[#5C5C5C]";
+  };
+
+  const statutIcon = (s) => {
+    if (s === "Validée") return <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>;
+    if (s === "En cours") return <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>;
+    if (s === "À venir") return <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>;
+    return null;
+  };
+
+  const ELearningIcon = () => (
+    <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+  );
+  const PresentielIcon = () => (
+    <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+  );
+
+  const thClass = "px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-[#9AA3B2] bg-[#FAFBFC]";
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full border-collapse">
         <thead>
-          <tr className="bg-[#03234D]">
-            <th className={thClass} style={{width:"60px"}}>Réf.</th>
-            <th className={thClass}>Intitulé</th>
-            <th className={thClass}>Format</th>
-            <th className={thClass} style={{width:"70px"}}>Statut</th>
+          <tr className="border-b border-[#EEF0F5]">
+            <th className={thClass} style={{width:"70px"}}>CFPC</th>
+            <th className={thClass}>Titre</th>
+            <th className={thClass} style={{width:"110px"}}>Format</th>
+            <th className={thClass} style={{width:"90px"}}>Date</th>
+            <th className={thClass} style={{width:"100px"}}>Statut</th>
           </tr>
         </thead>
         <tbody>
           {data.map((row, i) => (
-            <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-[#F9F9F9]"}>
-              <td className={tdClass + " font-medium text-[#03234D]"}>{row.ref}</td>
-              <td className={tdClass}>{row.intitule}</td>
-              <td className={tdClass + " text-[12px] text-[#5C5C5C]"}>{row.format}</td>
-              <td className={tdClass}>
-                {row.statut ? (
-                  <span className="inline-flex items-center gap-1 text-[12px] text-[#2E844A] font-medium">
-                    <span className="w-2 h-2 rounded-full bg-[#2E844A] inline-block" />
-                    {row.statut}
-                  </span>
-                ) : null}
+            <tr key={i} className="hover:bg-[#F8FAFC] transition-colors">
+              <td className="px-3 py-2.5 border-b border-[#EEF0F5] align-top">
+                <span className="text-[13px] font-medium text-[#1B324F]">{row.ref}</span>
+              </td>
+              <td className="px-3 py-2.5 border-b border-[#EEF0F5] align-top">
+                <span className="text-[13px] text-[#1B324F]">{row.intitule}</span>
+              </td>
+              <td className="px-3 py-2.5 border-b border-[#EEF0F5] align-top">
+                <div className="flex flex-col gap-1">
+                  {row.dates.map((d, di) => (
+                    <span key={di} className={`inline-flex items-center gap-1 text-[12px] font-medium whitespace-nowrap ${d.fmt === "E-learning" ? "text-[#2B5BA8]" : "text-[#9B3A2E]"}`}>
+                      {d.fmt === "E-learning" ? <ELearningIcon /> : <PresentielIcon />}
+                      {d.fmt === "E-learning" ? "E-learning" : "Présentiel"}
+                    </span>
+                  ))}
+                </div>
+              </td>
+              <td className="px-3 py-2.5 border-b border-[#EEF0F5] align-top">
+                <div className="flex flex-col gap-1">
+                  {row.dates.map((d, di) => (
+                    <span key={di} className="text-[12px] text-[#5A6478] whitespace-nowrap">{d.date}</span>
+                  ))}
+                </div>
+              </td>
+              <td className="px-3 py-2.5 border-b border-[#EEF0F5] align-top">
+                <div className="flex flex-col gap-1">
+                  {row.dates.map((d, di) => (
+                    <span key={di} className={`inline-flex items-center justify-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium whitespace-nowrap ${statutStyle(row.statut)}`}>
+                      {statutIcon(row.statut)}
+                      {row.statut}
+                    </span>
+                  ))}
+                </div>
               </td>
             </tr>
           ))}
@@ -2503,6 +2560,11 @@ function App() {
     </div>
   );
 }
+
+
+App;
+
+App;
 
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
