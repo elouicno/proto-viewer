@@ -90,13 +90,28 @@ const CP_MAP = {
 };
 
 const ALL_FORMATIONS = [
-  { ref: "MP110", intitule: "Découverte de la profession comptable", formats: ["E-learning", "Présentiel"], description: "Introduction à la profession d'expert-comptable : organisation de l'Ordre, missions de l'EC, rôle du stagiaire et cadre réglementaire du stage." },
-  { ref: "MP120", intitule: "Communication et développement personnel", formats: ["E-learning", "Présentiel"], description: "Techniques de communication professionnelle, développement des soft skills et posture relationnelle en cabinet." },
-  { ref: "MP130", intitule: "Audit 1 – Découvrir la mission d'audit légal", formats: ["E-learning", "Présentiel"], description: "Découverte de la mission d'audit légal : normes ISA, planification, évaluation des risques et premiers travaux de vérification." },
-  { ref: "MP140", intitule: "Missions comptes annuels : approche normative", formats: ["E-learning", "Présentiel"], description: "Missions de présentation et d'examen limité des comptes annuels : approche normative, lettre de mission et rédaction du rapport." },
-  { ref: "MP150", intitule: "Autres prestations récurrentes de l'expert-comptable", formats: ["E-learning", "Présentiel"], description: "Missions récurrentes de l'expert-comptable : conseil juridique, fiscal, social et accompagnement de la vie courante de l'entreprise." },
-  { ref: "ME160", intitule: "Présentation des trois épreuves du DEC", formats: ["Présentiel"], description: "Présentation de la structure, des épreuves et des modalités du Diplôme d'Expertise Comptable (DEC)." },
-  { ref: "MR160", intitule: "Confirmation des tiers et assistance aux inventaires", formats: ["Présentiel"], description: "Mise en œuvre des procédures de confirmation des tiers et assistance aux inventaires physiques dans le cadre d'une mission d'audit." },
+  // ── Cycle 1 (1re année) — 7 formations ──
+  { ref: "MP110", cycle: 1, intitule: "Découverte de la profession comptable", formats: ["E-learning", "Présentiel"], description: "Chiffres clés, organisation EC/CAC, déontologie, normes, contraintes et avantages des deux professions." },
+  { ref: "MP120", cycle: 1, intitule: "Communication", formats: ["E-learning", "Présentiel"], description: "Techniques de communication orale, négociation, prise de parole, animation de réunion, vente de prestations." },
+  { ref: "MP130", cycle: 1, intitule: "Audit 1", formats: ["E-learning", "Présentiel"], description: "Démarche d'audit, acceptation mission, prise de connaissance, approche risques, tests de procédures, procédures analytiques." },
+  { ref: "MP140", cycle: 1, intitule: "Missions comptes annuels", formats: ["E-learning", "Présentiel"], description: "Cadre normatif EC, missions avec/sans assurance, méthodologie de présentation, programme de travail, formalisation des contrôles." },
+  { ref: "MP150", cycle: 1, intitule: "Autres prestations récurrentes", formats: ["E-learning", "Présentiel"], description: "Loi PACTE, rôle EC, missions ponctuelles et récurrentes, outils, développement de marché." },
+  { ref: "ME160", cycle: 1, intitule: "Présentation des 3 épreuves du DEC", formats: ["Présentiel"], description: "Structure du DEC, sessions, examinateurs, méthodologie épreuves 1 et 2, rétroplanning." },
+  { ref: "MR160", cycle: 1, intitule: "Confirmation des tiers", formats: ["Présentiel"], description: "Portée et utilité des confirmations de tiers, cas pratiques fournisseurs complexes, inspection physique des stocks." },
+  // ── Cycle 2 (2e année) — 6 formations ──
+  { ref: "MP210", cycle: 2, intitule: "Démarche et contrôle qualité", formats: ["E-learning", "Présentiel"], description: "Normes ISO9001, contrôle qualité EC/CAC, négociation professionnelle." },
+  { ref: "MP220", cycle: 2, intitule: "Audit 2", formats: ["E-learning", "Présentiel"], description: "Prise de connaissance, risques d'anomalies, incidence cadre réglementaire, loi PACTE, adaptation de la démarche d'audit." },
+  { ref: "MP230", cycle: 2, intitule: "Autres missions comptes annuels", formats: ["E-learning", "Présentiel"], description: "Missions d'examen limité, audit contractuel, attestations diverses, missions légales EC." },
+  { ref: "MP260", cycle: 2, intitule: "DEC épreuve 2", formats: ["E-learning", "Présentiel"], description: "Présentation épreuve 2, choix du sujet de mémoire, méthodologie de préparation." },
+  { ref: "MR280", cycle: 2, intitule: "Blanchiment", formats: ["Présentiel"], description: "Dispositif LAB, déclaration de soupçon, organisation du cabinet, contrôle LAB spécifique." },
+  { ref: "MR290", cycle: 2, intitule: "Procédures analytiques", formats: ["Présentiel"], description: "Positionnement dans la démarche CAC, types de procédures analytiques, cas pratiques, outils d'analyse." },
+  // ── Cycle 3 (3e année) — 6 formations ──
+  { ref: "MP310", cycle: 3, intitule: "Déontologie et responsabilité", formats: ["E-learning", "Présentiel"], description: "Déontologie EC/CAC, responsabilité civile/pénale/disciplinaire, enjeux et risques professionnels." },
+  { ref: "MP320", cycle: 3, intitule: "Management des équipes", formats: ["E-learning", "Présentiel"], description: "Profession en mutation, cabinet-entreprise, styles de management, installation, valorisation clientèle, carrière en entreprise." },
+  { ref: "MP330", cycle: 3, intitule: "Audit 3", formats: ["E-learning", "Présentiel"], description: "Pilotage mission, prévention/traitement des difficultés entreprises, communication CAC, conventions réglementées, implication du signataire." },
+  { ref: "MP340", cycle: 3, intitule: "Gestion des missions", formats: ["E-learning", "Présentiel"], description: "Acceptation mission, lettre de mission, programme de travail, délégation, supervision, budget, facturation, missions de conseil." },
+  { ref: "MP360", cycle: 3, intitule: "DEC mémoire", formats: ["Présentiel"], description: "Procédure d'agrément du sujet, titre, note explicative, plan, bibliographie, correction par pairs." },
+  { ref: "MR390", cycle: 3, intitule: "Audit petite entreprise (ALPE)", formats: ["Présentiel"], description: "NEP 911 et 912, audit proportionné, PACK ALPE, risques financiers, comptables et de gestion." },
 ];
 
 // ══════════════════════════════════════════════════════════════
@@ -242,7 +257,7 @@ function buildRecordData(row) {
     [{ label: "Type de stage", value: "CABINET OU SOCIETE D'EXPERTISE COMPTABLE", readOnly: ro }, { label: "Mois validés", value: String(moisValides), readOnly: ro }],
     [{ label: "Mois invalidés", value: "0", readOnly: ro }, { label: "Mois suspension", value: row.statut === "Suspendu" ? "3" : "0", readOnly: ro }],
     [{ label: "Total", value: String(moisValides), readOnly: ro }, { label: "Durée de stage", value: String(moisValides), readOnly: ro }],
-    [{ label: "Situation", value: statutUpper, readOnly: ro }, { label: "Accès E-learning", value: "OUI" }],
+    ...(row.statut === "Suspendu" ? [[{ label: "Situation", value: statutUpper, readOnly: ro }, { label: "Accès E-learning", value: "OUI" }]] : [[{ label: "Situation", value: statutUpper, readOnly: ro }]]),
   ];
 
   const encadrement = [
@@ -359,22 +374,33 @@ function buildRecordData(row) {
     obligations.push({ name: "Fiche entretien 2ème année", statut: `À remettre le 31/01/${yEff + 2}` });
   }
 
-  // Formations: generate dates and statut based on année de stage
-  const completedCount = annee === 1 ? 3 : annee === 2 ? 5 : 7;
-  const baseDates = [
+  // Formations: toutes les formations des 3 cycles, statut selon l'avancement
+  const completedCount = annee === 1 ? 3 : annee === 2 ? 9 : 16;
+  const inProgressIdx = completedCount; // index de la formation "En cours"
+  const baseDatesAll = [
+    // Cycle 1
     ["10/02", "15/03"], ["05/04", "20/05"], ["01/06", "18/06"],
     ["25/08", "12/09"], ["01/10", "15/10"], ["08/11", ""], ["05/12", ""],
+    // Cycle 2
+    ["15/01", "20/02"], ["10/03", "15/04"], ["05/05", "10/06"],
+    ["25/08", "10/09"], ["15/10", ""], ["20/11", ""],
+    // Cycle 3
+    ["20/01", "25/02"], ["10/03", "15/04"], ["15/04", "20/05"],
+    ["05/06", "25/06"], ["15/09", ""], ["15/11", ""],
   ];
   const formations = ALL_FORMATIONS.map((f, i) => {
     const completed = i < completedCount;
-    const inProgress = i === completedCount;
+    const inProgress = i === inProgressIdx;
+    const yearOffset = f.cycle - 1;
+    const bd = baseDatesAll[i] || ["01/01", ""];
+    const futureCycle = f.cycle > annee;
     const dates = f.formats.length === 2
-      ? [{ fmt: "E-learning", date: `${baseDates[i][0]}/${yEff}` }, { fmt: "Présentiel", date: `${baseDates[i][1]}/${yEff}` }]
-      : [{ fmt: "Présentiel", date: `${baseDates[i][0]}/${yEff}` }];
+      ? [{ fmt: "E-learning", date: futureCycle ? "" : `${bd[0]}/${yEff + yearOffset}` }, { fmt: "Présentiel", date: futureCycle ? "" : `${bd[1]}/${yEff + yearOffset}` }]
+      : [{ fmt: "Présentiel", date: futureCycle ? "" : `${bd[0]}/${yEff + yearOffset}` }];
     return {
       ...f,
       dates,
-      statut: completed ? "Validée" : inProgress ? "En cours" : "À venir",
+      statut: futureCycle ? "À venir" : completed ? "Validée" : inProgress ? "En cours" : "À venir",
     };
   });
 
@@ -518,6 +544,8 @@ const RECORD_TABS = [
   { key: "individu", label: "Individu" },
   { key: "motifs", label: "Motifs" },
   { key: "stage", label: "Stage" },
+  { key: "formations", label: "Formations" },
+  { key: "obligations", label: "Obligations" },
 ];
 
 function TabBar({ activeTab, onTabChange }) {
@@ -830,7 +858,132 @@ function SuiviPanel({ data }) {
   );
 }
 
+function ObligationsTable({ data }) {
+  const [sortField, setSortField] = useState(null);
+  const [sortDir, setSortDir] = useState("asc");
+
+  const handleSort = (field) => {
+    if (sortField === field) { setSortDir(d => d === "asc" ? "desc" : "asc"); }
+    else { setSortField(field); setSortDir("asc"); }
+  };
+
+  // Parse "À remettre le 31/01/2025" → { label, date, year }
+  const enrich = (item) => {
+    const m = item.statut.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+    const dateStr = m ? `${m[1]}/${m[2]}/${m[3]}` : "";
+    const year = m ? parseInt(m[3]) : 9999;
+    const month = m ? parseInt(m[2]) : 12;
+    const now = new Date();
+    const past = year < now.getFullYear() || (year === now.getFullYear() && month < now.getMonth() + 1);
+    let statut, statutStyle, statutIcon;
+    if (past) {
+      statut = "Remis"; statutStyle = "bg-[#E6F4ED] text-[#1A7A45]";
+      statutIcon = <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>;
+    } else if (year === now.getFullYear() && month <= now.getMonth() + 2) {
+      statut = "À remettre"; statutStyle = "bg-[#FEF4E7] text-[#B05E0A]";
+      statutIcon = <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>;
+    } else {
+      statut = "À venir"; statutStyle = "bg-[#EEF3FB] text-[#0250D9]";
+      statutIcon = <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>;
+    }
+    return { ...item, dateStr, year, month, statut, statutStyle, statutIcon };
+  };
+
+  const statutOrder = { "À remettre": 1, "À venir": 2, "Remis": 3 };
+  const enriched = data.map(enrich);
+  const sorted = [...enriched].sort((a, b) => {
+    if (!sortField) return 0;
+    let av, bv;
+    if (sortField === "statut") { av = statutOrder[a.statut] || 5; bv = statutOrder[b.statut] || 5; }
+    else if (sortField === "date") { av = a.year * 100 + a.month; bv = b.year * 100 + b.month; }
+    else { av = (a[sortField] || "").toLowerCase(); bv = (b[sortField] || "").toLowerCase(); }
+    if (av < bv) return sortDir === "asc" ? -1 : 1;
+    if (av > bv) return sortDir === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  const SortIcon = ({ field }) => {
+    const active = sortField === field;
+    const col = active ? "#0250D9" : "#C4C9D4";
+    if (active && sortDir === "desc") return <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke={col} strokeWidth="2.5" strokeLinecap="round"><path d="M12 19V5M5 12l7 7 7-7"/></svg>;
+    return <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke={col} strokeWidth="2.5" strokeLinecap="round"><path d="M12 5v14M5 12l7-7 7 7"/></svg>;
+  };
+
+  const thBase = "px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider bg-[#FAFBFC] select-none cursor-pointer hover:text-[#0250D9] transition-colors";
+
+  const ThSort = ({ field, style, children }) => (
+    <th className={thBase} style={{ color: sortField === field ? "#0250D9" : "#9AA3B2", ...style }} onClick={() => handleSort(field)}>
+      <span className="inline-flex items-center gap-1">{children}<SortIcon field={field} /></span>
+    </th>
+  );
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full border-collapse">
+        <thead>
+          <tr className="border-b border-[#EEF0F5]">
+            <ThSort field="name">Obligation</ThSort>
+            <ThSort field="date" style={{width:"140px"}}>Échéance</ThSort>
+            <ThSort field="statut" style={{width:"120px"}}>Statut</ThSort>
+          </tr>
+        </thead>
+        <tbody>
+          {sorted.map((row, i) => (
+            <tr key={i} className="hover:bg-[#F8FAFC] transition-colors">
+              <td className="px-3 py-2.5 border-b border-[#EEF0F5]">
+                <span className="text-[13px] text-[#1B324F]">{row.name}</span>
+              </td>
+              <td className="px-3 py-2.5 border-b border-[#EEF0F5] whitespace-nowrap">
+                <span className="text-[13px] text-[#5A6478]">{row.dateStr}</span>
+              </td>
+              <td className="px-3 py-2.5 border-b border-[#EEF0F5]">
+                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium whitespace-nowrap ${row.statutStyle}`}>
+                  {row.statutIcon}{row.statut}
+                </span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function FormationsTable({ data }) {
+  const [sortField, setSortField] = useState(null);
+  const [sortDir, setSortDir] = useState("asc");
+  const [showAll, setShowAll] = useState(false);
+  const PREVIEW = 3;
+
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDir(d => d === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDir("asc");
+    }
+  };
+
+  const statutOrder = { "Validée": 1, "En cours": 2, "À venir": 3, "Invalidée": 4 };
+
+  const sorted = [...data].sort((a, b) => {
+    if (!sortField) return 0;
+    let av, bv;
+    if (sortField === "statut") { av = statutOrder[a.statut] || 5; bv = statutOrder[b.statut] || 5; }
+    else if (sortField === "cycle") { av = a.cycle; bv = b.cycle; }
+    else { av = (a[sortField] || "").toLowerCase(); bv = (b[sortField] || "").toLowerCase(); }
+    if (av < bv) return sortDir === "asc" ? -1 : 1;
+    if (av > bv) return sortDir === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  const SortIcon = ({ field }) => {
+    const active = sortField === field;
+    const col = active ? "#0250D9" : "#C4C9D4";
+    if (active && sortDir === "desc") return <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke={col} strokeWidth="2.5" strokeLinecap="round"><path d="M12 19V5M5 12l7 7 7-7"/></svg>;
+    return <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke={col} strokeWidth="2.5" strokeLinecap="round"><path d="M12 5v14M5 12l7-7 7 7"/></svg>;
+  };
+
   const statutStyle = (s) => {
     if (s === "Validée") return "bg-[#E6F4ED] text-[#1A7A45]";
     if (s === "En cours") return "bg-[#FEF4E7] text-[#B05E0A]";
@@ -846,25 +999,37 @@ function FormationsTable({ data }) {
     return null;
   };
 
-  const thClass = "px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-[#9AA3B2] bg-[#FAFBFC]";
+  const thBase = "px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider bg-[#FAFBFC] select-none";
+  const thSort = thBase + " cursor-pointer hover:text-[#0250D9] transition-colors";
+  const thPlain = thBase + " text-[#9AA3B2]";
+
+  const ThSort = ({ field, style, children }) => (
+    <th className={thSort} style={{ color: sortField === field ? "#0250D9" : "#9AA3B2", ...style }} onClick={() => handleSort(field)}>
+      <span className="inline-flex items-center gap-1">{children}<SortIcon field={field} /></span>
+    </th>
+  );
 
   return (
     <div className="overflow-x-auto">
       <table className="w-full border-collapse">
         <thead>
           <tr className="border-b border-[#EEF0F5]">
-            <th className={thClass} style={{width:"70px"}}>CFPC</th>
-            <th className={thClass}>Titre</th>
-            <th className={thClass} style={{width:"110px"}}>Format</th>
-            <th className={thClass} style={{width:"90px"}}>Date</th>
-            <th className={thClass} style={{width:"100px"}}>Statut</th>
+            <ThSort field="ref" style={{width:"75px"}}>CFPC</ThSort>
+            <ThSort field="cycle" style={{width:"85px"}}>Cycle</ThSort>
+            <ThSort field="intitule">Titre</ThSort>
+            <th className={thPlain} style={{width:"115px"}}>Format</th>
+            <th className={thPlain} style={{width:"90px"}}>Date</th>
+            <ThSort field="statut" style={{width:"105px"}}>Statut</ThSort>
           </tr>
         </thead>
         <tbody>
-          {data.map((row, i) => (
+          {(showAll ? sorted : sorted.slice(0, PREVIEW)).map((row, i) => (
             <tr key={i} className="hover:bg-[#F8FAFC] transition-colors">
               <td className="px-3 py-2.5 border-b border-[#EEF0F5] align-top">
                 <span className="text-[13px] font-medium text-[#1B324F]">{row.ref}</span>
+              </td>
+              <td className="px-3 py-2.5 border-b border-[#EEF0F5] align-top whitespace-nowrap">
+                <span className="inline-block text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#EEF3FB] text-[#0250D9] whitespace-nowrap">Cycle {row.cycle}</span>
               </td>
               <td className="px-3 py-2.5 border-b border-[#EEF0F5] align-top">
                 <span className="text-[13px] text-[#1B324F]">{row.intitule}</span>
@@ -891,7 +1056,7 @@ function FormationsTable({ data }) {
               <td className="px-3 py-2.5 border-b border-[#EEF0F5] align-top">
                 <div className="flex flex-col gap-1">
                   {row.dates.map((d, di) => (
-                    <span key={di} className={`inline-flex items-center justify-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium whitespace-nowrap ${statutStyle(row.statut)}`}>
+                    <span key={di} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium whitespace-nowrap ${statutStyle(row.statut)}`}>
                       {statutIcon(row.statut)}
                       {row.statut}
                     </span>
@@ -902,6 +1067,19 @@ function FormationsTable({ data }) {
           ))}
         </tbody>
       </table>
+      {sorted.length > PREVIEW && (
+        <div className="flex justify-center pt-2 pb-1">
+          <button
+            onClick={() => setShowAll(v => !v)}
+            className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-[#D0D5DD] text-[12px] font-medium text-[#5C5C5C] bg-white hover:bg-[#F3F3F3] hover:text-[#0250D9] hover:border-[#0250D9] transition-colors"
+          >
+            {showAll
+              ? <><svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 15l-6-6-6 6"/></svg>Réduire</>
+              : <><svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 9l6 6 6-6"/></svg>Afficher tout ({sorted.length - PREVIEW} de plus)</>
+            }
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -1527,16 +1705,24 @@ function RecordPage({ row }) {
                   </div>
                 )}
 
+                {/* ═══ ONGLET FORMATIONS ═══ */}
+                {activeTab === "formations" && (
+                  <div className="mt-3">
+                    <FormationsTable data={data.formations} />
+                  </div>
+                )}
+
+                {/* ═══ ONGLET OBLIGATIONS ═══ */}
+                {activeTab === "obligations" && (
+                  <div className="mt-3">
+                    <ObligationsTable data={data.obligations} />
+                  </div>
+                )}
+
               </div>
             </div>
           </div>
           <div className="w-[698px] flex flex-col gap-3">
-            <CardSection icon={<Users size={12} className="text-white" />} iconBg="bg-[#9602C7]" title="Obligations">
-              <SuiviPanel data={data.obligations} />
-            </CardSection>
-            <CardSection icon={<GraduationCap size={12} className="text-white" />} iconBg="bg-[#FF5D2D]" title="Formations" count={data.formations.length}>
-              <FormationsTable data={data.formations} />
-            </CardSection>
             <CardSection icon={<Star size={12} className="text-white" />} iconBg="bg-[#0250D9]" title="Attestation">
               <AttestationPanel data={data.attestation} />
             </CardSection>
@@ -2548,14 +2734,9 @@ function App() {
 
   const handleNavigateToRecord = (row) => {
     const tabId = "record:" + row.numInscription;
-    const formationsTabId = "formations:" + row.numInscription;
     setOpenTabs(prev => {
       const exists = prev.find(t => t.id === tabId);
-      if (!exists) return [
-        ...prev,
-        { type: "record", id: tabId, label: row.stagiaire, data: row },
-        { type: "formations", id: formationsTabId, label: "Formations", data: row },
-      ];
+      if (!exists) return [...prev, { type: "record", id: tabId, label: row.stagiaire, data: row }];
       return prev;
     });
     setActivePage(tabId);
@@ -2573,14 +2754,8 @@ function App() {
 
   const handleCloseTab = (e, tabId) => {
     e.stopPropagation();
-    // If closing a record tab, also close its formations companion, and vice versa
-    let companionId = null;
-    if (tabId.startsWith("record:")) companionId = "formations:" + tabId.replace("record:", "");
-    if (tabId.startsWith("formations:")) companionId = "record:" + tabId.replace("formations:", "");
-    setOpenTabs(prev => prev.filter(t => t.id !== tabId && t.id !== companionId));
-    if (activePage === tabId || activePage === companionId) {
-      setActivePage("list");
-    }
+    setOpenTabs(prev => prev.filter(t => t.id !== tabId));
+    if (activePage === tabId) setActivePage("list");
   };
 
   // Determine what to render
