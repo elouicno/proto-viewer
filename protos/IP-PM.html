@@ -1761,11 +1761,35 @@
     };
 
     // ── Reusable Address Block ──
-    const AddressBlock = ({ data, onChange, onSelectAddress, prefix, noRequired }) => {
+    const AddressBlock = ({ data, onChange, onSelectAddress, prefix, noRequired, readOnly }) => {
       const pfx = (k) => prefix ? `${prefix}${k.charAt(0).toUpperCase()}${k.slice(1)}` : k;
       const val = (k) => data[pfx(k)] || '';
       const set = (k, v) => onChange(pfx(k), v);
       const req = !noRequired;
+
+      // Mode lecture seule : champs grisés pré-remplis
+      if (readOnly) {
+        return (
+          <>
+            <div style={{ marginBottom: '16px' }}>
+              <ReadOnlyField label="Rue" required={req} value={val('rue')} />
+            </div>
+            <div style={{ marginBottom: '16px' }}>
+              <ReadOnlyField label="Complément d'adresse" value={val('complement')} />
+            </div>
+            <div style={{ marginBottom: '16px' }}>
+              <ReadOnlyField label="Lieu-dit" value={val('lieuDit')} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+              <ReadOnlyField label="Code postal" required={req} value={val('codePostal')} />
+              <ReadOnlyField label="Ville"        required={req} value={val('ville')} />
+            </div>
+            <div style={{ marginBottom: '16px' }}>
+              <ReadOnlyField label="Pays" required={req} value={val('pays')} />
+            </div>
+          </>
+        );
+      }
 
       const [addrQuery, setAddrQuery] = React.useState('');
       const [addrOpen, setAddrOpen] = React.useState(false);
@@ -1916,14 +1940,14 @@
 
     // ── Mock data for person search ──
     const MOCK_PERSONNES_PP = [
-      { civilite: 'Madame', nom: 'DUBOIS', prenom: 'Maud', prenom2: '', prenom3: '', prenom4: '', region: 'IDF', conseilRegional: 'Île-de-France' },
-      { civilite: 'Monsieur', nom: 'DUPONT', prenom: 'Jean', prenom2: 'Marc', prenom3: '', prenom4: '', region: 'AURA', conseilRegional: 'Auvergne-Rhône-Alpes' },
-      { civilite: 'Madame', nom: 'DURAND', prenom: 'Marie', prenom2: 'Claire', prenom3: '', prenom4: '', region: 'IDF', conseilRegional: 'Île-de-France' },
-      { civilite: 'Monsieur', nom: 'MARTIN', prenom: 'Pierre', prenom2: '', prenom3: '', prenom4: '', region: 'Grand Est', conseilRegional: 'Grand Est' },
-      { civilite: 'Madame', nom: 'MOREAU', prenom: 'Sophie', prenom2: 'Anne', prenom3: '', prenom4: '', region: 'Normandie', conseilRegional: 'Normandie' },
-      { civilite: 'Monsieur', nom: 'MARTINEZ', prenom: 'Luis', prenom2: '', prenom3: '', prenom4: '', region: 'Occitanie', conseilRegional: 'Occitanie' },
-      { civilite: 'Madame', nom: 'BERNARD', prenom: 'Isabelle', prenom2: '', prenom3: '', prenom4: '', region: 'IDF', conseilRegional: 'Île-de-France' },
-      { civilite: 'Monsieur', nom: 'BERTRAND', prenom: 'Alain', prenom2: 'François', prenom3: '', prenom4: '', region: 'PACA', conseilRegional: "Provence-Alpes-Côte d'Azur" },
+      { civilite: 'Madame',   nom: 'DUBOIS',   prenom: 'Maud',     prenom2: '',        prenom3: '', prenom4: '', region: 'IDF',       conseilRegional: 'Île-de-France',              rue: '12 rue de Rivoli',          complement: '',         lieuDit: '', codePostal: '75001', ville: 'Paris',         pays: 'France' },
+      { civilite: 'Monsieur', nom: 'DUPONT',   prenom: 'Jean',     prenom2: 'Marc',    prenom3: '', prenom4: '', region: 'AURA',      conseilRegional: 'Auvergne-Rhône-Alpes',       rue: '5 place Bellecour',         complement: '',         lieuDit: '', codePostal: '69002', ville: 'Lyon',          pays: 'France' },
+      { civilite: 'Madame',   nom: 'DURAND',   prenom: 'Marie',    prenom2: 'Claire',  prenom3: '', prenom4: '', region: 'IDF',       conseilRegional: 'Île-de-France',              rue: '34 avenue des Champs',      complement: 'Bât. B',   lieuDit: '', codePostal: '75008', ville: 'Paris',         pays: 'France' },
+      { civilite: 'Monsieur', nom: 'MARTIN',   prenom: 'Pierre',   prenom2: '',        prenom3: '', prenom4: '', region: 'Grand Est', conseilRegional: 'Grand Est',                  rue: '8 rue du Général de Gaulle',complement: '',         lieuDit: '', codePostal: '67000', ville: 'Strasbourg',    pays: 'France' },
+      { civilite: 'Madame',   nom: 'MOREAU',   prenom: 'Sophie',   prenom2: 'Anne',    prenom3: '', prenom4: '', region: 'Normandie', conseilRegional: 'Normandie',                  rue: '2 rue Saint-Patrice',       complement: '',         lieuDit: '', codePostal: '14000', ville: 'Caen',          pays: 'France' },
+      { civilite: 'Monsieur', nom: 'MARTINEZ', prenom: 'Luis',     prenom2: '',        prenom3: '', prenom4: '', region: 'Occitanie', conseilRegional: 'Occitanie',                  rue: '18 allée Jean Jaurès',      complement: '',         lieuDit: '', codePostal: '31000', ville: 'Toulouse',      pays: 'France' },
+      { civilite: 'Madame',   nom: 'BERNARD',  prenom: 'Isabelle', prenom2: '',        prenom3: '', prenom4: '', region: 'IDF',       conseilRegional: 'Île-de-France',              rue: '7 rue de la Paix',          complement: 'Étage 3',  lieuDit: '', codePostal: '75002', ville: 'Paris',         pays: 'France' },
+      { civilite: 'Monsieur', nom: 'BERTRAND', prenom: 'Alain',    prenom2: 'François',prenom3: '', prenom4: '', region: 'PACA',      conseilRegional: "Provence-Alpes-Côte d'Azur", rue: '23 bd Longchamp',           complement: '',         lieuDit: '', codePostal: '13001', ville: 'Marseille',     pays: 'France' },
     ];
 
 
@@ -5520,6 +5544,8 @@
         });
       };
 
+      const RO_ADDR_KEYS = ['roRue','roComplement','roLieuDit','roCodePostal','roVille','roPays'];
+
       const resetSituation = (val) => {
         update('situation', val);
         update('rlSelection', '');
@@ -5528,6 +5554,7 @@
         update('roNom', ''); update('roPrenom', ''); update('roCivilite', '');
         update('roPrenom2', ''); update('roPrenom3', ''); update('roPrenom4', '');
         update('roConseilRegional', ''); update('roSearchLabel', '');
+        RO_ADDR_KEYS.forEach(k => update(k, ''));
       };
 
       return (
@@ -5586,9 +5613,6 @@
                   options={MOCK_RL_PP_RO}
                   placeholder="Sélectionnez"
                 />
-                <p style={{ fontSize: '13px', color: T.color.gray, margin: '6px 0 0 0' }}>
-                  Parmi les représentants légaux PP préalablement renseignés à l'étape "Représentants Légaux".
-                </p>
               </div>
             )}
 
@@ -5603,9 +5627,6 @@
                   options={MOCK_ASSOCIES_PP_RO}
                   placeholder="Sélectionnez"
                 />
-                <p style={{ fontSize: '13px', color: T.color.gray, margin: '6px 0 0 0' }}>
-                  Parmi les associés PP préalablement renseignés à l'étape "Liste des associés".
-                </p>
               </div>
             )}
 
@@ -5623,6 +5644,12 @@
                     update('roPrenom4',   person.prenom4 || '');
                     update('roConseilRegional', person.conseilRegional);
                     update('roSearchLabel', `${person.civilite} ${person.nom} ${person.prenom} - ${person.region}`);
+                    update('roRue',        person.rue        || '');
+                    update('roComplement', person.complement || '');
+                    update('roLieuDit',    person.lieuDit    || '');
+                    update('roCodePostal', person.codePostal || '');
+                    update('roVille',      person.ville      || '');
+                    update('roPays',       person.pays       || '');
                   }}
                   onManual={() => {
                     update('roSearchMode', 'manual');
@@ -5630,10 +5657,12 @@
                     update('roPrenom2', ''); update('roPrenom3', ''); update('roPrenom4', '');
                     update('roConseilRegional', '');
                     update('roSearchLabel', '+ Renseignez manuellement');
+                    RO_ADDR_KEYS.forEach(k => update(k, ''));
                   }}
                   onClear={() => {
                     ['roSearchMode','roCivilite','roNom','roPrenom','roPrenom2','roPrenom3','roPrenom4','roConseilRegional','roSearchLabel']
                       .forEach(k => update(k, k === 'roSearchMode' ? undefined : ''));
+                    RO_ADDR_KEYS.forEach(k => update(k, ''));
                   }}
                   searchMode={d.roSearchMode}
                   selectedLabel={d.roSearchLabel}
@@ -5682,7 +5711,7 @@
                         <p style={{ fontSize: '13px', fontWeight: 600, color: T.color.gray, margin: '0 0 12px 0', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                           Adresse professionnelle de l'inscription principale
                         </p>
-                        <AddressBlock data={d} onChange={() => {}} prefix="ro" noRequired />
+                        <AddressBlock data={d} onChange={() => {}} prefix="ro" noRequired readOnly />
                         <div style={{ marginBottom: '16px' }}>
                           <ReadOnlyField label="Conseil régional de l'Ordre d'inscription principale" required value={d.roConseilRegional} />
                         </div>
