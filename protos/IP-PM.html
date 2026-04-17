@@ -177,8 +177,11 @@
     const ADMIN_STEP = "Administrateurs/membres du directoire/membres du conseil de surveillance";
     const ADMIN_FORMES = ['SELAS', 'SELASU', 'SELAFA', 'SELCA'];
 
+    const RO_STEP = "Responsable ordinal";
+
     const buildSteps = (hasPM, profile, formeJuridique) => {
-      const steps = [...BASE_STEPS];
+      // RO est conditionnel à SPE — on le retire de BASE_STEPS pour le réinsérer selon le profil
+      const steps = BASE_STEPS.filter(s => s !== RO_STEP);
       const hasAdmin = ADMIN_FORMES.includes(formeJuridique);
 
       // EXTRA_STEP après "Représentants Légaux"
@@ -199,6 +202,12 @@
         const pcpIdx = steps.indexOf("Personne de contact principal");
         const insertAfter = lbcIdx !== -1 ? lbcIdx : pcpIdx;
         if (insertAfter !== -1) steps.splice(insertAfter + 1, 0, ADMIN_STEP);
+      }
+
+      // RO_STEP uniquement pour SPE, après "Liste des bénéficiaires effectifs"
+      if (profile === 'SPE') {
+        const befIdx = steps.indexOf("Liste des bénéficiaires effectifs");
+        if (befIdx !== -1) steps.splice(befIdx + 1, 0, RO_STEP);
       }
 
       return steps;
@@ -1917,6 +1926,22 @@
       { civilite: 'Monsieur', nom: 'BERTRAND', prenom: 'Alain', prenom2: 'François', prenom3: '', prenom4: '', region: 'PACA', conseilRegional: "Provence-Alpes-Côte d'Azur" },
     ];
 
+
+    // ── Mock: Bénéficiaires pré-chargés (depuis étapes précédentes) ──
+    const MOCK_BENEF_PRELOADS = [
+      { civilite: 'Monsieur', nom: 'DUPONT',  prenom: 'Jean',   source: 'Représentant légal' },
+      { civilite: 'Madame',   nom: 'DURAND',  prenom: 'Marie',  source: 'Associé' },
+    ];
+
+    // ── Mock: picklists Responsable Ordinal ──
+    const MOCK_RL_PP_RO = [
+      { value: 'dupont-jean',    label: 'M. DUPONT Jean' },
+      { value: 'martin-pierre',  label: 'M. MARTIN Pierre' },
+    ];
+    const MOCK_ASSOCIES_PP_RO = [
+      { value: 'durand-marie',   label: 'Mme DURAND Marie' },
+      { value: 'moreau-sophie',  label: 'Mme MOREAU Sophie' },
+    ];
 
     // ── Read-only field (grey background) ──
     const ReadOnlyField = ({ label, required, value }) => (
@@ -4369,9 +4394,17 @@
       },
     ];
 
-    const StepPiecesContent = ({ data, update }) => {
+    const StepPiecesContent = ({ data, update, roSituation }) => {
       const d = data || {};
       const files = d.files || {};
+
+      const handleUpdateROFile = (docId, name) => {
+        update('files', prev => {
+          const next = { ...(prev || {}) };
+          if (name) next[docId] = name; else delete next[docId];
+          return next;
+        });
+      };
 
       const UploadZone = ({ docId }) => {
         const [dragging, setDragging] = React.useState(false);
@@ -4508,6 +4541,45 @@
               <UploadZone docId={doc.id} />
             </div>
           ))}
+
+          {/* Documents Responsable ordinal (conditionnels) */}
+          {roSituation === 'rl' && (
+            <SectionCard>
+              <SectionTitle>Responsable ordinal</SectionTitle>
+              <p style={{ fontSize: '14px', color: T.color.gray, margin: '0 0 20px 0', lineHeight: '22px' }}>
+                Téléversez le document signé correspondant (modèle 1).
+              </p>
+              <PJUploadRow
+                label="Engagement de responsabilité ordinale du représentant légal"
+                tag="Modèle 1"
+                docId="ro_model1"
+                files={files}
+                onUpdate={handleUpdateROFile}
+              />
+            </SectionCard>
+          )}
+          {(roSituation === 'associe' || roSituation === 'salarie') && (
+            <SectionCard>
+              <SectionTitle>Responsable ordinal</SectionTitle>
+              <p style={{ fontSize: '14px', color: T.color.gray, margin: '0 0 20px 0', lineHeight: '22px' }}>
+                Téléversez les deux documents signés correspondants (modèles 2 et 3).
+              </p>
+              <PJUploadRow
+                label="Engagement de responsabilité ordinale du représentant légal"
+                tag="Modèle 2"
+                docId="ro_model2"
+                files={files}
+                onUpdate={handleUpdateROFile}
+              />
+              <PJUploadRow
+                label="Engagement de responsabilité ordinale du responsable ordinal"
+                tag="Modèle 3"
+                docId="ro_model3"
+                files={files}
+                onUpdate={handleUpdateROFile}
+              />
+            </SectionCard>
+          )}
 
         </div>
       );
@@ -5155,6 +5227,507 @@
     };
 
     // ============================================================
+    // Drawer: Ajouter un bénéficiaire effectif
+    // ============================================================
+    const DrawerAjoutBeneficiaire = ({ isOpen, onClose, onAdd }) => {
+      const [ppData, setPpData] = useState({});
+
+      const reset = () => { setPpData({}); };
+      const handleClose = () => { reset(); onClose(); };
+      const updatePP = (k, v) => setPpData(prev => ({ ...prev, [k]: v }));
+
+      const getLabel = () => `${ppData.civilite || ''} ${ppData.nom || ''} ${ppData.prenom || ''}`.trim();
+      const canAdd = ppData.searchMode !== undefined;
+
+      const handleAdd = () => {
+        if (!canAdd) return;
+        onAdd({ label: getLabel(), civilite: ppData.civilite, nom: ppData.nom, prenom: ppData.prenom });
+        reset();
+        onClose();
+      };
+
+      if (!isOpen) return null;
+
+      return (
+        <>
+          <div onClick={handleClose} style={{ position: 'fixed', inset: 0, background: 'rgba(17,24,39,0.35)', zIndex: 1000 }} />
+          <div style={{
+            position: 'fixed', top: 0, right: 0, bottom: 0, width: '50%',
+            background: T.color.white, zIndex: 1001, display: 'flex', flexDirection: 'column',
+            boxShadow: '-6px 0 32px rgba(0,0,0,0.14)', fontFamily: T.font,
+          }}>
+
+            {/* En-tête */}
+            <div style={{
+              padding: '20px 24px', borderBottom: `1px solid ${T.color.border}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0,
+            }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: T.color.textDark }}>
+                  Ajouter un bénéficiaire effectif
+                </h3>
+                <p style={{ margin: '2px 0 0', fontSize: '13px', color: T.color.gray }}>
+                  Renseignez les informations de la personne physique
+                </p>
+              </div>
+              <button onClick={handleClose} style={{
+                background: 'none', border: `1px solid ${T.color.border}`, borderRadius: T.radius,
+                cursor: 'pointer', padding: '6px 10px', fontSize: '16px', color: T.color.gray, lineHeight: 1,
+              }}>✕</button>
+            </div>
+
+            {/* Corps */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+              <div style={{ paddingTop: '4px' }}>
+                <PersonnePhysiqueCard data={ppData} update={updatePP} profile="SEC" />
+              </div>
+            </div>
+
+            {/* Pied de page */}
+            <div style={{
+                padding: '16px 24px', borderTop: `1px solid ${T.color.border}`,
+                display: 'flex', gap: '12px', flexShrink: 0, background: T.color.white,
+              }}>
+                <button onClick={handleClose} style={{
+                  flex: 1, padding: '10px 0', border: `1px solid ${T.color.border}`,
+                  borderRadius: T.radius, background: 'none', color: T.color.textDark,
+                  fontSize: '14px', fontWeight: 500, cursor: 'pointer', fontFamily: T.font,
+                }}>Annuler</button>
+                <button onClick={handleAdd} disabled={!canAdd} style={{
+                  flex: 2, padding: '10px 0', border: 'none', borderRadius: T.radius,
+                  background: canAdd ? T.color.primaryBlue : '#D1D5DB', color: T.color.white,
+                  fontSize: '14px', fontWeight: 600, cursor: canAdd ? 'pointer' : 'default',
+                  fontFamily: T.font, transition: 'background 0.15s',
+                }}>Ajouter le bénéficiaire →</button>
+              </div>
+          </div>
+        </>
+      );
+    };
+
+    // ============================================================
+    // Step: Liste des bénéficiaires effectifs
+    // ============================================================
+    const StepBeneficiairesContent = () => {
+      const [autreBenef, setAutreBenef] = useState('');
+      const [drawerOpen, setDrawerOpen] = useState(false);
+      const [addedBenef, setAddedBenef] = useState([]);
+
+      const allRows = [
+        ...MOCK_BENEF_PRELOADS.map(b => ({ ...b, added: false })),
+        ...addedBenef.map(b  => ({ civilite: b.civilite || '', nom: b.nom || '', prenom: b.prenom || '', source: 'Déclaré à cette étape', added: true, idx: addedBenef.indexOf(b) })),
+      ];
+
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <div>
+            <h2 style={{ fontSize: '24px', fontWeight: 700, color: T.color.textDark, margin: '0 0 8px 0', lineHeight: '36px' }}>
+              Liste des bénéficiaires effectifs
+            </h2>
+            <p style={{ fontSize: '14px', color: T.color.gray, margin: 0 }}>
+              Identifiez les bénéficiaires effectifs de la société en cours d'inscription.
+            </p>
+          </div>
+
+          <SectionCard>
+            {/* Titre tableau */}
+            <p style={{ fontSize: '14px', fontWeight: 600, color: T.color.textDark, margin: '0 0 4px 0' }}>
+              Liste récapitulative des bénéficiaires effectifs déclarés précédemment dans ce formulaire.
+            </p>
+            <p style={{ fontSize: '13px', color: T.color.gray, margin: '0 0 16px 0' }}>
+              Le bénéficiaire effectif est défini aux articles R561-1 et R561-3 du code monétaire et financier.
+            </p>
+
+            {/* Tableau */}
+            <div style={{ border: `1px solid ${T.color.border}`, borderRadius: T.radius, overflow: 'hidden', marginBottom: '24px' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+                <thead>
+                  <tr style={{ background: T.color.radioBg }}>
+                    <th style={{ padding: '10px 16px', textAlign: 'left', fontWeight: 600, color: T.color.textDark, borderBottom: `1px solid ${T.color.border}` }}>
+                      Bénéficiaire effectif
+                    </th>
+                    <th style={{ padding: '10px 16px', width: '80px', borderBottom: `1px solid ${T.color.border}` }} />
+                  </tr>
+                </thead>
+                <tbody>
+                  {allRows.length === 0 && (
+                    <tr>
+                      <td colSpan={2} style={{ padding: '24px 16px', textAlign: 'center', color: T.color.gray, fontSize: '14px' }}>
+                        Aucun bénéficiaire effectif déclaré pour le moment.
+                      </td>
+                    </tr>
+                  )}
+                  {allRows.map((be, idx) => (
+                    <tr key={idx} style={{
+                      borderBottom: idx < allRows.length - 1 ? `1px solid ${T.color.border}` : 'none',
+                      background: be.added ? '#F0FDF4' : T.color.white,
+                    }}>
+                      <td style={{ padding: '12px 16px', color: T.color.textDark }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          {be.added && (
+                            <span style={{
+                              background: '#DCFCE7', border: '1px solid #BBF7D0', borderRadius: '4px',
+                              fontSize: '11px', fontWeight: 600, color: '#15803D', padding: '1px 6px', flexShrink: 0,
+                            }}>Ajouté</span>
+                          )}
+                          {be.civilite} {be.nom} {be.prenom}
+                        </span>
+                      </td>
+                      <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                        {be.added && (
+                          <button onClick={() => {
+                            const origIdx = addedBenef.findIndex(a => a.label === `${be.civilite} ${be.nom} ${be.prenom}`.trim());
+                            setAddedBenef(prev => prev.filter((_, i) => i !== (origIdx === -1 ? be.idx : origIdx)));
+                          }} style={{
+                            background: 'none', border: 'none', cursor: 'pointer',
+                            fontSize: '13px', color: T.color.primaryRed, fontFamily: T.font, padding: 0,
+                          }}>Retirer</button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Question OuiNon */}
+            <OuiNon
+              label="Avez-vous des bénéficiaires effectifs à déclarer, hors ceux listés ci-dessus ?"
+              required
+              value={autreBenef}
+              onChange={setAutreBenef}
+            />
+
+            {autreBenef === 'Oui' && (
+              <div style={{ marginTop: '16px' }}>
+                <button onClick={() => setDrawerOpen(true)} style={{
+                  background: 'none', border: `1px solid ${T.color.border}`, borderRadius: T.radius,
+                  padding: '8px 20px', cursor: 'pointer', alignSelf: 'flex-start',
+                  fontSize: '14px', fontWeight: 500, color: T.color.primaryBlue, fontFamily: T.font,
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                }}>
+                  + Ajouter un bénéficiaire effectif
+                </button>
+              </div>
+            )}
+          </SectionCard>
+
+          <DrawerAjoutBeneficiaire
+            isOpen={drawerOpen}
+            onClose={() => setDrawerOpen(false)}
+            onAdd={(b) => {
+              setAddedBenef(prev => [...prev, b]);
+              setDrawerOpen(false);
+            }}
+          />
+        </div>
+      );
+    };
+
+    // ============================================================
+    // Composant upload PJ réutilisable (pour Responsable ordinal)
+    // ============================================================
+    const PJUploadRow = ({ label, tag, docId, files, onUpdate }) => {
+      const [dragging, setDragging] = useState(false);
+      const uploaded = (files || {})[docId];
+
+      const handleChange = (e) => {
+        const file = e.target.files[0];
+        if (file) onUpdate(docId, file.name);
+      };
+      const handleDrop = (e) => {
+        e.preventDefault(); setDragging(false);
+        const file = e.dataTransfer.files[0];
+        if (file) onUpdate(docId, file.name);
+      };
+      const handleRemove = () => onUpdate(docId, null);
+
+      return (
+        <div style={{
+          background: T.color.white, border: `1px solid ${T.color.border}`,
+          borderRadius: T.radius, padding: '20px', marginBottom: '16px',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+            <p style={{ fontSize: '15px', fontWeight: 600, color: T.color.textDark, margin: 0 }}>{label}</p>
+            {tag && (
+              <span style={{
+                background: T.color.infoBg, border: `1px solid ${T.color.infoBorder}`,
+                borderRadius: '4px', fontSize: '11px', fontWeight: 600, color: T.color.infoText, padding: '1px 6px',
+              }}>{tag}</span>
+            )}
+          </div>
+          <a href="#" onClick={e => e.preventDefault()} style={{
+            display: 'inline-block', fontSize: '13px', color: T.color.primaryBlue,
+            fontWeight: 500, textDecoration: 'underline', marginBottom: '12px',
+          }}>Télécharger le modèle</a>
+
+          {uploaded ? (
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '12px 16px', background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: T.radius,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#047857" strokeWidth="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+                </svg>
+                <span style={{ fontSize: '14px', color: '#047857', fontWeight: 500 }}>{uploaded}</span>
+              </div>
+              <button onClick={handleRemove} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: T.color.gray, lineHeight: 1 }}>×</button>
+            </div>
+          ) : (
+            <label
+              onDragOver={e => { e.preventDefault(); setDragging(true); }}
+              onDragLeave={() => setDragging(false)}
+              onDrop={handleDrop}
+              style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
+                padding: '24px 20px', cursor: 'pointer',
+                border: `1px ${dragging ? 'solid' : 'dashed'} ${dragging ? T.color.primaryBlue : T.color.borderMedium}`,
+                borderRadius: T.radius, background: dragging ? T.color.infoBg : T.color.bg, transition: 'all 0.15s',
+              }}
+            >
+              <input type="file" accept=".jpg,.jpeg,.png,.pdf" onChange={handleChange} style={{ display: 'none' }} />
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={T.color.primaryBlue} strokeWidth="1.8">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              <span style={{ fontSize: '14px', color: T.color.textDark }}>
+                <span style={{ color: T.color.primaryBlue, fontWeight: 500, textDecoration: 'underline' }}>Parcourir</span>
+                {' '}ou glisser-déposer
+              </span>
+              <span style={{ fontSize: '13px', color: T.color.gray }}>PDF, JPG, JPEG, PNG — 2 Mo max</span>
+            </label>
+          )}
+        </div>
+      );
+    };
+
+    // ============================================================
+    // Step: Responsable ordinal (SPE uniquement)
+    // ============================================================
+    const StepROContent = ({ data, update, showError }) => {
+      const d = data || {};
+      const situation = d.situation || '';
+      const isSelected = d.roSearchMode === 'selected';
+      const isManual   = d.roSearchMode === 'manual';
+      const showFields = isSelected || isManual;
+      const files      = d.files || {};
+
+      const handleUpdateFile = (docId, name) => {
+        update('files', prev => {
+          const next = { ...(prev || {}) };
+          if (name) next[docId] = name; else delete next[docId];
+          return next;
+        });
+      };
+
+      const resetSituation = (val) => {
+        update('situation', val);
+        update('rlSelection', '');
+        update('associeSelection', '');
+        update('roSearchMode', undefined);
+        update('roNom', ''); update('roPrenom', ''); update('roCivilite', '');
+        update('roPrenom2', ''); update('roPrenom3', ''); update('roPrenom4', '');
+        update('roConseilRegional', ''); update('roSearchLabel', '');
+      };
+
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <div>
+            <h2 style={{ fontSize: '24px', fontWeight: 700, color: T.color.textDark, margin: '0 0 8px 0', lineHeight: '36px' }}>
+              Responsable ordinal
+            </h2>
+            <p style={{ fontSize: '14px', color: T.color.gray, margin: 0, lineHeight: '22px' }}>
+              Un responsable ordinal expert-comptable exerçant au siège social de la SPE doit être désigné.
+              Il doit s'agir d'un expert-comptable représentant légal de la SPE ou d'un associé et/ou salarié et exerçant.
+              Des attestations d'engagement de responsabilité ordinale correspondantes, qui doivent être téléversées dûment complétées et signées, sont disponibles en fin de formulaire.
+            </p>
+          </div>
+
+          <SectionCard>
+            {/* Choix de situation */}
+            <p style={{ fontSize: '14px', fontWeight: 600, color: T.color.textDark, margin: '0 0 12px 0' }}>
+              <span style={{ color: T.color.primaryRed }}>* </span>Précisez la situation du responsable ordinal :
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+              {[
+                { val: 'rl',      label: 'Il est représentant légal de la SPE' },
+                { val: 'associe', label: 'Il est associé de la SPE' },
+                { val: 'salarie', label: 'Il est salarié de la SPE' },
+              ].map(({ val, label }) => {
+                const sel = situation === val;
+                return (
+                  <label key={val} onClick={() => resetSituation(val)} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                    <div style={{
+                      width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0,
+                      border: `2px solid ${sel ? T.color.primaryBlue : T.color.borderMedium}`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', background: T.color.white,
+                    }}>
+                      {sel && <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: T.color.primaryBlue }} />}
+                    </div>
+                    <span style={{ fontSize: '14px', color: T.color.textDark }}>{label}</span>
+                  </label>
+                );
+              })}
+            </div>
+            {showError && !situation && (
+              <p style={{ fontSize: '13px', color: T.color.primaryRed, margin: '-16px 0 16px 0' }}>
+                Veuillez préciser la situation du responsable ordinal.
+              </p>
+            )}
+
+            {/* Choix 1 : RL PP */}
+            {situation === 'rl' && (
+              <div style={{ marginBottom: '24px' }}>
+                <FieldSelect
+                  label="Sélectionnez le responsable ordinal"
+                  required
+                  value={d.rlSelection || ''}
+                  onChange={v => update('rlSelection', v)}
+                  options={MOCK_RL_PP_RO}
+                  placeholder="Sélectionnez"
+                />
+                <p style={{ fontSize: '13px', color: T.color.gray, margin: '6px 0 0 0' }}>
+                  Parmi les représentants légaux PP préalablement renseignés à l'étape "Représentants Légaux".
+                </p>
+              </div>
+            )}
+
+            {/* Choix 2 : Associé PP */}
+            {situation === 'associe' && (
+              <div style={{ marginBottom: '24px' }}>
+                <FieldSelect
+                  label="Sélectionnez le responsable ordinal"
+                  required
+                  value={d.associeSelection || ''}
+                  onChange={v => update('associeSelection', v)}
+                  options={MOCK_ASSOCIES_PP_RO}
+                  placeholder="Sélectionnez"
+                />
+                <p style={{ fontSize: '13px', color: T.color.gray, margin: '6px 0 0 0' }}>
+                  Parmi les associés PP préalablement renseignés à l'étape "Liste des associés".
+                </p>
+              </div>
+            )}
+
+            {/* Choix 3 : Salarié */}
+            {situation === 'salarie' && (
+              <div style={{ marginBottom: '24px' }}>
+                <PersonSearchAutocomplete
+                  onSelectPerson={(person) => {
+                    update('roSearchMode', 'selected');
+                    update('roCivilite',  person.civilite);
+                    update('roNom',       person.nom);
+                    update('roPrenom',    person.prenom);
+                    update('roPrenom2',   person.prenom2 || '');
+                    update('roPrenom3',   person.prenom3 || '');
+                    update('roPrenom4',   person.prenom4 || '');
+                    update('roConseilRegional', person.conseilRegional);
+                    update('roSearchLabel', `${person.civilite} ${person.nom} ${person.prenom} - ${person.region}`);
+                  }}
+                  onManual={() => {
+                    update('roSearchMode', 'manual');
+                    update('roCivilite', ''); update('roNom', ''); update('roPrenom', '');
+                    update('roPrenom2', ''); update('roPrenom3', ''); update('roPrenom4', '');
+                    update('roConseilRegional', '');
+                    update('roSearchLabel', '+ Renseignez manuellement');
+                  }}
+                  onClear={() => {
+                    ['roSearchMode','roCivilite','roNom','roPrenom','roPrenom2','roPrenom3','roPrenom4','roConseilRegional','roSearchLabel']
+                      .forEach(k => update(k, k === 'roSearchMode' ? undefined : ''));
+                  }}
+                  searchMode={d.roSearchMode}
+                  selectedLabel={d.roSearchLabel}
+                />
+
+                {showFields && (
+                  <div style={{ borderTop: `1px solid ${T.color.border}`, paddingTop: '20px', marginTop: '8px' }}>
+
+                    {/* Civilité */}
+                    <div style={{ marginBottom: '16px' }}>
+                      <p style={{ fontSize: '14px', fontWeight: 600, color: T.color.textDark, margin: '0 0 8px 0' }}>
+                        <span style={{ color: '#C81E1E' }}>* </span>Civilité
+                      </p>
+                      <div style={{ display: 'flex', gap: '24px' }}>
+                        {CIVILITE_OPTIONS.map(opt => {
+                          const sel = d.roCivilite === opt;
+                          return (
+                            <label key={opt} onClick={isManual ? () => update('roCivilite', opt) : undefined}
+                              style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: isManual ? 'pointer' : 'default' }}>
+                              <div style={{
+                                width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0,
+                                border: `2px solid ${sel ? T.color.primaryBlue : T.color.borderMedium}`,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', background: T.color.white,
+                              }}>
+                                {sel && <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: T.color.primaryBlue }} />}
+                              </div>
+                              <span style={{ fontSize: '14px', color: T.color.textDark }}>{opt}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Noms */}
+                    {isSelected ? (
+                      <>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                          <ReadOnlyField label="Nom de famille" required value={d.roNom} />
+                          <ReadOnlyField label="Prénom"         required value={d.roPrenom} />
+                          <ReadOnlyField label="Prénom 2"               value={d.roPrenom2} />
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                          <ReadOnlyField label="Prénom 3" value={d.roPrenom3} />
+                          <ReadOnlyField label="Prénom 4" value={d.roPrenom4} />
+                        </div>
+                        <p style={{ fontSize: '13px', fontWeight: 600, color: T.color.gray, margin: '0 0 12px 0', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                          Adresse professionnelle de l'inscription principale
+                        </p>
+                        <AddressBlock data={d} onChange={() => {}} prefix="ro" noRequired />
+                        <div style={{ marginBottom: '16px' }}>
+                          <ReadOnlyField label="Conseil régional de l'Ordre d'inscription principale" required value={d.roConseilRegional} />
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                          <FieldInput label="Nom de famille" required value={d.roNom}    onChange={v => update('roNom', v)} />
+                          <FieldInput label="Prénom"         required value={d.roPrenom} onChange={v => update('roPrenom', v)} />
+                          <FieldInput label="Prénom 2"               value={d.roPrenom2} onChange={v => update('roPrenom2', v)} />
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                          <FieldInput label="Prénom 3" value={d.roPrenom3} onChange={v => update('roPrenom3', v)} />
+                          <FieldInput label="Prénom 4" value={d.roPrenom4} onChange={v => update('roPrenom4', v)} />
+                        </div>
+                        <p style={{ fontSize: '13px', fontWeight: 600, color: T.color.gray, margin: '0 0 12px 0', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                          Adresse professionnelle de l'inscription principale
+                        </p>
+                        <AddressBlock data={d} onChange={(k, v) => update(k, v)} prefix="ro" noRequired />
+                        <div style={{ marginBottom: '16px' }}>
+                          <FieldInput label="Conseil régional d'inscription en cours" value={d.roConseilRegional} onChange={v => update('roConseilRegional', v)} />
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Question finale (visible dès qu'une situation est choisie et, si salarié, dès qu'une PP est identifiée) */}
+            {situation && (situation !== 'salarie' || showFields) && (
+              <OuiNon
+                label="Ce responsable ordinal a-t-il déposé une demande personnelle d'inscription au titre du siège social de la SPE ?"
+                required
+                value={d.demandeInscription}
+                onChange={v => update('demandeInscription', v)}
+              />
+            )}
+          </SectionCard>
+
+        </div>
+      );
+    };
+
+    // ============================================================
     // REUSABLE: Text Input
     // ============================================================
     const FieldInput = ({ label, required, value, onChange, type = 'text', placeholder }) => {
@@ -5265,8 +5838,10 @@
       const [stepConsent, setStepConsent] = useState({});
       const [stepPieces, setStepPieces] = useState({});
       const [stepAdmin, setStepAdmin] = useState({});
+      const [stepRO, setStepRO] = useState({});
       const [step4Attempted, setStep4Attempted] = useState(false);
       const [lbcAttempted, setLbcAttempted] = useState(false);
+      const [roAttempted, setRoAttempted] = useState(false);
 
       const updateStep1 = useCallback((path, value) => {
         setStep1(prev => {
@@ -5287,6 +5862,10 @@
 
       const updateStepAdmin = useCallback((key, value) => {
         setStepAdmin(prev => ({ ...prev, [key]: typeof value === 'function' ? value(prev[key]) : value }));
+      }, []);
+
+      const updateStepRO = useCallback((key, value) => {
+        setStepRO(prev => ({ ...prev, [key]: typeof value === 'function' ? value(prev[key]) : value }));
       }, []);
 
       // Validation: Step 1 requires profile + qualite + croec
@@ -5314,8 +5893,16 @@
           const valid = LBC_FUNCTIONS.filter(f => f.required).every(f => covered.has(f.id));
           if (!valid) { setLbcAttempted(true); return; }
         }
+        if (stepName === RO_STEP) {
+          const sit = stepRO.situation;
+          if (!sit) { setRoAttempted(true); return; }
+          if (sit === 'rl'      && !stepRO.rlSelection)      { setRoAttempted(true); return; }
+          if (sit === 'associe' && !stepRO.associeSelection) { setRoAttempted(true); return; }
+          if (sit === 'salarie' && stepRO.roSearchMode === undefined) { setRoAttempted(true); return; }
+        }
         setStep4Attempted(false);
         setLbcAttempted(false);
+        setRoAttempted(false);
         window.scrollTo(0, 0);
         setCurrentStep(prev => Math.min(prev + 1, steps.length));
       };
@@ -5364,7 +5951,9 @@
           case "Personne de contact principal": return <StepPCPContent data={stepPCP} update={updateStepPCP} />;
           case LBC_STEP: return <StepLBCContent data={stepLBC} update={updateStepLBC} showError={lbcAttempted} />;
           case "Liste des associés": return <StepAssociesContent pcpSelection={stepPCP?.pcp} lbcPersons={stepLBC?.persons} />;
-          case "Pièces justificatives": return <StepPiecesContent data={stepPieces} update={updateStepPieces} />;
+          case "Liste des bénéficiaires effectifs": return <StepBeneficiairesContent />;
+          case RO_STEP: return <StepROContent data={stepRO} update={updateStepRO} showError={roAttempted} />;
+          case "Pièces justificatives": return <StepPiecesContent data={stepPieces} update={updateStepPieces} roSituation={stepRO?.situation} />;
           case "Consentement et RGPD": return <StepConsentementContent data={stepConsent} update={updateStepConsent} />;
           default: return (
             <div style={{ padding: '40px', textAlign: 'center', color: T.color.gray }}>
