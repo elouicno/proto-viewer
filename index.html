@@ -527,6 +527,138 @@
     gap: 4px;
   }
   .logout-btn:hover { color: var(--danger); border-color: var(--danger); }
+
+  /* ── COMMENT SYSTEM ── */
+  .toolbar-btn.btn-active {
+    color: var(--accent) !important;
+    border-color: var(--accent) !important;
+    background: var(--accent-soft) !important;
+  }
+
+  #btnComment { position: relative; }
+
+  .comment-count-badge {
+    position: absolute;
+    top: -5px; right: -5px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    font-size: 9px;
+    font-weight: 700;
+    min-width: 16px; height: 16px;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 3px;
+    font-family: 'JetBrains Mono', monospace;
+    pointer-events: none;
+  }
+
+  .comment-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 50;
+    cursor: crosshair;
+    display: none;
+    background: rgba(99,107,255,.03);
+  }
+
+  .comment-pin {
+    position: absolute;
+    width: 28px; height: 28px;
+    background: var(--accent);
+    border-radius: 50% 50% 0 50%;
+    transform: rotate(-45deg);
+    transform-origin: 0 100%;
+    cursor: pointer;
+    z-index: 51;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 10px rgba(0,0,0,.5);
+    display: flex; align-items: center; justify-content: center;
+    transition: background var(--transition), box-shadow var(--transition);
+    margin-left: -4px; margin-top: -28px;
+    pointer-events: all;
+  }
+
+  .comment-pin:hover { background: #818aff; box-shadow: 0 4px 16px rgba(99,107,255,.5); }
+  .comment-pin.selected { background: #ff8c42; }
+  .comment-pin.pending-pin { background: #ff8c42; }
+
+  .comment-pin-number {
+    transform: rotate(45deg);
+    font-size: 11px; font-weight: 700;
+    color: #fff; line-height: 1;
+    font-family: 'JetBrains Mono', monospace;
+    pointer-events: none;
+  }
+
+  .comment-bubble {
+    position: absolute;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    width: 264px;
+    z-index: 52;
+    box-shadow: 0 8px 32px rgba(0,0,0,.5);
+    animation: bubbleIn .15s cubic-bezier(.4,0,.2,1);
+    pointer-events: all;
+  }
+
+  @keyframes bubbleIn {
+    from { opacity:0; transform: scale(.93) translateY(4px); }
+    to   { opacity:1; transform: scale(1)   translateY(0); }
+  }
+
+  .comment-bubble textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    padding: 9px 11px;
+    resize: none; outline: none;
+    height: 80px; line-height: 1.5;
+    display: block;
+  }
+
+  .comment-bubble textarea:focus { border-color: var(--accent); }
+  .comment-bubble textarea::placeholder { color: var(--text-muted); }
+
+  .comment-bubble-actions {
+    display: flex; gap: 6px;
+    margin-top: 10px; justify-content: flex-end;
+  }
+
+  .cbtn {
+    display: flex; align-items: center; gap: 5px;
+    padding: 6px 12px; border-radius: 7px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px; font-weight: 500;
+    cursor: pointer; border: 1px solid transparent;
+    transition: all var(--transition);
+  }
+
+  .cbtn-cancel  { background: var(--bg); color: var(--text-muted); border-color: var(--border); }
+  .cbtn-cancel:hover  { color: var(--text); border-color: var(--text-dim); }
+  .cbtn-confirm { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .cbtn-confirm:hover { background: #818aff; }
+  .cbtn-resolve { background: rgba(52,211,153,.12); color: #34d399; border-color: #34d399; }
+  .cbtn-resolve:hover { background: rgba(52,211,153,.22); }
+  .cbtn-delete  { background: none; color: var(--danger); border-color: var(--danger); }
+  .cbtn-delete:hover  { background: rgba(255,77,106,.12); }
+
+  .comment-text {
+    font-size: 13px; color: var(--text);
+    line-height: 1.6; word-break: break-word;
+    margin-bottom: 4px;
+  }
+
+  .comment-date {
+    font-size: 11px; color: var(--text-muted);
+    margin-bottom: 10px;
+    font-family: 'JetBrains Mono', monospace;
+  }
 </style>
 </head>
 <body>
@@ -603,9 +735,14 @@
       <button class="toolbar-btn" title="Recharger" onclick="reloadFrame()">
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1v4h4"/><path d="M1 5a6 6 0 1 1 1.3 3.8"/></svg>
       </button>
+
+      <button class="toolbar-btn" id="btnComment" title="Ajouter des commentaires" onclick="toggleCommentMode()">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 2h11a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H5l-3 3V3a1 1 0 0 1 1-1z"/></svg>
+      </button>
     </div>
 
     <div class="viewer-frame" id="viewerFrame">
+      <div id="commentOverlay" class="comment-overlay"></div>
       <div class="empty-state" id="emptyState">
         <svg width="56" height="56" fill="none" stroke="currentColor" stroke-width="1"><rect x="6" y="6" width="44" height="44" rx="6"/><path d="M20 22h16M20 28h12M20 34h8"/></svg>
         <h2>Sélectionnez un prototype</h2>
@@ -735,6 +872,7 @@ async function initApp() {
     ghRepo = location.pathname.split('/')[1] || null;
   }
 
+  initComments();
   await autoDiscoverProtos();
 
   renderList();
@@ -900,6 +1038,12 @@ async function loadProto(proto) {
   location.hash = encodeURIComponent(proto.file);
 
   document.querySelector('.sidebar').classList.remove('open');
+
+  // Render comment pins for this proto
+  cancelNewComment();
+  closeAllBubbles();
+  renderCommentPins();
+  updateCommentBadge();
 }
 
 function setDevice(device) {
@@ -957,6 +1101,222 @@ function showToast(msg) {
 // ── SEARCH ──
 document.getElementById('search').addEventListener('input', e => {
   renderList(e.target.value);
+});
+
+// ── COMMENT SYSTEM ──
+let commentMode = false;
+let commentsDB = {};   // { 'protos/X.html': [{id, num, x, y, text, date}] }
+let commentNums = {};  // { 'protos/X.html': lastNum }
+let openBubbleId = null;
+
+function initComments() {
+  try {
+    const raw = localStorage.getItem('pv_comments_v2');
+    if (raw) {
+      const p = JSON.parse(raw);
+      commentsDB  = p.db      || {};
+      commentNums = p.counter || {};
+    }
+  } catch {}
+}
+
+function saveComments() {
+  try {
+    localStorage.setItem('pv_comments_v2', JSON.stringify({ db: commentsDB, counter: commentNums }));
+  } catch {}
+}
+
+function toggleCommentMode() {
+  commentMode = !commentMode;
+  const btn     = document.getElementById('btnComment');
+  const overlay = document.getElementById('commentOverlay');
+  btn.classList.toggle('btn-active', commentMode);
+  overlay.style.display = commentMode ? 'block' : 'none';
+  if (!commentMode) { cancelNewComment(); closeAllBubbles(); }
+}
+
+// Click on overlay → place pin + input
+document.getElementById('commentOverlay').addEventListener('click', function(e) {
+  const frame = document.getElementById('viewerFrame');
+  const rect  = frame.getBoundingClientRect();
+  const x = (e.clientX - rect.left)  / rect.width;
+  const y = (e.clientY - rect.top)   / rect.height;
+  closeAllBubbles();
+  cancelNewComment();
+  showNewCommentInput(x, y);
+});
+
+function showNewCommentInput(x, y) {
+  const proto = protos.find(p => p.id === currentId);
+  if (!proto) return;
+
+  const frame = document.getElementById('viewerFrame');
+
+  // Pending pin
+  const pin = document.createElement('div');
+  pin.className = 'comment-pin pending-pin';
+  pin.id = 'pendingPin';
+  pin.style.left = (x * 100) + '%';
+  pin.style.top  = (y * 100) + '%';
+  pin.innerHTML  = '<span class="comment-pin-number">+</span>';
+  frame.appendChild(pin);
+
+  // Input bubble
+  const bubble = document.createElement('div');
+  bubble.className = 'comment-bubble';
+  bubble.id = 'pendingBubble';
+  bubble.innerHTML = `
+    <textarea id="commentInput" placeholder="Votre commentaire… (Ctrl+Entrée pour valider)"></textarea>
+    <div class="comment-bubble-actions">
+      <button class="cbtn cbtn-cancel" onclick="cancelNewComment()">Annuler</button>
+      <button class="cbtn cbtn-confirm" onclick="confirmNewComment(${x},${y})">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2 6l3 3 5-5"/></svg>
+        Valider
+      </button>
+    </div>`;
+  positionBubble(bubble, x, y);
+  frame.appendChild(bubble);
+
+  setTimeout(() => {
+    const ta = document.getElementById('commentInput');
+    if (!ta) return;
+    ta.focus();
+    ta.addEventListener('keydown', e => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') confirmNewComment(x, y);
+      if (e.key === 'Escape') cancelNewComment();
+    });
+  }, 40);
+}
+
+function positionBubble(el, xFrac, yFrac) {
+  const frame = document.getElementById('viewerFrame');
+  const fw = frame.offsetWidth, fh = frame.offsetHeight;
+  const bw = 264, bh = 170;
+  const px = xFrac * fw, py = yFrac * fh;
+  let left = px + 24, top = py - 10;
+  if (left + bw > fw - 10)  left = px - bw - 10;
+  if (top  + bh > fh - 10)  top  = fh - bh - 10;
+  if (top  < 10)             top  = 10;
+  if (left < 10)             left = 10;
+  el.style.left = left + 'px';
+  el.style.top  = top  + 'px';
+}
+
+function confirmNewComment(x, y) {
+  const ta = document.getElementById('commentInput');
+  if (!ta) return;
+  const text = ta.value.trim();
+  if (!text) { ta.focus(); return; }
+
+  const proto = protos.find(p => p.id === currentId);
+  if (!proto) return;
+  const key = proto.file;
+
+  if (!commentsDB[key])  commentsDB[key]  = [];
+  if (!commentNums[key]) commentNums[key] = 0;
+  commentNums[key]++;
+
+  commentsDB[key].push({
+    id:   Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    num:  commentNums[key],
+    x, y, text, date: Date.now()
+  });
+  saveComments();
+  cancelNewComment();
+  renderCommentPins();
+  updateCommentBadge();
+  showToast('Commentaire ajouté ✓');
+}
+
+function cancelNewComment() {
+  document.getElementById('pendingPin')?.remove();
+  document.getElementById('pendingBubble')?.remove();
+}
+
+function renderCommentPins() {
+  document.querySelectorAll('.comment-pin:not(#pendingPin), .comment-bubble:not(#pendingBubble)').forEach(el => el.remove());
+  const proto = protos.find(p => p.id === currentId);
+  if (!proto) return;
+  const list = commentsDB[proto.file] || [];
+  const frame = document.getElementById('viewerFrame');
+
+  list.forEach(c => {
+    const pin = document.createElement('div');
+    pin.className = 'comment-pin';
+    pin.dataset.id = c.id;
+    pin.style.left = (c.x * 100) + '%';
+    pin.style.top  = (c.y * 100) + '%';
+    pin.innerHTML  = `<span class="comment-pin-number">${c.num}</span>`;
+    pin.onclick = e => { e.stopPropagation(); openCommentBubble(c, pin); };
+    frame.appendChild(pin);
+  });
+}
+
+function openCommentBubble(comment, pinEl) {
+  closeAllBubbles();
+  pinEl.classList.add('selected');
+
+  const frame  = document.getElementById('viewerFrame');
+  const bubble = document.createElement('div');
+  bubble.className = 'comment-bubble';
+  bubble.dataset.bubbleFor = comment.id;
+
+  const d = new Date(comment.date);
+  const date = d.toLocaleDateString('fr-FR', { day:'numeric', month:'short' })
+             + ' · ' + d.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+
+  bubble.innerHTML = `
+    <div class="comment-text">${escapeHtml(comment.text)}</div>
+    <div class="comment-date">${date}</div>
+    <div class="comment-bubble-actions">
+      <button class="cbtn cbtn-delete" onclick="deleteComment('${comment.id}')">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 4h8M4 4V2h4v2M3 4l.5 7a1 1 0 0 0 1 .9h3a1 1 0 0 0 1-.9L9 4"/></svg>
+        Supprimer
+      </button>
+      <button class="cbtn cbtn-resolve" onclick="closeAllBubbles()">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2 6l3 3 5-5"/></svg>
+        Fermer
+      </button>
+    </div>`;
+
+  positionBubble(bubble, comment.x, comment.y);
+  frame.appendChild(bubble);
+  openBubbleId = comment.id;
+}
+
+function closeAllBubbles() {
+  document.querySelectorAll('.comment-bubble:not(#pendingBubble)').forEach(el => el.remove());
+  document.querySelectorAll('.comment-pin:not(#pendingPin)').forEach(el => el.classList.remove('selected'));
+  openBubbleId = null;
+}
+
+function deleteComment(id) {
+  const proto = protos.find(p => p.id === currentId);
+  if (!proto) return;
+  const key = proto.file;
+  commentsDB[key] = (commentsDB[key] || []).filter(c => c.id !== id);
+  saveComments();
+  renderCommentPins();
+  updateCommentBadge();
+  showToast('Commentaire supprimé');
+}
+
+function updateCommentBadge() {
+  const proto = protos.find(p => p.id === currentId);
+  const btn   = document.getElementById('btnComment');
+  let badge   = btn.querySelector('.comment-count-badge');
+  const count = proto ? (commentsDB[proto.file] || []).length : 0;
+  if (count > 0) {
+    if (!badge) { badge = document.createElement('span'); badge.className = 'comment-count-badge'; btn.appendChild(badge); }
+    badge.textContent = count;
+  } else { badge?.remove(); }
+}
+
+// Close bubble when clicking outside pins/bubbles
+document.addEventListener('click', e => {
+  if (openBubbleId && !e.target.closest('.comment-bubble') && !e.target.closest('.comment-pin')) {
+    closeAllBubbles();
+  }
 });
 
 // ── KEYBOARD ──
