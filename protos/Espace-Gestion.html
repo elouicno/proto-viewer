@@ -921,7 +921,7 @@ function SuiviPanel({ data }) {
             <Users size={14} className="text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <a href="#" className="text-[13px] text-[#0250D9] underline leading-[18px]">{item.name}</a>
+            <a href="javascript:void(0)" className="text-[13px] text-[#0250D9] underline leading-[18px]">{item.name}</a>
             <div className="flex gap-4 text-[13px] leading-[18px]">
               <span className="text-[#03234D]">Statut:</span>
               <span className="text-[#2E2E2E]">{item.statut}</span>
@@ -1328,7 +1328,7 @@ function DataTableDemandesView({ onContactClick }) {
             >
               <td className="px-2 py-2"><input type="checkbox" className="w-4 h-4 accent-[#0250D9] cursor-pointer" checked={!!selected[i]} onChange={() => toggle(i)} onClick={e => e.stopPropagation()} /></td>
               <td className="px-2 py-2">
-                <a href="#" onClick={e => e.preventDefault()} className="text-[#0250D9] underline font-medium">{row.num}</a>
+                <a href="javascript:void(0)" onClick={e => e.preventDefault()} className="text-[#0250D9] underline font-medium">{row.num}</a>
               </td>
               <td className="px-2 py-2 text-[#2E2E2E] max-w-[220px]">
                 <span className="block truncate">{row.type}</span>
@@ -1337,7 +1337,7 @@ function DataTableDemandesView({ onContactClick }) {
                 <span className="block truncate">{row.nomComptable}</span>
               </td>
               <td className="px-2 py-2">
-                <a href="#" onClick={e => { e.preventDefault(); e.stopPropagation(); if(onContactClick) onContactClick(row); }} className="text-[#0250D9] underline block truncate max-w-[180px]">{row.demandeur}</a>
+                <a href="javascript:void(0)" onClick={e => { e.preventDefault(); e.stopPropagation(); if(onContactClick) onContactClick(row); }} className="text-[#0250D9] underline block truncate max-w-[180px]">{row.demandeur}</a>
               </td>
               <td className="px-2 py-2 text-[#2E2E2E] max-w-[200px]">
                 <span className="block truncate">{row.profil}</span>
@@ -1460,7 +1460,7 @@ function DataTableListView({ data, onRowClick }) {
               <td className="px-2 py-2"><input type="checkbox" className="w-4 h-4 accent-[#0250D9] cursor-pointer" checked={!!selected[i]} onChange={() => toggle(i)} onClick={e => e.stopPropagation()} /></td>
               <td className="px-2 py-2 text-[#2E2E2E]">{row.groupePrincipal}</td>
               <td className="px-2 py-2">
-                <a href="#" onClick={(e) => { e.preventDefault(); e.stopPropagation(); if(onRowClick) onRowClick(row); }} className="text-[#0250D9] underline font-medium">{row.stagiaire}</a>
+                <a href="javascript:void(0)" onClick={(e) => { e.preventDefault(); e.stopPropagation(); if(onRowClick) onRowClick(row); }} className="text-[#0250D9] underline font-medium">{row.stagiaire}</a>
               </td>
               <td className="px-2 py-2 text-[#2E2E2E]">{row.dateNaissance}</td>
               <td className="px-2 py-2"><StatusBadge statut={row.statut} /></td>
@@ -2039,7 +2039,7 @@ function GroupesDataTable({ data, onRowClick }) {
               <td className="px-2 py-2"><span className="text-[#0250D9] underline font-medium">{row.numero}</span></td>
               <td className="px-2 py-2 text-[#2E2E2E]">{row.annee}</td>
               <td className="px-2 py-2">
-                <a href="#" onClick={(e) => { e.preventDefault(); e.stopPropagation(); if(onRowClick) onRowClick(row); }} className="text-[#0250D9] underline font-medium">{row.libelle}</a>
+                <a href="javascript:void(0)" onClick={(e) => { e.preventDefault(); e.stopPropagation(); if(onRowClick) onRowClick(row); }} className="text-[#0250D9] underline font-medium">{row.libelle}</a>
               </td>
               <td className="px-2 py-2">{row.controleur ? <span className="text-[#0250D9] underline">{row.controleur}</span> : ""}</td>
               <td className="px-2 py-2 text-[#2E2E2E]">{row.dateConstitution}</td>
@@ -2834,11 +2834,11 @@ function GroupeRecordPage({ groupe, onNavigateToRecord }) {
                           <tr key={i} className="border-b border-[#E5E5E5] hover:bg-[#F9F9F9] cursor-pointer transition-colors group">
                             <td className="px-2 py-2 text-[#2E2E2E]">{s.cr}</td>
                             <td className="px-2 py-2">
-                              <a href="#" onClick={(e) => { e.preventDefault(); if(onNavigateToRecord) onNavigateToRecord(s); }} className="text-[#0250D9] underline font-medium">{s.numInscription}</a>
+                              <a href="javascript:void(0)" onClick={(e) => { e.preventDefault(); if(onNavigateToRecord) onNavigateToRecord(s); }} className="text-[#0250D9] underline font-medium">{s.numInscription}</a>
                             </td>
                             <td className="px-2 py-2 text-[#2E2E2E]">{s.groupePrincipal}</td>
                             <td className="px-2 py-2">
-                              <a href="#" onClick={(e) => { e.preventDefault(); if(onNavigateToRecord) onNavigateToRecord(s); }} className="text-[#0250D9] underline font-medium">{s.stagiaire}</a>
+                              <a href="javascript:void(0)" onClick={(e) => { e.preventDefault(); if(onNavigateToRecord) onNavigateToRecord(s); }} className="text-[#0250D9] underline font-medium">{s.stagiaire}</a>
                             </td>
                             <td className="px-2 py-2"><StatusBadge statut={s.statut} /></td>
                             <td className="px-2 py-2 text-[#2E2E2E]">{s.dscg}</td>
@@ -4096,11 +4096,31 @@ function CheckIcon({ size = 14, className = "" }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="20 6 9 17 4 12"/></svg>;
 }
 
+// ── Hash routing helpers ──────────────────────────────────────
+// Maps activePage value → hash string (and back)
+const pageToHash = (page) => page === "list" ? "stagiaires" : page;
+const hashToPage = (hash) => (!hash || hash === "stagiaires") ? "list" : hash;
+
 function App() {
-  // activePage: "list" | "groupes" | "record:<numInscription>" | "groupe:<numero>"
-  const [activePage, setActivePage] = useState("list");
-  // openTabs: array of { type: "record"|"groupe", id, label, data }
+  // Initialise from URL hash on first load
+  const [activePage, setActivePageState] = useState(() => hashToPage(window.location.hash.slice(1)));
   const [openTabs, setOpenTabs] = useState([]);
+
+  // Keep hash in sync whenever activePage changes
+  const setActivePage = React.useCallback((page) => {
+    const hash = pageToHash(page);
+    if (window.location.hash.slice(1) !== hash) {
+      window.history.pushState(null, "", "#" + hash);
+    }
+    setActivePageState(page);
+  }, []);
+
+  // Handle browser Back / Forward buttons
+  React.useEffect(() => {
+    const onPop = () => setActivePageState(hashToPage(window.location.hash.slice(1)));
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
 
   const handleNavigateToRecord = (row) => {
     const tabId = "record:" + row.numInscription;
