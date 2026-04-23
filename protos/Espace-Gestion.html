@@ -4123,6 +4123,8 @@ const writeHash = (hash) => {
       const protoPath = parentHash.split("|")[0]; // "#protos%2FEspace-Gestion.html"
       const newHash = hash === "stagiaires" ? protoPath : protoPath + "|" + hash;
       window.parent.history.pushState(null, "", newHash);
+      // Notify patch via custom event (pushState doesn't fire hashchange)
+      try { window.parent.dispatchEvent(new window.parent.CustomEvent('pvViewChange', { detail: { view: hash } })); } catch(e2) {}
     } catch(e) {}
   } else {
     if (window.location.hash.slice(1) !== hash) {
@@ -4313,8 +4315,8 @@ root.render(<App />);
     } catch(e) {}
   }, 300);
 
-  // hashchange: update view and re-render pins
-  try { p.addEventListener('hashchange', function() { var v = getView(); if (v !== cv) { cv = v; p.renderCommentPins(); p.updateCommentBadge(); } }); } catch(e) {}
+  // pvViewChange: custom event dispatched by writeHash (pushState doesn't fire hashchange)
+  try { p.addEventListener('pvViewChange', function(e) { cv = e.detail.view; p.renderCommentPins(); p.updateCommentBadge(); }); } catch(e) {}
 
   function wrapFilter(fn) {
     return function() {
