@@ -598,6 +598,106 @@
     50%      { opacity: .55; }
   }
 
+  /* Sync indicator clickable when token missing or in error */
+  .sync-indicator.clickable { cursor: pointer; }
+  .sync-indicator.clickable:hover { background: var(--bg-card-hover); }
+
+  /* Token prompt modal */
+  .gist-token-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .gist-token-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,.55);
+    backdrop-filter: blur(4px);
+  }
+  .gist-token-card {
+    position: relative;
+    background: var(--bg-sidebar);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 28px 22px;
+    max-width: 460px;
+    width: 100%;
+    color: var(--text);
+    box-shadow: 0 20px 60px rgba(0,0,0,.5);
+  }
+  .gist-token-card h2 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .gist-token-card p {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.5;
+    margin-bottom: 16px;
+  }
+  .gist-token-card input {
+    width: 100%;
+    padding: 11px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    outline: none;
+    margin-bottom: 8px;
+    transition: border-color var(--transition);
+  }
+  .gist-token-card input:focus { border-color: var(--accent); }
+  .gist-token-error {
+    display: none;
+    font-size: 12px;
+    color: var(--danger);
+    margin-bottom: 8px;
+  }
+  .gist-token-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 12px;
+  }
+  .gist-token-actions button {
+    padding: 9px 16px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity var(--transition);
+  }
+  .gist-token-cancel {
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+  }
+  .gist-token-cancel:hover { color: var(--text); }
+  .gist-token-save {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+  }
+  .gist-token-save:hover { opacity: .9; }
+  .gist-token-save:disabled { opacity: .5; cursor: wait; }
+  .gist-token-help {
+    font-size: 11px !important;
+    color: var(--text-muted) !important;
+    margin-top: 14px !important;
+    margin-bottom: 0 !important;
+    line-height: 1.5 !important;
+  }
+  .gist-token-help a { color: var(--accent); text-decoration: none; }
+  .gist-token-help a:hover { text-decoration: underline; }
+
   .comment-pin {
     position: absolute;
     width: 28px; height: 28px;
@@ -819,6 +919,20 @@ async function sha256(text) {
 }
 
 // ── AUTH ──
+const GIST_TOKEN_KEY = 'pv_gist_token';
+
+function getStoredGistToken() {
+  try { return localStorage.getItem(GIST_TOKEN_KEY) || null; } catch { return null; }
+}
+function setStoredGistToken(t) {
+  try { localStorage.setItem(GIST_TOKEN_KEY, t); } catch {}
+  gistToken = t;
+}
+function clearStoredGistToken() {
+  try { localStorage.removeItem(GIST_TOKEN_KEY); } catch {}
+  gistToken = null;
+}
+
 async function loadConfig() {
   // Try to load config.json from same directory
   try {
@@ -827,9 +941,12 @@ async function loadConfig() {
       const config = await res.json();
       passwordHash = config.passwordHash || null;
       gistId       = config.gistId       || null;
-      gistToken    = config.gistToken    || null;
+      // gistToken is NEVER read from config.json (it would leak in the public repo
+      // and GitHub Secret Scanning would auto-revoke it). It lives in localStorage.
     }
   } catch { /* no config file — no password protection */ }
+  // Load token from localStorage (per-device, never in repo)
+  gistToken = getStoredGistToken();
 }
 
 async function handleLogin(e) {
@@ -1172,16 +1289,19 @@ function setSyncStatus(status, msg) {
   const el = document.getElementById('syncIndicator');
   if (!el) return;
   const map = {
-    idle:    { txt: 'Local',     cls: 'sync-idle',    title: 'Stockage local seulement (Gist non configuré)' },
-    loading: { txt: 'Sync…',     cls: 'sync-loading', title: 'Chargement depuis le Gist' },
-    saving:  { txt: 'Sync…',     cls: 'sync-loading', title: 'Sauvegarde vers le Gist' },
-    ok:      { txt: 'Synchro',   cls: 'sync-ok',      title: 'Commentaires synchronisés avec le Gist' },
-    error:   { txt: 'Erreur',    cls: 'sync-error',   title: msg || 'Erreur de synchronisation Gist' },
-    offline: { txt: 'Hors ligne', cls: 'sync-error',  title: 'Pas de connexion — modifications en local seulement' },
+    idle:     { txt: 'Local',      cls: 'sync-idle',    title: 'Stockage local seulement (Gist non configuré dans config.json)' },
+    'no-token': { txt: 'Token ?',  cls: 'sync-error',   title: 'Token GitHub manquant — clique pour le saisir et activer la synchro' },
+    loading:  { txt: 'Sync…',      cls: 'sync-loading', title: 'Chargement depuis le Gist' },
+    saving:   { txt: 'Sync…',      cls: 'sync-loading', title: 'Sauvegarde vers le Gist' },
+    ok:       { txt: 'Synchro',    cls: 'sync-ok',      title: 'Commentaires synchronisés. Clique pour changer de token.' },
+    error:    { txt: 'Erreur',     cls: 'sync-error',   title: (msg || 'Erreur de synchronisation Gist') + ' — clique pour saisir un nouveau token' },
+    offline:  { txt: 'Hors ligne', cls: 'sync-error',   title: 'Pas de connexion — modifications en local seulement' },
   };
   const m = map[status] || map.idle;
   el.textContent = m.txt;
-  el.className = 'sync-indicator ' + m.cls;
+  // Indicator is clickable when user can act on it (set/change token)
+  const clickable = (status === 'no-token' || status === 'error' || status === 'ok');
+  el.className = 'sync-indicator ' + m.cls + (clickable ? ' clickable' : '');
   el.title = m.title;
 }
 
@@ -1259,6 +1379,12 @@ async function fetchGist() {
     },
     cache: 'no-store',
   });
+  if (res.status === 401 || res.status === 403) {
+    handleGistAuthError();
+    const err = new Error(`Token invalide (${res.status})`);
+    err.status = res.status;
+    throw err;
+  }
   if (!res.ok) {
     const err = new Error(`Gist GET failed: ${res.status}`);
     err.status = res.status;
@@ -1308,6 +1434,12 @@ async function writeGist(payload) {
     },
     body: JSON.stringify(body),
   });
+  if (res.status === 401 || res.status === 403) {
+    handleGistAuthError();
+    const err = new Error(`Token invalide (${res.status})`);
+    err.status = res.status;
+    throw err;
+  }
   if (!res.ok) {
     const err = new Error(`Gist PATCH failed: ${res.status}`);
     err.status = res.status;
@@ -1363,6 +1495,14 @@ async function initComments() {
   commentNums  = local.counter;
   commentTombs = local.tombs;
 
+  // gistId set but no token in localStorage → prompt the user
+  if (gistId && !gistToken) {
+    setSyncStatus('no-token');
+    // Auto-open the modal once at boot so non-tech users discover the prompt
+    setTimeout(() => openGistTokenModal(), 400);
+    return;
+  }
+
   if (!gistConfigured()) {
     setSyncStatus('idle');
     return;
@@ -1393,6 +1533,134 @@ async function initComments() {
     console.warn('[pv] Initial Gist load failed:', e.message);
     setSyncStatus('error', e.message);
   }
+}
+
+// ── TOKEN PROMPT MODAL ──
+function ensureGistTokenModal() {
+  if (document.getElementById('gistTokenModal')) return;
+  const div = document.createElement('div');
+  div.id = 'gistTokenModal';
+  div.className = 'gist-token-modal';
+  div.innerHTML = `
+    <div class="gist-token-backdrop"></div>
+    <div class="gist-token-card">
+      <h2>Activer la synchro des commentaires</h2>
+      <p>Pour partager les commentaires entre tes appareils, colle ton token GitHub ci-dessous. Le token est gardé sur ce navigateur uniquement (jamais publié en ligne).</p>
+      <input type="password" id="gistTokenInput" placeholder="ghp_xxxxxxxxxxxxxxxx" spellcheck="false" autocomplete="off">
+      <div class="gist-token-error" id="gistTokenError"></div>
+      <div class="gist-token-actions">
+        <button class="gist-token-cancel" id="gistTokenCancel">Plus tard</button>
+        <button class="gist-token-save" id="gistTokenSave">Enregistrer</button>
+      </div>
+      <p class="gist-token-help">Pas de token ? Demande-le à la personne qui t'a donné accès, ou crée-en un sur <a href="https://github.com/settings/tokens" target="_blank" rel="noopener">github.com/settings/tokens</a> avec le scope <code>gist</code>.</p>
+    </div>
+  `;
+  document.body.appendChild(div);
+  document.getElementById('gistTokenSave').addEventListener('click', handleGistTokenSave);
+  document.getElementById('gistTokenCancel').addEventListener('click', closeGistTokenModal);
+  document.getElementById('gistTokenInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); handleGistTokenSave(); }
+    if (e.key === 'Escape') closeGistTokenModal();
+  });
+  // Click backdrop to dismiss
+  div.querySelector('.gist-token-backdrop').addEventListener('click', closeGistTokenModal);
+}
+
+function openGistTokenModal(errMsg) {
+  ensureGistTokenModal();
+  const modal = document.getElementById('gistTokenModal');
+  const input = document.getElementById('gistTokenInput');
+  const err = document.getElementById('gistTokenError');
+  modal.style.display = 'flex';
+  input.value = gistToken || '';
+  err.textContent = errMsg || '';
+  err.style.display = errMsg ? 'block' : 'none';
+  setTimeout(() => input.focus(), 50);
+}
+
+function closeGistTokenModal() {
+  const modal = document.getElementById('gistTokenModal');
+  if (modal) modal.style.display = 'none';
+}
+
+async function handleGistTokenSave() {
+  const input = document.getElementById('gistTokenInput');
+  const err = document.getElementById('gistTokenError');
+  const saveBtn = document.getElementById('gistTokenSave');
+  const t = (input.value || '').trim();
+  if (!t) {
+    err.textContent = 'Colle un token avant d\u2019enregistrer.';
+    err.style.display = 'block';
+    return;
+  }
+  if (!gistId) {
+    err.textContent = 'Aucun gistId configuré dans config.json.';
+    err.style.display = 'block';
+    return;
+  }
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Vérification…';
+  try {
+    const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+      headers: {
+        'Authorization': `Bearer ${t}`,
+        'Accept': 'application/vnd.github+json',
+      },
+      cache: 'no-store',
+    });
+    if (res.status === 401 || res.status === 403) {
+      err.textContent = 'Token invalide ou sans accès au Gist (' + res.status + ').';
+      err.style.display = 'block';
+      return;
+    }
+    if (res.status === 404) {
+      err.textContent = 'Gist introuvable. Vérifie l\u2019ID dans config.json.';
+      err.style.display = 'block';
+      return;
+    }
+    if (!res.ok) {
+      err.textContent = 'Erreur (' + res.status + '). Réessaie ou vérifie ta connexion.';
+      err.style.display = 'block';
+      return;
+    }
+    setStoredGistToken(t);
+    closeGistTokenModal();
+    showToast('Synchronisation activée');
+    // Reload comments now that we have a token
+    await initComments();
+    if (typeof renderCommentPins === 'function') renderCommentPins();
+    if (typeof updateCommentBadge === 'function') updateCommentBadge();
+  } catch (e) {
+    err.textContent = 'Erreur réseau : ' + (e.message || e);
+    err.style.display = 'block';
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'Enregistrer';
+  }
+}
+
+// Auth-error handler: token was revoked or never valid → clear it and re-prompt
+function handleGistAuthError() {
+  clearStoredGistToken();
+  setSyncStatus('no-token');
+  // Don't auto-pop the modal on every fetch failure — let the user click the indicator.
+}
+
+// Wire up the syncIndicator to open the modal when clickable
+function wireSyncIndicator() {
+  const el = document.getElementById('syncIndicator');
+  if (!el || el.dataset.wired) return;
+  el.dataset.wired = '1';
+  el.addEventListener('click', () => {
+    if (gistSyncStatus === 'no-token' || gistSyncStatus === 'error' || gistSyncStatus === 'ok') {
+      openGistTokenModal();
+    }
+  });
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', wireSyncIndicator);
+} else {
+  wireSyncIndicator();
 }
 
 // Public save entry point: always write local cache immediately, then push to Gist (debounced).
