@@ -1183,21 +1183,21 @@ function DockedUtilityBar() {
 // ══════════════════════════════════════════════════════════════
 
 const DEMANDES_LIST = [
-  { num: "#043512789", type: "Inscription secondaire PM",       nomComptable: "Cabinet Conseil & Associés",    demandeur: "Cabinet Solutions EC",   profil: "Article 27",                    statut: "Soumise",  dateSoumission: "22/07/2025", statutPieces: "Non conforme", proprietaire: "Thomas André" },
-  { num: "#043512800", type: "Demander une radiation PM",       nomComptable: "Société Fiduciaire Nationale", demandeur: "Société TechConseil",      profil: "Expert-comptable en entreprise", statut: "Soumise",  dateSoumission: "17/10/2025", statutPieces: "Demandée",     proprietaire: "Lucas Vidal" },
-  { num: "#043512811", type: "Inscription secondaire PM",       nomComptable: "Cabinet Durand & Partners",    demandeur: "Groupe d'Expertise Sud",   profil: "Article 7bis",                  statut: "Soumise",  dateSoumission: "11/02/2025", statutPieces: "Conforme",     proprietaire: "Alexandre Lefevre" },
-  { num: "#043512822", type: "Mettre à jour des informations",  nomComptable: "Cabinet XYZ",                  demandeur: "Emma David",               profil: "Diplômé d'expertise comptable", statut: "Affectée", dateSoumission: "26/05/2025", statutPieces: "A examiner",   proprietaire: "Alexandre Bernard" },
-  { num: "#043512833", type: "Inscription secondaire PP",       nomComptable: "Cabinet Juridique Martin",     demandeur: "Camille Durand",           profil: "Article 83 bis",                statut: "Affectée", dateSoumission: "07/04/2025", statutPieces: "Conforme",     proprietaire: "Alexandre Roche" },
-  { num: "#043512844", type: "Demander une radiation PP",       nomComptable: "Cabinet Expert Conseil",       demandeur: "Camille Vincent",          profil: "Article 27",                    statut: "Affectée", dateSoumission: "09/11/2025", statutPieces: "Conforme",     proprietaire: "Emma Rousseau" },
-  { num: "#043512855", type: "Inscription secondaire PP",       nomComptable: "Société Conseil Premium",      demandeur: "Lucas André",              profil: "Article 7bis",                  statut: "Soumise",  dateSoumission: "07/04/2025", statutPieces: "A examiner",   proprietaire: "Camille David" },
-  { num: "#043512866", type: "Demander un changement de statut",nomComptable: "Étude Collaborative",          demandeur: "Emma Durand",              profil: "Article 83 bis",                statut: "Affectée", dateSoumission: "16/03/2025", statutPieces: "A examiner",   proprietaire: "Lucas François" },
-  { num: "#043512877", type: "Mettre à jour des informations",  nomComptable: "Réseau Professionnel",         demandeur: "Thomas Giraud",            profil: "Expert-comptable en entreprise", statut: "Soumise",  dateSoumission: "19/01/2025", statutPieces: "Demandée",     proprietaire: "Lucas Clement" },
-  { num: "#043512888", type: "Demander une omission PP",        nomComptable: "Étude Partenaires",            demandeur: "Alexandre André",          profil: "Article 7bis",                  statut: "Affectée", dateSoumission: "09/12/2025", statutPieces: "Non conforme", proprietaire: "Emma David" },
-  { num: "#043512899", type: "Inscription secondaire PM",       nomComptable: "Cabinet Fiscal Expert",        demandeur: "Marie Leblanc",            profil: "Article 27",                    statut: "Soumise",  dateSoumission: "14/06/2025", statutPieces: "Conforme",     proprietaire: "Pierre Martin" },
-  { num: "#043512910", type: "Demander une radiation PP",       nomComptable: "Conseil & Patrimoine",         demandeur: "Nicolas Dupont",           profil: "Article 83 bis",                statut: "Affectée", dateSoumission: "03/08/2025", statutPieces: "Non conforme", proprietaire: "Sophie Bernard" },
-  { num: "#043512921", type: "Inscription secondaire PP",       nomComptable: "Cabinet Alliance",             demandeur: "Isabelle Moreau",          profil: "Diplômé d'expertise comptable", statut: "Soumise",  dateSoumission: "25/09/2025", statutPieces: "Demandée",     proprietaire: "Jean-Pierre Roux" },
-  { num: "#043512932", type: "Mettre à jour des informations",  nomComptable: "Fiduciaire du Nord",           demandeur: "François Petit",           profil: "Expert-comptable en entreprise", statut: "Affectée", dateSoumission: "12/11/2025", statutPieces: "A examiner",   proprietaire: "Claire Fontaine" },
-  { num: "#043512943", type: "Demander un changement de statut",nomComptable: "Cabinet Meridien",             demandeur: "Sylvie Garnier",           profil: "Article 7bis",                  statut: "Soumise",  dateSoumission: "28/01/2025", statutPieces: "Conforme",     proprietaire: "Marc Dubois" },
+  { num: "#043512789", type: "Inscription secondaire PM",   nomComptable: "Cabinet Conseil & Associés",    demandeur: "Cabinet Solutions EC",   profil: "Article 27",                    statut: "Soumise",  dateSoumission: "22/07/2025", statutPieces: "Non conforme", proprietaire: "Thomas André" },
+  { num: "#043512800", type: "Radiation PP",                nomComptable: "Société Fiduciaire Nationale", demandeur: "Société TechConseil",      profil: "Expert-comptable en entreprise", statut: "Soumise",  dateSoumission: "17/10/2025", statutPieces: "Demandée",     proprietaire: "Lucas Vidal" },
+  { num: "#043512811", type: "Inscription principale PP",   nomComptable: "Cabinet Durand & Partners",    demandeur: "Groupe d'Expertise Sud",   profil: "Article 7bis",                  statut: "Soumise",  dateSoumission: "11/02/2025", statutPieces: "Conforme",     proprietaire: "Alexandre Lefevre" },
+  { num: "#043512822", type: "Inscription principal PM",    nomComptable: "Cabinet XYZ",                  demandeur: "Emma David",               profil: "Diplômé d'expertise comptable", statut: "Affectée", dateSoumission: "26/05/2025", statutPieces: "A examiner",   proprietaire: "Alexandre Bernard" },
+  { num: "#043512833", type: "Inscription secondaire PP",   nomComptable: "Cabinet Juridique Martin",     demandeur: "Camille Durand",           profil: "Article 83 bis",                statut: "Affectée", dateSoumission: "07/04/2025", statutPieces: "Conforme",     proprietaire: "Alexandre Roche" },
+  { num: "#043512844", type: "Omission PP",                 nomComptable: "Cabinet Expert Conseil",       demandeur: "Camille Vincent",          profil: "Article 27",                    statut: "Affectée", dateSoumission: "09/11/2025", statutPieces: "Conforme",     proprietaire: "Emma Rousseau" },
+  { num: "#043512855", type: "Inscription secondaire PM",   nomComptable: "Société Conseil Premium",      demandeur: "Lucas André",              profil: "Article 7bis",                  statut: "Soumise",  dateSoumission: "07/04/2025", statutPieces: "A examiner",   proprietaire: "Camille David" },
+  { num: "#043512866", type: "Radiation PP",                nomComptable: "Étude Collaborative",          demandeur: "Emma Durand",              profil: "Article 83 bis",                statut: "Affectée", dateSoumission: "16/03/2025", statutPieces: "A examiner",   proprietaire: "Lucas François" },
+  { num: "#043512877", type: "Inscription principale PP",   nomComptable: "Réseau Professionnel",         demandeur: "Thomas Giraud",            profil: "Expert-comptable en entreprise", statut: "Soumise",  dateSoumission: "19/01/2025", statutPieces: "Demandée",     proprietaire: "Lucas Clement" },
+  { num: "#043512888", type: "Omission PP",                 nomComptable: "Étude Partenaires",            demandeur: "Alexandre André",          profil: "Article 7bis",                  statut: "Affectée", dateSoumission: "09/12/2025", statutPieces: "Non conforme", proprietaire: "Emma David" },
+  { num: "#043512899", type: "Inscription principal PM",    nomComptable: "Cabinet Fiscal Expert",        demandeur: "Marie Leblanc",            profil: "Article 27",                    statut: "Soumise",  dateSoumission: "14/06/2025", statutPieces: "Conforme",     proprietaire: "Pierre Martin" },
+  { num: "#043512910", type: "Inscription secondaire PP",   nomComptable: "Conseil & Patrimoine",         demandeur: "Nicolas Dupont",           profil: "Article 83 bis",                statut: "Affectée", dateSoumission: "03/08/2025", statutPieces: "Non conforme", proprietaire: "Sophie Bernard" },
+  { num: "#043512921", type: "Radiation PP",                nomComptable: "Cabinet Alliance",             demandeur: "Isabelle Moreau",          profil: "Diplômé d'expertise comptable", statut: "Soumise",  dateSoumission: "25/09/2025", statutPieces: "Demandée",     proprietaire: "Jean-Pierre Roux" },
+  { num: "#043512932", type: "Inscription secondaire PM",   nomComptable: "Fiduciaire du Nord",           demandeur: "François Petit",           profil: "Expert-comptable en entreprise", statut: "Affectée", dateSoumission: "12/11/2025", statutPieces: "A examiner",   proprietaire: "Claire Fontaine" },
+  { num: "#043512943", type: "Omission PP",                 nomComptable: "Cabinet Meridien",             demandeur: "Sylvie Garnier",           profil: "Article 7bis",                  statut: "Soumise",  dateSoumission: "28/01/2025", statutPieces: "Conforme",     proprietaire: "Marc Dubois" },
 ];
 
 const STAGIAIRES_LIST = [
@@ -2975,7 +2975,6 @@ function GroupeRecordPage({ groupe, onNavigateToRecord }) {
 
 const CONTACT_TABS = [
   { key: "individu",  label: "Individu"    },
-  { key: "motifs",    label: "Motifs"      },
   { key: "adresses",  label: "Adresse pro" },
   { key: "rac",       label: "RAC"         },
   { key: "infos",     label: "Infos"       },
@@ -3598,8 +3597,6 @@ function AccountActivitesTab() {
 // ══════════════════════════════════════════════════════════════
 const ACCOUNT_TABS = [
   { key: "etablissement", label: "Etablissement" },
-  { key: "motifs",        label: "Motifs"        },
-  { key: "adresse",       label: "Adresse"       },
   { key: "activites",     label: "Activités"     },
   { key: "rac",           label: "RAC"           },
   { key: "adminprov",     label: "Admin prov."   },
@@ -3661,6 +3658,11 @@ function AccountRecordPage({ account }) {
                       [{label:"Les Statuts",        value:"—"},             {label:"Diffusion adresse",    value:"Oui"}],
                       [{label:"Date d'inscription", value:"19/12/2013"},    {label:"Date de fin",          value:"—"}],
                       [{label:"Date de mise à jour",value:"13/02/2024"},    {label:"Info Complémentaire",  value:"—"}],
+                    ]} />
+                    <AdresseActuelleSection adresse={"7 RUE MARCEL RENAULT\n75017 PARIS\nFRANCE"} validee={true} />
+                    <ExpandableSection title="Coordonnées" defaultOpen={true} fields={[
+                      [{label:"Téléphone", value:"01 46 55 14 62"}, {label:"E-mail", value:"f.abtan@abtan-aec.fr"}],
+                      [{label:"Fax",       value:"—"},              {label:"Site web", value:"—"}],
                     ]} />
                     <ExpandableSection title="Cotisations" defaultOpen={true} fields={[
                       [{label:"Solde cotisation",        value:"0,00"}, {label:"Dernière année de cotisation", value:"—"}],
@@ -3774,6 +3776,33 @@ function AccountRecordPage({ account }) {
             <AccountRelatedPanel icon={
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             } iconBg="#E91E63" label="Lien PP PM" count={0} />
+            <AccountRelatedPanel icon={
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+            } iconBg="#0250D9" label="Demandes" count={2} defaultOpen={true}>
+              <div className="px-3 overflow-x-auto pb-2">
+                <table className="w-full text-[11px] border-collapse" style={{minWidth:520}}>
+                  <thead>
+                    <tr className="bg-[#F3F3F3] text-[#5C5C5C]">
+                      {["CR Origine du Motif","Motif","Effet","Session","Décision","Qualité","Qualité avant","Statut","Statut avant"].map(h=>(
+                        <th key={h} className="px-2 py-1 text-left font-semibold border-b border-[#C9C9C9] whitespace-nowrap">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      {cr:"IDF", motif:"MODIFICATION SIEGE SOCIAL", effet:"31/08/2022", session:"06/10/2022", decision:"Validé", qualite:"SEC", qualAvant:"SEC", statut:"EN EXE.", statAvant:"EN EXE."},
+                      {cr:"IDF", motif:"INSCRIPTION",               effet:"11/01/2019", session:"17/01/2019", decision:"Validé", qualite:"SEC", qualAvant:"SEC", statut:"EN EXE.", statAvant:"EN ATT."},
+                    ].map((r,i)=>(
+                      <tr key={i} className="border-b border-[#F0F0F0] hover:bg-[#F9FAFB]">
+                        {[r.cr,r.motif,r.effet,r.session,r.decision,r.qualite,r.qualAvant,r.statut,r.statAvant].map((v,j)=>(
+                          <td key={j} className="px-2 py-1 text-[#1A1A1A] whitespace-nowrap">{v}</td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </AccountRelatedPanel>
             <AccountRelatedPanel icon={
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             } iconBg="#FF9800" label="Assurances" count={1} defaultOpen={true}>
@@ -4062,6 +4091,21 @@ function ContactRecordPage({ demande, onAccountClick }) {
               label="Liens PP PM"
               count={4}
             />
+            {/* Demandes */}
+            <ContactRelatedPanel
+              icon={<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>}
+              iconBg="#0250D9"
+              label="Demandes"
+              count={4}
+              cols={["CR","CR Origine","N° inscription","Motif","Type","Effet","Session","Décision","Qualité","Qual. avant","Statut","Statut avant"]}
+              rows={[
+                { cr:"IDF", crOrig:"IDF", num:"14-00019231-01", motif:"INSCRIPTION",               type:"D", effet:"14/02/2019", session:"26/03/2019", decision:"Validé", qualite:"EC",       qualAvant:"EC",   statut:"EN EXE.", statAvant:"EN ATT." },
+                { cr:"IDF", crOrig:"IDF", num:"14-00019231-01", motif:"OBTENTION DEC",              type:"D", effet:"22/06/2018", session:"26/03/2019", decision:"Validé", qualite:"DIP-NINS", qualAvant:"MEMO", statut:"CLASSE",   statAvant:"EN EXE." },
+                { cr:"IDF", crOrig:"IDF", num:"14-00019231-01", motif:"ATTESTATION DE FIN DE STAGE",type:"D", effet:"20/01/2017", session:"19/01/2017", decision:"Validé", qualite:"MEMO",    qualAvant:"STA",  statut:"EN EXE.", statAvant:"EN EXE." },
+                { cr:"IDF", crOrig:"IDF", num:"14-00019231-01", motif:"INSCRIPTION AU STAGE",       type:"D", effet:"01/01/2013", session:"11/07/2013", decision:"Validé", qualite:"STA",     qualAvant:"STA",  statut:"EN EXE.", statAvant:"EN ATT." },
+              ]}
+              renderRow={(r) => [r.cr, r.crOrig, r.num, r.motif, r.type, r.effet, r.session, r.decision, r.qualite, r.qualAvant, r.statut, r.statAvant]}
+            />
             {/* Participations */}
             <ContactRelatedPanel
               icon={<svg viewBox="0 0 24 24" width="16" height="16" fill="white"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>}
@@ -4316,21 +4360,49 @@ root.render(<App />);
   }, 300);
 
   // pvViewChange: custom event dispatched by writeHash (pushState doesn't fire hashchange)
-  try { p.addEventListener('pvViewChange', function(e) { cv = e.detail.view; p.renderCommentPins(); p.updateCommentBadge(); }); } catch(e) {}
+  try { p.addEventListener('pvViewChange', function(e) { cv = e.detail.view; try { filterPinDOM(); } catch(x) {} p.updateCommentBadge(); }); } catch(e) {}
 
-  function wrapFilter(fn) {
-    return function() {
-      var view = cv; var saved = {};
-      try {
-        Object.keys(p.commentsDB).forEach(function(k) { saved[k] = p.commentsDB[k]; p.commentsDB[k] = p.commentsDB[k].filter(function(c) { return (c.view||'') === view; }); });
-        var r = fn.apply(this, arguments);
-        Object.keys(saved).forEach(function(k) { p.commentsDB[k] = saved[k]; });
-        return r;
-      } catch(e) { Object.keys(saved).forEach(function(k) { p.commentsDB[k] = saved[k]; }); return fn.apply(this, arguments); }
-    };
+  // Build a lookup map: comment id → view
+  function buildIdMap() {
+    var m = {};
+    Object.keys(p.commentsDB).forEach(function(k) {
+      (p.commentsDB[k]||[]).forEach(function(c) { if (c && c.id) m[c.id] = (c.view||''); });
+    });
+    return m;
   }
-  p.renderCommentPins = wrapFilter(p.renderCommentPins);
-  p.updateCommentBadge = wrapFilter(p.updateCommentBadge);
+
+  // After renderCommentPins runs, remove DOM pins that don't belong to current view
+  function filterPinDOM() {
+    var view = cv;
+    var idMap = buildIdMap();
+    p.document.querySelectorAll('.comment-pin').forEach(function(el) {
+      var id = el.dataset && el.dataset.id;
+      if (id !== undefined && idMap[id] !== undefined && idMap[id] !== view) {
+        el.style.display = 'none';
+      } else if (id !== undefined && idMap[id] === view) {
+        el.style.display = '';
+      }
+    });
+  }
+
+  var _origRender = p.renderCommentPins;
+  p.renderCommentPins = function() {
+    var r = _origRender.apply(this, arguments);
+    try { filterPinDOM(); } catch(e) {}
+    return r;
+  };
+
+  // Badge: count only current-view comments
+  var _origBadge = p.updateCommentBadge;
+  p.updateCommentBadge = function() {
+    var view = cv; var saved = {};
+    try {
+      Object.keys(p.commentsDB).forEach(function(k) { saved[k] = p.commentsDB[k]; p.commentsDB[k] = p.commentsDB[k].filter(function(c) { return (c.view||'') === view; }); });
+      var r = _origBadge.apply(this, arguments);
+      Object.keys(saved).forEach(function(k) { p.commentsDB[k] = saved[k]; });
+      return r;
+    } catch(e) { Object.keys(saved).forEach(function(k) { p.commentsDB[k] = saved[k]; }); return _origBadge.apply(this, arguments); }
+  };
   var _orig = p.confirmNewComment;
   p.confirmNewComment = function() {
     var r = _orig.apply(this, arguments);
