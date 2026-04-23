@@ -4097,29 +4097,59 @@ function CheckIcon({ size = 14, className = "" }) {
 }
 
 // ── Hash routing helpers ──────────────────────────────────────
-// Maps activePage value → hash string (and back)
 const pageToHash = (page) => page === "list" ? "stagiaires" : page;
 const hashToPage = (hash) => (!hash || hash === "stagiaires") ? "list" : hash;
 
-function App() {
-  // Initialise from URL hash on first load
-  const [activePage, setActivePageState] = useState(() => hashToPage(window.location.hash.slice(1)));
-  const [openTabs, setOpenTabs] = useState([]);
+// Détecte si on est dans un iframe (Proto Viewer) ou en standalone
+const IN_IFRAME = window.self !== window.top;
 
-  // Keep hash in sync whenever activePage changes
-  const setActivePage = React.useCallback((page) => {
-    const hash = pageToHash(page);
+// Lit le hash de vue courant (après "|" en iframe, sinon window.location.hash)
+const readCurrentHash = () => {
+  if (IN_IFRAME) {
+    try {
+      const parentHash = window.parent.location.hash; // ex: "#protos%2FEspace-Gestion.html|groupes"
+      const parts = parentHash.split("|");
+      return parts.length > 1 ? decodeURIComponent(parts[1]) : "stagiaires";
+    } catch(e) { return "stagiaires"; }
+  }
+  return window.location.hash.slice(1) || "stagiaires";
+};
+
+// Écrit le hash de vue (en préservant le chemin proto en iframe)
+const writeHash = (hash) => {
+  if (IN_IFRAME) {
+    try {
+      const parentHash = window.parent.location.hash;
+      const protoPath = parentHash.split("|")[0]; // "#protos%2FEspace-Gestion.html"
+      const newHash = hash === "stagiaires" ? protoPath : protoPath + "|" + hash;
+      window.parent.history.pushState(null, "", newHash);
+    } catch(e) {}
+  } else {
     if (window.location.hash.slice(1) !== hash) {
       window.history.pushState(null, "", "#" + hash);
     }
+  }
+};
+
+function App() {
+  const [activePage, setActivePageState] = useState(() => hashToPage(readCurrentHash()));
+  const [openTabs, setOpenTabs] = useState([]);
+
+  const setActivePage = React.useCallback((page) => {
+    writeHash(pageToHash(page));
     setActivePageState(page);
   }, []);
 
-  // Handle browser Back / Forward buttons
+  // Back / Forward — écoute sur la bonne fenêtre
   React.useEffect(() => {
-    const onPop = () => setActivePageState(hashToPage(window.location.hash.slice(1)));
-    window.addEventListener("popstate", onPop);
-    return () => window.removeEventListener("popstate", onPop);
+    const target = IN_IFRAME ? window.parent : window;
+    const onPop = () => setActivePageState(hashToPage(readCurrentHash()));
+    try { target.addEventListener("popstate", onPop); }
+    catch(e) { window.addEventListener("popstate", onPop); }
+    return () => {
+      try { target.removeEventListener("popstate", onPop); }
+      catch(e) { window.removeEventListener("popstate", onPop); }
+    };
   }, []);
 
   const handleNavigateToRecord = (row) => {
