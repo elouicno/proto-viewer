@@ -561,6 +561,43 @@
     background: rgba(99,107,255,.03);
   }
 
+  /* Sync status pill in toolbar */
+  .sync-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 24px;
+    padding: 0 10px;
+    margin-left: 4px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 500;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: .02em;
+    user-select: none;
+    cursor: help;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-dim);
+    transition: background var(--transition), color var(--transition), border-color var(--transition);
+  }
+  .sync-indicator::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: .8;
+  }
+  .sync-idle    { color: var(--text-muted); }
+  .sync-loading { color: #f0b85e; border-color: rgba(240,184,94,.4); animation: syncPulse 1.4s ease-in-out infinite; }
+  .sync-ok      { color: #4cd58a; border-color: rgba(76,213,138,.35); }
+  .sync-error   { color: var(--danger); border-color: rgba(255,77,106,.4); }
+
+  @keyframes syncPulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: .55; }
+  }
+
   .comment-pin {
     position: absolute;
     width: 28px; height: 28px;
@@ -739,6 +776,8 @@
       <button class="toolbar-btn" id="btnComment" title="Ajouter des commentaires" onclick="toggleCommentMode()">
         <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 2h11a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H5l-3 3V3a1 1 0 0 1 1-1z"/></svg>
       </button>
+
+      <span id="syncIndicator" class="sync-indicator sync-idle" title="Statut de synchronisation des commentaires">Local</span>
     </div>
 
     <div class="viewer-frame" id="viewerFrame">
@@ -768,6 +807,8 @@ let idCounter = 0;
 let ghOwner = null;
 let ghRepo = null;
 let passwordHash = null;
+let gistId = null;
+let gistToken = null;
 
 // ── SHA-256 HELPER ──
 async function sha256(text) {
@@ -785,6 +826,8 @@ async function loadConfig() {
     if (res.ok) {
       const config = await res.json();
       passwordHash = config.passwordHash || null;
+      gistId       = config.gistId       || null;
+      gistToken    = config.gistToken    || null;
     }
   } catch { /* no config file — no password protection */ }
 }
@@ -872,8 +915,8 @@ async function initApp() {
     ghRepo = location.pathname.split('/')[1] || null;
   }
 
-  initComments();
-  await autoDiscoverProtos();
+  // Run Gist comment load and proto discovery in parallel — neither depends on the other
+  await Promise.all([initComments(), autoDiscoverProtos()]);
 
   renderList();
   updateCount();
@@ -885,10 +928,9 @@ async function initApp() {
 
   // Auto-select from URL hash
   if (location.hash) {
-    // Strip sub-page segment after "|" (kept for iframe internal routing)
-    const target = decodeURIComponent(location.hash.slice(1)).split('|')[0];
+    const target = decodeURIComponent(location.hash.slice(1));
     const proto = protos.find(p => p.file === target || p.fileName === target);
-    if (proto) loadProto(proto, { preserveHash: true });
+    if (proto) loadProto(proto);
   } else if (protos.length > 0) {
     loadProto(protos[0]);
   }
@@ -1020,44 +1062,27 @@ function updateCount(filter) {
 }
 
 // ── ACTIONS ──
-async function loadProto(proto, opts) {
+async function loadProto(proto) {
   currentId = proto.id;
   renderList(document.getElementById('search').value);
 
   const empty = document.getElementById('emptyState');
   if (empty) empty.style.display = 'none';
 
-  // Preserve existing sub-page suffix (e.g. "|groupes") if the proto being
-  // loaded matches the current hash's base — otherwise drop it (new proto).
-  const currentHashRaw = location.hash.slice(1);
-  const currentBase    = decodeURIComponent(currentHashRaw.split('|')[0] || '');
-  const suffix         = currentHashRaw.includes('|') ? '|' + currentHashRaw.split('|').slice(1).join('|') : '';
-  const preserveSuffix = (opts && opts.preserveHash) && (currentBase === proto.file);
-
-  // Build iframe src with sub-page hash so Espace-Gestion.html reads it correctly
-  let iframeSrc = proto.file;
-  if (preserveSuffix && suffix) {
-    const subHash = suffix.slice(1); // drop leading "|"
-    iframeSrc = proto.file + '#' + subHash;
-  }
-
   const frame = document.getElementById('viewerFrame');
   let iframe = frame.querySelector('iframe');
   if (iframe) iframe.remove();
 
   iframe = document.createElement('iframe');
-  iframe.src = iframeSrc;
+  iframe.src = proto.file;
   frame.appendChild(iframe);
 
   document.getElementById('urlBar').textContent = proto.name;
-  const newHash = encodeURIComponent(proto.file) + (preserveSuffix ? suffix : '');
-  if (location.hash.slice(1) !== newHash) {
-    location.hash = newHash;
-  }
+  location.hash = encodeURIComponent(proto.file);
 
   document.querySelector('.sidebar').classList.remove('open');
 
-  // Render comment pins for this proto + current sub-page
+  // Render comment pins for this proto
   cancelNewComment();
   closeAllBubbles();
   renderCommentPins();
@@ -1123,42 +1148,262 @@ document.getElementById('search').addEventListener('input', e => {
 
 // ── COMMENT SYSTEM ──
 let commentMode = false;
-let commentsDB = {};   // { 'protos/X.html[|sub]': [{id, num, x, y, text, date}] }
-let commentNums = {};  // { 'protos/X.html[|sub]': lastNum }
+let commentsDB = {};   // { 'protos/X.html': [{id, num, x, y, text, date}] }
+let commentNums = {};  // { 'protos/X.html': lastNum }
+let commentTombs = {}; // { 'protos/X.html': [{id, deletedAt}] }  — propagates deletions across devices
 let openBubbleId = null;
 
-// Extract sub-page suffix from current URL hash (after "|"), empty string if none.
-// The inner iframe (e.g. Espace-Gestion.html) writes "|groupes" to parent hash
-// when switching tabs — we scope comments per sub-page so they don't bleed.
-function getSubPage() {
-  const raw = location.hash.slice(1);
-  const i = raw.indexOf('|');
-  if (i === -1) return '';
-  try { return decodeURIComponent(raw.slice(i + 1)); } catch { return raw.slice(i + 1); }
+// ── GIST SYNC ──
+// Comments are persisted in two places:
+//   1. localStorage ('pv_comments_v2') — fast cache, works offline
+//   2. GitHub Gist  — shared source of truth across devices
+// If gistId/gistToken are not set in config.json, the app falls back to
+// localStorage-only mode (single-device, like the original behavior).
+const GIST_FILENAME = 'comments.json';
+let gistSyncStatus = 'idle'; // 'idle' | 'loading' | 'saving' | 'ok' | 'error' | 'offline'
+let gistSyncTimer = null;
+let gistSaveInFlight = false;
+let gistSavePending = false;
+
+function gistConfigured() { return !!(gistId && gistToken); }
+
+function setSyncStatus(status, msg) {
+  gistSyncStatus = status;
+  const el = document.getElementById('syncIndicator');
+  if (!el) return;
+  const map = {
+    idle:    { txt: 'Local',     cls: 'sync-idle',    title: 'Stockage local seulement (Gist non configuré)' },
+    loading: { txt: 'Sync…',     cls: 'sync-loading', title: 'Chargement depuis le Gist' },
+    saving:  { txt: 'Sync…',     cls: 'sync-loading', title: 'Sauvegarde vers le Gist' },
+    ok:      { txt: 'Synchro',   cls: 'sync-ok',      title: 'Commentaires synchronisés avec le Gist' },
+    error:   { txt: 'Erreur',    cls: 'sync-error',   title: msg || 'Erreur de synchronisation Gist' },
+    offline: { txt: 'Hors ligne', cls: 'sync-error',  title: 'Pas de connexion — modifications en local seulement' },
+  };
+  const m = map[status] || map.idle;
+  el.textContent = m.txt;
+  el.className = 'sync-indicator ' + m.cls;
+  el.title = m.title;
 }
 
-function getCommentKey(proto) {
-  if (!proto) return '';
-  const sub = getSubPage();
-  return sub ? proto.file + '|' + sub : proto.file;
-}
-
-function initComments() {
+// Local cache helpers
+function loadFromLocal() {
   try {
     const raw = localStorage.getItem('pv_comments_v2');
     if (raw) {
       const p = JSON.parse(raw);
-      commentsDB  = p.db      || {};
-      commentNums = p.counter || {};
+      return { db: p.db || {}, counter: p.counter || {}, tombs: p.tombs || {} };
     }
+  } catch {}
+  return { db: {}, counter: {}, tombs: {} };
+}
+
+function saveToLocal() {
+  try {
+    localStorage.setItem('pv_comments_v2', JSON.stringify({
+      db: commentsDB,
+      counter: commentNums,
+      tombs: commentTombs,
+    }));
   } catch {}
 }
 
-function saveComments() {
-  try {
-    localStorage.setItem('pv_comments_v2', JSON.stringify({ db: commentsDB, counter: commentNums }));
-  } catch {}
+// Merge two stores by comment ID (union), respecting tombstones.
+// For counters, take the max per key.
+// Tombstones are unioned and persist forever (cheap; protects against
+// resurrection from a stale device that never saw the deletion).
+function mergeStores(a, b) {
+  const db = {};
+  const counter = {};
+  const tombs = {};
+  const keys = new Set([
+    ...Object.keys(a.db || {}),
+    ...Object.keys(b.db || {}),
+    ...Object.keys(a.tombs || {}),
+    ...Object.keys(b.tombs || {}),
+  ]);
+  keys.forEach(k => {
+    // Union tombstones by id, keep latest deletedAt
+    const tombMap = new Map();
+    [...((a.tombs && a.tombs[k]) || []), ...((b.tombs && b.tombs[k]) || [])].forEach(t => {
+      const prev = tombMap.get(t.id);
+      if (!prev || (t.deletedAt || 0) > (prev.deletedAt || 0)) tombMap.set(t.id, t);
+    });
+    tombs[k] = [...tombMap.values()];
+    const deletedIds = new Set(tombs[k].map(t => t.id));
+
+    // Union comments by id, prefer latest 'date' for the same id
+    const seen = new Map();
+    [...((a.db && a.db[k]) || []), ...((b.db && b.db[k]) || [])].forEach(c => {
+      if (deletedIds.has(c.id)) return; // tombstone wins
+      const prev = seen.get(c.id);
+      if (!prev || (c.date || 0) > (prev.date || 0)) seen.set(c.id, c);
+    });
+    db[k] = [...seen.values()].sort((x, y) => (x.num || 0) - (y.num || 0));
+    counter[k] = Math.max(
+      (a.counter && a.counter[k]) || 0,
+      (b.counter && b.counter[k]) || 0,
+      ...db[k].map(c => c.num || 0),
+    );
+  });
+  return { db, counter, tombs };
 }
+
+// Gist API: fetch the current contents of comments.json
+async function fetchGist() {
+  if (!gistConfigured()) return null;
+  const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+    headers: {
+      'Authorization': `Bearer ${gistToken}`,
+      'Accept': 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+    },
+    cache: 'no-store',
+  });
+  if (!res.ok) {
+    const err = new Error(`Gist GET failed: ${res.status}`);
+    err.status = res.status;
+    throw err;
+  }
+  const data = await res.json();
+  const file = data.files && data.files[GIST_FILENAME];
+  if (!file) return { db: {}, counter: {}, tombs: {} }; // gist exists but file not yet created
+  // Large gist files are truncated; fetch raw_url instead
+  let content = file.content;
+  if (file.truncated && file.raw_url) {
+    const r2 = await fetch(file.raw_url, { cache: 'no-store' });
+    content = await r2.text();
+  }
+  if (!content || !content.trim()) return { db: {}, counter: {}, tombs: {} };
+  try {
+    const parsed = JSON.parse(content);
+    return { db: parsed.db || {}, counter: parsed.counter || {}, tombs: parsed.tombs || {} };
+  } catch {
+    return { db: {}, counter: {}, tombs: {} };
+  }
+}
+
+// Gist API: write comments.json (PATCH replaces just that file)
+async function writeGist(payload) {
+  if (!gistConfigured()) return;
+  const body = {
+    files: {
+      [GIST_FILENAME]: {
+        content: JSON.stringify({
+          version: 3,
+          updatedAt: Date.now(),
+          db: payload.db,
+          counter: payload.counter,
+          tombs: payload.tombs || {},
+        }, null, 2),
+      },
+    },
+  };
+  const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${gistToken}`,
+      'Accept': 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const err = new Error(`Gist PATCH failed: ${res.status}`);
+    err.status = res.status;
+    throw err;
+  }
+}
+
+// Pull-merge-push: re-read remote, merge with local in-memory, push back.
+// This protects against losing edits made on another device between our boot
+// and our save (last-write-wins would otherwise overwrite them).
+async function pushToGist() {
+  if (!gistConfigured()) return;
+  if (!navigator.onLine) { setSyncStatus('offline'); return; }
+  if (gistSaveInFlight) { gistSavePending = true; return; }
+  gistSaveInFlight = true;
+  setSyncStatus('saving');
+  try {
+    let remote = { db: {}, counter: {}, tombs: {} };
+    try { remote = (await fetchGist()) || remote; } catch { /* push anyway with local */ }
+    const merged = mergeStores(remote, { db: commentsDB, counter: commentNums, tombs: commentTombs });
+    commentsDB   = merged.db;
+    commentNums  = merged.counter;
+    commentTombs = merged.tombs;
+    saveToLocal();
+    await writeGist(merged);
+    setSyncStatus('ok');
+    // Refresh pins in case merge added comments from another device
+    renderCommentPins();
+    updateCommentBadge();
+  } catch (e) {
+    console.warn('[pv] Gist sync failed:', e.message);
+    setSyncStatus('error', e.message);
+  } finally {
+    gistSaveInFlight = false;
+    if (gistSavePending) {
+      gistSavePending = false;
+      // Coalesce any saves that arrived during this round-trip
+      schedulePushToGist(300);
+    }
+  }
+}
+
+function schedulePushToGist(delay = 1000) {
+  if (!gistConfigured()) return;
+  if (gistSyncTimer) clearTimeout(gistSyncTimer);
+  gistSyncTimer = setTimeout(() => { gistSyncTimer = null; pushToGist(); }, delay);
+}
+
+// Initial load: read local cache immediately (snappy UI), then merge in remote.
+async function initComments() {
+  const local = loadFromLocal();
+  commentsDB   = local.db;
+  commentNums  = local.counter;
+  commentTombs = local.tombs;
+
+  if (!gistConfigured()) {
+    setSyncStatus('idle');
+    return;
+  }
+
+  setSyncStatus('loading');
+  try {
+    const remote = await fetchGist();
+    if (remote) {
+      const merged = mergeStores(remote, local);
+      commentsDB   = merged.db;
+      commentNums  = merged.counter;
+      commentTombs = merged.tombs;
+      saveToLocal();
+      // If local had data not in remote, push the merge back to propagate
+      const localDiffersFromRemote = JSON.stringify(local) !== JSON.stringify(remote);
+      if (localDiffersFromRemote) {
+        schedulePushToGist(500);
+      } else {
+        setSyncStatus('ok');
+      }
+      renderCommentPins();
+      updateCommentBadge();
+    } else {
+      setSyncStatus('ok');
+    }
+  } catch (e) {
+    console.warn('[pv] Initial Gist load failed:', e.message);
+    setSyncStatus('error', e.message);
+  }
+}
+
+// Public save entry point: always write local cache immediately, then push to Gist (debounced).
+function saveComments() {
+  saveToLocal();
+  schedulePushToGist();
+}
+
+// React to coming back online
+window.addEventListener('online',  () => { if (gistConfigured()) schedulePushToGist(300); });
+window.addEventListener('offline', () => setSyncStatus('offline'));
 
 function toggleCommentMode() {
   commentMode = !commentMode;
@@ -1244,7 +1489,7 @@ function confirmNewComment(x, y) {
 
   const proto = protos.find(p => p.id === currentId);
   if (!proto) return;
-  const key = getCommentKey(proto);
+  const key = proto.file;
 
   if (!commentsDB[key])  commentsDB[key]  = [];
   if (!commentNums[key]) commentNums[key] = 0;
@@ -1271,7 +1516,7 @@ function renderCommentPins() {
   document.querySelectorAll('.comment-pin:not(#pendingPin), .comment-bubble:not(#pendingBubble)').forEach(el => el.remove());
   const proto = protos.find(p => p.id === currentId);
   if (!proto) return;
-  const list = commentsDB[getCommentKey(proto)] || [];
+  const list = commentsDB[proto.file] || [];
   const frame = document.getElementById('viewerFrame');
 
   list.forEach(c => {
@@ -1327,8 +1572,13 @@ function closeAllBubbles() {
 function deleteComment(id) {
   const proto = protos.find(p => p.id === currentId);
   if (!proto) return;
-  const key = getCommentKey(proto);
+  const key = proto.file;
   commentsDB[key] = (commentsDB[key] || []).filter(c => c.id !== id);
+  // Tombstone so the deletion propagates across devices and survives merges
+  if (!commentTombs[key]) commentTombs[key] = [];
+  if (!commentTombs[key].some(t => t.id === id)) {
+    commentTombs[key].push({ id, deletedAt: Date.now() });
+  }
   saveComments();
   renderCommentPins();
   updateCommentBadge();
@@ -1339,36 +1589,12 @@ function updateCommentBadge() {
   const proto = protos.find(p => p.id === currentId);
   const btn   = document.getElementById('btnComment');
   let badge   = btn.querySelector('.comment-count-badge');
-  const count = proto ? (commentsDB[getCommentKey(proto)] || []).length : 0;
+  const count = proto ? (commentsDB[proto.file] || []).length : 0;
   if (count > 0) {
     if (!badge) { badge = document.createElement('span'); badge.className = 'comment-count-badge'; btn.appendChild(badge); }
     badge.textContent = count;
   } else { badge?.remove(); }
 }
-
-// Refresh pins/badge when the inner iframe switches sub-page (e.g. tab change
-// inside Espace-Gestion.html). The child fires 'pvViewChange' on the parent
-// window after its pushState. We also listen for manual hash edits /
-// back-forward navigation via 'hashchange'.
-function refreshCommentsForCurrentView() {
-  cancelNewComment();
-  closeAllBubbles();
-  renderCommentPins();
-  updateCommentBadge();
-}
-
-window.addEventListener('pvViewChange', refreshCommentsForCurrentView);
-
-window.addEventListener('hashchange', () => {
-  // If the base file changed, switch proto; otherwise just refresh pins/badge.
-  const newBase = decodeURIComponent((location.hash.slice(1).split('|')[0]) || '');
-  const proto = protos.find(p => p.id === currentId);
-  if (proto && newBase && newBase !== proto.file) {
-    const newProto = protos.find(p => p.file === newBase || p.fileName === newBase);
-    if (newProto) { loadProto(newProto, { preserveHash: true }); return; }
-  }
-  refreshCommentsForCurrentView();
-});
 
 // Close bubble when clicking outside pins/bubbles
 document.addEventListener('click', e => {
