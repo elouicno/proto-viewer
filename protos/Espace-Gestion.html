@@ -4299,7 +4299,33 @@ root.render(<App />);
     try { var h = decodeURIComponent(p.location.hash.slice(1)); var i = h.indexOf('|'); return i >= 0 ? h.slice(i+1) : ''; } catch(e) { return ''; }
   }
   var cv = getView();
+
+  // MutationObserver: when a new pin appears in the parent DOM, stamp it with current view
+  try {
+    var obs = new p.MutationObserver(function(muts) {
+      muts.forEach(function(m) {
+        m.addedNodes.forEach(function(node) {
+          if (node.classList && node.classList.contains('comment-pin')) {
+            setTimeout(function() {
+              try {
+                Object.keys(p.commentsDB).forEach(function(k) {
+                  (p.commentsDB[k]||[]).forEach(function(c) {
+                    if (c && !('view' in c)) { c.view = cv; }
+                  });
+                });
+                if (typeof p.saveComments === 'function') p.saveComments();
+              } catch(e) {}
+            }, 0);
+          }
+        });
+      });
+    });
+    obs.observe(p.document.body, { childList: true, subtree: true });
+  } catch(e) {}
+
+  // hashchange: update view and re-render pins
   try { p.addEventListener('hashchange', function() { var v = getView(); if (v !== cv) { cv = v; p.renderCommentPins(); p.updateCommentBadge(); } }); } catch(e) {}
+
   function wrapFilter(fn) {
     return function() {
       var view = cv; var saved = {};
