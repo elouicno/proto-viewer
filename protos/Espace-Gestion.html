@@ -4147,27 +4147,26 @@ const hashToPage = (hash) => (!hash || hash === "stagiaires") ? "list" : hash;
 // Détecte si on est dans un iframe (Proto Viewer) ou en standalone
 const IN_IFRAME = window.self !== window.top;
 
-// Lit le hash de vue courant (après "|" en iframe, sinon window.location.hash)
+// Lit le hash de vue courant — on lit TOUJOURS notre propre hash.
+// Au chargement en iframe, le Proto Viewer injecte déjà le suffix dans iframe.src
+// (ex: "Espace-Gestion.html#demandes"), donc window.location.hash contient la bonne vue.
 const readCurrentHash = () => {
-  if (IN_IFRAME) {
-    try {
-      const parentHash = window.parent.location.hash; // ex: "#protos%2FEspace-Gestion.html|groupes"
-      const parts = parentHash.split("|");
-      return parts.length > 1 ? decodeURIComponent(parts[1]) : "stagiaires";
-    } catch(e) { return "stagiaires"; }
-  }
   return window.location.hash.slice(1) || "stagiaires";
 };
 
 // Écrit le hash de vue (en préservant le chemin proto en iframe)
+// NOTE: en iframe, on écrit uniquement dans NOTRE propre hash. Le Proto Viewer parent
+// poll iw.location.hash toutes les 400ms et le mirror dans son URL via |suffix.
+// Écrire directement dans window.parent.history.pushState crée une race condition :
+// le parent écrase notre suffix parce qu'il voit que notre hash interne est vide.
 const writeHash = (hash) => {
   if (IN_IFRAME) {
     try {
-      const parentHash = window.parent.location.hash;
-      const protoPath = parentHash.split("|")[0]; // "#protos%2FEspace-Gestion.html"
-      const newHash = hash === "stagiaires" ? protoPath : protoPath + "|" + hash;
-      window.parent.history.pushState(null, "", newHash);
-      // Notify patch via custom event (pushState doesn't fire hashchange)
+      const target = (hash === "stagiaires") ? "" : hash;
+      if (window.location.hash.replace(/^#/, "") !== target) {
+        window.history.replaceState(null, "", target ? ("#" + target) : window.location.pathname + window.location.search);
+      }
+      // Custom event conservé pour compat (optionnel)
       try { window.parent.dispatchEvent(new window.parent.CustomEvent('pvViewChange', { detail: { view: hash } })); } catch(e2) {}
     } catch(e) {}
   } else {
@@ -4186,15 +4185,16 @@ function App() {
     setActivePageState(page);
   }, []);
 
-  // Back / Forward — écoute sur la bonne fenêtre
+  // Back / Forward — on écoute hashchange + popstate sur notre propre window.
+  // Le Proto Viewer parent recharge l'iframe avec le bon hash lors d'un deep-link,
+  // donc notre hashchange/popstate local suffit.
   React.useEffect(() => {
-    const target = IN_IFRAME ? window.parent : window;
-    const onPop = () => setActivePageState(hashToPage(readCurrentHash()));
-    try { target.addEventListener("popstate", onPop); }
-    catch(e) { window.addEventListener("popstate", onPop); }
+    const onChange = () => setActivePageState(hashToPage(readCurrentHash()));
+    window.addEventListener("hashchange", onChange);
+    window.addEventListener("popstate", onChange);
     return () => {
-      try { target.removeEventListener("popstate", onPop); }
-      catch(e) { window.removeEventListener("popstate", onPop); }
+      window.removeEventListener("hashchange", onChange);
+      window.removeEventListener("popstate", onChange);
     };
   }, []);
 
