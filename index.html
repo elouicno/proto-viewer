@@ -698,6 +698,11 @@
   .gist-token-help a { color: var(--accent); text-decoration: none; }
   .gist-token-help a:hover { text-decoration: underline; }
 
+  /* Hide pins/bubbles by default — shown only when user toggles "review mode"
+     via the comment button. Lets the user navigate the proto without visual clutter. */
+  .viewer-frame:not(.comments-visible) .comment-pin,
+  .viewer-frame:not(.comments-visible) .comment-bubble { display: none !important; }
+
   .comment-pin {
     position: absolute;
     width: 28px; height: 28px;
@@ -873,7 +878,7 @@
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1v4h4"/><path d="M1 5a6 6 0 1 1 1.3 3.8"/></svg>
       </button>
 
-      <button class="toolbar-btn" id="btnComment" title="Ajouter des commentaires" onclick="toggleCommentMode()">
+      <button class="toolbar-btn" id="btnComment" title="Afficher / masquer les commentaires" onclick="toggleCommentMode()">
         <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 2h11a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H5l-3 3V3a1 1 0 0 1 1-1z"/></svg>
       </button>
 
@@ -1075,7 +1080,8 @@ function getCommentKey(proto) {
 }
 
 // Re-render pins / badge when the URL hash changes (e.g. user pastes a deep link).
-// If the file portion changes, swap the iframe; otherwise just refresh comments.
+// If the file portion changes, swap the iframe; otherwise just refresh comments
+// AND push the new |suffix into the iframe's internal hash so its routing follows.
 window.addEventListener('hashchange', () => {
   const { file, suffix } = parseHash();
   const proto = protos.find(p => p.file === file || p.fileName === file);
@@ -1083,6 +1089,14 @@ window.addEventListener('hashchange', () => {
   if (proto.id !== currentId) {
     loadProto(proto, suffix);
   } else {
+    const iframe = document.querySelector('#viewerFrame iframe');
+    if (iframe) {
+      try {
+        const iw = iframe.contentWindow;
+        const current = iw.location.hash.replace(/^#/, '');
+        if (current !== suffix) iw.location.hash = suffix || '';
+      } catch {}
+    }
     renderCommentPins();
     updateCommentBadge();
   }
@@ -1226,8 +1240,13 @@ async function loadProto(proto, suffix = null) {
   if (iframe) iframe.remove();
 
   iframe = document.createElement('iframe');
-  iframe.src = proto.file;
+  // Load iframe with the |suffix as its internal hash so the proto's own routing reacts
+  iframe.src = proto.file + (suffix ? '#' + suffix : '');
   frame.appendChild(iframe);
+
+  // When iframe finishes loading, hook into its internal hash changes so we
+  // can mirror them into the parent URL → comment scope follows clicks inside the proto.
+  iframe.addEventListener('load', () => attachIframeHashSync(iframe));
 
   document.getElementById('urlBar').textContent = proto.name;
   // Preserve the |suffix portion (sub-state) so deep links keep their comment scope
@@ -1240,6 +1259,40 @@ async function loadProto(proto, suffix = null) {
   closeAllBubbles();
   renderCommentPins();
   updateCommentBadge();
+}
+
+// Mirror the iframe's internal #hash into the parent URL's |suffix.
+// Same-origin iframes only — cross-origin will silently no-op.
+let _iframeHashTimer = null;
+function attachIframeHashSync(iframe) {
+  let iw;
+  try { iw = iframe.contentWindow; } catch { return; }
+  if (!iw) return;
+  const push = () => {
+    let inner = '';
+    try { inner = iw.location.hash.replace(/^#/, ''); } catch { return; }
+    const proto = protos.find(p => p.id === currentId);
+    if (!proto) return;
+    const expected = encodeURIComponent(proto.file) + (inner ? '|' + inner : '');
+    if (location.hash.replace(/^#/, '') !== expected) {
+      // Use replaceState to avoid polluting browser history with every click
+      history.replaceState(null, '', '#' + expected);
+      // hashchange does NOT fire on replaceState, so trigger our handler manually
+      renderCommentPins();
+      updateCommentBadge();
+    }
+  };
+  // Initial sync (in case iframe loaded with a hash)
+  push();
+  // Listen to iframe's own hashchange
+  try { iw.addEventListener('hashchange', push); } catch {}
+  // Some prototypes mutate location.hash via JS without firing hashchange reliably;
+  // poll lightly as a fallback (cheap — every 400ms while the iframe lives).
+  if (_iframeHashTimer) clearInterval(_iframeHashTimer);
+  _iframeHashTimer = setInterval(() => {
+    if (!document.body.contains(iframe)) { clearInterval(_iframeHashTimer); _iframeHashTimer = null; return; }
+    push();
+  }, 400);
 }
 
 function setDevice(device) {
@@ -1713,8 +1766,13 @@ function toggleCommentMode() {
   commentMode = !commentMode;
   const btn     = document.getElementById('btnComment');
   const overlay = document.getElementById('commentOverlay');
+  const frame   = document.getElementById('viewerFrame');
   btn.classList.toggle('btn-active', commentMode);
   overlay.style.display = commentMode ? 'block' : 'none';
+  // Toggle pin/bubble visibility together with the overlay so the comment button
+  // becomes a simple "review comments" switch: ON = see pins + can add new,
+  // OFF = pins hidden + iframe interactive (normal navigation).
+  frame.classList.toggle('comments-visible', commentMode);
   if (!commentMode) { cancelNewComment(); closeAllBubbles(); }
 }
 
