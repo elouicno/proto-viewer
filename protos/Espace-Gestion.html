@@ -4288,5 +4288,39 @@ App;
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(<App />);
 </script>
+<script>
+(function patchViewerComments() {
+  if (window.self === window.top) return;
+  var p = window.parent;
+  if (!p || typeof p.renderCommentPins !== 'function') {
+    return setTimeout(patchViewerComments, 400);
+  }
+  function getView() {
+    try { var h = decodeURIComponent(p.location.hash.slice(1)); var i = h.indexOf('|'); return i >= 0 ? h.slice(i+1) : ''; } catch(e) { return ''; }
+  }
+  var cv = getView();
+  try { p.addEventListener('hashchange', function() { var v = getView(); if (v !== cv) { cv = v; p.renderCommentPins(); p.updateCommentBadge(); } }); } catch(e) {}
+  function wrapFilter(fn) {
+    return function() {
+      var view = cv; var saved = {};
+      try {
+        Object.keys(p.commentsDB).forEach(function(k) { saved[k] = p.commentsDB[k]; p.commentsDB[k] = p.commentsDB[k].filter(function(c) { return (c.view||'') === view; }); });
+        var r = fn.apply(this, arguments);
+        Object.keys(saved).forEach(function(k) { p.commentsDB[k] = saved[k]; });
+        return r;
+      } catch(e) { Object.keys(saved).forEach(function(k) { p.commentsDB[k] = saved[k]; }); return fn.apply(this, arguments); }
+    };
+  }
+  p.renderCommentPins = wrapFilter(p.renderCommentPins);
+  p.updateCommentBadge = wrapFilter(p.updateCommentBadge);
+  var _orig = p.confirmNewComment;
+  p.confirmNewComment = function() {
+    var r = _orig.apply(this, arguments);
+    try { Object.keys(p.commentsDB).forEach(function(k) { var a = p.commentsDB[k]; if (a && a.length) { var last = a[a.length-1]; if (last && last.view === undefined) { last.view = cv; p.saveComments(); } } }); } catch(e) {}
+    return r;
+  };
+  p.renderCommentPins(); p.updateCommentBadge();
+})();
+</script>
 </body>
 </html>
