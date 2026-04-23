@@ -1045,13 +1045,48 @@ async function initApp() {
 
   // Auto-select from URL hash
   if (location.hash) {
-    const target = decodeURIComponent(location.hash.slice(1));
-    const proto = protos.find(p => p.file === target || p.fileName === target);
-    if (proto) loadProto(proto);
+    const { file, suffix } = parseHash();
+    const proto = protos.find(p => p.file === file || p.fileName === file);
+    if (proto) loadProto(proto, suffix);
   } else if (protos.length > 0) {
     loadProto(protos[0]);
   }
 }
+
+// Parse the URL hash into { file, suffix }.
+// Hash format: #<encoded-path>[|<sub-section>]
+// The sub-section after | scopes comments to a sub-state of the same proto
+// (e.g. tab, contact id) so that two deep-link URLs on the same file get
+// independent comment threads.
+function parseHash() {
+  if (!location.hash) return { file: '', suffix: '' };
+  const decoded = decodeURIComponent(location.hash.slice(1));
+  const i = decoded.indexOf('|');
+  if (i < 0) return { file: decoded, suffix: '' };
+  return { file: decoded.slice(0, i), suffix: decoded.slice(i + 1) };
+}
+
+// Comment storage key = file + |suffix (if present in current hash for this proto)
+function getCommentKey(proto) {
+  proto = proto || protos.find(p => p.id === currentId);
+  if (!proto) return '';
+  const { file, suffix } = parseHash();
+  return (file === proto.file && suffix) ? proto.file + '|' + suffix : proto.file;
+}
+
+// Re-render pins / badge when the URL hash changes (e.g. user pastes a deep link).
+// If the file portion changes, swap the iframe; otherwise just refresh comments.
+window.addEventListener('hashchange', () => {
+  const { file, suffix } = parseHash();
+  const proto = protos.find(p => p.file === file || p.fileName === file);
+  if (!proto) return;
+  if (proto.id !== currentId) {
+    loadProto(proto, suffix);
+  } else {
+    renderCommentPins();
+    updateCommentBadge();
+  }
+});
 
 // ── AUTO-DISCOVERY ──
 // Strategy: try GitHub API first (auto-detects new uploads),
@@ -1179,7 +1214,7 @@ function updateCount(filter) {
 }
 
 // ── ACTIONS ──
-async function loadProto(proto) {
+async function loadProto(proto, suffix = null) {
   currentId = proto.id;
   renderList(document.getElementById('search').value);
 
@@ -1195,7 +1230,8 @@ async function loadProto(proto) {
   frame.appendChild(iframe);
 
   document.getElementById('urlBar').textContent = proto.name;
-  location.hash = encodeURIComponent(proto.file);
+  // Preserve the |suffix portion (sub-state) so deep links keep their comment scope
+  location.hash = encodeURIComponent(proto.file) + (suffix ? '|' + suffix : '');
 
   document.querySelector('.sidebar').classList.remove('open');
 
@@ -1757,7 +1793,7 @@ function confirmNewComment(x, y) {
 
   const proto = protos.find(p => p.id === currentId);
   if (!proto) return;
-  const key = proto.file;
+  const key = getCommentKey(proto);
 
   if (!commentsDB[key])  commentsDB[key]  = [];
   if (!commentNums[key]) commentNums[key] = 0;
@@ -1784,7 +1820,7 @@ function renderCommentPins() {
   document.querySelectorAll('.comment-pin:not(#pendingPin), .comment-bubble:not(#pendingBubble)').forEach(el => el.remove());
   const proto = protos.find(p => p.id === currentId);
   if (!proto) return;
-  const list = commentsDB[proto.file] || [];
+  const list = commentsDB[getCommentKey(proto)] || [];
   const frame = document.getElementById('viewerFrame');
 
   list.forEach(c => {
@@ -1840,7 +1876,7 @@ function closeAllBubbles() {
 function deleteComment(id) {
   const proto = protos.find(p => p.id === currentId);
   if (!proto) return;
-  const key = proto.file;
+  const key = getCommentKey(proto);
   commentsDB[key] = (commentsDB[key] || []).filter(c => c.id !== id);
   // Tombstone so the deletion propagates across devices and survives merges
   if (!commentTombs[key]) commentTombs[key] = [];
@@ -1857,7 +1893,7 @@ function updateCommentBadge() {
   const proto = protos.find(p => p.id === currentId);
   const btn   = document.getElementById('btnComment');
   let badge   = btn.querySelector('.comment-count-badge');
-  const count = proto ? (commentsDB[proto.file] || []).length : 0;
+  const count = proto ? (commentsDB[getCommentKey(proto)] || []).length : 0;
   if (count > 0) {
     if (!badge) { badge = document.createElement('span'); badge.className = 'comment-count-badge'; btn.appendChild(badge); }
     badge.textContent = count;
