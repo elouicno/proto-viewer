@@ -4176,9 +4176,31 @@ const writeHash = (hash) => {
   }
 };
 
+// Au boot, si l'URL pointe vers une fiche (record:NN, contact:Nom, groupe:NN),
+// on doit recréer l'onglet correspondant — sinon le deep-link tombe sur une page vide.
+function seedOpenTabsFromHash(hash) {
+  if (!hash) return [];
+  if (hash.startsWith("record:")) {
+    const numInscription = hash.slice("record:".length);
+    const row = STAGIAIRES_LIST.find(r => r.numInscription === numInscription);
+    if (row) return [{ type: "record", id: hash, label: row.stagiaire, data: row }];
+  }
+  if (hash.startsWith("contact:")) {
+    const tag = hash.slice("contact:".length);
+    const demande = DEMANDES_LIST.find(d => d.demandeur.replace(/\s+/g, "_") === tag);
+    if (demande) return [{ type: "contact", id: hash, label: demande.demandeur, data: demande }];
+  }
+  if (hash.startsWith("groupe:")) {
+    const numero = hash.slice("groupe:".length);
+    const row = GROUPES_LIST.find(g => g.numero === numero || String(g.numero) === numero);
+    if (row) return [{ type: "groupe", id: hash, label: row.libelle, data: row }];
+  }
+  return [];
+}
+
 function App() {
   const [activePage, setActivePageState] = useState(() => hashToPage(readCurrentHash()));
-  const [openTabs, setOpenTabs] = useState([]);
+  const [openTabs, setOpenTabs] = useState(() => seedOpenTabsFromHash(readCurrentHash()));
 
   const setActivePage = React.useCallback((page) => {
     writeHash(pageToHash(page));
@@ -4334,83 +4356,9 @@ App;
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(<App />);
 </script>
-<script>
-(function patchViewerComments() {
-  if (window.self === window.top) return;
-  var p = window.parent;
-  if (!p || typeof p.renderCommentPins !== 'function') {
-    return setTimeout(patchViewerComments, 400);
-  }
-  function getView() {
-    try { var h = decodeURIComponent(p.location.hash.slice(1)); var i = h.indexOf('|'); return i >= 0 ? h.slice(i+1) : ''; } catch(e) { return ''; }
-  }
-  var cv = getView();
+<!-- Le scoping par vue est désormais géré côté Proto Viewer (clés commentsDB par |suffix
+     dans l'URL parent). L'ancien patchViewerComments stampait un champ `view` sur chaque
+     commentaire et filtrait au render — ça doublait le mécanisme et créait des conflits. -->
 
-  // Interval: stamp any comment without view every 300ms
-  setInterval(function() {
-    try {
-      var changed = false;
-      Object.keys(p.commentsDB).forEach(function(k) {
-        (p.commentsDB[k]||[]).forEach(function(c) {
-          if (c && !('view' in c)) { c.view = cv; changed = true; }
-        });
-      });
-      if (changed && typeof p.saveComments === 'function') p.saveComments();
-    } catch(e) {}
-  }, 300);
-
-  // pvViewChange: custom event dispatched by writeHash (pushState doesn't fire hashchange)
-  try { p.addEventListener('pvViewChange', function(e) { cv = e.detail.view; try { filterPinDOM(); } catch(x) {} p.updateCommentBadge(); }); } catch(e) {}
-
-  // Build a lookup map: comment id → view
-  function buildIdMap() {
-    var m = {};
-    Object.keys(p.commentsDB).forEach(function(k) {
-      (p.commentsDB[k]||[]).forEach(function(c) { if (c && c.id) m[c.id] = (c.view||''); });
-    });
-    return m;
-  }
-
-  // After renderCommentPins runs, remove DOM pins that don't belong to current view
-  function filterPinDOM() {
-    var view = cv;
-    var idMap = buildIdMap();
-    p.document.querySelectorAll('.comment-pin').forEach(function(el) {
-      var id = el.dataset && el.dataset.id;
-      if (id !== undefined && idMap[id] !== undefined && idMap[id] !== view) {
-        el.style.display = 'none';
-      } else if (id !== undefined && idMap[id] === view) {
-        el.style.display = '';
-      }
-    });
-  }
-
-  var _origRender = p.renderCommentPins;
-  p.renderCommentPins = function() {
-    var r = _origRender.apply(this, arguments);
-    try { filterPinDOM(); } catch(e) {}
-    return r;
-  };
-
-  // Badge: count only current-view comments
-  var _origBadge = p.updateCommentBadge;
-  p.updateCommentBadge = function() {
-    var view = cv; var saved = {};
-    try {
-      Object.keys(p.commentsDB).forEach(function(k) { saved[k] = p.commentsDB[k]; p.commentsDB[k] = p.commentsDB[k].filter(function(c) { return (c.view||'') === view; }); });
-      var r = _origBadge.apply(this, arguments);
-      Object.keys(saved).forEach(function(k) { p.commentsDB[k] = saved[k]; });
-      return r;
-    } catch(e) { Object.keys(saved).forEach(function(k) { p.commentsDB[k] = saved[k]; }); return _origBadge.apply(this, arguments); }
-  };
-  var _orig = p.confirmNewComment;
-  p.confirmNewComment = function() {
-    var r = _orig.apply(this, arguments);
-    try { Object.keys(p.commentsDB).forEach(function(k) { var a = p.commentsDB[k]; if (a && a.length) { var last = a[a.length-1]; if (last && last.view === undefined) { last.view = cv; p.saveComments(); } } }); } catch(e) {}
-    return r;
-  };
-  p.renderCommentPins(); p.updateCommentBadge();
-})();
-</script>
 </body>
 </html>
