@@ -1059,24 +1059,35 @@ async function initApp() {
 }
 
 // Parse the URL hash into { file, suffix }.
-// Hash format: #<encoded-path>[|<sub-section>]
-// The sub-section after | scopes comments to a sub-state of the same proto
-// (e.g. tab, contact id) so that two deep-link URLs on the same file get
-// independent comment threads.
+// Hash format: #<encoded-path>[/<sub-section>]
+// The sub-section after the final slash (or legacy "|") scopes comments to a sub-state
+// of the same proto (e.g. tab, contact id), so two deep-link URLs on the same file
+// get independent comment threads.
+// Boundary detection: the proto file always ends in .html or .htm — anything after that
+// is the suffix.
 function parseHash() {
   if (!location.hash) return { file: '', suffix: '' };
   const decoded = decodeURIComponent(location.hash.slice(1));
-  const i = decoded.indexOf('|');
-  if (i < 0) return { file: decoded, suffix: '' };
-  return { file: decoded.slice(0, i), suffix: decoded.slice(i + 1) };
+  const m = decoded.match(/^(.+\.html?)(?:[\/|](.+))?$/);
+  if (m) return { file: m[1], suffix: m[2] || '' };
+  return { file: decoded, suffix: '' };
 }
 
-// Comment storage key = file + |suffix (if present in current hash for this proto)
+// Comment storage key = file + "/suffix" (if present in current hash for this proto).
+// Read also accepts legacy "|" keys for backward compatibility with already-stored data.
 function getCommentKey(proto) {
   proto = proto || protos.find(p => p.id === currentId);
   if (!proto) return '';
   const { file, suffix } = parseHash();
-  return (file === proto.file && suffix) ? proto.file + '|' + suffix : proto.file;
+  if (!(file === proto.file && suffix)) return proto.file;
+  const newKey = proto.file + '/' + suffix;
+  // Backward-compat read: if no data under new key but data exists under legacy "|" key,
+  // return the legacy key so existing comments stay reachable. Migration runs on save.
+  if (typeof commentsDB !== 'undefined' && !commentsDB[newKey]) {
+    const legacyKey = proto.file + '|' + suffix;
+    if (commentsDB[legacyKey] && commentsDB[legacyKey].length) return legacyKey;
+  }
+  return newKey;
 }
 
 // Re-render pins / badge when the URL hash changes (e.g. user pastes a deep link).
@@ -1249,8 +1260,8 @@ async function loadProto(proto, suffix = null) {
   iframe.addEventListener('load', () => attachIframeHashSync(iframe));
 
   document.getElementById('urlBar').textContent = proto.name;
-  // Preserve the |suffix portion (sub-state) so deep links keep their comment scope
-  location.hash = encodeURIComponent(proto.file) + (suffix ? '|' + suffix : '');
+  // Preserve the /suffix portion (sub-state) so deep links keep their comment scope
+  location.hash = encodeURIComponent(proto.file) + (suffix ? '/' + suffix : '');
 
   document.querySelector('.sidebar').classList.remove('open');
 
@@ -1273,7 +1284,7 @@ function attachIframeHashSync(iframe) {
     try { inner = iw.location.hash.replace(/^#/, ''); } catch { return; }
     const proto = protos.find(p => p.id === currentId);
     if (!proto) return;
-    const expected = encodeURIComponent(proto.file) + (inner ? '|' + inner : '');
+    const expected = encodeURIComponent(proto.file) + (inner ? '/' + inner : '');
     if (location.hash.replace(/^#/, '') !== expected) {
       // Use replaceState to avoid polluting browser history with every click
       history.replaceState(null, '', '#' + expected);
@@ -1605,10 +1616,12 @@ async function initComments() {
       commentsDB   = merged.db;
       commentNums  = merged.counter;
       commentTombs = merged.tombs;
+      // One-time migration: rename legacy "protos/X.html|suffix" keys to use "/" separator
+      const migrated = migrateLegacyPipeKeys();
       saveToLocal();
-      // If local had data not in remote, push the merge back to propagate
+      // Push back if local differs from remote OR migration changed keys
       const localDiffersFromRemote = JSON.stringify(local) !== JSON.stringify(remote);
-      if (localDiffersFromRemote) {
+      if (localDiffersFromRemote || migrated) {
         schedulePushToGist(500);
       } else {
         setSyncStatus('ok');
@@ -1622,6 +1635,37 @@ async function initComments() {
     console.warn('[pv] Initial Gist load failed:', e.message);
     setSyncStatus('error', e.message);
   }
+}
+
+// One-shot rename of legacy `protos/X.html|suffix` keys to `protos/X.html/suffix`.
+// Comments themselves don't change — only the storage key.
+// If both the legacy and new key exist, merge by id (de-dup) and drop the legacy.
+function migrateLegacyPipeKeys() {
+  let changed = false;
+  const stores = [
+    { o: commentsDB,   isList: true  },
+    { o: commentNums,  isList: false },
+    { o: commentTombs, isList: true  },
+  ];
+  stores.forEach(({ o, isList }) => {
+    Object.keys(o).forEach(k => {
+      const m = k.match(/^(.+\.html?)\|(.+)$/);
+      if (!m) return;
+      const newKey = m[1] + '/' + m[2];
+      if (o[newKey] === undefined) {
+        o[newKey] = o[k];
+      } else if (isList && Array.isArray(o[k]) && Array.isArray(o[newKey])) {
+        const seen = new Set(o[newKey].map(c => c && c.id).filter(Boolean));
+        o[k].forEach(c => { if (c && c.id && !seen.has(c.id)) o[newKey].push(c); });
+      } else if (!isList) {
+        // Counter: take the max
+        o[newKey] = Math.max(o[newKey] || 0, o[k] || 0);
+      }
+      delete o[k];
+      changed = true;
+    });
+  });
+  return changed;
 }
 
 // ── TOKEN PROMPT MODAL ──
