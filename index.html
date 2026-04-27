@@ -1563,8 +1563,12 @@ async function pushToGist() {
     commentsDB   = merged.db;
     commentNums  = merged.counter;
     commentTombs = merged.tombs;
+    // Re-run pipe→slash migration on the merged data — otherwise legacy `|` keys
+    // we just dropped locally would re-appear in memory (and on the gist) every
+    // time another device that hasn't migrated yet pushes its old keys.
+    migrateLegacyPipeKeys();
     saveToLocal();
-    await writeGist(merged);
+    await writeGist({ db: commentsDB, counter: commentNums, tombs: commentTombs });
     setSyncStatus('ok');
     // Refresh pins in case merge added comments from another device
     renderCommentPins();
