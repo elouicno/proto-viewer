@@ -621,7 +621,7 @@ function ExpandableSection({ title, fields, defaultOpen = true }) {
 // ══════════════════════════════════════════════════════════════
 // AdresseActuelleSection — bloc adresse avec badge validée
 // ══════════════════════════════════════════════════════════════
-function AdresseActuelleSection({ adresse, validee }) {
+function AdresseActuelleSection({ adresse, validee, title = "Adresse actuelle" }) {
   const [open, setOpen] = useState(true);
   return (
     <div className="w-full pb-3">
@@ -630,7 +630,7 @@ function AdresseActuelleSection({ adresse, validee }) {
         className="flex items-center gap-2 w-full h-8 px-2 rounded-lg bg-[#F3F3F3]"
       >
         {open ? <ChevronDown size={12} className="text-[#5C5C5C]" /> : <ChevronRight size={12} className="text-[#5C5C5C]" />}
-        <span className="text-[16px] text-[#2E2E2E] leading-[22px]">Adresse actuelle</span>
+        <span className="text-[16px] text-[#2E2E2E] leading-[22px]">{title}</span>
       </button>
       {open && (
         <div className="mt-2 px-2 flex items-start justify-between gap-3">
@@ -2973,17 +2973,64 @@ function GroupeRecordPage({ groupe, onNavigateToRecord }) {
 // CONTACT RECORD — fiche Contact ouverte depuis Demandes tableau
 // ══════════════════════════════════════════════════════════════
 
-const CONTACT_TABS = [
-  { key: "individu",  label: "Individu"    },
-  { key: "adresses",  label: "Adresse pro" },
-  { key: "rac",       label: "RAC"         },
-  { key: "infos",     label: "Infos"       },
+const CONTACT_TABS_VISIBLE = [
+  { key: "individu",      label: "Individu"        },
+  { key: "adresses",      label: "Adresse pro"     },
+  { key: "rac",           label: "RAC"             },
+  { key: "modeexercice",  label: "Mode d'exercice" },
+  { key: "commissions",   label: "Commissions"     },
+  { key: "stage",         label: "Stage"           },
 ];
+const CONTACT_TABS_OVERFLOW = [
+  { key: "declarations",  label: "Déclarations" },
+  { key: "adminprov",     label: "Admin Prov"   },
+  { key: "panels",        label: "Panels"       },
+  { key: "infos",         label: "Infos"        },
+];
+const CONTACT_TABS = [...CONTACT_TABS_VISIBLE, ...CONTACT_TABS_OVERFLOW];
 
 function ContactTabBar({ activeTab, onTabChange }) {
+  const [openMenu, setOpenMenu] = useState(false);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+  const btnRef = React.useRef(null);
+  const popRef = React.useRef(null);
+
+  const computePos = () => {
+    if (!btnRef.current) return;
+    const r = btnRef.current.getBoundingClientRect();
+    const menuW = 200;
+    setMenuPos({ top: r.bottom + 4, left: Math.max(8, r.right - menuW) });
+  };
+
+  const toggleMenu = () => {
+    if (!openMenu) computePos();
+    setOpenMenu(v => !v);
+  };
+
+  React.useEffect(() => {
+    if (!openMenu) return;
+    const onDoc = (e) => {
+      if (btnRef.current && btnRef.current.contains(e.target)) return;
+      if (popRef.current && popRef.current.contains(e.target)) return;
+      setOpenMenu(false);
+    };
+    const onScroll = () => computePos();
+    const onResize = () => computePos();
+    document.addEventListener("mousedown", onDoc);
+    window.addEventListener("scroll", onScroll, true);
+    window.addEventListener("resize", onResize);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      window.removeEventListener("scroll", onScroll, true);
+      window.removeEventListener("resize", onResize);
+    };
+  }, [openMenu]);
+
+  const overflowActive = CONTACT_TABS_OVERFLOW.find(t => t.key === activeTab);
+
   return (
     <div className="flex w-full overflow-x-auto">
-      {CONTACT_TABS.map((tab) => (
+      {CONTACT_TABS_VISIBLE.map((tab) => (
         <button
           key={tab.key}
           onClick={() => onTabChange(tab.key)}
@@ -2996,7 +3043,39 @@ function ContactTabBar({ activeTab, onTabChange }) {
           {tab.label}
         </button>
       ))}
+      <button
+        ref={btnRef}
+        onClick={toggleMenu}
+        className={`px-3 h-10 text-[14px] font-semibold whitespace-nowrap flex items-center gap-1 ${
+          overflowActive
+            ? "text-[#0250D9] border-b-[3px] border-[#0250D9]"
+            : "text-[#5C5C5C] border-b border-[#C9C9C9]"
+        }`}
+      >
+        {overflowActive ? overflowActive.label : "Plus"}
+        <ChevronDown size={14} />
+      </button>
       <div className="flex-1 border-b border-[#C9C9C9]" />
+      {openMenu && ReactDOM.createPortal(
+        <div
+          ref={popRef}
+          style={{ position: "fixed", top: menuPos.top, left: menuPos.left, width: 200, zIndex: 9999 }}
+          className="bg-white border border-[#C9C9C9] rounded-md shadow-lg py-1"
+        >
+          {CONTACT_TABS_OVERFLOW.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => { onTabChange(tab.key); setOpenMenu(false); }}
+              className={`w-full text-left px-3 py-2 text-[13px] hover:bg-[#F3F3F3] ${
+                activeTab === tab.key ? "text-[#0250D9] font-semibold" : "text-[#03234D]"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
@@ -3023,6 +3102,17 @@ function ContactPageHeader({ name, type = "Contact" }) {
       </div>
     </div>
   );
+}
+
+// Helper : formate "Lucas André" en "LUCAS André" (nom en MAJ, prénom inchangé).
+// Convention de la donnée : "Nom Prénom" (le dernier mot est le prénom).
+function formatContactName(raw) {
+  if (!raw) return "";
+  const parts = String(raw).trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].toUpperCase();
+  const prenom = parts[parts.length - 1];
+  const nom = parts.slice(0, -1).join(" ");
+  return `${nom.toUpperCase()} ${prenom}`;
 }
 
 function buildContactData(demande) {
@@ -3060,16 +3150,16 @@ function buildContactData(demande) {
   const generatedPhone = `+33 ${phonePrefixes[seed % phonePrefixes.length]} ${phoneBase.slice(0,2)} ${phoneBase.slice(2,4)} ${phoneBase.slice(4,6)} ${phoneBase.slice(6,8)}`;
 
   const highlights = [
-    { label: "Nom du contact",          value: demande.demandeur },
     { label: "Qualité",                 value: qualite },
-    { label: "N° Supra",                value: numSupra },
+    { label: "Numéro d'inscription",    value: numSupra },
     { label: "Statut",                  value: "En exercice" },
     { label: "Entrepreneur Individuel", value: seed % 2 === 0 ? "OUI" : "NON" },
     { label: "Type d'inscription",      value: "Principal" },
     { label: "Date d'inscription",      value: dateInscription },
     { label: "CRO",                     value: cro },
-    { label: "Email",                   value: generatedEmail },
-    { label: "Téléphone",               value: generatedPhone },
+    { label: "Email pro",               value: generatedEmail },
+    { label: "Portable",                value: generatedPhone },
+    { label: "Etablissement",           value: demande.nomComptable || "—" },
   ];
 
   // ── Section Identité ──────────────────────────────────────────
@@ -3093,6 +3183,59 @@ function buildContactData(demande) {
     [{ label: "Mobile",              value: ""                                           }, { label: "EIRL",               value: ""                                             }],
     [{ label: "Téléphone",           value: ""                                           }, { label: "Fax",                value: ""                                             }],
     [{ label: "Site internet",       value: ""                                           }],
+  ];
+
+  // ── Section Diplômes ──────────────────────────────────────────
+  // Dates dérivées du seed pour rester déterministes par contact.
+  const decYear   = yr; // année d'inscription = obtention du DEC
+  const dscgYear  = decYear - 3;
+  const dcgYear   = decYear - 6;
+  const stageDeb  = `01/01/${decYear - 3}`;
+  const stageFin  = `31/12/${decYear - 1}`;
+  const ecoles    = ["INTEC – CNAM","Université Paris-Dauphine","ESCP Business School","IAE de Lyon","Université de Bordeaux","Toulouse Business School","Université de Strasbourg"];
+  const mentions  = ["Bien","Très bien","Assez bien","Passable"];
+  const ecole     = ecoles[seed % ecoles.length];
+  const mention   = mentions[seed % mentions.length];
+  const diplomesFields = [
+    [{ label: "DEC – Diplôme d'Expertise Comptable", value: `${dy}/${mo}/${decYear}`, readOnly: true }, { label: "Mention",          value: mention,                  readOnly: true }],
+    [{ label: "DSCG – Diplôme Supérieur de Compta. et Gestion", value: `15/06/${dscgYear}`,    readOnly: true }, { label: "Établissement",    value: ecole,                    readOnly: true }],
+    [{ label: "DCG – Diplôme de Compta. et Gestion", value: `20/06/${dcgYear}`,       readOnly: true }, { label: "Mémoire DEC",      value: "Validé",                 readOnly: true }],
+    [{ label: "Stage – Début",                       value: stageDeb,                 readOnly: true }, { label: "Stage – Fin",      value: stageFin,                 readOnly: true }],
+    [{ label: "Attestation fin de stage",            value: `Délivrée le ${dy}/${mo}/${decYear - 1}`, readOnly: true }],
+  ];
+
+  // ── Section Historique du stage ───────────────────────────────
+  const cabinets        = ["Mazars","KPMG","Deloitte","EY","PwC","Grant Thornton","BDO","Cabinet Durand & Associés"];
+  const maitresStage    = ["Jean DUPONT","Marie LEROY","Pierre MARTIN","Sophie BERNARD","Thomas RICHARD","Camille FONTAINE"];
+  const cabinetStage    = cabinets[seed % cabinets.length];
+  const maitreStage     = maitresStage[seed % maitresStage.length];
+  const numStage        = `ST-${supraRegion < 10 ? "0" : ""}${supraRegion}-${supraSuffix.slice(0, 6)}`;
+  const semestresValid  = 6;
+  const noteMoyenne     = (12 + (seed % 8)).toFixed(1).replace(".", ",") + " / 20";
+  const stageHistoriqueFields = [
+    [{ label: "N° d'inscription stage", value: numStage,                        readOnly: true }, { label: "Statut",            value: "Validé",                       readOnly: true }],
+    [{ label: "Date début",             value: stageDeb,                        readOnly: true }, { label: "Date fin",          value: stageFin,                       readOnly: true }],
+    [{ label: "Cabinet de stage",       value: cabinetStage,                    readOnly: true }, { label: "Maître de stage",   value: maitreStage,                    readOnly: true }],
+    [{ label: "Semestres validés",      value: `${semestresValid} / 6`,         readOnly: true }, { label: "Note moyenne",      value: noteMoyenne,                    readOnly: true }],
+    [{ label: "Suspensions",            value: "Aucune",                        readOnly: true }, { label: "Renouvellements",   value: "0",                            readOnly: true }],
+    [{ label: "Mémoire DEC – Soutenance", value: `${dy}/${mo}/${decYear}`,      readOnly: true }, { label: "Attestation fin de stage", value: `${dy}/${mo}/${decYear - 1}`, readOnly: true }],
+  ];
+
+  // ── Section CAC (Commissaire Aux Comptes) ─────────────────────
+  // Inscrit ou non selon la qualité — déterministe via seed.
+  const isCAC          = qualite.includes("COMMISSAIRE") || (seed % 3 === 0);
+  const cacRegions     = ["CRCC Paris","CRCC Versailles","CRCC Lyon","CRCC Aix-Bastia","CRCC Bordeaux","CRCC Rennes","CRCC Strasbourg","CRCC Toulouse"];
+  const cacRegion      = cacRegions[seed % cacRegions.length];
+  const cacNum         = `CNCC-${supraSuffix.slice(0, 6)}`;
+  const cacInscription = isCAC ? `${dy}/${mo}/${decYear + 1}` : "—";
+  const cacMandats     = isCAC ? String(2 + (seed % 8)) : "0";
+  const cacFormation   = isCAC ? `${dy}/${mo}/${new Date().getFullYear() - 1}` : "—";
+  const cacFields = [
+    [{ label: "Statut CAC",                value: isCAC ? "Inscrit" : "Non inscrit",       readOnly: true }, { label: "N° d'inscription CNCC",  value: isCAC ? cacNum : "—",      readOnly: true }],
+    [{ label: "Date d'inscription",        value: cacInscription,                          readOnly: true }, { label: "Type d'inscription",     value: isCAC ? "Personne physique" : "—", readOnly: true }],
+    [{ label: "Compagnie régionale",       value: isCAC ? cacRegion : "—",                 readOnly: true }, { label: "Statut d'exercice",      value: isCAC ? "En exercice" : "—",       readOnly: true }],
+    [{ label: "Mandats en cours",          value: cacMandats,                              readOnly: true }, { label: "Dernière formation continue", value: cacFormation,                 readOnly: true }],
+    [{ label: "Assurance RCP CAC",         value: isCAC ? "À jour" : "—",                  readOnly: true }, { label: "Suspensions",            value: "Aucune",                          readOnly: true }],
   ];
 
   // ── Section Cotisations ───────────────────────────────────────
@@ -3141,7 +3284,7 @@ function buildContactData(demande) {
     ],
   };
 
-  return { highlights, identiteFields, dossierFields, cotisationsFields, coordonneesFields, comptexpertFields, adressePersoData, adresseProData };
+  return { highlights, identiteFields, dossierFields, diplomesFields, stageHistoriqueFields, cacFields, cotisationsFields, coordonneesFields, comptexpertFields, adressePersoData, adresseProData };
 }
 
 // ── Pièces Panel ────────────────────────────────────────────────
@@ -3659,7 +3802,7 @@ function AccountRecordPage({ account }) {
                       [{label:"Date d'inscription", value:"19/12/2013"},    {label:"Date de fin",          value:"—"}],
                       [{label:"Date de mise à jour",value:"13/02/2024"},    {label:"Info Complémentaire",  value:"—"}],
                     ]} />
-                    <AdresseActuelleSection adresse={"7 RUE MARCEL RENAULT\n75017 PARIS\nFRANCE"} validee={true} />
+                    <AdresseActuelleSection title="Adresse" adresse={"7 RUE MARCEL RENAULT\n75017 PARIS\nFRANCE"} validee={true} />
                     <ExpandableSection title="Coordonnées" defaultOpen={true} fields={[
                       [{label:"Téléphone", value:"01 46 55 14 62"}, {label:"E-mail", value:"f.abtan@abtan-aec.fr"}],
                       [{label:"Fax",       value:"—"},              {label:"Site web", value:"—"}],
@@ -3750,6 +3893,7 @@ function AccountRecordPage({ account }) {
                 {activeTab === "adresse" && (
                   <div className="mt-3 flex flex-col gap-1">
                     <AdresseActuelleSection
+                      title="Adresse"
                       adresse={"7 RUE MARCEL RENAULT\n75017 PARIS\nFRANCE"}
                       validee={true}
                     />
@@ -3804,62 +3948,6 @@ function AccountRecordPage({ account }) {
               </div>
             </AccountRelatedPanel>
             <AccountRelatedPanel icon={
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            } iconBg="#FF9800" label="Assurances" count={1} defaultOpen={true}>
-              {/* Liste assurances à partir de 2023 */}
-              <div className="px-3 pb-1">
-                <div className="text-[11px] font-semibold text-[#5C5C5C] bg-[#EEF0F5] px-3 py-1 mb-1 rounded">Liste des assurances (à partir de 2023)</div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-[11px] border-collapse" style={{minWidth:680}}>
-                    <thead>
-                      <tr className="bg-[#F3F3F3] text-[#5C5C5C]">
-                        {["N° Supra","Dénomination","Compagnie","N° Contrat","N° Police","Début","Fin","N° Chrono","Date Attest.","Min. couvert","Commentaire"].map(h=>(
-                          <th key={h} className="px-2 py-1 text-left font-semibold border-b border-[#C9C9C9] whitespace-nowrap">{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="border-b border-[#F0F0F0]" style={{background:"#F0FAF3"}}>
-                        {["14-01358000-01","AUDIT COMPT...","VERSPIEREN","008386728","118269730","19/12/2013","—","—","—","—","—"].map((v,i)=>(
-                          <td key={i} className="px-2 py-1 text-[#1A7A45] whitespace-nowrap">{v}</td>
-                        ))}
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-              {/* Liste assurances jusqu'à fin 2022 */}
-              <div className="px-3 pt-2">
-                <div className="text-[11px] font-semibold text-[#5C5C5C] bg-[#EEF0F5] px-3 py-1 mb-1 rounded">Liste des assurances (jusqu'à fin 2022)</div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-[11px] border-collapse" style={{minWidth:580}}>
-                    <thead>
-                      <tr className="bg-[#F3F3F3] text-[#5C5C5C]">
-                        {["Compagnie","N° Contrat","N° Police","Année","Début","Fin","N° Chrono","Date Attest.","Min. couvert","Commentaire"].map(h=>(
-                          <th key={h} className="px-2 py-1 text-left font-semibold border-b border-[#C9C9C9] whitespace-nowrap">{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {[
-                        ["VERSPIEREN","8386728","118269730","2022","01/01/2022","31/12/2022"],
-                        ["VERSPIEREN","8386728","118269730","2016","01/01/2016","31/12/2016"],
-                        ["VERSPIEREN","8386728","118269730","2015","01/01/2015","31/12/2015"],
-                        ["VERSPIEREN","8386728","118269730","2014","01/01/2014","31/12/2014"],
-                        ["VERSPIEREN","8386728","118269730","2013","19/12/2013","31/12/2013"],
-                      ].map((r,i)=>(
-                        <tr key={i} className="border-b border-[#F0F0F0] hover:bg-[#F9FAFB]">
-                          {[...r,"—","—","—","—"].map((v,j)=>(
-                            <td key={j} className="px-2 py-1 text-[#1A1A1A] whitespace-nowrap">{v}</td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </AccountRelatedPanel>
-            <AccountRelatedPanel icon={
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
             } iconBg="#9C27B0" label="Mode d'exercice" count={7} defaultOpen={true}>
               <div className="px-3 overflow-x-auto">
@@ -3903,9 +3991,15 @@ function AccountRecordPage({ account }) {
   );
 }
 
+// Liste globale des comptes (établissements). Sert à la fois d'alimenter le tableau
+// "Activités" de la fiche contact et à reconstruire l'onglet sur deep-link (account:NUM).
+const ACCOUNTS_LIST = [
+  { numInscription: "140000709201", inscription: "PRINCIPAL", denomination: "RIV CONSULTING", ro: "Oui", effet: "14/02/2019", fin: "—", cac: "—", cp: "75019", ville: "PARIS", qualite: "SEC", statut: "EN EXE.", conseil: "IDF" },
+];
+
 function ActivitesPanel({ onAccountClick }) {
   const [open, setOpen] = useState(true);
-  const activite = { numInscription: "140000709201", inscription: "PRINCIPAL", denomination: "RIV CONSULTING", ro: "Oui", effet: "14/02/2019", fin: "—", cac: "—", cp: "75019", ville: "PARIS", qualite: "SEC", statut: "EN EXE.", conseil: "IDF" };
+  const activite = ACCOUNTS_LIST[0];
   return (
     <div className="bg-white rounded-[20px] overflow-hidden">
       <button className="w-full flex items-center justify-between px-4 py-4" onClick={() => setOpen(o => !o)}>
@@ -3952,7 +4046,7 @@ function ContactRecordPage({ demande, onAccountClick }) {
   const data = buildContactData(demande);
   return (
     <>
-      <ContactPageHeader name={demande.demandeur} />
+      <ContactPageHeader name={formatContactName(demande.demandeur)} />
       <HighlightsPanel fields={data.highlights} />
       <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 pt-[1px]">
         <div className="flex gap-3 w-full">
@@ -3963,15 +4057,18 @@ function ContactRecordPage({ demande, onAccountClick }) {
                 {activeTab === "individu" && (
                   <div className="mt-3 flex flex-col gap-1">
                     <ExpandableSection title="Identité"                                       fields={data.identiteFields}     defaultOpen={true}  />
-                    <AdresseActuelleSection adresse={data.adressePersoData.adresseComplete} validee={data.adressePersoData.adresseValidee} />
-                    <ExpandableSection title="Dossier"      fields={data.dossierFields}      defaultOpen={false} />
-                    <ExpandableSection title="Cotisations"  fields={data.cotisationsFields}  defaultOpen={false} />
-                    <ExpandableSection title="Comptexpert"  fields={data.comptexpertFields}  defaultOpen={false} />
+                    <AdresseActuelleSection title="Adresse perso" adresse={data.adressePersoData.adresseComplete} validee={data.adressePersoData.adresseValidee} />
+                    <ExpandableSection title="Dossier"             fields={data.dossierFields}          defaultOpen={false} />
+                    <ExpandableSection title="Diplômes"            fields={data.diplomesFields}         defaultOpen={false} />
+                    <ExpandableSection title="Historique du stage" fields={data.stageHistoriqueFields}  defaultOpen={false} />
+                    <ExpandableSection title="CAC"                 fields={data.cacFields}              defaultOpen={false} />
+                    <ExpandableSection title="Cotisations"         fields={data.cotisationsFields}      defaultOpen={false} />
+                    <ExpandableSection title="Comptexpert"         fields={data.comptexpertFields}      defaultOpen={false} />
                   </div>
                 )}
                 {activeTab === "adresses" && (
                   <div className="mt-3 flex flex-col gap-1">
-                    <AdresseActuelleSection adresse={data.adresseProData.adresseComplete} validee={data.adresseProData.adresseValidee} />
+                    <AdresseActuelleSection title="Adresse pro" adresse={data.adresseProData.adresseComplete} validee={data.adresseProData.adresseValidee} />
                     <ExpandableSection title="Coordonnées" fields={data.adresseProData.coordFields} defaultOpen={true} />
                   </div>
                 )}
@@ -4072,6 +4169,54 @@ function ContactRecordPage({ demande, onAccountClick }) {
                     </div>
                   </div>
                 )}
+                {activeTab === "modeexercice" && (
+                  <div className="mt-6 flex flex-col items-center justify-center py-12 text-[#5C5C5C] text-[14px]">
+                    <div className="w-10 h-10 rounded-full bg-[#F3F3F3] flex items-center justify-center mb-3">
+                      <HelpCircle size={20} className="text-[#C9C9C9]" />
+                    </div>
+                    Mode d'exercice — contenu à définir
+                  </div>
+                )}
+                {activeTab === "commissions" && (
+                  <div className="mt-6 flex flex-col items-center justify-center py-12 text-[#5C5C5C] text-[14px]">
+                    <div className="w-10 h-10 rounded-full bg-[#F3F3F3] flex items-center justify-center mb-3">
+                      <HelpCircle size={20} className="text-[#C9C9C9]" />
+                    </div>
+                    Commissions — contenu à définir
+                  </div>
+                )}
+                {activeTab === "stage" && (
+                  <div className="mt-6 flex flex-col items-center justify-center py-12 text-[#5C5C5C] text-[14px]">
+                    <div className="w-10 h-10 rounded-full bg-[#F3F3F3] flex items-center justify-center mb-3">
+                      <HelpCircle size={20} className="text-[#C9C9C9]" />
+                    </div>
+                    Stage — contenu à définir
+                  </div>
+                )}
+                {activeTab === "declarations" && (
+                  <div className="mt-6 flex flex-col items-center justify-center py-12 text-[#5C5C5C] text-[14px]">
+                    <div className="w-10 h-10 rounded-full bg-[#F3F3F3] flex items-center justify-center mb-3">
+                      <HelpCircle size={20} className="text-[#C9C9C9]" />
+                    </div>
+                    Déclarations — contenu à définir
+                  </div>
+                )}
+                {activeTab === "adminprov" && (
+                  <div className="mt-6 flex flex-col items-center justify-center py-12 text-[#5C5C5C] text-[14px]">
+                    <div className="w-10 h-10 rounded-full bg-[#F3F3F3] flex items-center justify-center mb-3">
+                      <HelpCircle size={20} className="text-[#C9C9C9]" />
+                    </div>
+                    Admin Prov — contenu à définir
+                  </div>
+                )}
+                {activeTab === "panels" && (
+                  <div className="mt-6 flex flex-col items-center justify-center py-12 text-[#5C5C5C] text-[14px]">
+                    <div className="w-10 h-10 rounded-full bg-[#F3F3F3] flex items-center justify-center mb-3">
+                      <HelpCircle size={20} className="text-[#C9C9C9]" />
+                    </div>
+                    Panels — contenu à définir
+                  </div>
+                )}
                 {activeTab === "infos" && (
                   <div className="mt-6 flex flex-col items-center justify-center py-12 text-[#5C5C5C] text-[14px]">
                     <div className="w-10 h-10 rounded-full bg-[#F3F3F3] flex items-center justify-center mb-3">
@@ -4084,13 +4229,6 @@ function ContactRecordPage({ demande, onAccountClick }) {
             </div>
           </div>
           <div className="w-1/2 min-w-0 flex flex-col gap-3">
-            {/* Liens PP PM */}
-            <ContactRelatedPanel
-              icon={<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>}
-              iconBg="#E91E8C"
-              label="Liens PP PM"
-              count={4}
-            />
             {/* Demandes */}
             <ContactRelatedPanel
               icon={<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>}
@@ -4105,6 +4243,19 @@ function ContactRecordPage({ demande, onAccountClick }) {
                 { cr:"IDF", crOrig:"IDF", num:"14-00019231-01", motif:"INSCRIPTION AU STAGE",       type:"D", effet:"01/01/2013", session:"11/07/2013", decision:"Validé", qualite:"STA",     qualAvant:"STA",  statut:"EN EXE.", statAvant:"EN ATT." },
               ]}
               renderRow={(r) => [r.cr, r.crOrig, r.num, r.motif, r.type, r.effet, r.session, r.decision, r.qualite, r.qualAvant, r.statut, r.statAvant]}
+            />
+            {/* Bureaux */}
+            <ContactRelatedPanel
+              icon={<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 9h.01M9 12h.01M9 15h.01M9 18h.01M15 9h.01M15 12h.01M15 15h.01M15 18h.01"/></svg>}
+              iconBg="#7E57C2"
+              label="Bureaux"
+              count={2}
+              cols={["Type", "Dénomination", "Adresse", "CP", "Ville", "Téléphone", "Effet", "Statut"]}
+              rows={[
+                { type: "Siège",  denom: "RIV CONSULTING",          adresse: "10 RUE GUIZOT",       cp: "78220", ville: "VIROFLAY",     tel: "+33 1 30 24 88 12", effet: "14/02/2019", statut: "EN EXE." },
+                { type: "Annexe", denom: "RIV CONSULTING – Lyon",   adresse: "25 BOULEVARD HAUSSMANN", cp: "69001", ville: "LYON",       tel: "+33 4 78 92 14 50", effet: "01/03/2022", statut: "EN EXE." },
+              ]}
+              renderRow={(r) => [r.type, r.denom, r.adresse, r.cp, r.ville, r.tel, r.effet, r.statut]}
             />
             {/* Participations */}
             <ContactRelatedPanel
@@ -4150,8 +4301,12 @@ const IN_IFRAME = window.self !== window.top;
 // Lit le hash de vue courant — on lit TOUJOURS notre propre hash.
 // Au chargement en iframe, le Proto Viewer injecte déjà le suffix dans iframe.src
 // (ex: "Espace-Gestion.html#demandes"), donc window.location.hash contient la bonne vue.
+// On décode l'URI car les navigateurs renvoient le hash encodé (ex: "%C3%A9" pour "é"),
+// alors que les ids internes (contact:Alexandre_André) sont en clair.
 const readCurrentHash = () => {
-  return window.location.hash.slice(1) || "stagiaires";
+  const raw = window.location.hash.slice(1);
+  if (!raw) return "stagiaires";
+  try { return decodeURIComponent(raw); } catch (e) { return raw; }
 };
 
 // Écrit le hash de vue (en préservant le chemin proto en iframe)
@@ -4160,17 +4315,20 @@ const readCurrentHash = () => {
 // Écrire directement dans window.parent.history.pushState crée une race condition :
 // le parent écrase notre suffix parce qu'il voit que notre hash interne est vide.
 const writeHash = (hash) => {
+  // Compare en version décodée (location.hash retourne du %XX, hash est en clair)
+  const currentDecoded = (() => {
+    try { return decodeURIComponent(window.location.hash.slice(1)); } catch (e) { return window.location.hash.slice(1); }
+  })();
   if (IN_IFRAME) {
     try {
       const target = (hash === "stagiaires") ? "" : hash;
-      if (window.location.hash.replace(/^#/, "") !== target) {
+      if (currentDecoded !== target) {
         window.history.replaceState(null, "", target ? ("#" + target) : window.location.pathname + window.location.search);
       }
-      // Custom event conservé pour compat (optionnel)
       try { window.parent.dispatchEvent(new window.parent.CustomEvent('pvViewChange', { detail: { view: hash } })); } catch(e2) {}
     } catch(e) {}
   } else {
-    if (window.location.hash.slice(1) !== hash) {
+    if (currentDecoded !== hash) {
       window.history.pushState(null, "", "#" + hash);
     }
   }
@@ -4190,6 +4348,11 @@ function seedOpenTabsFromHash(hash) {
     const demande = DEMANDES_LIST.find(d => d.demandeur.replace(/\s+/g, "_") === tag);
     if (demande) return [{ type: "contact", id: hash, label: demande.demandeur, data: demande }];
   }
+  if (hash.startsWith("account:")) {
+    const numInscription = hash.slice("account:".length);
+    const row = ACCOUNTS_LIST.find(a => a.numInscription === numInscription);
+    if (row) return [{ type: "account", id: hash, label: row.denomination, data: row }];
+  }
   if (hash.startsWith("groupe:")) {
     const numero = hash.slice("groupe:".length);
     const row = GROUPES_LIST.find(g => g.numero === numero || String(g.numero) === numero);
@@ -4198,20 +4361,48 @@ function seedOpenTabsFromHash(hash) {
   return [];
 }
 
+// Si l'URL pointe vers un deep-link mais qu'on n'a rien trouvé (ex: id supprimé),
+// on retombe sur la page liste plutôt que d'afficher du blanc.
+function resolveInitialPage(hash, openTabs) {
+  if (!hash) return "list";
+  if (hash.includes(":")) {
+    return openTabs.length > 0 ? hash : "list";
+  }
+  return hashToPage(hash);
+}
+
 function App() {
-  const [activePage, setActivePageState] = useState(() => hashToPage(readCurrentHash()));
   const [openTabs, setOpenTabs] = useState(() => seedOpenTabsFromHash(readCurrentHash()));
+  const [activePage, setActivePageState] = useState(() => {
+    const h = readCurrentHash();
+    const seeded = seedOpenTabsFromHash(h);
+    return resolveInitialPage(h, seeded);
+  });
 
   const setActivePage = React.useCallback((page) => {
     writeHash(pageToHash(page));
     setActivePageState(page);
   }, []);
 
-  // Back / Forward — on écoute hashchange + popstate sur notre propre window.
-  // Le Proto Viewer parent recharge l'iframe avec le bon hash lors d'un deep-link,
-  // donc notre hashchange/popstate local suffit.
+  // Back / Forward / paste URL — on écoute hashchange + popstate.
+  // Si l'utilisateur arrive sur un deep-link absent de openTabs (paste dans la barre,
+  // back vers un onglet fermé), on re-seed openTabs depuis le hash.
   React.useEffect(() => {
-    const onChange = () => setActivePageState(hashToPage(readCurrentHash()));
+    const onChange = () => {
+      const h = readCurrentHash();
+      if (h && h.includes(":")) {
+        setOpenTabs(prev => {
+          if (prev.find(t => t.id === h)) return prev;
+          const seeded = seedOpenTabsFromHash(h);
+          return seeded.length > 0 ? [...prev, ...seeded] : prev;
+        });
+        // resolveInitialPage gère le cas "deep-link introuvable" → retour liste
+        const seededNow = seedOpenTabsFromHash(h);
+        setActivePageState(resolveInitialPage(h, seededNow));
+      } else {
+        setActivePageState(hashToPage(h));
+      }
+    };
     window.addEventListener("hashchange", onChange);
     window.addEventListener("popstate", onChange);
     return () => {
