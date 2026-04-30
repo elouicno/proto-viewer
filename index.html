@@ -1059,33 +1059,41 @@ async function initApp() {
 }
 
 // Parse the URL hash into { file, suffix }.
-// Hash format: #<encoded-path>[/<sub-section>]
-// The sub-section after the final slash (or legacy "|") scopes comments to a sub-state
-// of the same proto (e.g. tab, contact id), so two deep-link URLs on the same file
-// get independent comment threads.
-// Boundary detection: the proto file always ends in .html or .htm — anything after that
-// is the suffix.
+// Hash format: #<encoded-path>[<sep><sub-section>]
+// Separator can be '#' (current), '/' or '|' (legacy).
+// The sub-section scopes comments to a specific screen/state inside the proto so that
+// two deep-link URLs on the same file get independent comment threads.
+// Key format has evolved:
+//   v1: "protos/X.html|suffix"   (pipe)
+//   v2: "protos/X.html/suffix"   (slash)
+//   v3: "protos/X.html#suffix"   (hash) ← current, matches direct proto URL format
+// Boundary: the proto file always ends in .html or .htm.
 function parseHash() {
   if (!location.hash) return { file: '', suffix: '' };
   const decoded = decodeURIComponent(location.hash.slice(1));
-  const m = decoded.match(/^(.+\.html?)(?:[\/|](.+))?$/);
+  // Accept '#', '/' or '|' as separator for backward compat
+  const m = decoded.match(/^(.+\.html?)(?:[#\/|](.+))?$/);
   if (m) return { file: m[1], suffix: m[2] || '' };
   return { file: decoded, suffix: '' };
 }
 
-// Comment storage key = file + "/suffix" (if present in current hash for this proto).
-// Read also accepts legacy "|" keys for backward compatibility with already-stored data.
+// Comment storage key = "protos/X.html" or "protos/X.html#suffix".
+// The '#' separator matches the format of a direct proto URL, so comments placed
+// in the viewer and comments placed on the direct page (via comment-widget.js) share
+// the same key and appear in both contexts automatically.
+// Backward-compat: also checks legacy '/' and '|' separator keys.
 function getCommentKey(proto) {
   proto = proto || protos.find(p => p.id === currentId);
   if (!proto) return '';
   const { file, suffix } = parseHash();
   if (!(file === proto.file && suffix)) return proto.file;
-  const newKey = proto.file + '/' + suffix;
-  // Backward-compat read: if no data under new key but data exists under legacy "|" key,
-  // return the legacy key so existing comments stay reachable. Migration runs on save.
+  const newKey = proto.file + '#' + suffix;  // ← v3 format (matches direct URL)
+  // Backward-compat read: fall back to legacy key formats if the new key has no data yet.
   if (typeof commentsDB !== 'undefined' && !commentsDB[newKey]) {
-    const legacyKey = proto.file + '|' + suffix;
-    if (commentsDB[legacyKey] && commentsDB[legacyKey].length) return legacyKey;
+    for (const sep of ['/', '|']) {
+      const legacyKey = proto.file + sep + suffix;
+      if (commentsDB[legacyKey] && commentsDB[legacyKey].length) return legacyKey;
+    }
   }
   return newKey;
 }
@@ -1284,7 +1292,10 @@ function attachIframeHashSync(iframe) {
     try { inner = iw.location.hash.replace(/^#/, ''); } catch { return; }
     const proto = protos.find(p => p.id === currentId);
     if (!proto) return;
-    const expected = encodeURIComponent(proto.file) + (inner ? '/' + inner : '');
+    // Use '#' separator (v3) — matches the direct proto URL format so that the
+    // comment key in the viewer equals the key in comment-widget.js on the same page.
+    const suffix = inner ? encodeURIComponent('#') + encodeURIComponent(inner) : '';
+    const expected = encodeURIComponent(proto.file) + suffix;
     if (location.hash.replace(/^#/, '') !== expected) {
       // Use replaceState to avoid polluting browser history with every click
       history.replaceState(null, '', '#' + expected);
@@ -1320,7 +1331,15 @@ function setDevice(device) {
 function openExternal() {
   const proto = protos.find(p => p.id === currentId);
   if (!proto) return;
-  window.open(proto.file, '_blank');
+  // Carry the iframe's current hash so the new tab opens at the exact same screen.
+  // The service worker will inject comment-widget.js, and since the URL matches the
+  // viewer's comment key (proto.file + '#' + iframeHash), comments are shared.
+  let iframeHash = '';
+  try {
+    const iframe = document.querySelector('#viewerFrame iframe');
+    if (iframe) iframeHash = iframe.contentWindow.location.hash || '';
+  } catch {}
+  window.open(proto.file + iframeHash, '_blank');
 }
 
 function reloadFrame() {
@@ -1641,9 +1660,10 @@ async function initComments() {
   }
 }
 
-// One-shot rename of legacy `protos/X.html|suffix` keys to `protos/X.html/suffix`.
-// Comments themselves don't change — only the storage key.
-// If both the legacy and new key exist, merge by id (de-dup) and drop the legacy.
+// Migrate legacy comment keys to the current v3 format ("protos/X.html#suffix").
+// Handles both v1 (pipe: "|") and v2 (slash: "/") separators in one pass.
+// If both a legacy key and the new "#" key exist, comments are merged by id.
+// Returns true if any key was renamed (so the caller can push the change to Gist).
 function migrateLegacyPipeKeys() {
   let changed = false;
   const stores = [
@@ -1653,16 +1673,16 @@ function migrateLegacyPipeKeys() {
   ];
   stores.forEach(({ o, isList }) => {
     Object.keys(o).forEach(k => {
-      const m = k.match(/^(.+\.html?)\|(.+)$/);
+      // Match keys with "|" or "/" separator (v1 and v2) but not "#" (already v3)
+      const m = k.match(/^(.+\.html?)([\/|])(.+)$/);
       if (!m) return;
-      const newKey = m[1] + '/' + m[2];
+      const newKey = m[1] + '#' + m[3];  // upgrade to v3 ("#" separator)
       if (o[newKey] === undefined) {
         o[newKey] = o[k];
       } else if (isList && Array.isArray(o[k]) && Array.isArray(o[newKey])) {
         const seen = new Set(o[newKey].map(c => c && c.id).filter(Boolean));
         o[k].forEach(c => { if (c && c.id && !seen.has(c.id)) o[newKey].push(c); });
       } else if (!isList) {
-        // Counter: take the max
         o[newKey] = Math.max(o[newKey] || 0, o[k] || 0);
       }
       delete o[k];
