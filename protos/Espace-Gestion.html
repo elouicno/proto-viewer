@@ -610,7 +610,7 @@ function ExpandableSection({ title, fields, defaultOpen = true, children }) {
             : data.map((row, ri) => (
               <div key={ri} className="flex gap-3">
                 {row.map((field, fi) => (
-                  <EditableField key={fi} label={field.label} value={field.value} readOnly={field.readOnly} onChange={(v) => handleChange(ri, fi, v)} />
+                  <EditableField key={fi} label={field.label} value={field.value} readOnly={field.readOnly} isLink={field.isLink} onClick={field.onClick} onChange={(v) => handleChange(ri, fi, v)} />
                 ))}
               </div>
             ))
@@ -847,7 +847,7 @@ function GroupesEditableSection({ fields, defaultOpen = false }) {
   );
 }
 
-function EditableField({ label, value, onChange, readOnly }) {
+function EditableField({ label, value, onChange, readOnly, isLink, onClick }) {
   const [editing, setEditing] = useState(false);
   const [localVal, setLocalVal] = useState(value);
   const commit = () => { setEditing(false); if (onChange) onChange(localVal); };
@@ -858,9 +858,10 @@ function EditableField({ label, value, onChange, readOnly }) {
       <div className="flex-1 pl-1 pb-1">
         <p className="text-[13px] text-[#5C5C5C] leading-[18px]">{label}</p>
         <div className="flex items-center gap-1 border-b border-transparent min-h-[24px] pb-1 pt-0.5">
-          <span className="flex-1 text-[13px] text-[#2E2E2E] leading-[18px] truncate">
-            {value || "\u00A0"}
-          </span>
+          {isLink
+            ? <span onClick={onClick} className="flex-1 text-[13px] text-[#0250D9] leading-[18px] truncate cursor-pointer hover:underline">{value || "\u00A0"}</span>
+            : <span className="flex-1 text-[13px] text-[#2E2E2E] leading-[18px] truncate">{value || "\u00A0"}</span>
+          }
         </div>
       </div>
     );
@@ -3873,7 +3874,7 @@ function SocieteTabBar({ activeTab, onTabChange }) {
               ? "text-[#0250D9] border-b-[3px] border-[#0250D9]"
               : "text-[#5C5C5C] border-b border-[#C9C9C9]"
           }`}
-        >{tab.label}{tab.key === "societe" ? <span className="ml-1 text-[10px] text-[#9E9E9E]">🔒</span> : ""}</button>
+        >{tab.label}</button>
       ))}
       <div className="flex-1 border-b border-[#C9C9C9]" />
     </div>
@@ -3937,7 +3938,7 @@ function SocieteDemandesPanel() {
   );
 }
 
-function SocieteRecordPage({ societe }) {
+function SocieteRecordPage({ societe, onAccountClick }) {
   const [activeTab, setActiveTab] = useState("societe");
   const [assurSubTab, setAssurSubTab] = useState("2023");
 
@@ -4063,9 +4064,13 @@ function SocieteRecordPage({ societe }) {
                           {["Conseil","N° Inscription","Inscription","Statut","CP","Ville","N° Siret"].map(h=><th key={h} className={thCls}>{h}</th>)}
                         </tr></thead>
                         <tbody>
-                          <tr className="hover:bg-[#F9F9F9]">
+                          <tr
+                            className="hover:bg-[#EBF2FF] cursor-pointer"
+                            onClick={() => onAccountClick && onAccountClick({ numInscription: "14-00025838-01", denomination: "FISCALIA" })}
+                            title="Ouvrir la fiche Account"
+                          >
                             <td className={tdCls}>ÎLE-DE-FRANCE</td>
-                            <td className={tdCls + " text-[#0250D9] cursor-pointer"}>14-00025838-01</td>
+                            <td className={tdCls + " text-[#0250D9] font-semibold"}>14-00025838-01</td>
                             <td className={tdCls}>PRINCIPAL</td>
                             <td className={tdCls}><span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#E8F5E9] text-[#2E7D32]">EN EXERCICE</span></td>
                             <td className={tdCls}>78500</td>
@@ -4455,16 +4460,18 @@ function AccountTabBar({ activeTab, onTabChange }) {
 function AccountRecordPage({ account, onSocieteClick }) {
   const [activeTab, setActiveTab] = useState("etablissement");
   const highlights = [
-    { label: "N° d'inscription",  value: "14-00007092-01"   },
-    { label: "Statut",            value: "EN EXERCICE"      },
-    { label: "Conseil régional",  value: "ÎLE-DE-FRANCE"   },
-    { label: "Inscription",       value: "PRINCIPAL"        },
-    { label: "N° SIRET",          value: "848-615-043-00025"},
-    { label: "Diffusion adresse", value: "Oui"              },
-    { label: "Date d'inscription",value: "14/02/2019"       },
-    { label: "Date de fin",       value: "—"                },
-    { label: "Solde cotisation",  value: "0,00"             },
-    { label: "Société",           value: "14-00025838-01",  isLink: true, onClick: () => onSocieteClick && onSocieteClick({ numInscription: "14-00025838-01", denomination: "FISCALIA" }) },
+    { label: "N° d'inscription",    value: "14-00007092-01"          },
+    { label: "Statut",              value: "EN EXERCICE"             },
+    { label: "Conseil régional",    value: "ÎLE-DE-FRANCE"          },
+    { label: "Type d'inscription",  value: "PRINCIPAL"               },
+    { label: "N° SIRET",            value: "848-615-043-00025"       },
+    { label: "Responsable Ordinal", value: "M AAFIR OTMAN"          },
+    { label: "Qualité",             value: "SEC"                     },
+    { label: "Date d'inscription",  value: "14/02/2019"              },
+    { label: "Mobile",              value: "06 12 34 56 78"          },
+    { label: "Email pro",           value: "f.abtan@abtan-aec.fr"   },
+    { label: "Ville",               value: "SARTROUVILLE"            },
+    { label: "Société",             value: "14-00025838-01", isLink: true, onClick: () => onSocieteClick && onSocieteClick({ numInscription: "14-00025838-01", denomination: "FISCALIA" }) },
   ];
   return (
     <>
@@ -4488,6 +4495,7 @@ function AccountRecordPage({ account, onSocieteClick }) {
                       [{label:"Les Statuts",        value:"—"},             {label:"Diffusion adresse",    value:"Oui"}],
                       [{label:"Date d'inscription", value:"19/12/2013"},    {label:"Date de fin",          value:"—"}],
                       [{label:"Date de mise à jour",value:"13/02/2024"},    {label:"Info Complémentaire",  value:"—"}],
+                      [{label:"Société", value:"14-00025838-01", readOnly:true, isLink:true, onClick:() => onSocieteClick && onSocieteClick({numInscription:"14-00025838-01",denomination:"FISCALIA"})}, {label:"", value:""}],
                     ]} />
                     <AdresseActuelleSection adresse={"7 RUE MARCEL RENAULT\n75017 PARIS\nFRANCE"} validee={true} title="Adresse" />
                     <ExpandableSection title="Coordonnées" defaultOpen={true} fields={[
@@ -4500,45 +4508,50 @@ function AccountRecordPage({ account, onSocieteClick }) {
                   </div>
                 )}
 
-                {/* ── Motifs ── */}
-                {activeTab === "motifs" && (
+                {/* ── Demandes ── */}
+                {activeTab === "demandes" && (
                   <div className="mt-3 flex flex-col gap-4">
+                    {/* Motifs */}
                     <div className="overflow-x-auto">
-                      <table className="w-full text-[12px] border-collapse" style={{minWidth:780}}>
+                      <table className="w-full text-[12px] border-collapse border border-[#C9C9C9]" style={{minWidth:780}}>
                         <thead>
                           <tr className="bg-[#F3F3F3] text-[#5C5C5C]">
-                            {["CR Origine du Motif","Motif","Effet","Session","Décision","Qualité","Qualité avant","Statut","Statut avant"].map(h=>(
-                              <th key={h} className="px-3 py-2 text-left font-semibold border-b border-[#C9C9C9] whitespace-nowrap text-[11px]">{h}</th>
+                            {["CR Origine du Motif","Motif","Effet ↓","Session","Décision","Qualité","Qualité avant","Statut","Statut avant"].map(h=>(
+                              <th key={h} className="px-2 py-1.5 text-left font-semibold border border-[#C9C9C9] whitespace-nowrap text-[11px]">{h}</th>
                             ))}
                           </tr>
                         </thead>
                         <tbody>
-                          {[
-                            {cr:"IDF", motif:"MODIFICATION SIEGE SOCIAL", effet:"31/08/2022", session:"06/10/2022", decision:"Validé", qualite:"SEC", qualiteAv:"SEC", statut:"EN EXE.", statutAv:"EN EXE."},
-                            {cr:"IDF", motif:"INSCRIPTION",               effet:"11/01/2019", session:"17/01/2019", decision:"Validé", qualite:"SEC", qualiteAv:"SEC", statut:"EN EXE.", statutAv:"EN ATT."},
-                          ].map((r,i)=>(
-                            <tr key={i} className="border-b border-[#F0F0F0] hover:bg-[#F9FAFB]">
-                              {[r.cr,r.motif,r.effet,r.session,r.decision,r.qualite,r.qualiteAv,r.statut,r.statutAv].map((v,j)=>(
-                                <td key={j} className="px-3 py-2 text-[#1A1A1A] whitespace-nowrap">{v}</td>
-                              ))}
-                            </tr>
-                          ))}
+                          <tr className="border-b border-[#E5E5E5] hover:bg-[#F9F9F9]">
+                            {["IDF","INSCRIPTION","01/06/2023","01/06/2023","Validé","SEC","SEC","EN EXE.","EN ATT."].map((v,j)=>(
+                              <td key={j} className="px-2 py-1.5 text-[12px] border border-[#E5E5E5] text-[#1A1A1A] whitespace-nowrap">
+                                {j === 4 ? <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#E8F5E9] text-[#2E7D32]">{v}</span> : v}
+                              </td>
+                            ))}
+                          </tr>
                         </tbody>
                       </table>
                     </div>
+                    {/* Motifs en attente */}
                     <div>
-                      <div className="text-[12px] font-semibold text-[#5C5C5C] bg-[#EEF0F5] px-3 py-2 mb-0">Motifs en attente</div>
+                      <div className="text-[12px] font-bold text-[#03234D] bg-[#D6E4F7] px-3 py-1.5 mb-2">Motifs en attente</div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <button className="flex items-center gap-1 px-2 py-1 bg-[#4CAF50] text-white rounded text-[11px] font-semibold"><Plus size={11}/> Ajouter</button>
+                        <button className="flex items-center gap-1 px-2 py-1 bg-[#F44336] text-white rounded text-[11px] font-semibold">
+                          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="white" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg> Supprimer
+                        </button>
+                      </div>
                       <div className="overflow-x-auto">
-                        <table className="w-full text-[12px] border-collapse" style={{minWidth:560}}>
+                        <table className="w-full text-[12px] border-collapse border border-[#C9C9C9]" style={{minWidth:560}}>
                           <thead>
                             <tr className="bg-[#F3F3F3] text-[#5C5C5C]">
                               {["Motif","Effet","Session","Décision","Echéance","Commentaire"].map(h=>(
-                                <th key={h} className="px-3 py-2 text-left font-semibold border-b border-[#C9C9C9] whitespace-nowrap text-[11px]">{h}</th>
+                                <th key={h} className="px-2 py-1.5 text-left font-semibold border border-[#C9C9C9] whitespace-nowrap text-[11px]">{h}</th>
                               ))}
                             </tr>
                           </thead>
                           <tbody>
-                            <tr><td colSpan={6} className="px-3 py-6 text-center text-[#C9C9C9] text-[12px]">Aucun motif en attente</td></tr>
+                            <tr><td colSpan={6} className="px-2 py-6 text-center text-[#9E9E9E] text-[11px] border border-[#C9C9C9]">Aucun motif en attente</td></tr>
                           </tbody>
                         </table>
                       </div>
@@ -4838,29 +4851,53 @@ function AccountRecordPage({ account, onSocieteClick }) {
           <div className="w-1/2 min-w-0 flex flex-col gap-3">
             <AccountRelatedPanel icon={
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
-            } iconBg="#0250D9" label="Demandes" count={2} defaultOpen={true}>
-              <div className="px-3 overflow-x-auto pb-2">
-                <table className="w-full text-[11px] border-collapse" style={{minWidth:520}}>
-                  <thead>
-                    <tr className="bg-[#F3F3F3] text-[#5C5C5C]">
-                      {["CR Origine du Motif","Motif","Effet","Session","Décision","Qualité","Qualité avant","Statut","Statut avant"].map(h=>(
-                        <th key={h} className="px-2 py-1 text-left font-semibold border-b border-[#C9C9C9] whitespace-nowrap">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[
-                      {cr:"IDF", motif:"MODIFICATION SIEGE SOCIAL", effet:"31/08/2022", session:"06/10/2022", decision:"Validé", qualite:"SEC", qualAvant:"SEC", statut:"EN EXE.", statAvant:"EN EXE."},
-                      {cr:"IDF", motif:"INSCRIPTION",               effet:"11/01/2019", session:"17/01/2019", decision:"Validé", qualite:"SEC", qualAvant:"SEC", statut:"EN EXE.", statAvant:"EN ATT."},
-                    ].map((r,i)=>(
-                      <tr key={i} className="border-b border-[#F0F0F0] hover:bg-[#F9FAFB]">
-                        {[r.cr,r.motif,r.effet,r.session,r.decision,r.qualite,r.qualAvant,r.statut,r.statAvant].map((v,j)=>(
-                          <td key={j} className="px-2 py-1 text-[#1A1A1A] whitespace-nowrap">{v}</td>
+            } iconBg="#0250D9" label="Demandes" count={1} defaultOpen={true}>
+              <div className="px-3 pb-3 flex flex-col gap-3">
+                {/* Motifs */}
+                <div className="overflow-x-auto">
+                  <table className="w-full text-[11px] border-collapse border border-[#C9C9C9]" style={{minWidth:520}}>
+                    <thead>
+                      <tr className="bg-[#F3F3F3] text-[#5C5C5C]">
+                        {["CR Origine du Motif","Motif","Effet ↓","Session","Décision","Qualité","Qualité avant","Statut","Statut avant"].map(h=>(
+                          <th key={h} className="px-2 py-1.5 text-left font-semibold border border-[#C9C9C9] whitespace-nowrap text-[11px]">{h}</th>
                         ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      <tr className="border-b border-[#E5E5E5] hover:bg-[#F9F9F9]">
+                        {["IDF","INSCRIPTION","01/06/2023","01/06/2023","Validé","SEC","SEC","EN EXE.","EN ATT."].map((v,j)=>(
+                          <td key={j} className="px-2 py-1.5 text-[11px] border border-[#E5E5E5] text-[#1A1A1A] whitespace-nowrap">
+                            {j === 4 ? <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#E8F5E9] text-[#2E7D32]">{v}</span> : v}
+                          </td>
+                        ))}
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                {/* Motifs en attente */}
+                <div>
+                  <div className="text-[11px] font-bold text-[#03234D] bg-[#D6E4F7] px-3 py-1.5 mb-2">Motifs en attente</div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <button className="flex items-center gap-1 px-2 py-1 bg-[#4CAF50] text-white rounded text-[10px] font-semibold"><Plus size={10}/> Ajouter</button>
+                    <button className="flex items-center gap-1 px-2 py-1 bg-[#F44336] text-white rounded text-[10px] font-semibold">
+                      <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="white" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg> Supprimer
+                    </button>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-[11px] border-collapse border border-[#C9C9C9]" style={{minWidth:480}}>
+                      <thead>
+                        <tr className="bg-[#F3F3F3] text-[#5C5C5C]">
+                          {["Motif","Effet","Session","Décision","Echéance","Commentaire"].map(h=>(
+                            <th key={h} className="px-2 py-1.5 text-left font-semibold border border-[#C9C9C9] whitespace-nowrap text-[11px]">{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr><td colSpan={6} className="px-2 py-4 text-center text-[#9E9E9E] text-[11px] border border-[#C9C9C9]">Aucun motif en attente</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
             </AccountRelatedPanel>
             <AccountRelatedPanel icon={
@@ -5962,7 +5999,7 @@ function App() {
       {activeTab && activeTab.type === "groupe" && <GroupeRecordPage groupe={activeTab.data} onNavigateToRecord={handleNavigateToRecord} />}
       {activeTab && activeTab.type === "contact" && <ContactRecordPage demande={activeTab.data} onAccountClick={handleNavigateToAccount} />}
       {activeTab && activeTab.type === "account" && <AccountRecordPage account={activeTab.data} onSocieteClick={handleNavigateToSociete} />}
-      {activeTab && activeTab.type === "societe" && <SocieteRecordPage societe={activeTab.data} />}
+      {activeTab && activeTab.type === "societe" && <SocieteRecordPage societe={activeTab.data} onAccountClick={handleNavigateToAccount} />}
 
       <DockedUtilityBar />
     </div>
