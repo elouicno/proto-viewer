@@ -542,7 +542,7 @@ function HighlightsPanel({ fields }) {
           <div key={i} className="flex flex-col gap-0.5 shrink-0">
             <p className="text-[12px] text-[#5C5C5C] leading-[17px] whitespace-nowrap">{f.label}</p>
             {f.isLink ? (
-              <p className="text-[13px] text-[#0250D9] leading-[18px] whitespace-nowrap cursor-pointer hover:underline">{f.value || "\u00A0"}</p>
+              <p onClick={f.onClick} className="text-[13px] text-[#0250D9] leading-[18px] whitespace-nowrap cursor-pointer hover:underline">{f.value || "\u00A0"}</p>
             ) : (
               <p className="text-[13px] text-[#03234D] leading-[18px] whitespace-nowrap">{f.value || "\u00A0"}</p>
             )}
@@ -582,9 +582,9 @@ function TabBar({ activeTab, onTabChange }) {
   );
 }
 
-function ExpandableSection({ title, fields, defaultOpen = true }) {
+function ExpandableSection({ title, fields, defaultOpen = true, children }) {
   const [open, setOpen] = useState(defaultOpen);
-  const [data, setData] = useState(fields);
+  const [data, setData] = useState(fields || []);
   const handleChange = (ri, fi, newVal) => {
     setData(prev => {
       const copy = prev.map(r => r.map(f => ({ ...f })));
@@ -605,13 +605,16 @@ function ExpandableSection({ title, fields, defaultOpen = true }) {
       </button>
       {open && (
         <div className="flex flex-col gap-3 mt-2">
-          {data.map((row, ri) => (
-            <div key={ri} className="flex gap-3">
-              {row.map((field, fi) => (
-                <EditableField key={fi} label={field.label} value={field.value} readOnly={field.readOnly} onChange={(v) => handleChange(ri, fi, v)} />
-              ))}
-            </div>
-          ))}
+          {children
+            ? children
+            : data.map((row, ri) => (
+              <div key={ri} className="flex gap-3">
+                {row.map((field, fi) => (
+                  <EditableField key={fi} label={field.label} value={field.value} readOnly={field.readOnly} onChange={(v) => handleChange(ri, fi, v)} />
+                ))}
+              </div>
+            ))
+          }
         </div>
       )}
     </div>
@@ -621,7 +624,7 @@ function ExpandableSection({ title, fields, defaultOpen = true }) {
 // ══════════════════════════════════════════════════════════════
 // AdresseActuelleSection — bloc adresse avec badge validée
 // ══════════════════════════════════════════════════════════════
-function AdresseActuelleSection({ adresse, validee, title = "Adresse actuelle" }) {
+function AdresseActuelleSection({ adresse, validee, title = "Adresse pro" }) {
   const [open, setOpen] = useState(true);
   return (
     <div className="w-full pb-3">
@@ -2977,110 +2980,91 @@ const CONTACT_TABS_VISIBLE = [
   { key: "individu",      label: "Individu"        },
   { key: "adresses",      label: "Adresse pro"     },
   { key: "rac",           label: "RAC"             },
-  { key: "modeexercice",  label: "Mode d'exercice" },
+  { key: "mode_exercice", label: "Mode d'exercice" },
   { key: "commissions",   label: "Commissions"     },
   { key: "stage",         label: "Stage"           },
 ];
-const CONTACT_TABS_OVERFLOW = [
-  { key: "declarations",  label: "Déclarations" },
-  { key: "adminprov",     label: "Admin Prov"   },
-  { key: "panels",        label: "Panels"       },
-  { key: "infos",         label: "Infos"        },
+const CONTACT_TABS_MORE = [
+  { key: "declarations",  label: "Déclarations"     },
+  { key: "admin_prov",    label: "Admin. Provisoire" },
+  { key: "panels",        label: "Panels"            },
+  { key: "infos",         label: "Infos"             },
 ];
-const CONTACT_TABS = [...CONTACT_TABS_VISIBLE, ...CONTACT_TABS_OVERFLOW];
+const CONTACT_TABS = [...CONTACT_TABS_VISIBLE, ...CONTACT_TABS_MORE];
 
 function ContactTabBar({ activeTab, onTabChange }) {
-  const [openMenu, setOpenMenu] = useState(false);
-  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
-  const btnRef = React.useRef(null);
-  const popRef = React.useRef(null);
-
-  const computePos = () => {
-    if (!btnRef.current) return;
-    const r = btnRef.current.getBoundingClientRect();
-    const menuW = 200;
-    setMenuPos({ top: r.bottom + 4, left: Math.max(8, r.right - menuW) });
-  };
-
-  const toggleMenu = () => {
-    if (!openMenu) computePos();
-    setOpenMenu(v => !v);
-  };
+  const [moreOpen, setMoreOpen] = React.useState(false);
+  const moreRef = React.useRef(null);
+  const activeInMore = CONTACT_TABS_MORE.some(t => t.key === activeTab);
 
   React.useEffect(() => {
-    if (!openMenu) return;
-    const onDoc = (e) => {
-      if (btnRef.current && btnRef.current.contains(e.target)) return;
-      if (popRef.current && popRef.current.contains(e.target)) return;
-      setOpenMenu(false);
+    if (!moreOpen) return;
+    const handleClick = (e) => {
+      if (moreRef.current && !moreRef.current.contains(e.target)) setMoreOpen(false);
     };
-    const onScroll = () => computePos();
-    const onResize = () => computePos();
-    document.addEventListener("mousedown", onDoc);
-    window.addEventListener("scroll", onScroll, true);
-    window.addEventListener("resize", onResize);
-    return () => {
-      document.removeEventListener("mousedown", onDoc);
-      window.removeEventListener("scroll", onScroll, true);
-      window.removeEventListener("resize", onResize);
-    };
-  }, [openMenu]);
-
-  const overflowActive = CONTACT_TABS_OVERFLOW.find(t => t.key === activeTab);
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [moreOpen]);
 
   return (
-    <div className="flex w-full overflow-x-auto">
-      {CONTACT_TABS_VISIBLE.map((tab) => (
+    <div className="flex w-full">
+      {/* Onglets visibles — scrollable horizontalement */}
+      <div className="flex overflow-x-auto">
+        {CONTACT_TABS_VISIBLE.map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => onTabChange(tab.key)}
+            className={`px-3 h-10 text-[14px] font-semibold whitespace-nowrap ${
+              activeTab === tab.key
+                ? "text-[#0250D9] border-b-[3px] border-[#0250D9]"
+                : "text-[#5C5C5C] border-b border-[#C9C9C9]"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+      {/* "Plus" dropdown — hors du overflow pour ne pas être coupé */}
+      <div className="relative shrink-0" ref={moreRef}>
         <button
-          key={tab.key}
-          onClick={() => onTabChange(tab.key)}
-          className={`px-3 h-10 text-[14px] font-semibold whitespace-nowrap ${
-            activeTab === tab.key
+          onClick={() => setMoreOpen(o => !o)}
+          className={`px-3 h-10 text-[14px] font-semibold whitespace-nowrap flex items-center gap-1 ${
+            activeInMore
               ? "text-[#0250D9] border-b-[3px] border-[#0250D9]"
               : "text-[#5C5C5C] border-b border-[#C9C9C9]"
           }`}
         >
-          {tab.label}
+          Plus
+          <ChevronDown size={14} />
         </button>
-      ))}
-      <button
-        ref={btnRef}
-        onClick={toggleMenu}
-        className={`px-3 h-10 text-[14px] font-semibold whitespace-nowrap flex items-center gap-1 ${
-          overflowActive
-            ? "text-[#0250D9] border-b-[3px] border-[#0250D9]"
-            : "text-[#5C5C5C] border-b border-[#C9C9C9]"
-        }`}
-      >
-        {overflowActive ? overflowActive.label : "Plus"}
-        <ChevronDown size={14} />
-      </button>
+        {moreOpen && (
+          <div className="absolute top-full left-0 bg-white border border-[#C9C9C9] rounded shadow-lg min-w-[190px]" style={{zIndex:200}}>
+            {CONTACT_TABS_MORE.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => { onTabChange(tab.key); setMoreOpen(false); }}
+                className={`w-full text-left px-4 py-2 text-[13px] hover:bg-[#F3F3F3] ${
+                  activeTab === tab.key ? "text-[#0250D9] font-semibold" : "text-[#03234D]"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
       <div className="flex-1 border-b border-[#C9C9C9]" />
-      {openMenu && ReactDOM.createPortal(
-        <div
-          ref={popRef}
-          style={{ position: "fixed", top: menuPos.top, left: menuPos.left, width: 200, zIndex: 9999 }}
-          className="bg-white border border-[#C9C9C9] rounded-md shadow-lg py-1"
-        >
-          {CONTACT_TABS_OVERFLOW.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => { onTabChange(tab.key); setOpenMenu(false); }}
-              className={`w-full text-left px-3 py-2 text-[13px] hover:bg-[#F3F3F3] ${
-                activeTab === tab.key ? "text-[#0250D9] font-semibold" : "text-[#03234D]"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>,
-        document.body
-      )}
     </div>
   );
 }
 
 function ContactPageHeader({ name, type = "Contact" }) {
+  // Parse "Lucas André" → "LUCAS André"
+  const nameParts = name.trim().split(" ");
+  const firstName = nameParts[nameParts.length - 1];
+  const lastName = nameParts.slice(0, nameParts.length - 1).join(" ").toUpperCase();
+  const displayName = lastName ? `${lastName} ${firstName}` : name.toUpperCase();
+
   return (
     <div className="bg-[#F3F3F3] px-4 py-4">
       <div className="flex items-center justify-between">
@@ -3090,7 +3074,7 @@ function ContactPageHeader({ name, type = "Contact" }) {
           </div>
           <div>
             <p className="text-[13px] text-[#5C5C5C] leading-[18px]">{type}</p>
-            <p className="text-[28px] text-[#03234D] leading-[35px]">{name}</p>
+            <p className="text-[28px] text-[#03234D] leading-[35px]">{displayName}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -3102,17 +3086,6 @@ function ContactPageHeader({ name, type = "Contact" }) {
       </div>
     </div>
   );
-}
-
-// Helper : formate "Lucas André" en "LUCAS André" (nom en MAJ, prénom inchangé).
-// Convention de la donnée : "Nom Prénom" (le dernier mot est le prénom).
-function formatContactName(raw) {
-  if (!raw) return "";
-  const parts = String(raw).trim().split(/\s+/);
-  if (parts.length === 1) return parts[0].toUpperCase();
-  const prenom = parts[parts.length - 1];
-  const nom = parts.slice(0, -1).join(" ");
-  return `${nom.toUpperCase()} ${prenom}`;
 }
 
 function buildContactData(demande) {
@@ -3159,7 +3132,6 @@ function buildContactData(demande) {
     { label: "CRO",                     value: cro },
     { label: "Email pro",               value: generatedEmail },
     { label: "Portable",                value: generatedPhone },
-    { label: "Etablissement",           value: demande.nomComptable || "—" },
   ];
 
   // ── Section Identité ──────────────────────────────────────────
@@ -3183,59 +3155,6 @@ function buildContactData(demande) {
     [{ label: "Mobile",              value: ""                                           }, { label: "EIRL",               value: ""                                             }],
     [{ label: "Téléphone",           value: ""                                           }, { label: "Fax",                value: ""                                             }],
     [{ label: "Site internet",       value: ""                                           }],
-  ];
-
-  // ── Section Diplômes ──────────────────────────────────────────
-  // Dates dérivées du seed pour rester déterministes par contact.
-  const decYear   = yr; // année d'inscription = obtention du DEC
-  const dscgYear  = decYear - 3;
-  const dcgYear   = decYear - 6;
-  const stageDeb  = `01/01/${decYear - 3}`;
-  const stageFin  = `31/12/${decYear - 1}`;
-  const ecoles    = ["INTEC – CNAM","Université Paris-Dauphine","ESCP Business School","IAE de Lyon","Université de Bordeaux","Toulouse Business School","Université de Strasbourg"];
-  const mentions  = ["Bien","Très bien","Assez bien","Passable"];
-  const ecole     = ecoles[seed % ecoles.length];
-  const mention   = mentions[seed % mentions.length];
-  const diplomesFields = [
-    [{ label: "DEC – Diplôme d'Expertise Comptable", value: `${dy}/${mo}/${decYear}`, readOnly: true }, { label: "Mention",          value: mention,                  readOnly: true }],
-    [{ label: "DSCG – Diplôme Supérieur de Compta. et Gestion", value: `15/06/${dscgYear}`,    readOnly: true }, { label: "Établissement",    value: ecole,                    readOnly: true }],
-    [{ label: "DCG – Diplôme de Compta. et Gestion", value: `20/06/${dcgYear}`,       readOnly: true }, { label: "Mémoire DEC",      value: "Validé",                 readOnly: true }],
-    [{ label: "Stage – Début",                       value: stageDeb,                 readOnly: true }, { label: "Stage – Fin",      value: stageFin,                 readOnly: true }],
-    [{ label: "Attestation fin de stage",            value: `Délivrée le ${dy}/${mo}/${decYear - 1}`, readOnly: true }],
-  ];
-
-  // ── Section Historique du stage ───────────────────────────────
-  const cabinets        = ["Mazars","KPMG","Deloitte","EY","PwC","Grant Thornton","BDO","Cabinet Durand & Associés"];
-  const maitresStage    = ["Jean DUPONT","Marie LEROY","Pierre MARTIN","Sophie BERNARD","Thomas RICHARD","Camille FONTAINE"];
-  const cabinetStage    = cabinets[seed % cabinets.length];
-  const maitreStage     = maitresStage[seed % maitresStage.length];
-  const numStage        = `ST-${supraRegion < 10 ? "0" : ""}${supraRegion}-${supraSuffix.slice(0, 6)}`;
-  const semestresValid  = 6;
-  const noteMoyenne     = (12 + (seed % 8)).toFixed(1).replace(".", ",") + " / 20";
-  const stageHistoriqueFields = [
-    [{ label: "N° d'inscription stage", value: numStage,                        readOnly: true }, { label: "Statut",            value: "Validé",                       readOnly: true }],
-    [{ label: "Date début",             value: stageDeb,                        readOnly: true }, { label: "Date fin",          value: stageFin,                       readOnly: true }],
-    [{ label: "Cabinet de stage",       value: cabinetStage,                    readOnly: true }, { label: "Maître de stage",   value: maitreStage,                    readOnly: true }],
-    [{ label: "Semestres validés",      value: `${semestresValid} / 6`,         readOnly: true }, { label: "Note moyenne",      value: noteMoyenne,                    readOnly: true }],
-    [{ label: "Suspensions",            value: "Aucune",                        readOnly: true }, { label: "Renouvellements",   value: "0",                            readOnly: true }],
-    [{ label: "Mémoire DEC – Soutenance", value: `${dy}/${mo}/${decYear}`,      readOnly: true }, { label: "Attestation fin de stage", value: `${dy}/${mo}/${decYear - 1}`, readOnly: true }],
-  ];
-
-  // ── Section CAC (Commissaire Aux Comptes) ─────────────────────
-  // Inscrit ou non selon la qualité — déterministe via seed.
-  const isCAC          = qualite.includes("COMMISSAIRE") || (seed % 3 === 0);
-  const cacRegions     = ["CRCC Paris","CRCC Versailles","CRCC Lyon","CRCC Aix-Bastia","CRCC Bordeaux","CRCC Rennes","CRCC Strasbourg","CRCC Toulouse"];
-  const cacRegion      = cacRegions[seed % cacRegions.length];
-  const cacNum         = `CNCC-${supraSuffix.slice(0, 6)}`;
-  const cacInscription = isCAC ? `${dy}/${mo}/${decYear + 1}` : "—";
-  const cacMandats     = isCAC ? String(2 + (seed % 8)) : "0";
-  const cacFormation   = isCAC ? `${dy}/${mo}/${new Date().getFullYear() - 1}` : "—";
-  const cacFields = [
-    [{ label: "Statut CAC",                value: isCAC ? "Inscrit" : "Non inscrit",       readOnly: true }, { label: "N° d'inscription CNCC",  value: isCAC ? cacNum : "—",      readOnly: true }],
-    [{ label: "Date d'inscription",        value: cacInscription,                          readOnly: true }, { label: "Type d'inscription",     value: isCAC ? "Personne physique" : "—", readOnly: true }],
-    [{ label: "Compagnie régionale",       value: isCAC ? cacRegion : "—",                 readOnly: true }, { label: "Statut d'exercice",      value: isCAC ? "En exercice" : "—",       readOnly: true }],
-    [{ label: "Mandats en cours",          value: cacMandats,                              readOnly: true }, { label: "Dernière formation continue", value: cacFormation,                 readOnly: true }],
-    [{ label: "Assurance RCP CAC",         value: isCAC ? "À jour" : "—",                  readOnly: true }, { label: "Suspensions",            value: "Aucune",                          readOnly: true }],
   ];
 
   // ── Section Cotisations ───────────────────────────────────────
@@ -3284,7 +3203,7 @@ function buildContactData(demande) {
     ],
   };
 
-  return { highlights, identiteFields, dossierFields, diplomesFields, stageHistoriqueFields, cacFields, cotisationsFields, coordonneesFields, comptexpertFields, adressePersoData, adresseProData };
+  return { highlights, identiteFields, dossierFields, cotisationsFields, coordonneesFields, comptexpertFields, adressePersoData, adresseProData };
 }
 
 // ── Pièces Panel ────────────────────────────────────────────────
@@ -3612,7 +3531,7 @@ function PiecesPanel() {
 }
 // ────────────────────────────────────────────────────────────────
 
-function ContactRelatedPanel({ icon, iconBg, label, count, rows, cols, renderRow }) {
+function ContactRelatedPanel({ icon, iconBg, label, count, rows, cols, renderRow, emptyMessage }) {
   const [open, setOpen] = useState(false);
   const hasTable = rows && cols && renderRow;
   return (
@@ -3643,11 +3562,14 @@ function ContactRelatedPanel({ icon, iconBg, label, count, rows, cols, renderRow
               </tr>
             </thead>
             <tbody>
-              {rows.map((r, i) => (
-                <tr key={i} className="border-b border-[#E5E5E5] hover:bg-[#F9F9F9]">
-                  {renderRow(r).map((cell, j) => <td key={j} className="px-3 py-2 text-[#2E2E2E]" style={{whiteSpace: j === 0 ? "normal" : "nowrap"}}>{cell}</td>)}
-                </tr>
-              ))}
+              {rows.length === 0 && emptyMessage
+                ? <tr><td colSpan={cols.length} className="px-3 py-4 text-[12px] text-[#5C5C5C] italic">{emptyMessage}</td></tr>
+                : rows.map((r, i) => (
+                    <tr key={i} className="border-b border-[#E5E5E5] hover:bg-[#F9F9F9]">
+                      {renderRow(r).map((cell, j) => <td key={j} className="px-3 py-2 text-[#2E2E2E]" style={{whiteSpace: j === 0 ? "normal" : "nowrap"}}>{cell}</td>)}
+                    </tr>
+                  ))
+              }
             </tbody>
           </table>
         </div>
@@ -3657,6 +3579,164 @@ function ContactRelatedPanel({ icon, iconBg, label, count, rows, cols, renderRow
 }
 
 // ══════════════════════════════════════════════════════════════
+// BureauxPanel
+// ══════════════════════════════════════════════════════════════
+function BureauxPanel() {
+  const [open, setOpen] = useState(false);
+  const rows = [
+    { conseil: "ÎLE-DE-FRANCE", num: "14-00017408-01", inscription: "PRINCIPAL", denomination: "AAFIR OTMAN", statut: "CLASSE", cp: "78500", ville: "SARTROUVILLE", siret: "919-016-196-00...", adresse: "RUE PABLO PICASSO", numero: "8", numeroBis: "", typeVoie: "" },
+  ];
+  return (
+    <div className="bg-white rounded-[20px] overflow-hidden">
+      <button className="w-full flex items-center justify-between px-4 py-4" onClick={() => setOpen(o => !o)}>
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: "#7B1FA2" }}>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="white"><path d="M3 21h18M3 7h18M3 3h18v4H3V3zM9 11h2v2H9v-2zm0 4h2v2H9v-2zm4-4h2v2h-2v-2zm0 4h2v2h-2v-2zM5 21v-8h3v8H5zm11 0v-8h3v8h-3z"/></svg>
+          </div>
+          <span className="text-[15px] font-semibold text-[#03234D]">Bureaux <span className="font-normal text-[#5C5C5C]">({rows.length})</span></span>
+        </div>
+        <div className="w-7 h-7 rounded-full border border-[#C9C9C9] flex items-center justify-center">
+          <svg width="10" height="10" viewBox="0 0 10 6" fill="none"><path d={open ? "M1 5L5 1L9 5" : "M1 1L5 5L9 1"} stroke="#0250D9" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </div>
+      </button>
+      {open && (
+        <div className="px-4 pb-4">
+          {/* Toolbar */}
+          <div className="flex items-center gap-2 mb-2">
+            <button className="flex items-center gap-1 px-2.5 py-1 bg-[#4CAF50] text-white rounded text-[11px] font-semibold"><Plus size={11}/> Ajouter</button>
+            <button className="flex items-center gap-1 px-2.5 py-1 bg-[#1E88E5] text-white rounded text-[11px] font-semibold">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="white" strokeWidth="2"><circle cx="12" cy="12" r="4"/><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/></svg>
+              Pour tous les conseils
+            </button>
+          </div>
+          {/* Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-[12px] border-collapse" style={{minWidth: 900}}>
+              <thead>
+                <tr className="bg-[#F3F3F3] text-[#5C5C5C]">
+                  {["Conseil","N° Inscription","Inscription","Dénomination","Statut","CP","Ville","No Siret","Adresse","Numéro","Numéro Bis","Type de voie"].map(h => (
+                    <th key={h} className="px-2 py-1.5 text-left border-b border-[#C9C9C9] font-semibold text-[11px] whitespace-nowrap">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r, i) => (
+                  <tr key={i} className="border-b border-[#E5E5E5] hover:bg-[#F9F9F9]">
+                    <td className="px-2 py-1.5 whitespace-nowrap">{r.conseil}</td>
+                    <td className="px-2 py-1.5 whitespace-nowrap">{r.num}</td>
+                    <td className="px-2 py-1.5 whitespace-nowrap">{r.inscription}</td>
+                    <td className="px-2 py-1.5 whitespace-nowrap">{r.denomination}</td>
+                    <td className="px-2 py-1.5">{r.statut}</td>
+                    <td className="px-2 py-1.5">{r.cp}</td>
+                    <td className="px-2 py-1.5">{r.ville}</td>
+                    <td className="px-2 py-1.5">{r.siret}</td>
+                    <td className="px-2 py-1.5">{r.adresse}</td>
+                    <td className="px-2 py-1.5">{r.numero}</td>
+                    <td className="px-2 py-1.5">{r.numeroBis}</td>
+                    <td className="px-2 py-1.5">{r.typeVoie}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// DemandesContactPanel — panel droit Demandes (fiche contact)
+// ══════════════════════════════════════════════════════════════
+function DemandesContactPanel() {
+  const [open, setOpen] = useState(false);
+  const rows = [
+    { cr:"IDF", crOrig:"IDF", num:"14-00017408-...", demande:"ACTIVITE BNC - FIN",        type:"B", effet:"30/06/2023", session:"05/10/2023", decision:"Validé", qualite:"EC",       qualAvant:"EC",   statut:"CLASSE",  statAvant:"EN EXE." },
+    { cr:"IDF", crOrig:"IDF", num:"14-00017408-...", demande:"INSCRIPTION",               type:"B", effet:"06/07/2022", session:"19/07/2022", decision:"Validé", qualite:"EC",       qualAvant:"EC",   statut:"EN EXE.", statAvant:"EN ATT." },
+    { cr:"IDF", crOrig:"IDF", num:"14-00017408-...", demande:"INSCRIPTION",               type:"D", effet:"06/07/2022", session:"19/07/2022", decision:"Validé", qualite:"EC",       qualAvant:"EC",   statut:"EN EXE.", statAvant:"EN ATT." },
+    { cr:"IDF", crOrig:"IDF", num:"14-00017408-...", demande:"OBTENTION DEC",             type:"D", effet:"01/11/2016", session:"19/01/2017", decision:"Validé", qualite:"DIP-NINS", qualAvant:"MEMO", statut:"CLASSE",  statAvant:"EN EXE." },
+    { cr:"IDF", crOrig:"IDF", num:"14-00017408-...", demande:"ATTESTATION DE FIN DE ...", type:"D", effet:"01/01/2016", session:"10/03/2016", decision:"Validé", qualite:"MEMO",     qualAvant:"STA",  statut:"EN EXE.", statAvant:"EN EXE." },
+    { cr:"IDF", crOrig:"IDF", num:"14-00017408-...", demande:"REINSCRIPTION",             type:"D", effet:"01/01/2015", session:"24/01/2015", decision:"Validé", qualite:"STA",      qualAvant:"STA",  statut:"EN EXE.", statAvant:"EN ATT." },
+    { cr:"IDF", crOrig:"IDF", num:"14-00017408-...", demande:"SUSPENSION - DESCF IN...",  type:"D", effet:"01/08/2013", session:"21/03/2013", decision:"Validé", qualite:"STA",      qualAvant:"STA",  statut:"SUSPEN.", statAvant:"EN EXE." },
+    { cr:"IDF", crOrig:"IDF", num:"14-00017408-...", demande:"INSCRIPTION AU STAGE",      type:"D", effet:"01/08/2011", session:"05/10/2011", decision:"Validé", qualite:"STA",      qualAvant:"STA",  statut:"EN EXE.", statAvant:"EN ATT." },
+  ];
+  return (
+    <div className="bg-white rounded-[20px] overflow-hidden">
+      <button className="w-full flex items-center justify-between px-4 py-4" onClick={() => setOpen(o => !o)}>
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-[#0250D9]">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+          </div>
+          <span className="text-[15px] font-semibold text-[#03234D]">Demandes <span className="font-normal text-[#5C5C5C]">(8)</span></span>
+        </div>
+        <div className="w-7 h-7 rounded-full border border-[#C9C9C9] flex items-center justify-center">
+          <svg width="10" height="10" viewBox="0 0 10 6" fill="none"><path d={open ? "M1 5L5 1L9 5" : "M1 1L5 5L9 1"} stroke="#0250D9" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </div>
+      </button>
+      {open && (
+        <div className="px-4 pb-4 flex flex-col gap-4">
+          <div className="flex items-center gap-2">
+            <button className="w-6 h-6 flex items-center justify-center border border-[#C9C9C9] rounded bg-white hover:bg-[#F3F3F3]">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+            <span className="text-[11px] text-[#5C5C5C]">Pour tous les conseils</span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-[12px] border-collapse" style={{minWidth:860}}>
+              <thead>
+                <tr className="bg-[#F3F3F3] text-[#5C5C5C]">
+                  {["CR","CR Origine du Motif","N° inscription","Demande","Type","Effet","Session","Décision","Qualité","Qualité avant","Statut","Statut avant"].map(h => (
+                    <th key={h} className="px-2 py-1.5 text-left border-b border-[#C9C9C9] font-semibold whitespace-nowrap text-[11px]">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r,i) => (
+                  <tr key={i} className="border-b border-[#E5E5E5] hover:bg-[#F9F9F9]">
+                    <td className="px-2 py-1.5">{r.cr}</td>
+                    <td className="px-2 py-1.5">{r.crOrig}</td>
+                    <td className="px-2 py-1.5 whitespace-nowrap">{r.num}</td>
+                    <td className="px-2 py-1.5 whitespace-nowrap">{r.demande}</td>
+                    <td className="px-2 py-1.5">{r.type}</td>
+                    <td className="px-2 py-1.5 whitespace-nowrap">{r.effet}</td>
+                    <td className="px-2 py-1.5 whitespace-nowrap">{r.session}</td>
+                    <td className="px-2 py-1.5">{r.decision}</td>
+                    <td className="px-2 py-1.5">{r.qualite}</td>
+                    <td className="px-2 py-1.5">{r.qualAvant}</td>
+                    <td className="px-2 py-1.5"><span className={`px-1.5 py-0.5 rounded text-[11px] font-semibold ${r.statut==="EN EXE."?"bg-[#D6F5E3] text-[#1A7A45]":r.statut==="CLASSE"?"bg-[#E0E7FF] text-[#3730A3]":"bg-[#FEE2E2] text-[#991B1B]"}`}>{r.statut}</span></td>
+                    <td className="px-2 py-1.5 text-[#5C5C5C]">{r.statAvant}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div>
+            <div className="text-[12px] font-bold text-[#03234D] bg-[#D6E4F7] px-3 py-1.5 mb-2">Demandes en attente</div>
+            <div className="flex items-center gap-2 mb-2">
+              <button className="flex items-center gap-1 px-2 py-1 bg-[#4CAF50] text-white rounded text-[11px] font-semibold"><Plus size={11}/> Ajouter</button>
+              <button className="flex items-center gap-1 px-2 py-1 bg-[#F44336] text-white rounded text-[11px] font-semibold">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="white" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg> Supprimer
+              </button>
+            </div>
+            <table className="w-full text-[12px] border-collapse" style={{minWidth:520}}>
+              <thead>
+                <tr className="bg-[#F3F3F3] text-[#5C5C5C]">
+                  {["Demande","Effet","Session","Décision","Echéance","Commentaire"].map(h => (
+                    <th key={h} className="px-2 py-1.5 text-left border-b border-[#C9C9C9] font-semibold whitespace-nowrap text-[11px]">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td colSpan={6} className="px-2 py-5 text-center text-[#C9C9C9] text-[11px]">Aucune demande en attente</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ══════════════════════════════════════════════════════════════
 // AccountRelatedPanel — panel droit collapsible (Lien PP PM, Assurances, Mode d'exercice)
 // ══════════════════════════════════════════════════════════════
@@ -3689,43 +3769,74 @@ function AccountRelatedPanel({ icon, iconBg, label, count, children, defaultOpen
 // ══════════════════════════════════════════════════════════════
 function AccountActivitesTab() {
   const [subTab, setSubTab] = useState("ec");
-  const ecRow = { num:"140001728301", nom:"M ABTAN FRANCK", ro:"Oui", effet:"11/01/2019", fin:"—", qualite:"EC", statut:"EN EXE.", conseil:"IDF" };
+  const [selected, setSelected] = React.useState(0);
+  const ecRows = [
+    { num:"140001740801", nom:"M AAFIR OTMAN", ro:"Oui", effet:"01/06/2023", fin:"", qualite:"EC", statut:"EN EXE.", conseil:"IDF" },
+  ];
+  const thCls = "px-2 py-1.5 text-left border border-[#C9C9C9] font-semibold text-[11px] bg-[#F3F3F3] whitespace-nowrap text-[#5C5C5C]";
+  const tdCls = "px-2 py-1.5 text-[12px] border border-[#C9C9C9] text-[#03234D]";
+  const lblCls = "text-[12px] text-[#5C5C5C] w-32 shrink-0";
+  const inpCls = "border border-[#C9C9C9] rounded px-2 py-1 text-[12px] text-[#03234D] bg-white";
   return (
     <div className="mt-3">
       {/* sous-onglets */}
       <div className="flex border-b border-[#C9C9C9] mb-3">
         {[{key:"ec",label:"Experts comptables"},{key:"stg",label:"Stagiaires"}].map(t=>(
           <button key={t.key} onClick={()=>setSubTab(t.key)}
-            className={`px-4 h-9 text-[13px] font-semibold whitespace-nowrap ${subTab===t.key?"text-[#0250D9] border-b-[3px] border-[#0250D9]":"text-[#5C5C5C]"}`}>
+            className={`px-4 h-9 text-[13px] font-semibold whitespace-nowrap ${subTab===t.key?"text-white bg-[#0250D9]":"text-[#5C5C5C] bg-[#EEF0F5]"} rounded-t`}>
             {t.label}
           </button>
         ))}
       </div>
       {subTab === "ec" && (
         <>
-          <div className="flex items-center gap-2 mb-2 px-1">
-            <div className="w-6 h-6 rounded-full bg-[#4CAF50] flex items-center justify-center">
-              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="white" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            </div>
-            <span className="text-[12px] text-[#5C5C5C]">Dans établissement (Liste des activités à la date du jour)</span>
+          {/* Toolbar */}
+          <div className="flex items-center gap-2 mb-2">
+            <button className="flex items-center gap-1 px-2.5 py-1 bg-[#4CAF50] text-white rounded text-[11px] font-semibold"><Plus size={11}/> Ajouter</button>
+            <button className="flex items-center gap-1 px-2.5 py-1 bg-[#1E88E5] text-white rounded text-[11px] font-semibold">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="white" strokeWidth="2"><circle cx="12" cy="12" r="4"/><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/></svg>
+            </button>
+            <button className="flex items-center gap-1 px-2.5 py-1 bg-[#FB8C00] text-white rounded text-[11px] font-semibold">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+            </button>
+            <span className="text-[11px] text-[#5C5C5C]">Dans etablissement (Liste des activités à la date du jour)</span>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-[12px] border-collapse" style={{minWidth:520}}>
+          {/* Table */}
+          <div className="overflow-x-auto mb-3">
+            <table className="w-full text-[12px] border-collapse border border-[#C9C9C9]">
               <thead>
-                <tr className="bg-[#F3F3F3] text-[#5C5C5C]">
+                <tr>
                   {["N° Inscription","Nom","R.O","Effet","Fin","Qualité","Statut","Conseil"].map(h=>(
-                    <th key={h} className="px-3 py-2 text-left font-semibold border-b border-[#C9C9C9] whitespace-nowrap text-[11px]">{h}</th>
+                    <th key={h} className={thCls}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                <tr className="border-b border-[#F0F0F0] hover:bg-[#F9FAFB]">
-                  {[ecRow.num,ecRow.nom,ecRow.ro,ecRow.effet,ecRow.fin,ecRow.qualite,ecRow.statut,ecRow.conseil].map((v,i)=>(
-                    <td key={i} className="px-3 py-2 text-[#1A1A1A] whitespace-nowrap">{v}</td>
-                  ))}
-                </tr>
+                {ecRows.map((r,i)=>(
+                  <tr key={i} onClick={()=>setSelected(i)} className={`cursor-pointer ${selected===i?"bg-[#D6E4F7]":"bg-white"} hover:bg-[#EEF4FD]`}>
+                    <td className={`${tdCls} font-semibold`}>{r.num}</td>
+                    <td className={`${tdCls} font-semibold`}>{r.nom}</td>
+                    <td className={tdCls}>{r.ro}</td>
+                    <td className={tdCls}>{r.effet}</td>
+                    <td className={tdCls}>{r.fin}</td>
+                    <td className={tdCls}>{r.qualite}</td>
+                    <td className={tdCls}>{r.statut}</td>
+                    <td className={tdCls}>{r.conseil}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
+          </div>
+          {/* Form */}
+          <div className="flex flex-col gap-2 bg-[#EEF4FD] border border-[#C9C9C9] rounded p-3">
+            <div className="flex items-center gap-2"><span className={`${lblCls} font-semibold`}>N° Inscription:</span><input className={`${inpCls} w-48`} type="text" /></div>
+            <div className="flex items-center gap-2"><span className={lblCls}>Nom:</span><span className="text-[12px]"></span></div>
+            <div className="flex items-center gap-2"><span className={`${lblCls} font-semibold`}>R.O:</span><select className={`${inpCls} w-40 appearance-none`}><option></option><option>Oui</option><option>Non</option></select></div>
+            <div className="flex items-center gap-2"><span className={`${lblCls} font-semibold`}>Effet:</span><input className={`${inpCls} w-32`} type="text" defaultValue="30/04/2026" /></div>
+            <div className="flex items-center gap-2"><span className={lblCls}>Fin:</span><input className={`${inpCls} w-32`} type="text" placeholder="JJ/MM/AAAA" /></div>
+            <div className="flex items-center gap-2"><span className={lblCls}>Qualité:</span><span className="text-[12px]"></span></div>
+            <div className="flex items-center gap-2"><span className={lblCls}>Statut:</span><span className="text-[12px]"></span></div>
+            <div className="flex items-center gap-2"><span className={lblCls}>Conseil:</span><span className="text-[12px]"></span></div>
           </div>
         </>
       )}
@@ -3736,37 +3847,612 @@ function AccountActivitesTab() {
   );
 }
 
-// AccountRecordPage — fiche Account (société) ouverte depuis Activités
 // ══════════════════════════════════════════════════════════════
-const ACCOUNT_TABS = [
-  { key: "etablissement", label: "Etablissement" },
-  { key: "activites",     label: "Activités"     },
-  { key: "rac",           label: "RAC"           },
-  { key: "adminprov",     label: "Admin prov."   },
-  { key: "cac",           label: "CAC"           },
-  { key: "stats",         label: "Stats"         },
+// SocieteRecordPage — fiche Société
+// ══════════════════════════════════════════════════════════════
+const SOCIETE_TABS_LEFT = [
+  { key: "societe",       label: "Société"             },
+  { key: "etablissements",label: "Etablissements"      },
+  { key: "activites",     label: "Activités"           },
+  { key: "capital",       label: "Capital et fonctions"},
+  { key: "independance",  label: "Indépendance"        },
+  { key: "assurances",    label: "Assurances"          },
+  { key: "infos",         label: "Infos"               },
+  { key: "panels",        label: "Panels"              },
 ];
 
-function AccountTabBar({ activeTab, onTabChange }) {
+function SocieteTabBar({ activeTab, onTabChange }) {
   return (
     <div className="flex w-full overflow-x-auto">
-      {ACCOUNT_TABS.map(tab => (
+      {SOCIETE_TABS_LEFT.map(tab => (
         <button
           key={tab.key}
           onClick={() => onTabChange(tab.key)}
-          className={`px-3 h-10 text-[14px] font-semibold whitespace-nowrap ${
+          className={`px-3 h-10 text-[13px] font-semibold whitespace-nowrap ${
             activeTab === tab.key
               ? "text-[#0250D9] border-b-[3px] border-[#0250D9]"
               : "text-[#5C5C5C] border-b border-[#C9C9C9]"
           }`}
-        >{tab.label}</button>
+        >{tab.label}{tab.key === "societe" ? <span className="ml-1 text-[10px] text-[#9E9E9E]">🔒</span> : ""}</button>
       ))}
       <div className="flex-1 border-b border-[#C9C9C9]" />
     </div>
   );
 }
 
-function AccountRecordPage({ account }) {
+function SocieteDemandesPanel() {
+  const [open, setOpen] = React.useState(true);
+  const thCls = "px-2 py-1.5 text-left border border-[#C9C9C9] font-semibold text-[11px] text-[#5C5C5C] bg-[#F3F3F3] whitespace-nowrap";
+  const tdCls = "px-2 py-1.5 text-[12px] border border-[#C9C9C9] text-[#1A1A1A]";
+  return (
+    <div className="bg-white rounded-[20px] overflow-hidden">
+      <div className="flex items-center gap-2 px-4 py-3 cursor-pointer select-none" onClick={() => setOpen(v => !v)}>
+        <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{background:"#E91E63"}}>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+        </div>
+        <span className="text-[13px] font-semibold text-[#03234D] flex-1">Demandes</span>
+        <ChevronDown size={14} className={`text-[#5C5C5C] transition-transform ${open ? "rotate-180" : ""}`} />
+      </div>
+      {open && (
+        <div className="px-4 pb-4 flex flex-col gap-4">
+          {/* Motifs */}
+          <div>
+            <div className="text-[11px] font-bold text-[#03234D] bg-[#D6E4F7] px-3 py-1.5 mb-2">Motifs</div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-[12px] border-collapse border border-[#C9C9C9]" style={{minWidth:560}}>
+                <thead><tr>
+                  {["CR","CR Origine","N° inscription","Motif","Effet","Session","Décision"].map(h=><th key={h} className={thCls}>{h}</th>)}
+                </tr></thead>
+                <tbody>
+                  <tr className="hover:bg-[#F9F9F9]">
+                    <td className={tdCls}>IDF</td>
+                    <td className={tdCls}>IDF</td>
+                    <td className={tdCls + " text-[#0250D9] cursor-pointer"}>14-00025838-01</td>
+                    <td className={tdCls}>INSCRIPTION</td>
+                    <td className={tdCls}>01/06/2023</td>
+                    <td className={tdCls}>01/06/2023</td>
+                    <td className={tdCls}><span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#E8F5E9] text-[#2E7D32]">Validé</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          {/* Motifs en attente */}
+          <div>
+            <div className="text-[11px] font-bold text-[#03234D] bg-[#D6E4F7] px-3 py-1.5 mb-2">Motifs en attente</div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-[12px] border-collapse border border-[#C9C9C9]" style={{minWidth:520}}>
+                <thead><tr>
+                  {["Motif","Effet","Session","Décision","Echéance","Commentaire"].map(h=><th key={h} className={thCls}>{h}</th>)}
+                </tr></thead>
+                <tbody>
+                  <tr><td colSpan={6} className="px-2 py-6 text-center text-[#9E9E9E] text-[11px] border border-[#C9C9C9]">Aucun motif en attente</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SocieteRecordPage({ societe }) {
+  const [activeTab, setActiveTab] = useState("societe");
+  const [assurSubTab, setAssurSubTab] = useState("2023");
+
+  const highlights = [
+    { label: "N° d'inscription",  value: societe.numInscription || "14-00025838-01" },
+    { label: "Qualité",           value: "SEC"                  },
+    { label: "Forme Sociale",     value: "SAS"                  },
+    { label: "N° SIREN",          value: "949-662-332"          },
+    { label: "Capital (€)",       value: "10 000"               },
+    { label: "Nb de titres",      value: "10 000"               },
+    { label: "Statut",            value: "EN EXERCICE"          },
+    { label: "Conseil régional",  value: "ÎLE-DE-FRANCE"        },
+    { label: "Date d'inscription",value: "01/06/2023"           },
+    { label: "Tiers de confiance",value: "Non"                  },
+  ];
+
+  const thCls = "px-2 py-1.5 text-left border border-[#C9C9C9] font-semibold text-[11px] text-[#5C5C5C] bg-[#F3F3F3] whitespace-nowrap";
+  const tdCls = "px-2 py-1.5 text-[12px] border border-[#C9C9C9] text-[#1A1A1A]";
+  const fieldRow = (label, value, full=false) => (
+    <div key={label} className={`flex items-center gap-2 ${full ? "col-span-2" : ""}`}>
+      <span className="text-[12px] text-[#5C5C5C] shrink-0 w-36 text-right">{label} :</span>
+      <span className="text-[12px] font-semibold text-[#03234D]">{value || "—"}</span>
+    </div>
+  );
+
+  return (
+    <>
+      <ContactPageHeader name={societe.denomination || "FISCALIA"} type="Société" />
+      <HighlightsPanel fields={highlights} />
+      <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 pt-[1px]">
+        <div className="flex gap-3 w-full">
+
+          {/* ── Colonne gauche ── */}
+          <div className="w-1/2 min-w-0">
+            <div className="bg-white rounded-[20px] overflow-hidden">
+              <div className="px-4 pt-4 pb-3">
+                <SocieteTabBar activeTab={activeTab} onTabChange={setActiveTab} />
+
+                {/* ── Société (🔒) ── */}
+                {activeTab === "societe" && (
+                  <div className="mt-4">
+                    {/* Ligne N° Supra + Qualité */}
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-3 mb-4">
+                      <div className="flex items-center gap-1">
+                        <span className="text-[12px] text-[#5C5C5C] shrink-0 w-20 text-right">N° Supra :</span>
+                        <input readOnly value="14" className="w-10 border border-[#C9C9C9] rounded text-[12px] px-2 py-1 bg-[#FAFAFA] text-[#1A1A1A] ml-1"/>
+                        <input readOnly value="00025838" className="w-24 border border-[#C9C9C9] rounded text-[12px] px-2 py-1 bg-[#FAFAFA] text-[#1A1A1A]"/>
+                        <input readOnly value="01" className="w-10 border border-[#C9C9C9] rounded text-[12px] px-2 py-1 bg-[#FAFAFA] text-[#1A1A1A]"/>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[12px] text-[#5C5C5C] shrink-0">Qualité :</span>
+                        <input readOnly value="SEC" className="flex-1 border border-[#C9C9C9] rounded text-[12px] px-2 py-1 bg-[#FAFAFA] text-[#1A1A1A]"/>
+                      </div>
+                    </div>
+                    {/* Forme Sociale */}
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-[12px] text-[#5C5C5C] w-36 text-right shrink-0">Forme Sociale :</span>
+                      <input readOnly value="SOCIETE PAR ACTIONS SIMPLIFIEE" className="flex-1 border border-[#C9C9C9] rounded text-[12px] px-2 py-1 bg-[#FAFAFA] text-[#1A1A1A]"/>
+                    </div>
+                    {/* Grille champs */}
+                    <div className="grid grid-cols-1 gap-y-2 mb-3">
+                      {[
+                        ["Dénomination","FISCALIA"],["Sigle Officiel",""],["Nom réduit","FISCALIA"],
+                        ["Nom réduit2",""],["Enseigne",""],["Nom commercial",""],
+                      ].map(([l,v]) => (
+                        <div key={l} className="flex items-center gap-2">
+                          <span className="text-[12px] text-[#5C5C5C] w-36 text-right shrink-0">{l} :</span>
+                          <input readOnly value={v} className="flex-1 border border-[#C9C9C9] rounded text-[12px] px-2 py-1 bg-[#FAFAFA] text-[#1A1A1A]"/>
+                        </div>
+                      ))}
+                    </div>
+                    {/* Ligne SIREN / Capital / Nb titres */}
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-2 mb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[12px] text-[#5C5C5C] w-36 text-right shrink-0">N° SIREN :</span>
+                        <input readOnly value="949-662-332" className="w-28 border border-[#C9C9C9] rounded text-[12px] px-2 py-1 bg-[#FAFAFA] text-[#1A1A1A]"/>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[12px] text-[#5C5C5C] shrink-0">Capital (EURO) :</span>
+                        <input readOnly value="10000" className="w-20 border border-[#C9C9C9] rounded text-[12px] px-2 py-1 bg-[#FAFAFA] text-[#1A1A1A]"/>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[12px] text-[#5C5C5C] w-36 text-right shrink-0">RCS :</span>
+                        <input readOnly value="" className="w-28 border border-[#C9C9C9] rounded text-[12px] px-2 py-1 bg-[#FAFAFA] text-[#1A1A1A]"/>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[12px] text-[#5C5C5C] shrink-0">Nb de titres :</span>
+                        <input readOnly value="10000" className="w-20 border border-[#C9C9C9] rounded text-[12px] px-2 py-1 bg-[#FAFAFA] text-[#1A1A1A]"/>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[12px] text-[#5C5C5C] w-36 text-right shrink-0">N° TVA intra :</span>
+                        <input readOnly value="" className="w-28 border border-[#C9C9C9] rounded text-[12px] px-2 py-1 bg-[#FAFAFA] text-[#1A1A1A]"/>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[12px] text-[#5C5C5C] shrink-0">Nb droits de vote :</span>
+                        <input readOnly value="10000" className="w-20 border border-[#C9C9C9] rounded text-[12px] px-2 py-1 bg-[#FAFAFA] text-[#1A1A1A]"/>
+                      </div>
+                    </div>
+                    {/* Dropdowns ligne */}
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+                      {[["Extrait Kbis",""],["Visa Fiscal","Non"],["Tiers de confiance","Non"],["Statuts",""],["Date Immat RCS",""],["Date de fin",""],["Date signature VF",""],["Date signature TDC",""]].map(([l,v])=>(
+                        <div key={l} className="flex items-center gap-2">
+                          <span className="text-[12px] text-[#5C5C5C] w-36 text-right shrink-0">{l} :</span>
+                          <input readOnly value={v} className="flex-1 border border-[#C9C9C9] rounded text-[12px] px-2 py-1 bg-[#FAFAFA] text-[#1A1A1A]"/>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Etablissements ── */}
+                {activeTab === "etablissements" && (
+                  <div className="mt-3">
+                    <div className="flex items-center gap-2 mb-3">
+                      <button className="flex items-center gap-1 px-2 py-1 border border-[#0250D9] rounded text-[11px] text-[#0250D9] font-semibold bg-white">
+                        <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> Pour tous les conseils
+                      </button>
+                      <button className="flex items-center gap-1 px-2 py-1 bg-[#4CAF50] text-white rounded text-[11px] font-semibold"><Plus size={11}/> Ajouter établissement</button>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-[12px] border-collapse border border-[#C9C9C9]">
+                        <thead><tr>
+                          {["Conseil","N° Inscription","Inscription","Statut","CP","Ville","N° Siret"].map(h=><th key={h} className={thCls}>{h}</th>)}
+                        </tr></thead>
+                        <tbody>
+                          <tr className="hover:bg-[#F9F9F9]">
+                            <td className={tdCls}>ÎLE-DE-FRANCE</td>
+                            <td className={tdCls + " text-[#0250D9] cursor-pointer"}>14-00025838-01</td>
+                            <td className={tdCls}>PRINCIPAL</td>
+                            <td className={tdCls}><span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#E8F5E9] text-[#2E7D32]">EN EXERCICE</span></td>
+                            <td className={tdCls}>78500</td>
+                            <td className={tdCls}>SARTROUVILLE</td>
+                            <td className={tdCls}>949-662-332-00012</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Activités ── */}
+                {activeTab === "activites" && (
+                  <div className="mt-4 flex flex-col gap-4">
+                    <div className="flex flex-col gap-2">
+                      <span className="text-[12px] font-semibold text-[#5C5C5C]">Région :</span>
+                      <label className="flex items-center gap-2 text-[12px] text-[#1A1A1A] cursor-pointer">
+                        <input type="radio" name="socRegion" defaultChecked className="accent-[#0250D9]"/> Dans la Région
+                      </label>
+                      <label className="flex items-center gap-2 text-[12px] text-[#1A1A1A] cursor-pointer">
+                        <input type="radio" name="socRegion" className="accent-[#0250D9]"/> Dans toutes les Régions
+                      </label>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <span className="text-[12px] font-semibold text-[#5C5C5C]">Activités :</span>
+                      <label className="flex items-center gap-2 text-[12px] text-[#1A1A1A] cursor-pointer">
+                        <input type="radio" name="socActivites" defaultChecked className="accent-[#0250D9]"/> Liste des activités à la date du jour
+                      </label>
+                      <label className="flex items-center gap-2 text-[12px] text-[#1A1A1A] cursor-pointer">
+                        <input type="radio" name="socActivites" className="accent-[#0250D9]"/> Toutes les activités
+                      </label>
+                    </div>
+                    <button className="flex items-center gap-1 px-3 py-1.5 border border-[#C9C9C9] rounded text-[12px] text-[#1A1A1A] bg-white w-fit hover:bg-[#F3F3F3]">
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Editer
+                    </button>
+                    <div className="overflow-x-auto mt-2">
+                      <table className="w-full text-[12px] border-collapse border border-[#C9C9C9]">
+                        <thead><tr>
+                          {["N° Inscription","Nom","R.O","Effet","Fin","Qualité","Statut","Conseil"].map(h=><th key={h} className={thCls}>{h}</th>)}
+                        </tr></thead>
+                        <tbody><tr><td colSpan={8} className="px-2 py-6 text-center text-[#9E9E9E] text-[11px] border border-[#C9C9C9]">Aucune activité</td></tr></tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Capital et fonctions ── */}
+                {activeTab === "capital" && (
+                  <div className="mt-3 flex flex-col gap-4">
+                    {/* Individus */}
+                    <div>
+                      <div className="text-[12px] font-bold text-[#03234D] bg-[#D6E4F7] px-3 py-1.5 mb-2">Individus</div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <button className="flex items-center gap-1 px-2 py-1 border border-[#0250D9] rounded text-[11px] text-[#0250D9] bg-white font-semibold">
+                          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> Liste des individus actifs
+                        </button>
+                        <button className="flex items-center gap-1 px-2 py-1 bg-[#4CAF50] text-white rounded text-[11px] font-semibold"><Plus size={11}/> Ajouter Individu</button>
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-[12px] border-collapse border border-[#C9C9C9]" style={{minWidth:600}}>
+                          <thead><tr>
+                            {["N° Inscription Principal","Statut","Qualité","Nom","Titres","% titres","Droits de vote","% droits"].map(h=><th key={h} className={thCls}>{h}</th>)}
+                          </tr></thead>
+                          <tbody>
+                            {[
+                              {num:"14-00017408-01",statut:"EN EXERCICE",qualite:"EC", nom:"M AAFIR OTMAN",      titres:"5 000",pct:"50,00",ddv:"10 000",pddv:"100,00"},
+                              {num:"14-00020285-01",statut:"EN EXERCICE",qualite:"STA",nom:"M MFARAJ MOHAMED Y.",titres:"5 000",pct:"50,00",ddv:"0",    pddv:"0,00"},
+                            ].map((r,i) => (
+                              <tr key={i} className="hover:bg-[#F9F9F9]">
+                                <td className={tdCls + " text-[#0250D9] cursor-pointer"}>{r.num}</td>
+                                <td className={tdCls}><span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#E8F5E9] text-[#2E7D32]">{r.statut}</span></td>
+                                <td className={tdCls}>{r.qualite}</td>
+                                <td className={tdCls}>{r.nom}</td>
+                                <td className={tdCls + " text-right"}>{r.titres}</td>
+                                <td className={tdCls + " text-right"}>{r.pct}</td>
+                                <td className={tdCls + " text-right"}>{r.ddv}</td>
+                                <td className={tdCls + " text-right"}>{r.pddv}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                    {/* Sociétés */}
+                    <div>
+                      <div className="text-[12px] font-bold text-[#03234D] bg-[#D6E4F7] px-3 py-1.5 mb-2">Sociétés</div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <button className="flex items-center gap-1 px-2 py-1 border border-[#0250D9] rounded text-[11px] text-[#0250D9] bg-white font-semibold">
+                          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> Liste des sociétés actives
+                        </button>
+                        <button className="flex items-center gap-1 px-2 py-1 bg-[#4CAF50] text-white rounded text-[11px] font-semibold"><Plus size={11}/> Ajouter Société</button>
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-[12px] border-collapse border border-[#C9C9C9]" style={{minWidth:600}}>
+                          <thead><tr>
+                            {["N° Inscription Principal","Statut","Qualité","Dénomination","Titres","% titres","Droits de vote","% droits"].map(h=><th key={h} className={thCls}>{h}</th>)}
+                          </tr></thead>
+                          <tbody><tr><td colSpan={8} className="px-2 py-4 text-center text-[#9E9E9E] text-[11px] border border-[#C9C9C9]">Aucune société actionnaire</td></tr></tbody>
+                        </table>
+                      </div>
+                    </div>
+                    {/* Récapitulatif */}
+                    <div className="overflow-x-auto">
+                      <table className="text-[12px] border-collapse border border-[#C9C9C9]" style={{minWidth:420}}>
+                        <thead><tr>
+                          <th className={thCls + " w-32"}></th>
+                          <th className={thCls}>Titres</th>
+                          <th className={thCls}>% titres</th>
+                          <th className={thCls}>Droits de vote</th>
+                          <th className={thCls}>% votes</th>
+                        </tr></thead>
+                        <tbody>
+                          {[
+                            ["Membres",          "5 000","50,00","10 000","100,00"],
+                            ["Non membres",      "5 000","50,00","0",     "0,00"],
+                            ["Reste à répartir", "0",    "0,00", "0",     "0,00"],
+                          ].map(([l,...vals],i)=>(
+                            <tr key={i} className="border-b border-[#E5E5E5]">
+                              <td className={tdCls + " font-semibold"}>{l}</td>
+                              {vals.map((v,j)=><td key={j} className={tdCls + " text-right"}>{v}</td>)}
+                            </tr>
+                          ))}
+                          <tr className="bg-[#F3F3F3] font-bold">
+                            <td className={thCls}>Total :</td>
+                            <td className={thCls + " text-right"}>10 000</td>
+                            <td className={thCls}></td>
+                            <td className={thCls + " text-right"}>10 000</td>
+                            <td className={thCls}></td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Indépendance ── */}
+                {activeTab === "independance" && (
+                  <div className="mt-3">
+                    <div className="text-[12px] font-bold text-[#03234D] bg-[#D6E4F7] px-3 py-1.5 mb-2">Déclarations d'indépendance</div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <button className="flex items-center gap-1 px-2 py-1 bg-[#4CAF50] text-white rounded text-[11px] font-semibold"><Plus size={11}/> Ajouter</button>
+                      <button className="flex items-center gap-1 px-2 py-1 bg-[#F44336] text-white rounded text-[11px] font-semibold">
+                        <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="white" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg> Supprimer
+                      </button>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-[12px] border-collapse border border-[#C9C9C9]">
+                        <thead>
+                          <tr className="bg-[#F3F3F3]">
+                            <th className={thCls} rowSpan={2}>Année</th>
+                            <th className="px-2 py-1.5 text-center border border-[#C9C9C9] font-semibold text-[11px] text-[#5C5C5C] bg-[#F3F3F3]" colSpan={2}>A déclaré son indépendance vis-à-vis de ses</th>
+                            <th className={thCls} rowSpan={2}>Date</th>
+                            <th className={thCls} rowSpan={2}>Auteur</th>
+                          </tr>
+                          <tr className="bg-[#F3F3F3]">
+                            <th className={thCls}>Participations financières</th>
+                            <th className={thCls}>Mandats sociaux</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {[
+                            {annee:"2024",pf:"OUI",ms:"OUI",date:"18/01/2024 23:21:14",auteur:"OTMAN AAFIR"},
+                            {annee:"2023",pf:"OUI",ms:"OUI",date:"16/06/2023 01:29:14",auteur:"OTMAN AAFIR"},
+                          ].map((r,i)=>(
+                            <tr key={i} className="border-b border-[#E5E5E5] hover:bg-[#F9F9F9]">
+                              <td className={tdCls + " font-semibold"}>{r.annee}</td>
+                              <td className={tdCls}>{r.pf}</td>
+                              <td className={tdCls}>{r.ms}</td>
+                              <td className={tdCls + " whitespace-nowrap"}>{r.date}</td>
+                              <td className={tdCls}>{r.auteur}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Assurances ── */}
+                {activeTab === "assurances" && (
+                  <div className="mt-3">
+                    {/* Sub-tabs */}
+                    <div className="flex gap-1 mb-3">
+                      {[{key:"2022",label:"Assurances (jusqu'à fin 2022)"},{key:"2023",label:"Assurances (à partir de 2023)"}].map(t=>(
+                        <button key={t.key} onClick={()=>setAssurSubTab(t.key)}
+                          className={`px-3 py-1.5 text-[12px] rounded-t border ${assurSubTab===t.key ? "bg-white border-b-white text-[#0250D9] font-semibold border-[#0250D9]" : "bg-[#F3F3F3] border-[#C9C9C9] text-[#5C5C5C]"}`}>
+                          {t.label}
+                        </button>
+                      ))}
+                    </div>
+                    {/* Toolbar */}
+                    <div className="flex items-center gap-2 mb-2">
+                      <button className="flex items-center gap-1 px-2 py-1 border border-[#C9C9C9] rounded text-[11px] text-[#1A1A1A] bg-white hover:bg-[#F3F3F3]">
+                        <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Documentation
+                      </button>
+                      <button className="flex items-center gap-1 px-2 py-1 bg-[#4CAF50] text-white rounded text-[11px] font-semibold"><Plus size={11}/> Ajouter</button>
+                      <button className="flex items-center gap-1 px-2 py-1 bg-[#F44336] text-white rounded text-[11px] font-semibold">
+                        <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="white" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg> Supprimer
+                      </button>
+                      <button className="flex items-center gap-1 px-2 py-1 border border-[#0250D9] rounded text-[11px] text-[#0250D9] bg-white font-semibold">
+                        <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/></svg> Liste de toutes les assurances
+                      </button>
+                    </div>
+                    {/* Table */}
+                    <div className="overflow-x-auto mb-3">
+                      <table className="w-full text-[12px] border-collapse border border-[#C9C9C9]" style={{minWidth:580}}>
+                        <thead><tr>
+                          {["Compagnie","N° Contrat","N° Police","Début","Fin","N° Chrono","Date Attestation"].map(h=><th key={h} className={thCls}>{h}</th>)}
+                        </tr></thead>
+                        <tbody><tr><td colSpan={7} className="px-2 py-6 text-center text-[#9E9E9E] text-[11px] border border-[#C9C9C9]">Aucune assurance</td></tr></tbody>
+                      </table>
+                    </div>
+                    {/* Form */}
+                    <div className="grid grid-cols-1 gap-y-2">
+                      {[["Souscripteur",""],["Compagnie d'assurance",""],["Numéro contrat",""],["Numéro police",""],["Date de début",""],["Date de fin",""],["Numéro chrono",""],["Date de l'attestation",""],["Minimum légal couvert",""],["Commentaire",""]].map(([l,v])=>(
+                        <div key={l} className="flex items-center gap-2">
+                          <span className="text-[12px] text-[#5C5C5C] w-40 text-right shrink-0">{l} :</span>
+                          <input type="text" defaultValue={v} className="flex-1 max-w-xs border border-[#C9C9C9] rounded text-[12px] px-2 py-1 focus:outline-none focus:border-[#0250D9]"/>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Infos ── */}
+                {activeTab === "infos" && (
+                  <div className="mt-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <button className="flex items-center gap-1 px-2 py-1 bg-[#4CAF50] text-white rounded text-[11px] font-semibold"><Plus size={11}/> Ajouter</button>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-[12px] border-collapse border border-[#C9C9C9]">
+                        <thead><tr><th className={thCls}>Commentaire</th></tr></thead>
+                        <tbody><tr><td className="px-2 py-10 border border-[#C9C9C9]"></td></tr></tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Panels ── */}
+                {activeTab === "panels" && (
+                  <div className="mt-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <button className="flex items-center gap-1 px-2 py-1 border border-[#0250D9] rounded text-[11px] text-[#0250D9] bg-white font-semibold">
+                        <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> Liste des panels à date du jour
+                      </button>
+                      <button className="flex items-center gap-1 px-2 py-1 bg-[#4CAF50] text-white rounded text-[11px] font-semibold"><Plus size={11}/> Ajouter panel</button>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-[12px] border-collapse border border-[#C9C9C9]">
+                        <thead><tr>
+                          {["Libellé du panel","Effet","Fin"].map(h=><th key={h} className={thCls}>{h}</th>)}
+                        </tr></thead>
+                        <tbody><tr><td colSpan={3} className="px-2 py-6 text-center text-[#9E9E9E] text-[11px] border border-[#C9C9C9]">Aucun panel</td></tr></tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+              </div>
+            </div>
+          </div>
+
+          {/* ── Colonne droite ── */}
+          <div className="w-1/2 min-w-0 flex flex-col gap-3">
+            {/* Participations */}
+            <ContactRelatedPanel
+              icon={<svg viewBox="0 0 24 24" width="16" height="16" fill="white"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>}
+              iconBg="#0250D9"
+              label="Participations"
+              count={0}
+              rows={[]}
+              cols={["N° inscr. princ.","Dénomination","CRO princ.","Qualité","Statut princ.","Fonction"]}
+              renderRow={(r) => [r.num,r.denom,r.cro,r.qualite,r.statut,r.fct]}
+            />
+            {/* Demandes (Motifs) */}
+            <SocieteDemandesPanel />
+            {/* Etab. Stat. */}
+            <ContactRelatedPanel
+              icon={<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="white" strokeWidth="2.2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/></svg>}
+              iconBg="#FF9800"
+              label="Etab. Stat."
+              count={2}
+              rows={[
+                {ins:"PRINCIPAL",conseil:"IDF",num:"14-00025838-01",statut:"EN EXE.",cp:"78500",ville:"SARTROUVILLE",annee:"2024"},
+                {ins:"PRINCIPAL",conseil:"IDF",num:"14-00025838-01",statut:"EN EXE.",cp:"78500",ville:"SARTROUVILLE",annee:"2023"},
+              ]}
+              cols={["Inscription","Conseil","N° inscription","Statut","CP","Ville","Année"]}
+              renderRow={(r) => [r.ins,r.conseil,r.num,r.statut,r.cp,r.ville,r.annee]}
+            />
+            {/* RBE */}
+            <ContactRelatedPanel
+              icon={<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="white" strokeWidth="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>}
+              iconBg="#7B1FA2"
+              label="RBE"
+              count={0}
+              rows={[]}
+              cols={["Message"]}
+              renderRow={(r) => [r.msg]}
+              emptyMessage="Aucune déclaration des bénéficiaires effectifs n'a été déposée au registre pour cette entreprise"
+            />
+          </div>
+
+        </div>
+      </div>
+    </>
+  );
+}
+
+// AccountRecordPage — fiche Account (société) ouverte depuis Activités
+// ══════════════════════════════════════════════════════════════
+const ACCOUNT_TABS_VISIBLE = [
+  { key: "etablissement", label: "Établissement" },
+  { key: "activites",     label: "Activités"     },
+  { key: "rac",           label: "RAC"           },
+  { key: "adminprov",     label: "Admin. Prov"   },
+  { key: "stats",         label: "Stats"         },
+  { key: "cac",           label: "CAC"           },
+  { key: "reseaux",       label: "Réseaux"       },
+];
+const ACCOUNT_TABS_MORE = [
+  { key: "panels",        label: "Panels"        },
+  { key: "info",          label: "Info"          },
+];
+const ACCOUNT_TABS = [...ACCOUNT_TABS_VISIBLE, ...ACCOUNT_TABS_MORE];
+
+function AccountTabBar({ activeTab, onTabChange }) {
+  const [moreOpen, setMoreOpen] = React.useState(false);
+  const moreRef = React.useRef(null);
+  const activeInMore = ACCOUNT_TABS_MORE.some(t => t.key === activeTab);
+
+  React.useEffect(() => {
+    if (!moreOpen) return;
+    const handleClick = (e) => {
+      if (moreRef.current && !moreRef.current.contains(e.target)) setMoreOpen(false);
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [moreOpen]);
+
+  return (
+    <div className="flex w-full">
+      <div className="flex overflow-x-auto">
+        {ACCOUNT_TABS_VISIBLE.map(tab => (
+          <button
+            key={tab.key}
+            onClick={() => onTabChange(tab.key)}
+            className={`px-3 h-10 text-[14px] font-semibold whitespace-nowrap ${
+              activeTab === tab.key
+                ? "text-[#0250D9] border-b-[3px] border-[#0250D9]"
+                : "text-[#5C5C5C] border-b border-[#C9C9C9]"
+            }`}
+          >{tab.label}</button>
+        ))}
+      </div>
+      <div className="relative shrink-0" ref={moreRef}>
+        <button
+          onClick={() => setMoreOpen(o => !o)}
+          className={`px-3 h-10 text-[14px] font-semibold whitespace-nowrap flex items-center gap-1 ${
+            activeInMore
+              ? "text-[#0250D9] border-b-[3px] border-[#0250D9]"
+              : "text-[#5C5C5C] border-b border-[#C9C9C9]"
+          }`}
+        >
+          Plus <ChevronDown size={14} />
+        </button>
+        {moreOpen && (
+          <div className="absolute top-full left-0 bg-white border border-[#C9C9C9] rounded shadow-lg min-w-[160px]" style={{zIndex:200}}>
+            {ACCOUNT_TABS_MORE.map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => { onTabChange(tab.key); setMoreOpen(false); }}
+                className={`w-full text-left px-4 py-2 text-[13px] hover:bg-[#F3F3F3] ${
+                  activeTab === tab.key ? "text-[#0250D9] font-semibold" : "text-[#03234D]"
+                }`}
+              >{tab.label}</button>
+            ))}
+          </div>
+        )}
+      </div>
+      <div className="flex-1 border-b border-[#C9C9C9]" />
+    </div>
+  );
+}
+
+function AccountRecordPage({ account, onSocieteClick }) {
   const [activeTab, setActiveTab] = useState("etablissement");
   const highlights = [
     { label: "N° d'inscription",  value: "14-00007092-01"   },
@@ -3778,6 +4464,7 @@ function AccountRecordPage({ account }) {
     { label: "Date d'inscription",value: "14/02/2019"       },
     { label: "Date de fin",       value: "—"                },
     { label: "Solde cotisation",  value: "0,00"             },
+    { label: "Société",           value: "14-00025838-01",  isLink: true, onClick: () => onSocieteClick && onSocieteClick({ numInscription: "14-00025838-01", denomination: "FISCALIA" }) },
   ];
   return (
     <>
@@ -3802,7 +4489,7 @@ function AccountRecordPage({ account }) {
                       [{label:"Date d'inscription", value:"19/12/2013"},    {label:"Date de fin",          value:"—"}],
                       [{label:"Date de mise à jour",value:"13/02/2024"},    {label:"Info Complémentaire",  value:"—"}],
                     ]} />
-                    <AdresseActuelleSection title="Adresse" adresse={"7 RUE MARCEL RENAULT\n75017 PARIS\nFRANCE"} validee={true} />
+                    <AdresseActuelleSection adresse={"7 RUE MARCEL RENAULT\n75017 PARIS\nFRANCE"} validee={true} title="Adresse" />
                     <ExpandableSection title="Coordonnées" defaultOpen={true} fields={[
                       [{label:"Téléphone", value:"01 46 55 14 62"}, {label:"E-mail", value:"f.abtan@abtan-aec.fr"}],
                       [{label:"Fax",       value:"—"},              {label:"Site web", value:"—"}],
@@ -3862,21 +4549,29 @@ function AccountRecordPage({ account }) {
                 {/* ── RAC ── */}
                 {activeTab === "rac" && (
                   <div className="mt-3">
-                    <button className="flex items-center gap-2 text-[#0250D9] text-[13px] font-semibold mb-4 hover:underline">
-                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                      Ouvrir la fiche du RAC
-                    </button>
+                    {/* Toolbar */}
+                    <div className="flex items-center gap-2 mb-4">
+                      <button className="flex items-center gap-1 px-2.5 py-1 bg-[#4CAF50] text-white rounded text-[11px] font-semibold">
+                        <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="white" strokeWidth="2.5"><path d="M17 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"/><polyline points="9 11 12 14 15 11"/></svg>
+                        Changer Rac
+                      </button>
+                      <button className="flex items-center gap-1 px-2.5 py-1 bg-[#E91E63] text-white rounded text-[11px] font-semibold">
+                        <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                        Ouvrir la fiche du RAC
+                      </button>
+                    </div>
+                    {/* Champs */}
                     <div className="flex flex-col gap-3">
                       {[
-                        {label:"N° Supra",  value:"14-00017283-01"},
-                        {label:"Nom",       value:"M ABTAN FRANCK"},
-                        {label:"Email",     value:"franck@abtan-aec.fr"},
-                        {label:"Téléphone", value:"—"},
-                        {label:"Fax",       value:"—"},
-                        {label:"Ville",     value:"—"},
+                        {label:"N° Supra",  value:"14-00017408-01"},
+                        {label:"Nom",       value:"M AAFIR OTMAN"},
+                        {label:"Email",     value:"ot.aafir@gmail.com"},
+                        {label:"Téléphone", value:""},
+                        {label:"Fax",       value:""},
+                        {label:"Ville",     value:""},
                       ].map(f=>(
                         <div key={f.label} className="flex gap-4 text-[13px]">
-                          <span className="w-28 text-[#5C5C5C] shrink-0">{f.label}</span>
+                          <span className="w-28 text-[#5C5C5C] shrink-0">{f.label}:</span>
                           <span className="text-[#1A1A1A] font-medium">{f.value}</span>
                         </div>
                       ))}
@@ -3893,7 +4588,6 @@ function AccountRecordPage({ account }) {
                 {activeTab === "adresse" && (
                   <div className="mt-3 flex flex-col gap-1">
                     <AdresseActuelleSection
-                      title="Adresse"
                       adresse={"7 RUE MARCEL RENAULT\n75017 PARIS\nFRANCE"}
                       validee={true}
                     />
@@ -3904,8 +4598,233 @@ function AccountRecordPage({ account }) {
                   </div>
                 )}
 
+                {/* ── Stats ── */}
+                {activeTab === "stats" && (
+                  <div className="mt-3">
+                    <div className="text-[12px] font-bold text-[#03234D] bg-[#D6E4F7] px-3 py-1.5 mb-2">Effectif des cotisations</div>
+                    <div className="overflow-x-auto">
+                      <table className="text-[11px] border-collapse border border-[#C9C9C9]" style={{minWidth:1400}}>
+                        <thead>
+                          <tr className="bg-[#F3F3F3] text-[#5C5C5C]">
+                            {[
+                              "Année",
+                              "(A) M.O. salariés",
+                              "(B) EC stagiaires",
+                              "(B) dont GIE ou SCM",
+                              "(C) Diplômés EC non inscrits",
+                              "(C) dont GIE ou SCM",
+                              "(D) Autres comptables >= 200",
+                              "(D) dont GIE ou SCM",
+                              "(E) Autres comptables < 200",
+                              "(E) dont GIE ou SCM",
+                              "(F) Pers. non comptable",
+                              "(F) dont GIE ou SCM",
+                              "(G) Pers. d'entretien, coursiers",
+                              "(G) dont GIE ou SCM",
+                              "Total Z (C+D+E+F)",
+                              "Salaires bruts €",
+                              "Salaires bruts € dont GIE ou SCM",
+                              "Honoraires hors taxes €",
+                              "Invest. ex. préc. €",
+                              "Salaires bruts FRF",
+                              "Honoraires hors taxes FRF",
+                              "Invest. ex. préc. FRF",
+                              "Type N° Inscript.",
+                            ].map(h => (
+                              <th key={h} className="px-2 py-1.5 text-left border border-[#C9C9C9] font-semibold whitespace-normal text-center" style={{minWidth:60}}>{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {[
+                            { annee:"2024", a:"",     b:"",     bGIE:"",     cDip:"",     cGIE:"",     d:"",     dGIE:"",     e:"",     eGIE:"",     f:"",     fGIE:"",     g:"",     gGIE:"",     total:"0,00", sal:"0",     salGIE:"0",    hon:"",    inv:"0",    salFRF:"",    honFRF:"",    invFRF:"",    type:"E" },
+                            { annee:"2023", a:"0,00", b:"0,00", bGIE:"0,00", cDip:"0,00", cGIE:"0,00", d:"0,00", dGIE:"0,00", e:"0,00", eGIE:"0,00", f:"0,00", fGIE:"0,00", g:"0,00", gGIE:"0,00", total:"0,00", sal:"0",     salGIE:"0",    hon:"",    inv:"0",    salFRF:"",    honFRF:"",    invFRF:"",    type:"E" },
+                          ].map((r, i) => (
+                            <tr key={i} className={`${i % 2 === 0 ? "bg-white" : "bg-[#F9F9F9]"} hover:bg-[#EEF4FD]`}>
+                              {[r.annee,r.a,r.b,r.bGIE,r.cDip,r.cGIE,r.d,r.dGIE,r.e,r.eGIE,r.f,r.fGIE,r.g,r.gGIE,r.total,r.sal,r.salGIE,r.hon,r.inv,r.salFRF,r.honFRF,r.invFRF,r.type].map((v, j) => (
+                                <td key={j} className="px-2 py-1 border border-[#C9C9C9] text-[#03234D] whitespace-nowrap">{v}</td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Admin Prov ── */}
+                {activeTab === "adminprov" && (
+                  <div className="mt-3">
+                    <div className="text-[12px] font-bold text-[#03234D] bg-[#D6E4F7] px-3 py-1.5 mb-2">Administrateurs Provisoires</div>
+                    {/* Toolbar */}
+                    <div className="flex items-center gap-2 mb-2">
+                      <button className="flex items-center gap-1 px-2.5 py-1 bg-[#4CAF50] text-white rounded text-[11px] font-semibold"><Plus size={11}/> Ajouter</button>
+                      <button className="flex items-center gap-1 px-2.5 py-1 bg-[#1E88E5] text-white rounded text-[11px] font-semibold">
+                        <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="white" strokeWidth="2"><circle cx="12" cy="12" r="4"/><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/></svg>
+                        Liste des administrations provisoires à la date du jour
+                      </button>
+                    </div>
+                    {/* Table */}
+                    <div className="overflow-x-auto mb-3">
+                      <table className="w-full text-[12px] border-collapse border border-[#C9C9C9]" style={{minWidth:900}}>
+                        <thead>
+                          <tr className="bg-[#F3F3F3] text-[#5C5C5C]">
+                            {["N° Inscr.Princ.","Nom","Nature Dossier","Admin. Prov.","Ref. Dossier","Commentaire","Date Evèn.","Effet","Fin","Qualité","Statut Princ.","Conseil Princ."].map(h => (
+                              <th key={h} className="px-2 py-1.5 text-left border border-[#C9C9C9] font-semibold text-[11px] whitespace-nowrap">{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr><td colSpan={12} className="px-2 py-10 border border-[#C9C9C9]"></td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    {/* Form */}
+                    {(() => {
+                      const lblCls = "text-[12px] text-[#5C5C5C] w-44 shrink-0 pt-1";
+                      const inpCls = "border border-[#C9C9C9] rounded px-2 py-1 text-[12px] text-[#03234D] bg-white";
+                      return (
+                        <div className="flex flex-col gap-2 bg-[#EEF4FD] border border-[#C9C9C9] rounded p-3">
+                          <div className="flex items-start gap-2">
+                            <span className={`${lblCls} font-semibold`}>N° d'inscription principale:</span>
+                            <input className={`${inpCls} w-48`} type="text" />
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <span className={lblCls}>Nom:</span>
+                            <span className="text-[12px] text-[#03234D]"></span>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <span className={`${lblCls} font-semibold`}>Nature Dossier:</span>
+                            <select className={`${inpCls} w-64 appearance-none`}><option value=""></option></select>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <span className={`${lblCls} font-semibold`}>Admin. provisoire:</span>
+                            <select className={`${inpCls} w-64 appearance-none`}><option value=""></option></select>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <span className={lblCls}>Référence dossier:</span>
+                            <input className={`${inpCls} w-48`} type="text" />
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <span className={lblCls}>Commentaire:</span>
+                            <input className={`${inpCls} w-80`} type="text" />
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <span className={lblCls}>Date évènement:</span>
+                            <input className={`${inpCls} w-32`} type="text" placeholder="JJ/MM/AAAA" />
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <span className={`${lblCls} font-semibold`}>Effet:</span>
+                            <input className={`${inpCls} w-32`} type="text" defaultValue="30/04/2026" />
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <span className={lblCls}>Fin:</span>
+                            <input className={`${inpCls} w-32`} type="text" placeholder="JJ/MM/AAAA" />
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <span className={lblCls}>Qualité:</span>
+                            <span className="text-[12px] text-[#03234D]"></span>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <span className={lblCls}>Statut principal:</span>
+                            <span className="text-[12px] text-[#03234D]"></span>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
+
+                {/* ── CAC ── */}
+                {activeTab === "cac" && (
+                  <div className="mt-3">
+                    <div className="text-[12px] font-bold text-[#03234D] bg-[#D6E4F7] px-3 py-1.5 mb-2">Etablissement CAC</div>
+                    {/* Toolbar */}
+                    <div className="flex items-center gap-2 mb-2">
+                      <button className="flex items-center gap-1 px-2.5 py-1 bg-[#4CAF50] text-white rounded text-[11px] font-semibold"><Plus size={11}/> Ajouter</button>
+                      <button className="flex items-center gap-1 px-2.5 py-1 bg-[#1E88E5] text-white rounded text-[11px] font-semibold">
+                        <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="white" strokeWidth="2"><circle cx="12" cy="12" r="4"/><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/></svg>
+                        Liste des compagnies CAC à la date du jour
+                      </button>
+                    </div>
+                    {/* Table */}
+                    <div className="overflow-x-auto mb-3">
+                      <table className="w-full text-[12px] border-collapse border border-[#C9C9C9]">
+                        <thead>
+                          <tr className="bg-[#F3F3F3] text-[#5C5C5C]">
+                            {["Compagnie Régionale CAC","Effet","Fin"].map(h => (
+                              <th key={h} className="px-2 py-1.5 text-left border border-[#C9C9C9] font-semibold text-[11px] whitespace-nowrap">{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr><td colSpan={3} className="px-2 py-10 border border-[#C9C9C9]"></td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    {/* Form */}
+                    <div className="flex flex-col gap-2 bg-[#EEF4FD] border border-[#C9C9C9] rounded p-3">
+                      {[
+                        { label: "Organisme:", type: "select" },
+                        { label: "Date d'effet:", type: "date" },
+                        { label: "Date de fin:", type: "date" },
+                      ].map(f => (
+                        <div key={f.label} className="flex items-center gap-2">
+                          <span className="text-[12px] font-semibold text-[#5C5C5C] w-32 shrink-0">{f.label}</span>
+                          {f.type === "select"
+                            ? <select className="border border-[#C9C9C9] rounded px-2 py-1 text-[12px] text-[#03234D] bg-white w-64 appearance-none"><option value=""></option></select>
+                            : <input className="border border-[#C9C9C9] rounded px-2 py-1 text-[12px] text-[#03234D] bg-white w-32" type="text" placeholder="JJ/MM/AAAA" />
+                          }
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Réseaux ── */}
+                {activeTab === "reseaux" && (
+                  <div className="mt-3">
+                    <div className="text-[12px] font-bold text-[#03234D] bg-[#D6E4F7] px-3 py-1.5 mb-2">Réseaux</div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <button className="flex items-center gap-1 px-2.5 py-1 bg-[#4CAF50] text-white rounded text-[11px] font-semibold"><Plus size={11}/> Ajouter</button>
+                      <button className="flex items-center gap-1 px-2.5 py-1 bg-[#1E88E5] text-white rounded text-[11px] font-semibold">
+                        <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="white" strokeWidth="2"><circle cx="12" cy="12" r="4"/><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/></svg>
+                        Liste des reseaux à la date du jour
+                      </button>
+                    </div>
+                    <div className="overflow-x-auto mb-3">
+                      <table className="w-full text-[12px] border-collapse border border-[#C9C9C9]">
+                        <thead>
+                          <tr className="bg-[#F3F3F3] text-[#5C5C5C]">
+                            {["Nom de réseau","Effet","Fin"].map(h => (
+                              <th key={h} className="px-2 py-1.5 text-left border border-[#C9C9C9] font-semibold text-[11px] whitespace-nowrap">{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr><td colSpan={3} className="px-2 py-10 border border-[#C9C9C9]"></td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="flex flex-col gap-2 bg-[#EEF4FD] border border-[#C9C9C9] rounded p-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[12px] font-semibold text-[#5C5C5C] w-32 shrink-0">Nom du réseau:</span>
+                        <select className="border border-[#C9C9C9] rounded px-2 py-1 text-[12px] text-[#03234D] bg-white w-64 appearance-none"><option value=""></option></select>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[12px] font-semibold text-[#5C5C5C] w-32 shrink-0">Date Effet:</span>
+                        <input className="border border-[#C9C9C9] rounded px-2 py-1 text-[12px] text-[#03234D] bg-white w-32" type="text" defaultValue="30/04/2026" />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[12px] font-semibold text-[#5C5C5C] w-32 shrink-0">Date Fin:</span>
+                        <input className="border border-[#C9C9C9] rounded px-2 py-1 text-[12px] text-[#03234D] bg-white w-32" type="text" placeholder="JJ/MM/AAAA" />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* ── Onglets sans contenu encore ── */}
-                {!["etablissement","motifs","rac","activites","adresse"].includes(activeTab) && (
+                {!["etablissement","motifs","rac","activites","adresse","stats","adminprov","cac","reseaux"].includes(activeTab) && (
                   <div className="mt-6 flex flex-col items-center justify-center py-12 text-[#5C5C5C] text-[14px]">
                     <div className="w-10 h-10 rounded-full bg-[#F3F3F3] flex items-center justify-center mb-3">
                       <HelpCircle size={20} className="text-[#C9C9C9]" />
@@ -3917,9 +4836,6 @@ function AccountRecordPage({ account }) {
             </div>
           </div>
           <div className="w-1/2 min-w-0 flex flex-col gap-3">
-            <AccountRelatedPanel icon={
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            } iconBg="#E91E63" label="Lien PP PM" count={0} />
             <AccountRelatedPanel icon={
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
             } iconBg="#0250D9" label="Demandes" count={2} defaultOpen={true}>
@@ -3991,15 +4907,9 @@ function AccountRecordPage({ account }) {
   );
 }
 
-// Liste globale des comptes (établissements). Sert à la fois d'alimenter le tableau
-// "Activités" de la fiche contact et à reconstruire l'onglet sur deep-link (account:NUM).
-const ACCOUNTS_LIST = [
-  { numInscription: "140000709201", inscription: "PRINCIPAL", denomination: "RIV CONSULTING", ro: "Oui", effet: "14/02/2019", fin: "—", cac: "—", cp: "75019", ville: "PARIS", qualite: "SEC", statut: "EN EXE.", conseil: "IDF" },
-];
-
 function ActivitesPanel({ onAccountClick }) {
   const [open, setOpen] = useState(true);
-  const activite = ACCOUNTS_LIST[0];
+  const activite = { numInscription: "140000709201", inscription: "PRINCIPAL", denomination: "RIV CONSULTING", ro: "Oui", effet: "14/02/2019", fin: "—", cac: "—", cp: "75019", ville: "PARIS", qualite: "SEC", statut: "EN EXE.", conseil: "IDF" };
   return (
     <div className="bg-white rounded-[20px] overflow-hidden">
       <button className="w-full flex items-center justify-between px-4 py-4" onClick={() => setOpen(o => !o)}>
@@ -4041,12 +4951,363 @@ function ActivitesPanel({ onAccountClick }) {
   );
 }
 
+// ══════════════════════════════════════════════════════════════
+// DiplomesSection
+// ══════════════════════════════════════════════════════════════
+function DiplomesSection() {
+  const rows = [
+    { code: "311", diplome: "DSCG complet",                              annee: "2014", justif: "Oui", dateDiplome: "",           titre: "", soutenance: "", n1: "", n2: "", n3: "", comment: "" },
+    { code: "357", diplome: "DIPL. EXPERTISE COMPTABLE (DEC) 2010/...", annee: "2016", justif: "Non", dateDiplome: "01/11/2016", titre: "", soutenance: "", n1: "", n2: "", n3: "", comment: "" },
+    { code: "740", diplome: "MASTER COMPTABILITE CONTROLE AUDIT",        annee: "2011", justif: "Oui", dateDiplome: "",           titre: "", soutenance: "", n1: "", n2: "", n3: "", comment: "" },
+    { code: "890", diplome: "AUTRES LICENCES",                           annee: "2009", justif: "Oui", dateDiplome: "",           titre: "", soutenance: "", n1: "", n2: "", n3: "", comment: "ECONOMIE ET..." },
+  ];
+  const [selected, setSelected] = React.useState(null);
+
+  const thCls = "px-2 py-1.5 text-left border border-[#C9C9C9] font-semibold text-[11px] text-[#5C5C5C] bg-[#F3F3F3] whitespace-normal";
+  const tdCls = "px-2 py-1 text-[12px] border border-[#C9C9C9] text-[#03234D]";
+  const lblCls = "text-[12px] text-[#5C5C5C] w-44 shrink-0 pt-1";
+  const inpCls = "border border-[#C9C9C9] rounded px-2 py-1 text-[12px] text-[#03234D] bg-white";
+
+  return (
+    <div className="flex flex-col gap-3">
+      {/* Toolbar */}
+      <div className="flex items-center gap-2">
+        <button className="flex items-center gap-1 px-2.5 py-1 bg-[#4CAF50] text-white rounded text-[11px] font-semibold"><Plus size={11}/> Ajouter</button>
+        <button className="flex items-center gap-1 px-2.5 py-1 bg-[#F44336] text-white rounded text-[11px] font-semibold">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="white" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg> Supprimer
+        </button>
+      </div>
+
+      {/* Tableau */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-[12px] border-collapse border border-[#C9C9C9]">
+          <thead>
+            <tr>
+              <th className={thCls}>Code</th>
+              <th className={thCls}>Diplôme</th>
+              <th className={thCls}>Année</th>
+              <th className={thCls}>Justificatifs</th>
+              <th className={thCls}>Date diplôme</th>
+              <th className={thCls}>Titre du mémoire</th>
+              <th className={thCls}>Date de session de soutenance</th>
+              <th className={thCls}>1ère note obtenue</th>
+              <th className={thCls}>2ème note obtenue</th>
+              <th className={thCls}>3ème note obtenue</th>
+              <th className={thCls}>Commentaire</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r, i) => (
+              <tr
+                key={i}
+                onClick={() => setSelected(i)}
+                className={`cursor-pointer ${selected === i ? "bg-[#D6E4F7]" : i % 2 === 0 ? "bg-white" : "bg-[#F9F9F9]"} hover:bg-[#EEF4FD]`}
+              >
+                <td className={tdCls}>{r.code}</td>
+                <td className={tdCls}>{r.diplome}</td>
+                <td className={tdCls}>{r.annee}</td>
+                <td className={tdCls}>{r.justif}</td>
+                <td className={tdCls}>{r.dateDiplome}</td>
+                <td className={tdCls}>{r.titre}</td>
+                <td className={tdCls}>{r.soutenance}</td>
+                <td className={tdCls}>{r.n1}</td>
+                <td className={tdCls}>{r.n2}</td>
+                <td className={tdCls}>{r.n3}</td>
+                <td className={tdCls}>{r.comment}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Formulaire */}
+      <div className="bg-[#EEF4FD] border border-[#C9C9C9] rounded p-3 flex flex-col gap-2 mt-1">
+        <div className="flex items-start gap-2">
+          <span className={lblCls}>Diplôme:</span>
+          <div className="flex-1 relative">
+            <select className={`${inpCls} w-full max-w-xs appearance-none pr-6`}>
+              <option value=""></option>
+              <option>DSCG complet</option>
+              <option>DIPL. EXPERTISE COMPTABLE (DEC)</option>
+              <option>MASTER COMPTABILITE CONTROLE AUDIT</option>
+              <option>AUTRES LICENCES</option>
+            </select>
+          </div>
+        </div>
+        <div className="flex items-start gap-2">
+          <span className={lblCls}>Année Obtention:</span>
+          <input className={`${inpCls} w-20`} type="text" />
+        </div>
+        <div className="flex items-center gap-2">
+          <span className={lblCls}>Justificatifs:</span>
+          <label className="flex items-center gap-1 text-[12px] text-[#03234D]"><input type="radio" name="justif" value="oui" /> Oui</label>
+          <label className="flex items-center gap-1 text-[12px] text-[#03234D] ml-2"><input type="radio" name="justif" value="non" /> Non</label>
+        </div>
+        <div className="flex items-start gap-2">
+          <span className={lblCls}>Date diplôme:</span>
+          <input className={`${inpCls} w-32`} type="text" placeholder="JJ/MM/AAAA" />
+        </div>
+        <div className="flex items-start gap-2">
+          <span className={lblCls}>Titre du mémoire:</span>
+          <input className={`${inpCls} flex-1`} type="text" />
+        </div>
+        <div className="flex items-start gap-2">
+          <span className={lblCls}>Date de session de soutenance:</span>
+          <input className={`${inpCls} w-32`} type="text" placeholder="JJ/MM/AAAA" />
+        </div>
+        <div className="flex items-start gap-2">
+          <span className={lblCls}>1ère note obtenue:</span>
+          <input className={`${inpCls} w-20`} type="text" />
+        </div>
+        <div className="flex items-start gap-2">
+          <span className={lblCls}>2ème note obtenue:</span>
+          <input className={`${inpCls} w-20`} type="text" />
+        </div>
+        <div className="flex items-start gap-2">
+          <span className={lblCls}>3ème note obtenue:</span>
+          <input className={`${inpCls} w-20`} type="text" />
+        </div>
+        <div className="flex items-start gap-2">
+          <span className={lblCls}>Commentaire:</span>
+          <input className={`${inpCls} flex-1`} type="text" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// StageGroupesSection
+// ══════════════════════════════════════════════════════════════
+function StageGroupesSection() {
+  const [selected, setSelected] = React.useState(null);
+  const rows = [
+    { num: "11034", an: "3", libelle: "11034 / M WALCH",                 rattrapage: "Non", groupePrinc: "Non", effet: "16/09/2011", fin: "31/07/2013" },
+    { num: "13102", an: "3", libelle: "13102 / M MAHIOUT - DSCG COM...", rattrapage: "Non", groupePrinc: "Oui", effet: "01/01/2015", fin: "01/01/2016" },
+  ];
+  const thCls = "px-2 py-1.5 text-left border border-[#C9C9C9] font-semibold text-[11px] text-[#5C5C5C] bg-[#F3F3F3] whitespace-nowrap";
+  const tdCls = "px-2 py-1 text-[12px] border border-[#C9C9C9] text-[#03234D]";
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-2">
+        <button className="flex items-center gap-1 px-2.5 py-1 bg-[#4CAF50] text-white rounded text-[11px] font-semibold"><Plus size={11}/> Ajouter</button>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-[12px] border-collapse border border-[#C9C9C9]">
+          <thead>
+            <tr>
+              <th className={thCls}>N° Groupe</th>
+              <th className={thCls}>An</th>
+              <th className={thCls}>Libellé</th>
+              <th className={thCls}>Rattrapage</th>
+              <th className={thCls}>Groupe Princi...</th>
+              <th className={thCls}>Date d'effet</th>
+              <th className={thCls}>Date de fin</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r, i) => (
+              <tr
+                key={i}
+                onClick={() => setSelected(i)}
+                className={`cursor-pointer ${selected === i ? "bg-[#D6E4F7]" : i % 2 === 0 ? "bg-white" : "bg-[#F9F9F9]"} hover:bg-[#EEF4FD]`}
+              >
+                <td className={tdCls}>{r.num}</td>
+                <td className={tdCls}>{r.an}</td>
+                <td className={tdCls}>{r.libelle}</td>
+                <td className={tdCls}>{r.rattrapage}</td>
+                <td className={tdCls}>{r.groupePrinc}</td>
+                <td className={tdCls}>{r.effet}</td>
+                <td className={tdCls}>{r.fin}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// CACSection
+// ══════════════════════════════════════════════════════════════
+function CACSection() {
+  const [selected, setSelected] = React.useState(null);
+  const rows = [];
+
+  const thCls = "px-2 py-1.5 text-left border border-[#C9C9C9] font-semibold text-[11px] text-[#5C5C5C] bg-[#F3F3F3] whitespace-nowrap";
+  const tdCls = "px-2 py-1 text-[12px] border border-[#C9C9C9] text-[#03234D]";
+  const lblCls = "text-[12px] text-[#5C5C5C] w-44 shrink-0 pt-1";
+  const inpCls = "border border-[#C9C9C9] rounded px-2 py-1 text-[12px] text-[#03234D] bg-white";
+
+  return (
+    <div className="flex flex-col gap-3">
+      {/* Toolbar */}
+      <div className="flex items-center gap-2">
+        <button className="flex items-center gap-1 px-2.5 py-1 bg-[#4CAF50] text-white rounded text-[11px] font-semibold"><Plus size={11}/> Ajouter</button>
+        <button className="flex items-center gap-1 px-2.5 py-1 bg-[#F44336] text-white rounded text-[11px] font-semibold">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="white" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg> Supprimer
+        </button>
+        <button className="flex items-center gap-1 px-2.5 py-1 bg-[#1E88E5] text-white rounded text-[11px] font-semibold">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="white" strokeWidth="2"><circle cx="12" cy="12" r="4"/><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/></svg>
+          Liste de toutes les compagnies CAC
+        </button>
+      </div>
+
+      {/* Tableau */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-[12px] border-collapse border border-[#C9C9C9]">
+          <thead>
+            <tr>
+              <th className={thCls}>Compagnie Régionale CAC</th>
+              <th className={thCls}>Habilitation</th>
+              <th className={thCls}>Nb Stagiaires</th>
+              <th className={thCls}>Effet</th>
+              <th className={thCls}>Fin</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.length === 0 ? (
+              <tr><td colSpan={5} className="px-2 py-6 text-center text-[12px] text-[#9E9E9E] border border-[#C9C9C9]">—</td></tr>
+            ) : rows.map((r, i) => (
+              <tr key={i} onClick={() => setSelected(i)} className={`cursor-pointer ${selected === i ? "bg-[#D6E4F7]" : "bg-white"} hover:bg-[#EEF4FD]`}>
+                <td className={tdCls}>{r.compagnie}</td>
+                <td className={tdCls}>{r.habilitation}</td>
+                <td className={tdCls}>{r.nbStagiaires}</td>
+                <td className={tdCls}>{r.effet}</td>
+                <td className={tdCls}>{r.fin}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Formulaire */}
+      <div className="bg-[#EEF4FD] border border-[#C9C9C9] rounded p-3 flex flex-col gap-2 mt-1">
+        <div className="flex items-start gap-2">
+          <span className={lblCls}>Organisme:</span>
+          <select className={`${inpCls} w-64 appearance-none`}><option value=""></option></select>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className={lblCls}>Habilitation:</span>
+          <label className="flex items-center gap-1 text-[12px] text-[#03234D]"><input type="radio" name="cac_hab" value="oui" /> Oui</label>
+          <label className="flex items-center gap-1 text-[12px] text-[#03234D] ml-8"><input type="radio" name="cac_hab" value="non" /> Non</label>
+        </div>
+        <div className="flex items-start gap-2">
+          <span className={lblCls}>Nombre de stagiaires:</span>
+          <input className={`${inpCls} w-20`} type="text" />
+        </div>
+        <div className="flex items-start gap-2">
+          <span className={lblCls}>Date d'effet:</span>
+          <input className={`${inpCls} w-32`} type="text" placeholder="JJ/MM/AAAA" />
+        </div>
+        <div className="flex items-start gap-2">
+          <span className={lblCls}>Date de fin:</span>
+          <input className={`${inpCls} w-32`} type="text" placeholder="JJ/MM/AAAA" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// CommissionsTab — 3 sous-onglets
+// ══════════════════════════════════════════════════════════════
+function CommissionsTab() {
+  /* ── helpers partagés ── */
+  const CommTable = ({ cols }) => (
+    <div className="overflow-x-auto mb-3 mt-2">
+      <table className="w-full text-[12px] border-collapse border border-[#C9C9C9]">
+        <thead>
+          <tr className="bg-[#F3F3F3]">
+            {cols.map(c => <th key={c} className="px-2 py-1.5 text-left border border-[#C9C9C9] font-semibold text-[11px] text-[#5C5C5C] whitespace-nowrap">{c}</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td colSpan={cols.length} className="px-2 py-6 text-center text-[#C9C9C9] text-[11px] border border-[#C9C9C9]"></td></tr>
+        </tbody>
+      </table>
+    </div>
+  );
+  const DateF = ({ label }) => (
+    <div className="flex items-center gap-2 mb-2">
+      <span className="text-[12px] text-[#1A1A1A] w-36 shrink-0">{label}</span>
+      <div className="flex items-center border border-[#C9C9C9] rounded bg-white overflow-hidden">
+        <input type="text" className="px-2 py-1 text-[12px] w-24 focus:outline-none" placeholder="jj/mm/aaaa"/>
+        <button className="px-1.5 bg-[#F3F3F3] border-l border-[#C9C9C9] flex items-center py-1">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#5C5C5C" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </button>
+      </div>
+    </div>
+  );
+  const DropF = ({ label }) => (
+    <div className="flex items-center gap-2 mb-2">
+      <span className="text-[12px] text-[#1A1A1A] w-36 shrink-0">{label}</span>
+      <div className="relative w-56">
+        <select className="w-full border border-[#C9C9C9] rounded text-[12px] px-2 py-1 pr-6 bg-white appearance-none focus:outline-none focus:border-[#0250D9]"><option value=""></option></select>
+        <ChevronDown size={11} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[#5C5C5C] pointer-events-none"/>
+      </div>
+    </div>
+  );
+  const TextF = ({ label, wide }) => (
+    <div className="flex items-center gap-2 mb-2">
+      <span className="text-[12px] text-[#1A1A1A] w-36 shrink-0">{label}</span>
+      <input type="text" className={`border border-[#C9C9C9] rounded text-[12px] px-2 py-1 focus:outline-none focus:border-[#0250D9] ${wide ? "w-72" : "w-32"}`}/>
+    </div>
+  );
+  const ToolbarLine = ({ label, showAdd = true }) => (
+    <div className="flex items-center gap-2 mb-1">
+      {showAdd && (
+        <button className="flex items-center gap-1 px-2 py-1 bg-[#4CAF50] text-white rounded text-[11px] font-semibold">
+          <Plus size={11}/> Ajouter
+        </button>
+      )}
+      <button className="w-6 h-6 flex items-center justify-center border border-[#C9C9C9] rounded bg-white hover:bg-[#F3F3F3]">
+        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+      {showAdd && (
+        <button className="w-6 h-6 flex items-center justify-center border border-[#C9C9C9] rounded bg-white hover:bg-[#F3F3F3]">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#0250D9" strokeWidth="2.2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        </button>
+      )}
+      <span className="text-[11px] text-[#5C5C5C]">{label}</span>
+    </div>
+  );
+  return (
+    <div className="mt-3 flex flex-col gap-1">
+      <ExpandableSection title="Fonctions au Conseil régional courant" defaultOpen={true}>
+        <ToolbarLine label="Aujourd'hui, fonction au CR ÎLE-DE-FRANCE" showAdd={true}/>
+        <CommTable cols={["Conseil","Commission","Fonction Sociale","Effet","Fin","Commentaire"]}/>
+        <TextF label="Conseil :" />
+        <DropF label="Commission :" />
+        <DropF label="Fonction sociale :" />
+        <DateF label="Effet :" />
+        <DateF label="Fin :" />
+        <TextF label="Commentaire :" wide />
+      </ExpandableSection>
+      <ExpandableSection title="Fonctions dans les commissions spécifiques" defaultOpen={false}>
+        <ToolbarLine label="Aujourd'hui, fonctions dans les commissions spécifiques au CRÎLE-DE-FRANCE" showAdd={true}/>
+        <CommTable cols={["Commission","Fonction Sociale","Effet","Fin","Commentaire"]}/>
+        <DropF label="Commission :" />
+        <DropF label="Fonction sociale :" />
+        <DateF label="Effet :" />
+        <DateF label="Fin :" />
+        <TextF label="Commentaire :" wide />
+      </ExpandableSection>
+      <ExpandableSection title="Fonctions au SUPRA" defaultOpen={false}>
+        <ToolbarLine label="Aujourd'hui, fonctions au SUPRA" showAdd={false}/>
+        <CommTable cols={["Conseil","Commission","Fonction Sociale","Effet","Fin","Commentaire"]}/>
+      </ExpandableSection>
+    </div>
+  );
+}
+
 function ContactRecordPage({ demande, onAccountClick }) {
   const [activeTab, setActiveTab] = useState("individu");
   const data = buildContactData(demande);
   return (
     <>
-      <ContactPageHeader name={formatContactName(demande.demandeur)} />
+      <ContactPageHeader name={demande.demandeur} />
       <HighlightsPanel fields={data.highlights} />
       <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 pt-[1px]">
         <div className="flex gap-3 w-full">
@@ -4057,18 +5318,18 @@ function ContactRecordPage({ demande, onAccountClick }) {
                 {activeTab === "individu" && (
                   <div className="mt-3 flex flex-col gap-1">
                     <ExpandableSection title="Identité"                                       fields={data.identiteFields}     defaultOpen={true}  />
-                    <AdresseActuelleSection title="Adresse perso" adresse={data.adressePersoData.adresseComplete} validee={data.adressePersoData.adresseValidee} />
-                    <ExpandableSection title="Dossier"             fields={data.dossierFields}          defaultOpen={false} />
-                    <ExpandableSection title="Diplômes"            fields={data.diplomesFields}         defaultOpen={false} />
-                    <ExpandableSection title="Historique du stage" fields={data.stageHistoriqueFields}  defaultOpen={false} />
-                    <ExpandableSection title="CAC"                 fields={data.cacFields}              defaultOpen={false} />
-                    <ExpandableSection title="Cotisations"         fields={data.cotisationsFields}      defaultOpen={false} />
-                    <ExpandableSection title="Comptexpert"         fields={data.comptexpertFields}      defaultOpen={false} />
+                    <AdresseActuelleSection adresse={data.adressePersoData.adresseComplete} validee={data.adressePersoData.adresseValidee} title="Adresse perso" />
+                    <ExpandableSection title="Dossier"            fields={data.dossierFields}      defaultOpen={false} />
+                    <ExpandableSection title="Diplômes"           defaultOpen={false}><DiplomesSection /></ExpandableSection>
+                    <ExpandableSection title="Historique du stage" fields={[]}  defaultOpen={false} />
+                    <ExpandableSection title="CAC"                defaultOpen={false}><CACSection /></ExpandableSection>
+                    <ExpandableSection title="Cotisations"        fields={data.cotisationsFields} defaultOpen={false} />
+                    <ExpandableSection title="Comptexpert"        fields={data.comptexpertFields} defaultOpen={false} />
                   </div>
                 )}
                 {activeTab === "adresses" && (
                   <div className="mt-3 flex flex-col gap-1">
-                    <AdresseActuelleSection title="Adresse pro" adresse={data.adresseProData.adresseComplete} validee={data.adresseProData.adresseValidee} />
+                    <AdresseActuelleSection adresse={data.adresseProData.adresseComplete} validee={data.adresseProData.adresseValidee} />
                     <ExpandableSection title="Coordonnées" fields={data.adresseProData.coordFields} defaultOpen={true} />
                   </div>
                 )}
@@ -4131,98 +5392,298 @@ function ContactRecordPage({ demande, onAccountClick }) {
                 )}
                 {activeTab === "rac" && (
                   <div className="mt-3">
-                    <div className="text-[13px] font-semibold text-[#03234D] mb-2 px-1">Liste des établissements gérés par ce RAC</div>
+                    <div className="flex items-center gap-2 mb-4">
+                      <button className="flex items-center gap-1 px-2.5 py-1 bg-[#4CAF50] text-white rounded text-[11px] font-semibold">
+                        <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="white" strokeWidth="2.5"><path d="M17 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"/><polyline points="9 11 12 14 15 11"/></svg>
+                        Changer Rac
+                      </button>
+                      <button className="flex items-center gap-1 px-2.5 py-1 bg-[#E91E63] text-white rounded text-[11px] font-semibold">
+                        <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                        Ouvrir la fiche du RAC
+                      </button>
+                    </div>
+                    <div className="flex flex-col gap-3">
+                      {[
+                        {label:"N° Supra",  value:"14-00017408-01"},
+                        {label:"Nom",       value:"M AAFIR OTMAN"},
+                        {label:"Email",     value:"ot.aafir@gmail.com"},
+                        {label:"Téléphone", value:""},
+                        {label:"Fax",       value:""},
+                        {label:"Ville",     value:""},
+                      ].map(f => (
+                        <div key={f.label} className="flex gap-4 text-[13px]">
+                          <span className="w-28 text-[#5C5C5C] shrink-0">{f.label}:</span>
+                          <span className="text-[#1A1A1A] font-medium">{f.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {activeTab === "mode_exercice" && (
+                  <div className="mt-3 flex flex-col gap-4">
+                    {/* Tableau Mode d'exercice */}
                     <div className="overflow-x-auto">
-                      <table className="w-full text-[12px] border-collapse" style={{minWidth: 680}}>
+                      <table className="w-full text-[12px] border-collapse" style={{minWidth: 860}}>
                         <thead>
                           <tr className="bg-[#F3F3F3] text-[#5C5C5C]">
-                            {["N° Inscription","Conseil","Inscription","Dénomination","Statut","N° Siret","Adresse","Ville"].map(h => (
-                              <th key={h} className="px-2 py-2 text-left border-b border-[#C9C9C9] font-semibold whitespace-nowrap">{h}</th>
+                            {["Année","N° d'inscription","Type","CAC sous BNC","EC sous BNC","Expertise Judiciaire","Activité chez Personne Morale","Activité salariée","Bordereau de Cotisation","Date de mise à jour"].map(h => (
+                              <th key={h} className="px-2 py-2 text-left border-b border-[#C9C9C9] font-semibold whitespace-nowrap text-[11px]">{h}</th>
                             ))}
                           </tr>
                         </thead>
                         <tbody>
-                          <tr><td colSpan={8} className="px-2 py-1.5 text-[12px] font-semibold text-[#0250D9] bg-[#EEF3FB] border-b border-[#D0D5DD]">Code Cabinet : 140002416101 (1 ligne)</td></tr>
-                          <tr className="border-b border-[#E5E5E5] hover:bg-[#F9F9F9]">
-                            <td className="px-2 py-2 whitespace-nowrap">14-00024161-01</td>
-                            <td className="px-2 py-2">IDF</td>
-                            <td className="px-2 py-2">PRINCIPAL</td>
-                            <td className="px-2 py-2">QAAL EXPERTISE COMPTABLE</td>
-                            <td className="px-2 py-2"><span className="px-1.5 py-0.5 rounded text-[11px] font-semibold bg-[#D6F5E3] text-[#1A7A45]">EN EXE.</span></td>
-                            <td className="px-2 py-2 whitespace-nowrap">914-326-376-00011</td>
-                            <td className="px-2 py-2 whitespace-nowrap">10 RUE GUIZOT</td>
-                            <td className="px-2 py-2 whitespace-nowrap">78220 VIROFLAY</td>
+                          {[
+                            { annee:"2024", num:"14-00017408-01", type:"Dossier", cac:"",    ec:"",    expert:"",    actPM:"",    actSal:"", bordereau:"00003437", maj:""           },
+                            { annee:"2023", num:"14-00017408-01", type:"Bureau",  cac:"Non", ec:"Oui", expert:"Non", actPM:"Non", actSal:"", bordereau:"00000384", maj:"27/03/2023" },
+                            { annee:"2022", num:"14-00017408-01", type:"Bureau",  cac:"Non", ec:"Non", expert:"Non", actPM:"Non", actSal:"", bordereau:"00016734", maj:"24/08/2022" },
+                            { annee:"2015", num:"14-00017408-01", type:"Dossier", cac:"",    ec:"",    expert:"Non", actPM:"",    actSal:"", bordereau:"00012442", maj:"13/03/2015" },
+                            { annee:"2013", num:"14-00017408-01", type:"Dossier", cac:"",    ec:"",    expert:"Non", actPM:"",    actSal:"", bordereau:"00000546", maj:"05/04/2013" },
+                            { annee:"2012", num:"14-00017408-01", type:"Dossier", cac:"",    ec:"",    expert:"Non", actPM:"",    actSal:"", bordereau:"00011675", maj:"30/03/2012" },
+                            { annee:"2011", num:"14-00017408-01", type:"Dossier", cac:"",    ec:"",    expert:"",    actPM:"",    actSal:"", bordereau:"00013426", maj:"10/10/2012" },
+                          ].map((r, i) => (
+                            <tr key={i} className="border-b border-[#E5E5E5] hover:bg-[#F9F9F9]">
+                              <td className="px-2 py-1.5 font-semibold">{r.annee}</td>
+                              <td className="px-2 py-1.5 whitespace-nowrap">{r.num}</td>
+                              <td className="px-2 py-1.5">{r.type}</td>
+                              <td className="px-2 py-1.5">{r.cac}</td>
+                              <td className="px-2 py-1.5">{r.ec}</td>
+                              <td className="px-2 py-1.5">{r.expert}</td>
+                              <td className="px-2 py-1.5">{r.actPM}</td>
+                              <td className="px-2 py-1.5">{r.actSal}</td>
+                              <td className="px-2 py-1.5">{r.bordereau}</td>
+                              <td className="px-2 py-1.5 whitespace-nowrap">{r.maj}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    {/* Dropdowns */}
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-3 pt-1">
+                      {[
+                        "CAC sous BNC",
+                        "EC sous BNC",
+                        "Expert Judiciaire",
+                        "Activité chez Personne Morale",
+                        "Activité salariée",
+                      ].map(label => (
+                        <div key={label} className="flex items-center gap-2">
+                          <span className="text-[12px] text-[#5C5C5C] whitespace-nowrap w-44 shrink-0">{label} :</span>
+                          <div className="relative flex-1 min-w-0">
+                            <select className="w-full border border-[#C9C9C9] rounded text-[12px] px-2 py-1 pr-6 bg-white appearance-none text-[#1A1A1A] cursor-pointer focus:outline-none focus:border-[#0250D9]">
+                              <option value=""></option>
+                              <option>Oui</option>
+                              <option>Non</option>
+                            </select>
+                            <ChevronDown size={12} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[#5C5C5C] pointer-events-none" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {activeTab === "commissions" && <CommissionsTab />}
+                {activeTab === "stage" && (
+                  <div className="mt-3 flex flex-col gap-1">
+                    <ExpandableSection title="Groupes"     defaultOpen={true} ><StageGroupesSection /></ExpandableSection>
+                    <ExpandableSection title="Périodes"    fields={[]} defaultOpen={false} />
+                    <ExpandableSection title="Employeurs"  fields={[]} defaultOpen={false} />
+                    <ExpandableSection title="Suivi"       fields={[]} defaultOpen={false} />
+                    <ExpandableSection title="Formations"  fields={[]} defaultOpen={false} />
+                    <ExpandableSection title="Attestation" fields={[]} defaultOpen={false} />
+                  </div>
+                )}
+                {activeTab === "declarations" && (
+                  <div className="mt-3 flex flex-col gap-4">
+                    {/* Section 1 — Déclarations d'indépendance */}
+                    <div>
+                      <div className="text-[12px] font-bold text-[#03234D] bg-[#D6E4F7] px-3 py-1.5 mb-2">Déclarations d'indépendance</div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <button className="flex items-center gap-1 px-2 py-1 bg-[#4CAF50] text-white rounded text-[11px] font-semibold"><Plus size={11}/> Ajouter</button>
+                        <button className="flex items-center gap-1 px-2 py-1 bg-[#F44336] text-white rounded text-[11px] font-semibold">
+                          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="white" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg> Supprimer
+                        </button>
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-[12px] border-collapse border border-[#C9C9C9]">
+                          <thead>
+                            <tr className="bg-[#F3F3F3]">
+                              <th className="px-2 py-1.5 text-left border border-[#C9C9C9] font-semibold text-[11px] text-[#5C5C5C]" rowSpan={2}>Année ↓</th>
+                              <th className="px-2 py-1.5 text-center border border-[#C9C9C9] font-semibold text-[11px] text-[#5C5C5C]" colSpan={2}>a déclaré être indépendant vis-à-vis de</th>
+                              <th className="px-2 py-1.5 text-left border border-[#C9C9C9] font-semibold text-[11px] text-[#5C5C5C]" rowSpan={2}>Date</th>
+                            </tr>
+                            <tr className="bg-[#F3F3F3]">
+                              <th className="px-2 py-1.5 text-left border border-[#C9C9C9] font-semibold text-[11px] text-[#5C5C5C]">Participations financières</th>
+                              <th className="px-2 py-1.5 text-left border border-[#C9C9C9] font-semibold text-[11px] text-[#5C5C5C]">Mandats sociaux</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {[
+                              { annee:"2024", pf:"OUI",         ms:"OUI",         date:"18/01/2024 23:21:14" },
+                              { annee:"2023", pf:"OUI",         ms:"OUI",         date:"27/03/2023 12:01:33" },
+                              { annee:"2022", pf:"PAS CONCERNE",ms:"PAS CONCERNE",date:"08/07/2022 21:16:53" },
+                            ].map((r, i) => (
+                              <tr key={i} className="border-b border-[#E5E5E5] hover:bg-[#F9F9F9]">
+                                <td className="px-2 py-1.5 border border-[#E5E5E5] font-semibold">{r.annee}</td>
+                                <td className="px-2 py-1.5 border border-[#E5E5E5]">{r.pf}</td>
+                                <td className="px-2 py-1.5 border border-[#E5E5E5]">{r.ms}</td>
+                                <td className="px-2 py-1.5 border border-[#E5E5E5] whitespace-nowrap">{r.date}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                    {/* Section 2 — Formation LAB */}
+                    <div>
+                      <div className="text-[12px] font-bold text-[#03234D] bg-[#D6E4F7] px-3 py-1.5 mb-2">Déclaration du suivi de la formation sur la lutte anti-blanchiment</div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <button className="flex items-center gap-1 px-2 py-1 bg-[#4CAF50] text-white rounded text-[11px] font-semibold"><Plus size={11}/> Ajouter</button>
+                        <button className="flex items-center gap-1 px-2 py-1 bg-[#F44336] text-white rounded text-[11px] font-semibold">
+                          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="white" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg> Supprimer
+                        </button>
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-[12px] border-collapse border border-[#C9C9C9]">
+                          <thead>
+                            <tr className="bg-[#F3F3F3]">
+                              {["Formation LAB suivie","Date Maj","Mise à jour par"].map(h => (
+                                <th key={h} className="px-2 py-1.5 text-left border border-[#C9C9C9] font-semibold text-[11px] text-[#5C5C5C] whitespace-nowrap">{h}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr className="border-b border-[#E5E5E5] hover:bg-[#F9F9F9]">
+                              <td className="px-2 py-1.5 border border-[#E5E5E5]">Oui</td>
+                              <td className="px-2 py-1.5 border border-[#E5E5E5] whitespace-nowrap">02/08/2023 03:10:59</td>
+                              <td className="px-2 py-1.5 border border-[#E5E5E5]">OTMAN AAFIR</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {activeTab === "admin_prov" && (
+                  <div className="mt-3">
+                    <div className="text-[12px] font-bold text-[#03234D] bg-[#D6E4F7] px-3 py-1.5 mb-2">Administration Provisoire</div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <button className="w-6 h-6 flex items-center justify-center border border-[#C9C9C9] rounded bg-white hover:bg-[#F3F3F3]">
+                        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                      </button>
+                      <span className="text-[11px] text-[#5C5C5C]">Liste des administrations provisoires à la date du jour</span>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-[12px] border-collapse border border-[#C9C9C9]">
+                        <thead>
+                          <tr className="bg-[#F3F3F3]">
+                            {["N° Inscription","Inscription","Dénomination","Nature du Dossier","Admin. Prov.","Date Evèn.","Commentaire","Effet","Fin"].map(h => (
+                              <th key={h} className="px-2 py-1.5 text-left border border-[#C9C9C9] font-semibold text-[11px] text-[#5C5C5C] whitespace-nowrap">{h}</th>
+                            ))}
                           </tr>
-                          <tr><td colSpan={8} className="px-2 py-1.5 text-[12px] font-semibold text-[#0250D9] bg-[#EEF3FB] border-b border-[#D0D5DD]">Code Cabinet : 140002583801 (1 ligne)</td></tr>
-                          <tr className="border-b border-[#E5E5E5] hover:bg-[#F9F9F9]">
-                            <td className="px-2 py-2 whitespace-nowrap">14-00025838-01</td>
-                            <td className="px-2 py-2">IDF</td>
-                            <td className="px-2 py-2">PRINCIPAL</td>
-                            <td className="px-2 py-2">FISCALIA</td>
-                            <td className="px-2 py-2"><span className="px-1.5 py-0.5 rounded text-[11px] font-semibold bg-[#D6F5E3] text-[#1A7A45]">EN EXE.</span></td>
-                            <td className="px-2 py-2 whitespace-nowrap">949-662-332-00012</td>
-                            <td className="px-2 py-2 whitespace-nowrap">8 RUE PABLO PICASSO</td>
-                            <td className="px-2 py-2 whitespace-nowrap">78500 SARTROUVILLE</td>
-                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr><td colSpan={9} className="px-2 py-10 text-center text-[#C9C9C9] text-[11px] border border-[#C9C9C9]"></td></tr>
                         </tbody>
                       </table>
                     </div>
                   </div>
                 )}
-                {activeTab === "modeexercice" && (
-                  <div className="mt-6 flex flex-col items-center justify-center py-12 text-[#5C5C5C] text-[14px]">
-                    <div className="w-10 h-10 rounded-full bg-[#F3F3F3] flex items-center justify-center mb-3">
-                      <HelpCircle size={20} className="text-[#C9C9C9]" />
-                    </div>
-                    Mode d'exercice — contenu à définir
-                  </div>
-                )}
-                {activeTab === "commissions" && (
-                  <div className="mt-6 flex flex-col items-center justify-center py-12 text-[#5C5C5C] text-[14px]">
-                    <div className="w-10 h-10 rounded-full bg-[#F3F3F3] flex items-center justify-center mb-3">
-                      <HelpCircle size={20} className="text-[#C9C9C9]" />
-                    </div>
-                    Commissions — contenu à définir
-                  </div>
-                )}
-                {activeTab === "stage" && (
-                  <div className="mt-6 flex flex-col items-center justify-center py-12 text-[#5C5C5C] text-[14px]">
-                    <div className="w-10 h-10 rounded-full bg-[#F3F3F3] flex items-center justify-center mb-3">
-                      <HelpCircle size={20} className="text-[#C9C9C9]" />
-                    </div>
-                    Stage — contenu à définir
-                  </div>
-                )}
-                {activeTab === "declarations" && (
-                  <div className="mt-6 flex flex-col items-center justify-center py-12 text-[#5C5C5C] text-[14px]">
-                    <div className="w-10 h-10 rounded-full bg-[#F3F3F3] flex items-center justify-center mb-3">
-                      <HelpCircle size={20} className="text-[#C9C9C9]" />
-                    </div>
-                    Déclarations — contenu à définir
-                  </div>
-                )}
-                {activeTab === "adminprov" && (
-                  <div className="mt-6 flex flex-col items-center justify-center py-12 text-[#5C5C5C] text-[14px]">
-                    <div className="w-10 h-10 rounded-full bg-[#F3F3F3] flex items-center justify-center mb-3">
-                      <HelpCircle size={20} className="text-[#C9C9C9]" />
-                    </div>
-                    Admin Prov — contenu à définir
-                  </div>
-                )}
                 {activeTab === "panels" && (
-                  <div className="mt-6 flex flex-col items-center justify-center py-12 text-[#5C5C5C] text-[14px]">
-                    <div className="w-10 h-10 rounded-full bg-[#F3F3F3] flex items-center justify-center mb-3">
-                      <HelpCircle size={20} className="text-[#C9C9C9]" />
+                  <div className="mt-3">
+                    <div className="border border-[#C9C9C9] rounded overflow-hidden">
+                      <div className="text-[12px] font-bold text-[#03234D] bg-[#D6E4F7] px-3 py-1.5">Panels</div>
+                      <div className="p-2">
+                        {/* Toolbar */}
+                        <div className="flex items-center gap-2 mb-2">
+                          <button className="flex items-center gap-1 px-2 py-1 bg-[#4CAF50] text-white rounded text-[11px] font-semibold"><Plus size={11}/> Ajouter</button>
+                          <button className="w-6 h-6 flex items-center justify-center border border-[#C9C9C9] rounded bg-white hover:bg-[#F3F3F3]">
+                            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                          </button>
+                          <span className="text-[11px] text-[#5C5C5C]">Liste des panels à la date du jour</span>
+                        </div>
+                        {/* Table */}
+                        <div className="overflow-x-auto mb-3">
+                          <table className="w-full text-[12px] border-collapse border border-[#C9C9C9]">
+                            <thead>
+                              <tr className="bg-[#F3F3F3]">
+                                {["Code","Libellé du panel","Effet","Fin"].map(h => (
+                                  <th key={h} className="px-2 py-1.5 text-left border border-[#C9C9C9] font-semibold text-[11px] text-[#5C5C5C] whitespace-nowrap">{h}</th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr className="hover:bg-[#F9F9F9]">
+                                <td className="px-2 py-1.5 border border-[#E5E5E5]">255</td>
+                                <td className="px-2 py-1.5 border border-[#E5E5E5]">DEC NOV 2016</td>
+                                <td className="px-2 py-1.5 border border-[#E5E5E5] whitespace-nowrap">16/01/2017</td>
+                                <td className="px-2 py-1.5 border border-[#E5E5E5]"></td>
+                              </tr>
+                              <tr><td colSpan={4} className="px-2 py-6 border border-[#E5E5E5]"></td></tr>
+                            </tbody>
+                          </table>
+                        </div>
+                        {/* Form */}
+                        <div className="flex flex-col gap-2 pt-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[12px] text-[#1A1A1A] w-36 shrink-0">Libellé du panel :</span>
+                            <div className="relative w-64">
+                              <select className="w-full border border-[#C9C9C9] rounded text-[12px] px-2 py-1 pr-6 bg-white appearance-none focus:outline-none focus:border-[#0250D9]"><option value=""></option></select>
+                              <ChevronDown size={11} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[#5C5C5C] pointer-events-none"/>
+                            </div>
+                          </div>
+                          {["Effet :","Fin :"].map(label => (
+                            <div key={label} className="flex items-center gap-2">
+                              <span className="text-[12px] text-[#1A1A1A] w-36 shrink-0">{label}</span>
+                              <div className="flex items-center border border-[#C9C9C9] rounded bg-white overflow-hidden">
+                                <input type="text" className="px-2 py-1 text-[12px] w-24 focus:outline-none" placeholder="jj/mm/aaaa"/>
+                                <button className="px-1.5 bg-[#F3F3F3] border-l border-[#C9C9C9] flex items-center py-1">
+                                  <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#5C5C5C" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
-                    Panels — contenu à définir
                   </div>
                 )}
                 {activeTab === "infos" && (
-                  <div className="mt-6 flex flex-col items-center justify-center py-12 text-[#5C5C5C] text-[14px]">
-                    <div className="w-10 h-10 rounded-full bg-[#F3F3F3] flex items-center justify-center mb-3">
-                      <HelpCircle size={20} className="text-[#C9C9C9]" />
+                  <div className="mt-3">
+                    <div className="border border-[#C9C9C9] rounded overflow-hidden">
+                      <div className="text-[12px] font-bold text-[#03234D] bg-[#D6E4F7] px-3 py-1.5">Informations Régionales</div>
+                      <div className="p-2">
+                        {/* Toolbar */}
+                        <div className="flex items-center gap-2 mb-2">
+                          <button className="flex items-center gap-1 px-2 py-1 bg-[#4CAF50] text-white rounded text-[11px] font-semibold"><Plus size={11}/> Ajouter</button>
+                          <button className="flex items-center gap-1 px-2 py-1 bg-[#F44336] text-white rounded text-[11px] font-semibold">
+                            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="white" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg> Supprimer
+                          </button>
+                          <button className="w-6 h-6 flex items-center justify-center border border-[#C9C9C9] rounded bg-white hover:bg-[#F3F3F3]">
+                            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                          </button>
+                          <span className="text-[11px] text-[#5C5C5C]">Informations Régionales</span>
+                        </div>
+                        {/* Table */}
+                        <div className="overflow-x-auto mb-3">
+                          <table className="w-full text-[12px] border-collapse border border-[#C9C9C9]">
+                            <thead>
+                              <tr className="bg-[#F3F3F3]">
+                                <th className="px-2 py-1.5 text-left border border-[#C9C9C9] font-semibold text-[11px] text-[#5C5C5C] w-1/2">Commentaire</th>
+                                <th className="px-2 py-1.5 border border-[#C9C9C9] w-1/2"></th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr><td colSpan={2} className="px-2 py-12 border border-[#E5E5E5]"></td></tr>
+                            </tbody>
+                          </table>
+                        </div>
+                        {/* Form */}
+                        <div className="flex items-center gap-2 pt-1">
+                          <span className="text-[12px] font-semibold text-[#1A1A1A] w-28 shrink-0">Commentaire :</span>
+                          <input type="text" className="flex-1 max-w-md border border-[#C9C9C9] rounded text-[12px] px-2 py-1 focus:outline-none focus:border-[#0250D9]"/>
+                        </div>
+                      </div>
                     </div>
-                    Aucune information disponible
                   </div>
                 )}
               </div>
@@ -4230,33 +5691,9 @@ function ContactRecordPage({ demande, onAccountClick }) {
           </div>
           <div className="w-1/2 min-w-0 flex flex-col gap-3">
             {/* Demandes */}
-            <ContactRelatedPanel
-              icon={<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>}
-              iconBg="#0250D9"
-              label="Demandes"
-              count={4}
-              cols={["CR","CR Origine","N° inscription","Motif","Type","Effet","Session","Décision","Qualité","Qual. avant","Statut","Statut avant"]}
-              rows={[
-                { cr:"IDF", crOrig:"IDF", num:"14-00019231-01", motif:"INSCRIPTION",               type:"D", effet:"14/02/2019", session:"26/03/2019", decision:"Validé", qualite:"EC",       qualAvant:"EC",   statut:"EN EXE.", statAvant:"EN ATT." },
-                { cr:"IDF", crOrig:"IDF", num:"14-00019231-01", motif:"OBTENTION DEC",              type:"D", effet:"22/06/2018", session:"26/03/2019", decision:"Validé", qualite:"DIP-NINS", qualAvant:"MEMO", statut:"CLASSE",   statAvant:"EN EXE." },
-                { cr:"IDF", crOrig:"IDF", num:"14-00019231-01", motif:"ATTESTATION DE FIN DE STAGE",type:"D", effet:"20/01/2017", session:"19/01/2017", decision:"Validé", qualite:"MEMO",    qualAvant:"STA",  statut:"EN EXE.", statAvant:"EN EXE." },
-                { cr:"IDF", crOrig:"IDF", num:"14-00019231-01", motif:"INSCRIPTION AU STAGE",       type:"D", effet:"01/01/2013", session:"11/07/2013", decision:"Validé", qualite:"STA",     qualAvant:"STA",  statut:"EN EXE.", statAvant:"EN ATT." },
-              ]}
-              renderRow={(r) => [r.cr, r.crOrig, r.num, r.motif, r.type, r.effet, r.session, r.decision, r.qualite, r.qualAvant, r.statut, r.statAvant]}
-            />
+            <DemandesContactPanel />
             {/* Bureaux */}
-            <ContactRelatedPanel
-              icon={<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 9h.01M9 12h.01M9 15h.01M9 18h.01M15 9h.01M15 12h.01M15 15h.01M15 18h.01"/></svg>}
-              iconBg="#7E57C2"
-              label="Bureaux"
-              count={2}
-              cols={["Type", "Dénomination", "Adresse", "CP", "Ville", "Téléphone", "Effet", "Statut"]}
-              rows={[
-                { type: "Siège",  denom: "RIV CONSULTING",          adresse: "10 RUE GUIZOT",       cp: "78220", ville: "VIROFLAY",     tel: "+33 1 30 24 88 12", effet: "14/02/2019", statut: "EN EXE." },
-                { type: "Annexe", denom: "RIV CONSULTING – Lyon",   adresse: "25 BOULEVARD HAUSSMANN", cp: "69001", ville: "LYON",       tel: "+33 4 78 92 14 50", effet: "01/03/2022", statut: "EN EXE." },
-              ]}
-              renderRow={(r) => [r.type, r.denom, r.adresse, r.cp, r.ville, r.tel, r.effet, r.statut]}
-            />
+            <BureauxPanel />
             {/* Participations */}
             <ContactRelatedPanel
               icon={<svg viewBox="0 0 24 24" width="16" height="16" fill="white"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>}
@@ -4264,8 +5701,8 @@ function ContactRecordPage({ demande, onAccountClick }) {
               label="Participations"
               count={2}
               rows={[
-                { numInsc: "14-00025838-01", denomination: "FISCALIA",                 fct: "PRÉSIDENT", titres: "5 000", pct: "50,00", effet: "01/06/2023", fin: "—", qualite: "SEC", statut: "EN EXE.", conseil: "IDF", commentaire: "—" },
-                { numInsc: "14-00024161-01", denomination: "QAAL EXPERTISE COMPTABLE", fct: "PRÉSIDENT", titres: "100",   pct: "10,00", effet: "25/05/2023", fin: "—", qualite: "SEC", statut: "EN EXE.", conseil: "IDF", commentaire: "—" },
+                { numInsc: "14-00025838-01", denomination: "FISCALIA",                 fct: "PRESIDENT", titres: "5 000", pct: "50,00", effet: "01/06/2023", fin: "", qualite: "SEC", statut: "EN EXE.", conseil: "IDF", commentaire: "" },
+                { numInsc: "14-00024161-01", denomination: "QAAL EXPERTISE COM...",    fct: "PRESIDENT", titres: "100",   pct: "10,00", effet: "25/05/2023", fin: "", qualite: "SEC", statut: "EN EXE.", conseil: "IDF", commentaire: "" },
               ]}
               cols={["N° Inscr. Princ.", "Dénomination", "Fct. Sociale", "Titre", "% Capital", "Effet", "Fin", "Qualité", "Statut Princ.", "Conseil Princ.", "Commentaire"]}
               renderRow={(r) => [r.numInsc, r.denomination, r.fct, r.titres, r.pct, r.effet, r.fin, r.qualite, r.statut, r.conseil, r.commentaire]}
@@ -4298,116 +5735,99 @@ const hashToPage = (hash) => (!hash || hash === "stagiaires") ? "list" : hash;
 // Détecte si on est dans un iframe (Proto Viewer) ou en standalone
 const IN_IFRAME = window.self !== window.top;
 
-// Lit le hash de vue courant — on lit TOUJOURS notre propre hash.
-// Au chargement en iframe, le Proto Viewer injecte déjà le suffix dans iframe.src
-// (ex: "Espace-Gestion.html#demandes"), donc window.location.hash contient la bonne vue.
-// On décode l'URI car les navigateurs renvoient le hash encodé (ex: "%C3%A9" pour "é"),
-// alors que les ids internes (contact:Alexandre_André) sont en clair.
+// Lit le hash de vue courant (toujours décodé)
 const readCurrentHash = () => {
-  const raw = window.location.hash.slice(1);
-  if (!raw) return "stagiaires";
-  try { return decodeURIComponent(raw); } catch (e) { return raw; }
+  if (IN_IFRAME) {
+    try {
+      const parentHash = window.parent.location.hash;
+      const parts = parentHash.split("|");
+      return parts.length > 1 ? decodeURIComponent(parts[1]) : "stagiaires";
+    } catch(e) { return "stagiaires"; }
+  }
+  try {
+    return decodeURIComponent(window.location.hash.slice(1)) || "stagiaires";
+  } catch(e) {
+    return window.location.hash.slice(1) || "stagiaires";
+  }
 };
 
 // Écrit le hash de vue (en préservant le chemin proto en iframe)
-// NOTE: en iframe, on écrit uniquement dans NOTRE propre hash. Le Proto Viewer parent
-// poll iw.location.hash toutes les 400ms et le mirror dans son URL via |suffix.
-// Écrire directement dans window.parent.history.pushState crée une race condition :
-// le parent écrase notre suffix parce qu'il voit que notre hash interne est vide.
 const writeHash = (hash) => {
-  // Compare en version décodée (location.hash retourne du %XX, hash est en clair)
-  const currentDecoded = (() => {
-    try { return decodeURIComponent(window.location.hash.slice(1)); } catch (e) { return window.location.hash.slice(1); }
-  })();
   if (IN_IFRAME) {
     try {
-      const target = (hash === "stagiaires") ? "" : hash;
-      if (currentDecoded !== target) {
-        window.history.replaceState(null, "", target ? ("#" + target) : window.location.pathname + window.location.search);
-      }
+      const parentHash = window.parent.location.hash;
+      const protoPath = parentHash.split("|")[0]; // "#protos%2FEspace-Gestion.html"
+      const newHash = hash === "stagiaires" ? protoPath : protoPath + "|" + hash;
+      window.parent.history.pushState(null, "", newHash);
+      // Notify patch via custom event (pushState doesn't fire hashchange)
       try { window.parent.dispatchEvent(new window.parent.CustomEvent('pvViewChange', { detail: { view: hash } })); } catch(e2) {}
     } catch(e) {}
   } else {
-    if (currentDecoded !== hash) {
+    let current = "";
+    try { current = decodeURIComponent(window.location.hash.slice(1)); } catch(e) { current = window.location.hash.slice(1); }
+    if (current !== hash) {
       window.history.pushState(null, "", "#" + hash);
     }
   }
 };
 
-// Au boot, si l'URL pointe vers une fiche (record:NN, contact:Nom, groupe:NN),
-// on doit recréer l'onglet correspondant — sinon le deep-link tombe sur une page vide.
-function seedOpenTabsFromHash(hash) {
-  if (!hash) return [];
-  if (hash.startsWith("record:")) {
-    const numInscription = hash.slice("record:".length);
-    const row = STAGIAIRES_LIST.find(r => r.numInscription === numInscription);
-    if (row) return [{ type: "record", id: hash, label: row.stagiaire, data: row }];
-  }
+// Reconstruit les onglets ouverts depuis le hash initial (refresh sur URL directe)
+function initTabsFromHash() {
+  const hash = readCurrentHash();
+  if (!hash || hash === "stagiaires" || hash === "list" || hash === "demandes" || hash === "groupes") return [];
   if (hash.startsWith("contact:")) {
-    const tag = hash.slice("contact:".length);
-    const demande = DEMANDES_LIST.find(d => d.demandeur.replace(/\s+/g, "_") === tag);
+    const key = hash.slice("contact:".length);
+    const demande = DEMANDES_LIST.find(d => d.demandeur.replace(/\s+/g, "_") === key);
     if (demande) return [{ type: "contact", id: hash, label: demande.demandeur, data: demande }];
+    // fallback complet pour que buildContactData ne plante pas
+    const name = key.replace(/_/g, " ");
+    return [{ type: "contact", id: hash, label: name, data: {
+      demandeur: name, num: "#000000000", profil: "Article 27",
+      statut: "Soumise", dateSoumission: "", statutPieces: "",
+      proprietaire: "", type: "", nomComptable: ""
+    }}];
+  }
+  if (hash.startsWith("record:")) {
+    const num = hash.slice("record:".length);
+    const row = STAGIAIRES_LIST.find(s => s.numInscription === num);
+    if (row) return [{ type: "record", id: hash, label: row.stagiaire, data: row }];
+    return [{ type: "record", id: hash, label: num, data: { numInscription: num, stagiaire: num, cr: "Île-de-France" } }];
   }
   if (hash.startsWith("account:")) {
-    const numInscription = hash.slice("account:".length);
-    const row = ACCOUNTS_LIST.find(a => a.numInscription === numInscription);
-    if (row) return [{ type: "account", id: hash, label: row.denomination, data: row }];
+    const num = hash.slice("account:".length);
+    return [{ type: "account", id: hash, label: num, data: { numInscription: num, denomination: num } }];
+  }
+  if (hash.startsWith("societe:")) {
+    const num = hash.slice("societe:".length);
+    return [{ type: "societe", id: hash, label: num, data: { numInscription: num, denomination: num } }];
   }
   if (hash.startsWith("groupe:")) {
-    const numero = hash.slice("groupe:".length);
-    const row = GROUPES_LIST.find(g => g.numero === numero || String(g.numero) === numero);
+    const num = hash.slice("groupe:".length);
+    const row = GROUPES_LIST.find(g => g.numero === num);
     if (row) return [{ type: "groupe", id: hash, label: row.libelle, data: row }];
+    return [{ type: "groupe", id: hash, label: num, data: { numero: num, libelle: num } }];
   }
   return [];
 }
 
-// Si l'URL pointe vers un deep-link mais qu'on n'a rien trouvé (ex: id supprimé),
-// on retombe sur la page liste plutôt que d'afficher du blanc.
-function resolveInitialPage(hash, openTabs) {
-  if (!hash) return "list";
-  if (hash.includes(":")) {
-    return openTabs.length > 0 ? hash : "list";
-  }
-  return hashToPage(hash);
-}
-
 function App() {
-  const [openTabs, setOpenTabs] = useState(() => seedOpenTabsFromHash(readCurrentHash()));
-  const [activePage, setActivePageState] = useState(() => {
-    const h = readCurrentHash();
-    const seeded = seedOpenTabsFromHash(h);
-    return resolveInitialPage(h, seeded);
-  });
+  const [activePage, setActivePageState] = useState(() => hashToPage(readCurrentHash()));
+  const [openTabs, setOpenTabs] = useState(() => initTabsFromHash());
 
   const setActivePage = React.useCallback((page) => {
     writeHash(pageToHash(page));
     setActivePageState(page);
   }, []);
 
-  // Back / Forward / paste URL — on écoute hashchange + popstate.
-  // Si l'utilisateur arrive sur un deep-link absent de openTabs (paste dans la barre,
-  // back vers un onglet fermé), on re-seed openTabs depuis le hash.
+  // Back / Forward — écoute sur la bonne fenêtre
   React.useEffect(() => {
-    const onChange = () => {
-      const h = readCurrentHash();
-      if (h && h.includes(":")) {
-        setOpenTabs(prev => {
-          if (prev.find(t => t.id === h)) return prev;
-          const seeded = seedOpenTabsFromHash(h);
-          return seeded.length > 0 ? [...prev, ...seeded] : prev;
-        });
-        // resolveInitialPage gère le cas "deep-link introuvable" → retour liste
-        const seededNow = seedOpenTabsFromHash(h);
-        setActivePageState(resolveInitialPage(h, seededNow));
-      } else {
-        setActivePageState(hashToPage(h));
-      }
-    };
-    window.addEventListener("hashchange", onChange);
-    window.addEventListener("popstate", onChange);
+    const target = IN_IFRAME ? window.parent : window;
+    const onPop = () => setActivePageState(hashToPage(readCurrentHash()));
+    try { target.addEventListener("popstate", onPop); }
+    catch(e) { window.addEventListener("popstate", onPop); }
     return () => {
-      window.removeEventListener("hashchange", onChange);
-      window.removeEventListener("popstate", onChange);
+      try { target.removeEventListener("popstate", onPop); }
+      catch(e) { window.removeEventListener("popstate", onPop); }
     };
   }, []);
 
@@ -4436,6 +5856,16 @@ function App() {
     setOpenTabs(prev => {
       const exists = prev.find(t => t.id === tabId);
       if (!exists) return [...prev, { type: "account", id: tabId, label: account.denomination, data: account }];
+      return prev;
+    });
+    setActivePage(tabId);
+  };
+
+  const handleNavigateToSociete = (societe) => {
+    const tabId = "societe:" + societe.numInscription;
+    setOpenTabs(prev => {
+      const exists = prev.find(t => t.id === tabId);
+      if (!exists) return [...prev, { type: "societe", id: tabId, label: societe.denomination, data: societe }];
       return prev;
     });
     setActivePage(tabId);
@@ -4531,7 +5961,8 @@ function App() {
       {activeTab && activeTab.type === "formations" && <FormationsPage row={activeTab.data} />}
       {activeTab && activeTab.type === "groupe" && <GroupeRecordPage groupe={activeTab.data} onNavigateToRecord={handleNavigateToRecord} />}
       {activeTab && activeTab.type === "contact" && <ContactRecordPage demande={activeTab.data} onAccountClick={handleNavigateToAccount} />}
-      {activeTab && activeTab.type === "account" && <AccountRecordPage account={activeTab.data} />}
+      {activeTab && activeTab.type === "account" && <AccountRecordPage account={activeTab.data} onSocieteClick={handleNavigateToSociete} />}
+      {activeTab && activeTab.type === "societe" && <SocieteRecordPage societe={activeTab.data} />}
 
       <DockedUtilityBar />
     </div>
@@ -4547,9 +5978,83 @@ App;
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(<App />);
 </script>
-<!-- Le scoping par vue est désormais géré côté Proto Viewer (clés commentsDB par |suffix
-     dans l'URL parent). L'ancien patchViewerComments stampait un champ `view` sur chaque
-     commentaire et filtrait au render — ça doublait le mécanisme et créait des conflits. -->
+<script>
+(function patchViewerComments() {
+  if (window.self === window.top) return;
+  var p = window.parent;
+  if (!p || typeof p.renderCommentPins !== 'function') {
+    return setTimeout(patchViewerComments, 400);
+  }
+  function getView() {
+    try { var h = decodeURIComponent(p.location.hash.slice(1)); var i = h.indexOf('|'); return i >= 0 ? h.slice(i+1) : ''; } catch(e) { return ''; }
+  }
+  var cv = getView();
 
+  // Interval: stamp any comment without view every 300ms
+  setInterval(function() {
+    try {
+      var changed = false;
+      Object.keys(p.commentsDB).forEach(function(k) {
+        (p.commentsDB[k]||[]).forEach(function(c) {
+          if (c && !('view' in c)) { c.view = cv; changed = true; }
+        });
+      });
+      if (changed && typeof p.saveComments === 'function') p.saveComments();
+    } catch(e) {}
+  }, 300);
+
+  // pvViewChange: custom event dispatched by writeHash (pushState doesn't fire hashchange)
+  try { p.addEventListener('pvViewChange', function(e) { cv = e.detail.view; try { filterPinDOM(); } catch(x) {} p.updateCommentBadge(); }); } catch(e) {}
+
+  // Build a lookup map: comment id → view
+  function buildIdMap() {
+    var m = {};
+    Object.keys(p.commentsDB).forEach(function(k) {
+      (p.commentsDB[k]||[]).forEach(function(c) { if (c && c.id) m[c.id] = (c.view||''); });
+    });
+    return m;
+  }
+
+  // After renderCommentPins runs, remove DOM pins that don't belong to current view
+  function filterPinDOM() {
+    var view = cv;
+    var idMap = buildIdMap();
+    p.document.querySelectorAll('.comment-pin').forEach(function(el) {
+      var id = el.dataset && el.dataset.id;
+      if (id !== undefined && idMap[id] !== undefined && idMap[id] !== view) {
+        el.style.display = 'none';
+      } else if (id !== undefined && idMap[id] === view) {
+        el.style.display = '';
+      }
+    });
+  }
+
+  var _origRender = p.renderCommentPins;
+  p.renderCommentPins = function() {
+    var r = _origRender.apply(this, arguments);
+    try { filterPinDOM(); } catch(e) {}
+    return r;
+  };
+
+  // Badge: count only current-view comments
+  var _origBadge = p.updateCommentBadge;
+  p.updateCommentBadge = function() {
+    var view = cv; var saved = {};
+    try {
+      Object.keys(p.commentsDB).forEach(function(k) { saved[k] = p.commentsDB[k]; p.commentsDB[k] = p.commentsDB[k].filter(function(c) { return (c.view||'') === view; }); });
+      var r = _origBadge.apply(this, arguments);
+      Object.keys(saved).forEach(function(k) { p.commentsDB[k] = saved[k]; });
+      return r;
+    } catch(e) { Object.keys(saved).forEach(function(k) { p.commentsDB[k] = saved[k]; }); return _origBadge.apply(this, arguments); }
+  };
+  var _orig = p.confirmNewComment;
+  p.confirmNewComment = function() {
+    var r = _orig.apply(this, arguments);
+    try { Object.keys(p.commentsDB).forEach(function(k) { var a = p.commentsDB[k]; if (a && a.length) { var last = a[a.length-1]; if (last && last.view === undefined) { last.view = cv; p.saveComments(); } } }); } catch(e) {}
+    return r;
+  };
+  p.renderCommentPins(); p.updateCommentBadge();
+})();
+</script>
 </body>
 </html>
