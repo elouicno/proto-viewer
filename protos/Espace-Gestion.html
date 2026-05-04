@@ -555,7 +555,7 @@ function HighlightsPanel({ fields }) {
 
 const RECORD_TABS = [
   { key: "individu", label: "Individu" },
-  { key: "motifs", label: "Motifs" },
+  { key: "motifs", label: "Demandes" },
   { key: "stage", label: "Stage" },
   { key: "formations", label: "Formations" },
   { key: "obligations", label: "Obligations" },
@@ -624,7 +624,7 @@ function ExpandableSection({ title, fields, defaultOpen = true, children }) {
 // ══════════════════════════════════════════════════════════════
 // AdresseActuelleSection — bloc adresse avec badge validée
 // ══════════════════════════════════════════════════════════════
-function AdresseActuelleSection({ adresse, validee, title = "Adresse pro" }) {
+function AdresseActuelleSection({ adresse, validee, title = "Adresse pro", cabinetName, onCabinetClick }) {
   const [open, setOpen] = useState(true);
   return (
     <div className="w-full pb-3">
@@ -637,7 +637,15 @@ function AdresseActuelleSection({ adresse, validee, title = "Adresse pro" }) {
       </button>
       {open && (
         <div className="mt-2 px-2 flex items-start justify-between gap-3">
-          <div className="text-[13px] text-[#2E2E2E] leading-[22px] whitespace-pre-line font-medium">{adresse}</div>
+          <div>
+            {cabinetName && (
+              <p
+                onClick={onCabinetClick}
+                className="text-[13px] text-[#0250D9] font-semibold leading-[22px] cursor-pointer hover:underline"
+              >{cabinetName}</p>
+            )}
+            <div className="text-[13px] text-[#2E2E2E] leading-[22px] whitespace-pre-line font-medium">{adresse}</div>
+          </div>
           {validee && (
             <div className="flex items-center gap-1.5 text-[12px] text-[#1A7A45] font-medium shrink-0 mt-0.5">
               <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -1341,7 +1349,7 @@ function DataTableDemandesView({ onContactClick }) {
                 <span className="block truncate">{row.nomComptable}</span>
               </td>
               <td className="px-2 py-2">
-                <a href="javascript:void(0)" onClick={e => { e.preventDefault(); e.stopPropagation(); if(onContactClick) onContactClick(row); }} className="text-[#0250D9] underline block truncate max-w-[180px]">{row.demandeur}</a>
+                <a href="javascript:void(0)" onClick={e => { e.preventDefault(); e.stopPropagation(); if(onContactClick) onContactClick(row); }} className="text-[#0250D9] underline block truncate max-w-[180px]">{(() => { const p = row.demandeur.trim().split(" "); return `${p[p.length-1].toUpperCase()} ${p.slice(0,-1).join(" ")}`; })()}</a>
               </td>
               <td className="px-2 py-2 text-[#2E2E2E] max-w-[200px]">
                 <span className="block truncate">{row.profil}</span>
@@ -1464,7 +1472,7 @@ function DataTableListView({ data, onRowClick }) {
               <td className="px-2 py-2"><input type="checkbox" className="w-4 h-4 accent-[#0250D9] cursor-pointer" checked={!!selected[i]} onChange={() => toggle(i)} onClick={e => e.stopPropagation()} /></td>
               <td className="px-2 py-2 text-[#2E2E2E]">{row.groupePrincipal}</td>
               <td className="px-2 py-2">
-                <a href="javascript:void(0)" onClick={(e) => { e.preventDefault(); e.stopPropagation(); if(onRowClick) onRowClick(row); }} className="text-[#0250D9] underline font-medium">{row.stagiaire}</a>
+                <a href="javascript:void(0)" onClick={(e) => { e.preventDefault(); e.stopPropagation(); if(onRowClick) onRowClick(row); }} className="text-[#0250D9] underline font-medium">{(() => { const p = row.stagiaire.trim().split(" "); const prenom = p.slice(1).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" "); return prenom ? `${p[0]} ${prenom}` : p[0]; })()}</a>
               </td>
               <td className="px-2 py-2 text-[#2E2E2E]">{row.dateNaissance}</td>
               <td className="px-2 py-2"><StatusBadge statut={row.statut} /></td>
@@ -1907,11 +1915,11 @@ function RecordPage({ row }) {
                       </div>
                     </div>
 
-                    {/* Motifs en attente — table */}
+                    {/* Demandes en attente — table */}
                     <div className="bg-white rounded-[8px] border border-[#C9C9C9] overflow-hidden">
                       <button className="w-full flex items-center gap-2 px-4 py-3 text-left" onClick={() => {}}>
                         <ChevronRight size={14} className="text-[#5C5C5C]" />
-                        <span className="text-[14px] font-semibold text-[#03234D]">Motifs en attente</span>
+                        <span className="text-[14px] font-semibold text-[#03234D]">Demandes en attente</span>
                         <span className="ml-1 text-[12px] text-[#5C5C5C]">({data.motifsEnAttente.length})</span>
                       </button>
                       {data.motifsEnAttente.length > 0 && (
@@ -1943,7 +1951,7 @@ function RecordPage({ row }) {
                         </div>
                       )}
                       {data.motifsEnAttente.length === 0 && (
-                        <div className="px-4 pb-4 text-[13px] text-[#5C5C5C] italic">Aucun motif en attente</div>
+                        <div className="px-4 pb-4 text-[13px] text-[#5C5C5C] italic">Aucune demande en attente</div>
                       )}
                     </div>
                   </div>
@@ -2996,7 +3004,17 @@ const CONTACT_TABS = [...CONTACT_TABS_VISIBLE, ...CONTACT_TABS_MORE];
 function ContactTabBar({ activeTab, onTabChange }) {
   const [moreOpen, setMoreOpen] = React.useState(false);
   const moreRef = React.useRef(null);
+  const btnRef = React.useRef(null);
+  const [dropPos, setDropPos] = React.useState({ top: 0, left: 0 });
   const activeInMore = CONTACT_TABS_MORE.some(t => t.key === activeTab);
+
+  const openMenu = () => {
+    if (btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect();
+      setDropPos({ top: r.bottom + 2, left: r.left });
+    }
+    setMoreOpen(o => !o);
+  };
 
   React.useEffect(() => {
     if (!moreOpen) return;
@@ -3008,8 +3026,7 @@ function ContactTabBar({ activeTab, onTabChange }) {
   }, [moreOpen]);
 
   return (
-    <div className="flex w-full">
-      {/* Onglets visibles — scrollable horizontalement */}
+    <div className="flex w-full" ref={moreRef}>
       <div className="flex overflow-x-auto">
         {CONTACT_TABS_VISIBLE.map((tab) => (
           <button
@@ -3025,10 +3042,11 @@ function ContactTabBar({ activeTab, onTabChange }) {
           </button>
         ))}
       </div>
-      {/* "Plus" dropdown — hors du overflow pour ne pas être coupé */}
-      <div className="relative shrink-0" ref={moreRef}>
+      {/* "Plus" — position:fixed pour échapper à tout overflow parent */}
+      <div className="shrink-0">
         <button
-          onClick={() => setMoreOpen(o => !o)}
+          ref={btnRef}
+          onClick={openMenu}
           className={`px-3 h-10 text-[14px] font-semibold whitespace-nowrap flex items-center gap-1 ${
             activeInMore
               ? "text-[#0250D9] border-b-[3px] border-[#0250D9]"
@@ -3039,14 +3057,14 @@ function ContactTabBar({ activeTab, onTabChange }) {
           <ChevronDown size={14} />
         </button>
         {moreOpen && (
-          <div className="absolute top-full left-0 bg-white border border-[#C9C9C9] rounded shadow-lg min-w-[190px]" style={{zIndex:200}}>
+          <div style={{position:"fixed", top:dropPos.top, left:dropPos.left, zIndex:9999, background:"white", border:"1px solid #C9C9C9", borderRadius:6, boxShadow:"0 4px 16px rgba(0,0,0,0.12)", minWidth:190}}>
             {CONTACT_TABS_MORE.map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => { onTabChange(tab.key); setMoreOpen(false); }}
-                className={`w-full text-left px-4 py-2 text-[13px] hover:bg-[#F3F3F3] ${
-                  activeTab === tab.key ? "text-[#0250D9] font-semibold" : "text-[#03234D]"
-                }`}
+                style={{display:"block", width:"100%", textAlign:"left", padding:"8px 16px", fontSize:13, background:"none", border:"none", cursor:"pointer", color: activeTab === tab.key ? "#0250D9" : "#03234D", fontWeight: activeTab === tab.key ? 600 : 400}}
+                onMouseEnter={e => e.currentTarget.style.background="#F3F3F3"}
+                onMouseLeave={e => e.currentTarget.style.background="none"}
               >
                 {tab.label}
               </button>
@@ -3060,11 +3078,11 @@ function ContactTabBar({ activeTab, onTabChange }) {
 }
 
 function ContactPageHeader({ name, type = "Contact" }) {
-  // Parse "Lucas André" → "LUCAS André"
+  // Parse "Nicolas Dupont" → "DUPONT Nicolas" (dernier mot = NOM)
   const nameParts = name.trim().split(" ");
-  const firstName = nameParts[nameParts.length - 1];
-  const lastName = nameParts.slice(0, nameParts.length - 1).join(" ").toUpperCase();
-  const displayName = lastName ? `${lastName} ${firstName}` : name.toUpperCase();
+  const firstName = nameParts.slice(0, nameParts.length - 1).join(" ");
+  const lastName = nameParts[nameParts.length - 1].toUpperCase();
+  const displayName = firstName ? `${lastName} ${firstName}` : name.toUpperCase();
 
   return (
     <div className="bg-[#F3F3F3] px-4 py-4">
@@ -3112,10 +3130,10 @@ function buildContactData(demande) {
   const mo = String((seed % 12) + 1).padStart(2,"0");
   const dy = String((seed % 28) + 1).padStart(2,"0");
   const dateInscription = `${dy}/${mo}/${yr}`;
-  // Derive nom/prénom
+  // Derive nom/prénom — format données "Prénom NOM" → dernier mot = NOM
   const parts = demande.demandeur.trim().split(" ");
-  const prenom = parts[parts.length - 1] || "";
-  const nom = parts.slice(0, parts.length - 1).join(" ") || demande.demandeur;
+  const nom = parts[parts.length - 1] || demande.demandeur;
+  const prenom = parts.slice(0, parts.length - 1).join(" ") || "";
   // Generated email & phone (déterministes, non vides)
   const emailDomains = ["orange.fr","gmail.com","free.fr","wanadoo.fr","sfr.fr","outlook.fr"];
   const generatedEmail = `${prenom.toLowerCase().replace(/[^a-z]/g,"")}.${nom.toLowerCase().replace(/\s+/g,"-").replace(/[^a-z-]/g,"")}@${emailDomains[seed % emailDomains.length]}`;
@@ -3127,7 +3145,7 @@ function buildContactData(demande) {
     { label: "Qualité",                 value: qualite },
     { label: "Numéro d'inscription",    value: numSupra },
     { label: "Statut",                  value: "En exercice" },
-    { label: "Entrepreneur Individuel", value: seed % 2 === 0 ? "OUI" : "NON" },
+    { label: "Adresse pro", value: "3 AVENUE FOCH 06000 NICE FRANCE", isAccountLink: true },
     { label: "Type d'inscription",      value: "Principal" },
     { label: "Date d'inscription",      value: dateInscription },
     { label: "CRO",                     value: cro },
@@ -3137,7 +3155,7 @@ function buildContactData(demande) {
 
   // ── Section Identité ──────────────────────────────────────────
   const identiteFields = [
-    [{ label: "Nom du contact",         value: demande.demandeur, readOnly: true  }, { label: "Qualité",               value: qualite,       readOnly: true  }],
+    [{ label: "Nom du contact",         value: `${nom.toUpperCase()} ${prenom.charAt(0).toUpperCase()}${prenom.slice(1).toLowerCase()}`, readOnly: true  }, { label: "Qualité",               value: qualite,       readOnly: true  }],
     [{ label: "N° Supra",               value: numSupra,          readOnly: true  }, { label: "Statut",                value: "En exercice", readOnly: true  }],
     [{ label: "Entrepreneur Individuel",value: seed % 2 === 0 ? "OUI" : "NON", readOnly: true }, { label: "Type d'inscription", value: "Principal", readOnly: true }],
     [{ label: "Date d'inscription",     value: dateInscription,   readOnly: true  }, { label: "CRO",                   value: cro,           readOnly: true  }],
@@ -3200,7 +3218,7 @@ function buildContactData(demande) {
     adresseValidee: true,
     coordFields: [
       [{ label: "Téléphone", value: generatedPhone }, { label: "E-mail",   value: generatedEmail }],
-      [{ label: "Fax",       value: ""             }, { label: "Site web", value: ""             }],
+      [{ label: "Site web", value: "" }],
     ],
   };
 
@@ -3686,7 +3704,7 @@ function DemandesContactPanel() {
             <table className="w-full text-[12px] border-collapse" style={{minWidth:860}}>
               <thead>
                 <tr className="bg-[#F3F3F3] text-[#5C5C5C]">
-                  {["CR","CR Origine du Motif","N° inscription","Demande","Type","Effet","Session","Décision","Qualité","Qualité avant","Statut","Statut avant"].map(h => (
+                  {["CR","CR Origine","N° inscription","Demande","Type","Effet","Session","Décision","Qualité","Qualité avant","Statut","Statut avant"].map(h => (
                     <th key={h} className="px-2 py-1.5 text-left border-b border-[#C9C9C9] font-semibold whitespace-nowrap text-[11px]">{h}</th>
                   ))}
                 </tr>
@@ -3902,7 +3920,7 @@ function SocieteDemandesPanel() {
             <div className="overflow-x-auto">
               <table className="w-full text-[12px] border-collapse border border-[#C9C9C9]" style={{minWidth:560}}>
                 <thead><tr>
-                  {["CR","CR Origine","N° inscription","Motif","Effet","Session","Décision"].map(h=><th key={h} className={thCls}>{h}</th>)}
+                  {["CR","CR Origine","N° inscription","Demande","Effet","Session","Décision"].map(h=><th key={h} className={thCls}>{h}</th>)}
                 </tr></thead>
                 <tbody>
                   <tr className="hover:bg-[#F9F9F9]">
@@ -3918,16 +3936,16 @@ function SocieteDemandesPanel() {
               </table>
             </div>
           </div>
-          {/* Motifs en attente */}
+          {/* Demandes en attente */}
           <div>
-            <div className="text-[11px] font-bold text-[#03234D] bg-[#D6E4F7] px-3 py-1.5 mb-2">Motifs en attente</div>
+            <div className="text-[11px] font-bold text-[#03234D] bg-[#D6E4F7] px-3 py-1.5 mb-2">Demandes en attente</div>
             <div className="overflow-x-auto">
               <table className="w-full text-[12px] border-collapse border border-[#C9C9C9]" style={{minWidth:520}}>
                 <thead><tr>
-                  {["Motif","Effet","Session","Décision","Echéance","Commentaire"].map(h=><th key={h} className={thCls}>{h}</th>)}
+                  {["Demande","Effet","Session","Décision","Echéance","Commentaire"].map(h=><th key={h} className={thCls}>{h}</th>)}
                 </tr></thead>
                 <tbody>
-                  <tr><td colSpan={6} className="px-2 py-6 text-center text-[#9E9E9E] text-[11px] border border-[#C9C9C9]">Aucun motif en attente</td></tr>
+                  <tr><td colSpan={6} className="px-2 py-6 text-center text-[#9E9E9E] text-[11px] border border-[#C9C9C9]">Aucune demande en attente</td></tr>
                 </tbody>
               </table>
             </div>
@@ -3952,7 +3970,6 @@ function SocieteRecordPage({ societe, onAccountClick }) {
     { label: "Statut",            value: "EN EXERCICE"          },
     { label: "Conseil régional",  value: "ÎLE-DE-FRANCE"        },
     { label: "Date d'inscription",value: "01/06/2023"           },
-    { label: "Tiers de confiance",value: "Non"                  },
   ];
 
   const thCls = "px-2 py-1.5 text-left border border-[#C9C9C9] font-semibold text-[11px] text-[#5C5C5C] bg-[#F3F3F3] whitespace-nowrap";
@@ -4029,17 +4046,13 @@ function SocieteRecordPage({ societe, onAccountClick }) {
                         <input readOnly value="10000" className="w-20 border border-[#C9C9C9] rounded text-[12px] px-2 py-1 bg-[#FAFAFA] text-[#1A1A1A]"/>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-[12px] text-[#5C5C5C] w-36 text-right shrink-0">N° TVA intra :</span>
-                        <input readOnly value="" className="w-28 border border-[#C9C9C9] rounded text-[12px] px-2 py-1 bg-[#FAFAFA] text-[#1A1A1A]"/>
-                      </div>
-                      <div className="flex items-center gap-2">
                         <span className="text-[12px] text-[#5C5C5C] shrink-0">Nb droits de vote :</span>
                         <input readOnly value="10000" className="w-20 border border-[#C9C9C9] rounded text-[12px] px-2 py-1 bg-[#FAFAFA] text-[#1A1A1A]"/>
                       </div>
                     </div>
                     {/* Dropdowns ligne */}
                     <div className="grid grid-cols-2 gap-x-6 gap-y-2">
-                      {[["Extrait Kbis",""],["Visa Fiscal","Non"],["Tiers de confiance","Non"],["Statuts",""],["Date Immat RCS",""],["Date de fin",""],["Date signature VF",""],["Date signature TDC",""]].map(([l,v])=>(
+                      {[["Date Immat RCS",""],["Date de fin",""],["Date signature TDC",""]].map(([l,v])=>(
                         <div key={l} className="flex items-center gap-2">
                           <span className="text-[12px] text-[#5C5C5C] w-36 text-right shrink-0">{l} :</span>
                           <input readOnly value={v} className="flex-1 border border-[#C9C9C9] rounded text-[12px] px-2 py-1 bg-[#FAFAFA] text-[#1A1A1A]"/>
@@ -4491,11 +4504,9 @@ function AccountRecordPage({ account, onSocieteClick }) {
     { label: "Statut",              value: "EN EXERCICE"             },
     { label: "Conseil régional",    value: "ÎLE-DE-FRANCE"          },
     { label: "Type d'inscription",  value: "PRINCIPAL"               },
-    { label: "N° SIRET",            value: "848-615-043-00025"       },
     { label: "Responsable Ordinal", value: "M AAFIR OTMAN"          },
     { label: "Qualité",             value: "SEC"                     },
     { label: "Date d'inscription",  value: "14/02/2019"              },
-    { label: "Mobile",              value: "06 12 34 56 78"          },
     { label: "Email pro",           value: "f.abtan@abtan-aec.fr"   },
     { label: "Ville",               value: "SARTROUVILLE"            },
     { label: "Société",             value: "14-00025838-01", isLink: true, onClick: () => onSocieteClick && onSocieteClick({ numInscription: "14-00025838-01", denomination: "FISCALIA" }) },
@@ -4543,7 +4554,7 @@ function AccountRecordPage({ account, onSocieteClick }) {
                       <table className="w-full text-[12px] border-collapse border border-[#C9C9C9]" style={{minWidth:780}}>
                         <thead>
                           <tr className="bg-[#F3F3F3] text-[#5C5C5C]">
-                            {["CR Origine du Motif","Motif","Effet ↓","Session","Décision","Qualité","Qualité avant","Statut","Statut avant"].map(h=>(
+                            {["CR Origine","Demande","Effet ↓","Session","Décision","Qualité","Qualité avant","Statut","Statut avant"].map(h=>(
                               <th key={h} className="px-2 py-1.5 text-left font-semibold border border-[#C9C9C9] whitespace-nowrap text-[11px]">{h}</th>
                             ))}
                           </tr>
@@ -4559,9 +4570,9 @@ function AccountRecordPage({ account, onSocieteClick }) {
                         </tbody>
                       </table>
                     </div>
-                    {/* Motifs en attente */}
+                    {/* Demandes en attente */}
                     <div>
-                      <div className="text-[12px] font-bold text-[#03234D] bg-[#D6E4F7] px-3 py-1.5 mb-2">Motifs en attente</div>
+                      <div className="text-[12px] font-bold text-[#03234D] bg-[#D6E4F7] px-3 py-1.5 mb-2">Demandes en attente</div>
                       <div className="flex items-center gap-2 mb-2">
                         <button className="flex items-center gap-1 px-2 py-1 bg-[#4CAF50] text-white rounded text-[11px] font-semibold"><Plus size={11}/> Ajouter</button>
                         <button className="flex items-center gap-1 px-2 py-1 bg-[#F44336] text-white rounded text-[11px] font-semibold">
@@ -4572,13 +4583,13 @@ function AccountRecordPage({ account, onSocieteClick }) {
                         <table className="w-full text-[12px] border-collapse border border-[#C9C9C9]" style={{minWidth:560}}>
                           <thead>
                             <tr className="bg-[#F3F3F3] text-[#5C5C5C]">
-                              {["Motif","Effet","Session","Décision","Echéance","Commentaire"].map(h=>(
+                              {["Demande","Effet","Session","Décision","Echéance","Commentaire"].map(h=>(
                                 <th key={h} className="px-2 py-1.5 text-left font-semibold border border-[#C9C9C9] whitespace-nowrap text-[11px]">{h}</th>
                               ))}
                             </tr>
                           </thead>
                           <tbody>
-                            <tr><td colSpan={6} className="px-2 py-6 text-center text-[#9E9E9E] text-[11px] border border-[#C9C9C9]">Aucun motif en attente</td></tr>
+                            <tr><td colSpan={6} className="px-2 py-6 text-center text-[#9E9E9E] text-[11px] border border-[#C9C9C9]">Aucune demande en attente</td></tr>
                           </tbody>
                         </table>
                       </div>
@@ -4885,7 +4896,7 @@ function AccountRecordPage({ account, onSocieteClick }) {
                   <table className="w-full text-[11px] border-collapse border border-[#C9C9C9]" style={{minWidth:520}}>
                     <thead>
                       <tr className="bg-[#F3F3F3] text-[#5C5C5C]">
-                        {["CR Origine du Motif","Motif","Effet ↓","Session","Décision","Qualité","Qualité avant","Statut","Statut avant"].map(h=>(
+                        {["CR Origine","Demande","Effet ↓","Session","Décision","Qualité","Qualité avant","Statut","Statut avant"].map(h=>(
                           <th key={h} className="px-2 py-1.5 text-left font-semibold border border-[#C9C9C9] whitespace-nowrap text-[11px]">{h}</th>
                         ))}
                       </tr>
@@ -4901,9 +4912,9 @@ function AccountRecordPage({ account, onSocieteClick }) {
                     </tbody>
                   </table>
                 </div>
-                {/* Motifs en attente */}
+                {/* Demandes en attente */}
                 <div>
-                  <div className="text-[11px] font-bold text-[#03234D] bg-[#D6E4F7] px-3 py-1.5 mb-2">Motifs en attente</div>
+                  <div className="text-[11px] font-bold text-[#03234D] bg-[#D6E4F7] px-3 py-1.5 mb-2">Demandes en attente</div>
                   <div className="flex items-center gap-2 mb-2">
                     <button className="flex items-center gap-1 px-2 py-1 bg-[#4CAF50] text-white rounded text-[10px] font-semibold"><Plus size={10}/> Ajouter</button>
                     <button className="flex items-center gap-1 px-2 py-1 bg-[#F44336] text-white rounded text-[10px] font-semibold">
@@ -4914,13 +4925,13 @@ function AccountRecordPage({ account, onSocieteClick }) {
                     <table className="w-full text-[11px] border-collapse border border-[#C9C9C9]" style={{minWidth:480}}>
                       <thead>
                         <tr className="bg-[#F3F3F3] text-[#5C5C5C]">
-                          {["Motif","Effet","Session","Décision","Echéance","Commentaire"].map(h=>(
+                          {["Demande","Effet","Session","Décision","Echéance","Commentaire"].map(h=>(
                             <th key={h} className="px-2 py-1.5 text-left font-semibold border border-[#C9C9C9] whitespace-nowrap text-[11px]">{h}</th>
                           ))}
                         </tr>
                       </thead>
                       <tbody>
-                        <tr><td colSpan={6} className="px-2 py-4 text-center text-[#9E9E9E] text-[11px] border border-[#C9C9C9]">Aucun motif en attente</td></tr>
+                        <tr><td colSpan={6} className="px-2 py-4 text-center text-[#9E9E9E] text-[11px] border border-[#C9C9C9]">Aucune demande en attente</td></tr>
                       </tbody>
                     </table>
                   </div>
@@ -5193,6 +5204,341 @@ function StageGroupesSection() {
 }
 
 // ══════════════════════════════════════════════════════════════
+// STAGE SUB-SECTIONS
+// ══════════════════════════════════════════════════════════════
+
+function StagePeriodesSection() {
+  const [selectedRow, setSelectedRow] = React.useState(2);
+  const periodes = [
+    { badge:"V", color:"#4CAF50", debut:"01/08/2011", fin:"31/07/2013", duree:24, type:"CABINET OU SOCIETE D'EXPERTI...", maitre:"MME PIZZAFERRI VERONIQUE" },
+    { badge:"S", color:"#F44336", debut:"01/08/2013", fin:"31/12/2014", duree:17, type:"SUSPENSION - D.E.S.C.F. INCOM...", maitre:"" },
+    { badge:"V", color:"#4CAF50", debut:"01/01/2015", fin:"31/12/2015", duree:12, type:"CABINET OU SOCIETE D'EXPERTI...", maitre:"M BERNOSSI ABDELLATIF" },
+  ];
+  const thC = "px-2 py-1.5 text-left border border-[#C9C9C9] font-semibold text-[11px] text-[#5C5C5C] bg-[#F3F3F3] whitespace-nowrap";
+  const tdC = "px-2 py-1 text-[12px] border border-[#C9C9C9] text-[#03234D]";
+  const sel = periodes[selectedRow];
+  const CalIcon = () => <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>;
+  const PersonIcon = () => <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#0250D9" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center gap-2">
+        <button className="flex items-center gap-1 px-2.5 py-1 bg-[#4CAF50] text-white rounded text-[11px] font-semibold"><Plus size={11}/> Ajouter</button>
+        <button className="flex items-center gap-1 px-2.5 py-1 bg-[#F44336] text-white rounded text-[11px] font-semibold"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="white" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg> Supprimer</button>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-[12px] border-collapse border border-[#C9C9C9]">
+          <thead><tr>
+            <th className={thC}></th><th className={thC}>Début</th><th className={thC}>Fin</th><th className={thC}>Durée</th><th className={thC}>Type de Stage</th><th className={thC}>Maître de Stage</th><th className={thC}>Commentaire</th>
+          </tr></thead>
+          <tbody>
+            {periodes.map((p,i) => (
+              <tr key={i} onClick={() => setSelectedRow(i)} className={`cursor-pointer ${selectedRow===i?"bg-[#D6E4F7]":"bg-white"} hover:bg-[#EEF4FD]`}>
+                <td className={tdC}><span className="inline-flex items-center justify-center w-5 h-5 rounded text-white text-[11px] font-bold" style={{background:p.color}}>{p.badge}</span></td>
+                <td className={tdC}>{p.debut}</td><td className={tdC}>{p.fin}</td><td className={tdC}>{p.duree}</td>
+                <td className={tdC}>{p.type}</td><td className={tdC}>{p.maitre}</td><td className={tdC}></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="text-[11px] text-[#5C5C5C] border-t border-[#C9C9C9] pt-1">Total : 0</div>
+      <div className="bg-white border border-[#C9C9C9] rounded px-3 py-2 text-[12px] flex flex-wrap gap-4 items-center">
+        <span className="text-[#5C5C5C]">Situation à la date du jour :</span>
+        <span>Valides: <strong>36</strong></span><span>Invalides: <strong>0</strong></span>
+        <span>de Suspension: <strong>17</strong></span><span>Total: <strong>53</strong></span>
+        <span>Durée du stage: <strong>36</strong></span>
+      </div>
+      <div className="border border-[#C9C9C9] rounded bg-[#F8FAFE] p-3">
+        <div className="text-[12px] font-semibold text-[#03234D] mb-3">Stage :</div>
+        <div className="grid gap-y-2 gap-x-3 text-[12px]" style={{gridTemplateColumns:"120px 1fr"}}>
+          <span className="text-right text-[#5C5C5C] self-center">Cursus :</span>
+          <select className="border border-[#C9C9C9] rounded px-2 py-1 bg-white text-[12px]"><option>STAGE EXPERTISE COMPTABLE SEULEMENT</option></select>
+          <span className="text-right text-[#5C5C5C] self-center">Nature :</span>
+          <select className="border border-[#C9C9C9] rounded px-2 py-1 bg-white text-[12px]"><option>CABINET OU SOCIETE D'EXPERTISE COMPTABLE</option></select>
+          <span className="text-right text-[#5C5C5C] self-center">Localisation :</span>
+          <select className="border border-[#C9C9C9] rounded px-2 py-1 bg-white text-[12px] w-[80px]"><option>008</option></select>
+          <span className="text-right text-[#5C5C5C] self-center">Début :</span>
+          <div className="flex items-center gap-2">
+            <input type="text" defaultValue={sel.debut} className="border border-[#C9C9C9] rounded px-2 py-1 bg-white w-[88px] text-[12px]"/>
+            <button className="border border-[#C9C9C9] rounded p-1 bg-white"><CalIcon/></button>
+            <span className="text-[#5C5C5C] ml-2">Fin :</span>
+            <input type="text" defaultValue={sel.fin} className="border border-[#C9C9C9] rounded px-2 py-1 bg-white w-[88px] text-[12px]"/>
+            <button className="border border-[#C9C9C9] rounded p-1 bg-white"><CalIcon/></button>
+          </div>
+          <span className="text-right text-[#5C5C5C] self-center">Maître de stage :</span>
+          <div className="flex items-center gap-2"><PersonIcon/><strong className="text-[#03234D]">14-98055000-01 &nbsp; {sel.maitre || "—"}</strong></div>
+          <span className="text-right text-[#5C5C5C] self-center">Maître de stage CAC :</span>
+          <div className="flex items-center gap-1"><PersonIcon/></div>
+          <span className="text-right text-[#5C5C5C] self-center">Co-maître AGC :</span>
+          <div className="flex items-center gap-1"><PersonIcon/></div>
+          <span className="text-right text-[#5C5C5C] self-center">Commentaire :</span>
+          <input type="text" className="border border-[#C9C9C9] rounded px-2 py-1 bg-white text-[12px]"/>
+        </div>
+        <div className="flex justify-end mt-3">
+          <button className="px-3 py-1 bg-white border border-[#C9C9C9] rounded text-[12px] flex items-center gap-1 hover:bg-[#F3F3F3]">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Invalidation
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StageEmployeursSection() {
+  const thC = "px-2 py-1.5 text-left border border-[#C9C9C9] font-semibold text-[11px] text-[#5C5C5C] bg-[#F3F3F3] whitespace-nowrap";
+  const CalIcon = () => <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>;
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center gap-2">
+        <button className="flex items-center gap-1 px-2.5 py-1 bg-[#4CAF50] text-white rounded text-[11px] font-semibold"><Plus size={11}/> Ajouter</button>
+        <button className="flex items-center gap-1 px-2 py-1 border border-[#C9C9C9] rounded text-[11px] text-[#03234D] bg-white hover:bg-[#F3F3F3]">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Liste des employeurs à la date du jour
+        </button>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-[12px] border-collapse border border-[#C9C9C9]">
+          <thead><tr>{["Conseil","N° supra","N° inscription","Effet","Fin","Dénomination ou num","Qualité","CP"].map(h=><th key={h} className={thC}>{h}</th>)}</tr></thead>
+          <tbody><tr><td colSpan={8} className="px-2 py-8 text-center text-[#5C5C5C] text-[11px] border border-[#C9C9C9]">Aucun employeur enregistré</td></tr></tbody>
+        </table>
+      </div>
+      <div className="border border-[#C9C9C9] rounded bg-[#F8FAFE] p-3 text-[12px]">
+        <div className="grid gap-y-2 gap-x-3" style={{gridTemplateColumns:"140px 1fr"}}>
+          <span className="text-[#5C5C5C]">N° Supra :</span><span></span>
+          <span className="text-[#5C5C5C]">N° Inscription :</span><span></span>
+          <span className="text-[#5C5C5C]">Nom :</span><span></span>
+          <span className="font-bold text-[#03234D]">Date d'effet :</span>
+          <div className="flex items-center gap-1"><input type="text" className="border border-[#C9C9C9] rounded px-2 py-1 bg-white w-[90px]"/><button className="border border-[#C9C9C9] rounded p-1 bg-white"><CalIcon/></button></div>
+          <span className="text-[#5C5C5C]">Date de fin :</span>
+          <div className="flex items-center gap-1"><input type="text" className="border border-[#C9C9C9] rounded px-2 py-1 bg-white w-[90px]"/><button className="border border-[#C9C9C9] rounded p-1 bg-white"><CalIcon/></button></div>
+        </div>
+        <div className="mt-3 text-[11px] font-bold text-[#03234D]">Les champs en gras sont obligatoires</div>
+      </div>
+    </div>
+  );
+}
+
+function TreeNode({ label, icon="folder", depth=0, children, defaultOpen=false }) {
+  const [open, setOpen] = React.useState(defaultOpen);
+  const hasChildren = children && React.Children.count(children) > 0;
+  const FolderIcon = () => <svg viewBox="0 0 24 24" width="14" height="14" fill={open?"#E8C547":"#F0C800"} stroke="#C8A000" strokeWidth="1.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>;
+  const DocIcon = () => <svg viewBox="0 0 24 24" width="14" height="14" fill="white" stroke="#888" strokeWidth="1.5"><rect x="4" y="2" width="14" height="18" rx="1"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="17" y2="12"/></svg>;
+  return (
+    <div>
+      <div className="flex items-center gap-1 py-0.5 hover:bg-[#EEF4FD] cursor-pointer rounded px-1" style={{paddingLeft: depth*16+4}} onClick={() => hasChildren && setOpen(o=>!o)}>
+        <span className="text-[#5C5C5C] text-[10px] w-3 text-center">{hasChildren ? (open?"−":"+") : ""}</span>
+        {icon==="folder" ? <FolderIcon/> : <DocIcon/>}
+        <span className="text-[12px] text-[#03234D] ml-1">{label}</span>
+      </div>
+      {open && hasChildren && <div>{children}</div>}
+    </div>
+  );
+}
+
+function StageSuiviSection() {
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-2">
+        <button className="flex items-center gap-1 px-2.5 py-1 bg-[#4CAF50] text-white rounded text-[11px] font-semibold"><Plus size={11}/> Ajouter</button>
+        <button className="flex items-center gap-1 px-2.5 py-1 bg-[#F44336] text-white rounded text-[11px] font-semibold"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="white" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg> Supprimer</button>
+      </div>
+      <div className="border border-[#C9C9C9] rounded bg-white p-2">
+        <TreeNode label="Fiches travaux professionnels" defaultOpen={true}>
+          <TreeNode label="Fiche 1 remise le 08/10/2012" icon="doc" depth={1}/>
+          <TreeNode label="Fiche 2 remise le 24/10/2013" icon="doc" depth={1}/>
+          <TreeNode label="Fiche 3 remise le 10/11/2015" icon="doc" depth={1}/>
+        </TreeNode>
+        <TreeNode label="Fiches Contrôleurs de stage"/>
+        <TreeNode label="Rapports semestriels" defaultOpen={true}>
+          <TreeNode label="Rapport C.A.C. remis le 03/07/2015" icon="doc" depth={1}/>
+          <TreeNode label="Rapport EXPERTISE COMPTABLE remis le 03/07/2015" icon="doc" depth={1}/>
+          <TreeNode label="Rapport EXPERTISE COMPTABLE remis le 16/10/2015" icon="doc" depth={1}/>
+          <TreeNode label="Rapport PROJET PLAN ET NOTICE MEMOIRE remis le 10/11/2015" icon="doc" depth={1}/>
+        </TreeNode>
+        <TreeNode label="Fiches suivi des formations"/>
+        <TreeNode label="Fiche entretien 2ème année" defaultOpen={true}>
+          <TreeNode label="Fiche 1 remise le 16/07/2015" icon="doc" depth={1}/>
+        </TreeNode>
+      </div>
+    </div>
+  );
+}
+
+function StageFormationsSection() {
+  const thC = "px-2 py-1.5 text-left border border-[#C9C9C9] font-semibold text-[11px] text-[#5C5C5C] bg-[#F3F3F3] whitespace-nowrap";
+  const tdC = "px-2 py-1 text-[12px] border border-[#C9C9C9] text-[#03234D]";
+  const [openP, setOpenP] = React.useState(true);
+  const [openE, setOpenE] = React.useState(true);
+  const presentiel = [
+    {an:"",date:"24/07/2012",j:1,f:"Missions dans les groupes de sociétés : aspect fiscal",c:"17JT306"},
+    {an:"",date:"13/06/2015",j:1,f:"AUTRES MISSIONS D ASSISTANCE COMPTABLE",c:""},
+    {an:"",date:"03/08/2015",j:1,f:"Missions auprès des associations : aspects juridiques...",c:"17JT722"},
+    {an:"",date:"04/08/2015",j:1,f:"AUTRES MISSIONS D ASSISTANCE COMPTABLE",c:""},
+    {an:"",date:"13/11/2015",j:1,f:"AUTRES MISSIONS DE COMMISSARIAT AUX COMPTES...",c:""},
+    {an:1,date:"08/11/2011",j:1,f:"DECOUVERTE PROFESSION COMPTABLE",c:""},
+    {an:1,date:"22/11/2011",j:0.5,f:"ACCUEIL STAGIAIRES 1ERE ANNEE",c:""},
+    {an:1,date:"05/12/2011",j:1,f:"MANAGEMENT / COMMUNICATION",c:""},
+    {an:1,date:"16/01/2012",j:1,f:"AUDIT ET COMMISSARIAT AUX COMPTES - AUDIT...",c:"14MR130"},
+    {an:1,date:"24/01/2012",j:1,f:"MISSIONS EC / CPTES ANNUELS",c:""},
+  ];
+  const elearning = [
+    {an:1,date:"12/06/2012",j:1,f:"DECCAC C1M4 - MISSIONS COMPTES ANNUELS...",c:"21MLCAM4"},
+    {an:1,date:"06/01/2013",j:1,f:"DECCAC C1M5 - AUTRES PRESTATIONS RÉCUR...",c:"21MLC1M5"},
+    {an:1,date:"13/01/2013",j:1,f:"DECCAC C1M1 - DÉCOUVERTE DE LA PROFESS...",c:"21MLC1M1"},
+    {an:1,date:"13/01/2013",j:1,f:"DECCAC C1M2 - COMMUNICATION",c:"21MLC1M2"},
+    {an:2,date:"26/07/2013",j:1,f:"DECCAC C2M1 - DÉMARCHE ET CONTRÔLE QU...",c:"21MLC2M1"},
+    {an:2,date:"31/07/2013",j:1,f:"DECCAC C2M3 - AUTRES MISSIONS COMPTES...",c:"21MLC2M3"},
+    {an:2,date:"03/02/2015",j:1,f:"DECCAC C2M6 - SE PRÉPARER A L'ÉPREUVE N°...",c:"21MLCBM8"},
+    {an:3,date:"19/11/2015",j:1,f:"DECCAC C3M1 - DÉONTOLOGIE ET RESPONSA...",c:"21MLC3M1"},
+    {an:3,date:"19/11/2015",j:2,f:"DECCAC C3M3 - AUDIT 3 : PILOTER LA MISSION...",c:"21MLC3M3"},
+  ];
+  const Rows = ({rows}) => rows.map((r,i)=>(
+    <tr key={i} className={i%2===0?"bg-white":"bg-[#F9F9F9]"}>
+      <td className={tdC}>{r.an}</td><td className={tdC}>{r.date}</td>
+      <td className={`${tdC} text-center`}>{r.j}</td><td className={tdC}>{r.f}</td><td className={tdC}>{r.c}</td>
+    </tr>
+  ));
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-2">
+        <button className="flex items-center gap-1 px-2.5 py-1 bg-[#4CAF50] text-white rounded text-[11px] font-semibold"><Plus size={11}/> Ajouter</button>
+        <button className="flex items-center gap-1 px-2.5 py-1 bg-[#F44336] text-white rounded text-[11px] font-semibold"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="white" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg> Supprimer</button>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-[12px] border-collapse border border-[#C9C9C9]">
+          <thead><tr>{["Année","Date","Jour(s)","Formation","Code CFPC"].map(h=><th key={h} className={thC}>{h}</th>)}</tr></thead>
+          <tbody>
+            <tr><td colSpan={5} className="px-2 py-1 border border-[#C9C9C9] bg-[#EEF4FD]">
+              <button onClick={()=>setOpenP(o=>!o)} className="flex items-center gap-1 text-[#0250D9] font-semibold text-[12px]"><span>{openP?"−":"+"}</span> Format: Présentiel</button>
+            </td></tr>
+            {openP && <Rows rows={presentiel}/>}
+            <tr><td colSpan={5} className="px-2 py-1 border border-[#C9C9C9] bg-[#EEF4FD]">
+              <button onClick={()=>setOpenE(o=>!o)} className="flex items-center gap-1 text-[#0250D9] font-semibold text-[12px]"><span>{openE?"−":"+"}</span> Format: Elearning</button>
+            </td></tr>
+            {openE && <Rows rows={elearning}/>}
+          </tbody>
+        </table>
+      </div>
+      <div className="border border-[#C9C9C9] rounded bg-[#F8FAFE] p-3 text-[12px]">
+        <div className="grid gap-2" style={{gridTemplateColumns:"100px 1fr 100px 1fr"}}>
+          <select className="border border-[#C9C9C9] rounded px-1 py-1 bg-white text-[12px] col-span-1"><option></option></select>
+          <select className="border border-[#C9C9C9] rounded px-1 py-1 bg-white text-[12px] col-span-3"><option></option></select>
+          <span className="text-[#5C5C5C] self-center">Date :</span><input type="text" className="border border-[#C9C9C9] rounded px-2 py-1 bg-white text-[12px]"/>
+          <span className="text-[#5C5C5C] self-center">Catalogue :</span><span></span>
+          <span className="text-[#5C5C5C] self-center">CodeCFPC :</span><input type="text" className="border border-[#C9C9C9] rounded px-2 py-1 bg-white text-[12px]"/>
+          <span></span><span></span>
+          <span className="text-[#5C5C5C] self-center">Formation :</span>
+          <select className="border border-[#C9C9C9] rounded px-1 py-1 bg-white text-[12px] col-span-3"><option></option></select>
+          <span className="text-[#5C5C5C] self-center">F Régionale :</span>
+          <select className="border border-[#C9C9C9] rounded px-1 py-1 bg-white text-[12px] col-span-3"><option></option></select>
+          <span className="text-[#5C5C5C] self-center">Catégorie :</span>
+          <select className="border border-[#C9C9C9] rounded px-1 py-1 bg-white text-[12px] col-span-3"><option></option></select>
+          <span className="text-[#5C5C5C] self-center">Jour(s) :</span><input type="text" className="border border-[#C9C9C9] rounded px-2 py-1 bg-white text-[12px] w-[60px]"/><span></span><span></span>
+          <span className="text-[#5C5C5C] self-start mt-1">Commentaire :</span>
+          <textarea className="border border-[#C9C9C9] rounded px-2 py-1 bg-white text-[12px] col-span-3 h-[60px] resize-none"/>
+        </div>
+      </div>
+      <div className="flex justify-end gap-2 mt-1">
+        <button className="flex items-center gap-1 px-3 py-1 bg-white border border-[#C9C9C9] rounded text-[12px] hover:bg-[#F3F3F3]"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Individu</button>
+        <button className="flex items-center gap-1 px-3 py-1 bg-white border border-[#C9C9C9] rounded text-[12px] hover:bg-[#F3F3F3]"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Attestation</button>
+        <button className="flex items-center gap-1 px-3 py-1 bg-white border border-[#F44336] rounded text-[12px] text-[#F44336] hover:bg-[#FFF3F3]"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#F44336" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Fermer</button>
+      </div>
+    </div>
+  );
+}
+
+function StageAttestationSection() {
+  const FolderIcon = ({open}) => <svg viewBox="0 0 24 24" width="13" height="13" fill={open?"#E8C547":"#F0C800"} stroke="#C8A000" strokeWidth="1.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>;
+  const DocIcon = () => <svg viewBox="0 0 24 24" width="13" height="13" fill="white" stroke="#888" strokeWidth="1.5"><rect x="4" y="2" width="14" height="18" rx="1"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="17" y2="12"/></svg>;
+  const Item = ({label, indent=0, expand=null}) => (
+    <div className="flex items-start gap-1 py-0.5" style={{paddingLeft: indent*20+4}}>
+      <span className="text-[10px] text-[#5C5C5C] w-3 mt-0.5">{expand}</span>
+      <FolderIcon open={expand==="−"}/>
+      <span className="text-[12px] text-[#03234D] ml-1">{label}</span>
+    </div>
+  );
+  const Doc = ({label}) => (
+    <div className="flex items-center gap-1 py-0.5 pl-[26px]">
+      <DocIcon/><span className="text-[12px] text-[#03234D] ml-1">{label}</span>
+    </div>
+  );
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="border border-[#C9C9C9] rounded bg-white p-2">
+        <Item label="Fiches travaux professionnels - CAC (1234 h), séminaire CAC (0 h), EC (3832 h)" expand="+"/>
+        <Item label="Nombre de mois de stage (04/05/2026) : (36 validés), (0 non validés), (17 suspendus)" expand="+"/>
+        <Item label="Fiches Contrôleurs de stage" expand="+"/>
+        <Item label="Rapports semestriels" expand="−"/>
+        <Doc label="Rapport C.A.C. remis le 03/07/2015"/>
+        <Doc label="Rapport EXPERTISE COMPTABLE remis le 03/07/2015"/>
+        <Doc label="Rapport EXPERTISE COMPTABLE remis le 16/10/2015"/>
+        <Doc label="Rapport PROJET PLAN ET NOTICE MEMOIRE remis le 10/11/2015"/>
+        <Item label="Fiches de suivi des Formations" expand="+"/>
+        <Item label="Fiche entretien 2ème année" expand="+"/>
+        <Item label="Formations" expand="−"/>
+        <Doc label="008 - ELEARNING → 12 formations"/>
+        <Doc label="009 - JOURNEE A THEME LIBRE → 3 formations (2,5 jours)"/>
+        <Doc label="010 - JOURNEE DE REGROUPEMENT → 10 formations (9,0 jours)"/>
+        <Doc label="014 - AUDIT/CAC → 2 formations (4,0 jours)"/>
+        <Doc label="300 - MISSIONS COMPTABLES ET SPECIFI → 2 formations (2,0 jours)"/>
+        <Doc label="400 - MISSIONS DE COMMISSARIAT AUX C → 1 formation (1,0 jour)"/>
+        <Item label="Solde des cotisations : 0.00 €" expand="+"/>
+      </div>
+      <div className="border border-[#C9C9C9] rounded bg-[#F8FAFE] p-3 text-[12px]">
+        <div className="flex flex-wrap gap-4 mb-3">
+          <div className="flex items-center gap-2"><span className="text-[#5C5C5C]">Date de l'attestation :</span><input type="text" defaultValue="16/02/2016" className="border border-[#C9C9C9] rounded px-2 py-1 bg-white w-[90px]"/></div>
+          <div className="flex items-center gap-2"><span className="text-[#5C5C5C]">Date de fin de stage :</span><input type="text" defaultValue="31/12/2015" className="border border-[#C9C9C9] rounded px-2 py-1 bg-white w-[90px]"/></div>
+          <div className="flex items-center gap-2"><span className="text-[#5C5C5C]">Date de l'édition :</span><input type="text" defaultValue="16/02/2016" className="border border-[#C9C9C9] rounded px-2 py-1 bg-white w-[90px]"/></div>
+        </div>
+        <div className="border border-[#0250D9] rounded p-2 mb-3">
+          <div className="text-[#0250D9] font-semibold mb-2">Inscription à une réunion du Comité régional du stage en vue de la validation du stage</div>
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-2"><span className="text-[#5C5C5C]">Date :</span><input type="text" defaultValue="12/01/2016" className="border border-[#C9C9C9] rounded px-2 py-1 bg-white w-[90px]"/></div>
+            <div className="flex items-center gap-2"><span className="text-[#5C5C5C]">Validation du CRS :</span><select className="border border-[#C9C9C9] rounded px-2 py-1 bg-white text-[12px]"><option>Oui</option><option>Non</option></select></div>
+          </div>
+        </div>
+        <div className="grid gap-2" style={{gridTemplateColumns:"180px 1fr 180px 1fr"}}>
+          <span className="text-[#5C5C5C] self-center">Commentaire :</span>
+          <input type="text" className="border border-[#C9C9C9] rounded px-2 py-1 bg-white col-span-3"/>
+          <span className="text-[#5C5C5C] self-center">Attestation Conformité CRCC :</span>
+          <select className="border border-[#C9C9C9] rounded px-2 py-1 bg-white text-[12px]"><option></option></select>
+          <span className="text-[#5C5C5C] self-center">Fiche Générale de Synthèse :</span>
+          <select className="border border-[#C9C9C9] rounded px-2 py-1 bg-white text-[12px]"><option>Oui</option><option>Non</option></select>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StageTab() {
+  const [sub, setSub] = React.useState("periodes");
+  const menu = [
+    {key:"groupes",label:"Groupes"},{key:"periodes",label:"Périodes"},
+    {key:"employeurs",label:"Employeurs"},{key:"suivi",label:"Suivi"},
+    {key:"formations",label:"Formations"},{key:"attestation",label:"Attestation"},
+  ];
+  return (
+    <div className="flex gap-0 mt-2 min-h-[300px]">
+      <div className="shrink-0 border-r border-[#C9C9C9]" style={{width:110}}>
+        {menu.map(item => (
+          <button key={item.key} onClick={() => setSub(item.key)}
+            className={`w-full text-left px-3 py-2 text-[13px] border-b border-[#F0F0F0] ${sub===item.key?"font-bold text-[#03234D] bg-[#D6E4F7]":"text-[#5C5C5C] hover:bg-[#F3F3F3]"}`}>
+            {item.label}
+          </button>
+        ))}
+      </div>
+      <div className="flex-1 pl-3 min-w-0">
+        {sub==="groupes" && <StageGroupesSection/>}
+        {sub==="periodes" && <StagePeriodesSection/>}
+        {sub==="employeurs" && <StageEmployeursSection/>}
+        {sub==="suivi" && <StageSuiviSection/>}
+        {sub==="formations" && <StageFormationsSection/>}
+        {sub==="attestation" && <StageAttestationSection/>}
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
 // CACSection
 // ══════════════════════════════════════════════════════════════
 function CACSection() {
@@ -5369,10 +5715,15 @@ function CommissionsTab() {
 function ContactRecordPage({ demande, onAccountClick }) {
   const [activeTab, setActiveTab] = useState("individu");
   const data = buildContactData(demande);
+  const highlights = data.highlights.map(f =>
+    f.isAccountLink
+      ? { ...f, isLink: true, onClick: () => onAccountClick && onAccountClick({ numInscription: "14-00025838-01", denomination: "RIV CONSULTING" }) }
+      : f
+  );
   return (
     <>
       <ContactPageHeader name={demande.demandeur} />
-      <HighlightsPanel fields={data.highlights} />
+      <HighlightsPanel fields={highlights} />
       <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 pt-[1px]">
         <div className="flex gap-3 w-full">
           <div className="w-1/2 min-w-0">
@@ -5385,7 +5736,7 @@ function ContactRecordPage({ demande, onAccountClick }) {
                     <AdresseActuelleSection adresse={data.adressePersoData.adresseComplete} validee={data.adressePersoData.adresseValidee} title="Adresse perso" />
                     <ExpandableSection title="Dossier"            fields={data.dossierFields}      defaultOpen={false} />
                     <ExpandableSection title="Diplômes"           defaultOpen={false}><DiplomesSection /></ExpandableSection>
-                    <ExpandableSection title="Historique du stage" fields={[]}  defaultOpen={false} />
+                    <ExpandableSection title="Historique du stage" defaultOpen={false}><StageTab /></ExpandableSection>
                     <ExpandableSection title="CAC"                defaultOpen={false}><CACSection /></ExpandableSection>
                     <ExpandableSection title="Cotisations"        fields={data.cotisationsFields} defaultOpen={false} />
                     <ExpandableSection title="Comptexpert"        fields={data.comptexpertFields} defaultOpen={false} />
@@ -5393,7 +5744,7 @@ function ContactRecordPage({ demande, onAccountClick }) {
                 )}
                 {activeTab === "adresses" && (
                   <div className="mt-3 flex flex-col gap-1">
-                    <AdresseActuelleSection adresse={data.adresseProData.adresseComplete} validee={data.adresseProData.adresseValidee} />
+                    <AdresseActuelleSection adresse={data.adresseProData.adresseComplete} validee={data.adresseProData.adresseValidee} cabinetName="RIV CONSULTING" onCabinetClick={() => onAccountClick && onAccountClick({ numInscription: "14-00025838-01", denomination: "RIV CONSULTING" })} />
                     <ExpandableSection title="Coordonnées" fields={data.adresseProData.coordFields} defaultOpen={true} />
                   </div>
                 )}
@@ -5404,7 +5755,7 @@ function ContactRecordPage({ demande, onAccountClick }) {
                       <table className="w-full text-[12px] border-collapse" style={{minWidth: 860}}>
                         <thead>
                           <tr className="bg-[#F3F3F3] text-[#5C5C5C]">
-                            {["CR","CR Origine du Motif","N° inscription","Motif","Type","Effet","Session","Décision","Qualité","Qualité avant","Statut","Statut avant"].map(h => (
+                            {["CR","CR Origine","N° inscription","Demande","Type","Effet","Session","Décision","Qualité","Qualité avant","Statut","Statut avant"].map(h => (
                               <th key={h} className="px-2 py-2 text-left border-b border-[#C9C9C9] font-semibold whitespace-nowrap">{h}</th>
                             ))}
                           </tr>
@@ -5434,20 +5785,20 @@ function ContactRecordPage({ demande, onAccountClick }) {
                         </tbody>
                       </table>
                     </div>
-                    {/* Motifs en attente */}
+                    {/* Demandes en attente */}
                     <div>
-                      <div className="text-[13px] font-semibold text-[#03234D] mb-2 px-1">Motifs en attente</div>
+                      <div className="text-[13px] font-semibold text-[#03234D] mb-2 px-1">Demandes en attente</div>
                       <div className="overflow-x-auto">
                         <table className="w-full text-[12px] border-collapse" style={{minWidth: 500}}>
                           <thead>
                             <tr className="bg-[#F3F3F3] text-[#5C5C5C]">
-                              {["Motif","Effet","Session","Décision","Echéance","Commentaire"].map(h => (
+                              {["Demande","Effet","Session","Décision","Echéance","Commentaire"].map(h => (
                                 <th key={h} className="px-2 py-2 text-left border-b border-[#C9C9C9] font-semibold whitespace-nowrap">{h}</th>
                               ))}
                             </tr>
                           </thead>
                           <tbody>
-                            <tr><td colSpan={6} className="px-2 py-6 text-center text-[#9AA3B2] text-[12px]">Aucun motif en attente</td></tr>
+                            <tr><td colSpan={6} className="px-2 py-6 text-center text-[#9AA3B2] text-[12px]">Aucune demande en attente</td></tr>
                           </tbody>
                         </table>
                       </div>
@@ -5547,14 +5898,7 @@ function ContactRecordPage({ demande, onAccountClick }) {
                 )}
                 {activeTab === "commissions" && <CommissionsTab />}
                 {activeTab === "stage" && (
-                  <div className="mt-3 flex flex-col gap-1">
-                    <ExpandableSection title="Groupes"     defaultOpen={true} ><StageGroupesSection /></ExpandableSection>
-                    <ExpandableSection title="Périodes"    fields={[]} defaultOpen={false} />
-                    <ExpandableSection title="Employeurs"  fields={[]} defaultOpen={false} />
-                    <ExpandableSection title="Suivi"       fields={[]} defaultOpen={false} />
-                    <ExpandableSection title="Formations"  fields={[]} defaultOpen={false} />
-                    <ExpandableSection title="Attestation" fields={[]} defaultOpen={false} />
-                  </div>
+                  <div className="mt-3" />
                 )}
                 {activeTab === "declarations" && (
                   <div className="mt-3 flex flex-col gap-4">
@@ -5754,10 +6098,8 @@ function ContactRecordPage({ demande, onAccountClick }) {
             </div>
           </div>
           <div className="w-1/2 min-w-0 flex flex-col gap-3">
-            {/* Demandes */}
-            <DemandesContactPanel />
-            {/* Bureaux */}
-            <BureauxPanel />
+            {/* Activités */}
+            <ActivitesPanel onAccountClick={onAccountClick} />
             {/* Participations */}
             <ContactRelatedPanel
               icon={<svg viewBox="0 0 24 24" width="16" height="16" fill="white"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>}
@@ -5771,8 +6113,10 @@ function ContactRecordPage({ demande, onAccountClick }) {
               cols={["N° Inscr. Princ.", "Dénomination", "Fct. Sociale", "Titre", "% Capital", "Effet", "Fin", "Qualité", "Statut Princ.", "Conseil Princ.", "Commentaire"]}
               renderRow={(r) => [r.numInsc, r.denomination, r.fct, r.titres, r.pct, r.effet, r.fin, r.qualite, r.statut, r.conseil, r.commentaire]}
             />
-            {/* Activités */}
-            <ActivitesPanel onAccountClick={onAccountClick} />
+            {/* Bureaux */}
+            <BureauxPanel />
+            {/* Demandes */}
+            <DemandesContactPanel />
             {/* Pièces */}
             <PiecesPanel />
           </div>
