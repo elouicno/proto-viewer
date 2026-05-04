@@ -586,6 +586,151 @@
     .dstatut-completer      { background: #EFF1F5; color: #4A5568; }
     .dstatut-complete       { background: #E6F4ED; color: #1A7A45; }
 
+    /* ══════════════════ DRAWER UPLOAD PJ ══════════════════ */
+    .drawer-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(27,50,79,0.35);
+      z-index: 1000;
+    }
+    .drawer-overlay.open { display: block; }
+
+    .drawer {
+      position: fixed; top: 0; right: 0; bottom: 0;
+      width: 520px; max-width: 100vw;
+      background: white;
+      box-shadow: -4px 0 24px rgba(27,50,79,0.14);
+      display: flex; flex-direction: column;
+      transform: translateX(100%);
+      transition: transform .25s cubic-bezier(.4,0,.2,1);
+      z-index: 1001;
+    }
+    .drawer-overlay.open .drawer { transform: translateX(0); }
+
+    /* Header */
+    .drawer-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .drawer-title {
+      font-size: 18px; font-weight: 600; color: var(--navy);
+    }
+    .drawer-close {
+      background: none; border: none; cursor: pointer;
+      color: var(--text-mid); padding: 4px; border-radius: 4px;
+      display: flex; align-items: center;
+      transition: background .12s;
+    }
+    .drawer-close:hover { background: var(--nav-active-bg); }
+    .drawer-close svg { width: 20px; height: 20px; }
+
+    /* Body */
+    .drawer-body {
+      flex: 1; overflow-y: auto; padding: 24px;
+      display: flex; flex-direction: column; gap: 24px;
+    }
+    .drawer-subtitle {
+      font-size: 14px; font-weight: 500; color: var(--text-mid);
+      margin-bottom: -8px;
+    }
+
+    /* Chaque bloc PJ */
+    .pj-block {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    .pj-block-info {
+      padding: 16px 18px 14px;
+    }
+    .pj-block-title {
+      font-size: 14px; font-weight: 600; color: var(--navy);
+      margin-bottom: 6px;
+    }
+    .pj-block-desc {
+      font-size: 13px; color: var(--text-mid); line-height: 1.5;
+      margin-bottom: 8px;
+    }
+    .pj-block-model {
+      font-size: 13px; color: #2563eb; font-weight: 400;
+      text-decoration: underline; cursor: pointer; background: none; border: none;
+      padding: 0; font-family: var(--font);
+    }
+    .pj-block-model:hover { opacity: .75; }
+
+    /* Zone upload — ISO Figma Make */
+    .pj-upload-zone {
+      display: flex !important; flex-direction: column;
+      align-items: center; justify-content: center;
+      margin: 0 16px 16px;
+      border: 1px solid #c7d2fe; border-radius: 8px;
+      cursor: pointer; transition: border-color 200ms ease, background 200ms ease;
+      background: #eef2ff;
+      text-align: center; padding: 24px 16px;
+      min-height: 90px; position: relative;
+      box-sizing: border-box;
+    }
+    .pj-upload-zone:hover, .pj-upload-zone.drag-over {
+      border-color: #2563eb; background: #e0e7ff;
+    }
+    .pj-upload-zone input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .pj-upload-zone svg { display: none; }
+    .pj-upload-text {
+      font-size: 14px; color: var(--navy); margin: 0; line-height: 1.5;
+    }
+    .pj-upload-text strong {
+      color: #2563eb; font-weight: 600;
+    }
+    .pj-upload-formats {
+      font-size: 12px; color: #9ca3af; margin-top: 6px;
+    }
+
+    /* Fichiers ajoutés */
+    .pj-file-list {
+      display: flex; flex-direction: column; gap: 6px;
+      padding: 0 18px 12px;
+    }
+    .pj-file-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 10px;
+      background: var(--bg); border-radius: 5px;
+      font-size: 13px; color: var(--navy);
+    }
+    .pj-file-item svg { width: 13px; height: 13px; flex-shrink: 0; color: var(--text-soft); }
+    .pj-file-name { flex: 1; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .pj-file-size { font-size: 11px; color: var(--text-soft); }
+    .pj-file-remove {
+      background: none; border: none; cursor: pointer;
+      color: var(--text-soft); padding: 2px; border-radius: 3px;
+      display: flex; align-items: center; transition: color .12s;
+    }
+    .pj-file-remove:hover { color: var(--red); }
+    .pj-file-remove svg { width: 13px; height: 13px; }
+
+    /* Footer */
+    .drawer-footer {
+      display: flex; align-items: center; justify-content: stretch; gap: 12px;
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .btn-cancel {
+      flex: 1; padding: 10px 0; border: 1px solid #C4CBDA; border-radius: 6px;
+      background: white; color: var(--navy); font-size: 14px; font-weight: 500;
+      cursor: pointer; font-family: var(--font); transition: background .12s;
+    }
+    .btn-cancel:hover { background: var(--bg); }
+    .btn-submit {
+      flex: 1; padding: 10px 0; border: none; border-radius: 6px;
+      background: var(--navy); color: white; font-size: 14px; font-weight: 500;
+      cursor: pointer; font-family: var(--font); transition: background .12s;
+    }
+    .btn-submit:hover { background: #142840; }
+    .btn-submit:disabled { background: #9AA3B2; cursor: not-allowed; }
+
     /* Action CTA */
     .action-btn {
       display: inline-flex; align-items: center; gap: 6px;
@@ -1109,9 +1254,9 @@
             <td></td>
           </tr>
           <tr>
-            <td><span class="demande-type-label">Mise à jour des informations</span><a class="demande-id-link" href="#">Demande#12345678</a></td>
+            <td><span class="demande-type-label">Inscription principale PP</span><a class="demande-id-link" href="#">Demande#12345678</a></td>
             <td>27/08/2024</td>
-            <td><span class="dstatut dstatut-attente-piece"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>En attente de pièce(s)</span></td>
+            <td><span class="dstatut dstatut-attente-piece"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>Inscrit - En attente pièces justificatives</span></td>
             <td><button class="action-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Téléverser</button></td>
           </tr>
           <tr>
@@ -1201,6 +1346,190 @@
       });
       document.getElementById(panelId).classList.add('active');
     }
+
+    /* ══════════════════ DRAWER UPLOAD PJ — JS ══════════════════ */
+    var PJ_LIST = [
+      {
+        title: "Attestation provisoire d'assurance RCP",
+        desc: "Attestation provisoire justifiant de la souscription à une assurance de responsabilité civile professionnelle auprès d'une compagnie de votre choix, précisant quels sont les membres…",
+        model: true
+      },
+      {
+        title: "Attestation du conjoint - apport en nature, de biens et droits",
+        desc: "Attestation provisoire justifiant de la souscription à une assurance de responsabilité civile professionnelle auprès d'une compagnie de votre choix, précisant quels sont les membres…",
+        model: true
+      },
+      {
+        title: "Attestation d'admission à l'épreuve écrite d'aptitude, ou dispense",
+        desc: "Attestation d'admission à l'épreuve écrite d'aptitude délivrée par le ministère de l'Enseignement supérieur ou avis de la CCFPEC dispensant de l'examen.",
+        model: false
+      },
+      {
+        title: "Copie de la carte d'identité ou passeport",
+        desc: "Document d'identité officiel en cours de validité (recto-verso pour la carte d'identité).",
+        model: false
+      },
+      {
+        title: "Justificatif de domicile de moins de 3 mois",
+        desc: "Facture d'eau, d'électricité, de gaz, quittance de loyer ou relevé bancaire datant de moins de 3 mois.",
+        model: false
+      }
+    ];
+
+    function openDrawer(btn) {
+      var overlay = document.getElementById('pj-drawer-overlay');
+      // Reset toutes les listes de fichiers
+      overlay.querySelectorAll('.pj-file-list').forEach(function(l) { l.innerHTML = ''; });
+      overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeDrawer() {
+      document.getElementById('pj-drawer-overlay').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    function addFilesToBlock(input, blockIndex) {
+      var list = document.getElementById('pj-file-list-' + blockIndex);
+      Array.from(input.files).forEach(function(file) {
+        var item = document.createElement('div');
+        item.className = 'pj-file-item';
+        var size = file.size < 1024*1024
+          ? (file.size/1024).toFixed(0) + ' Ko'
+          : (file.size/1024/1024).toFixed(1) + ' Mo';
+        item.innerHTML =
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>' +
+          '<span class="pj-file-name">' + file.name + '</span>' +
+          '<span class="pj-file-size">' + size + '</span>' +
+          '<button class="pj-file-remove" onclick="this.parentElement.remove()" title="Supprimer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>';
+        list.appendChild(item);
+      });
+      input.value = '';
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      // Brancher tous les boutons Téléverser
+      document.querySelectorAll('.action-btn').forEach(function(btn) {
+        if (btn.textContent.trim().indexOf('Téléverser') !== -1) {
+          btn.addEventListener('click', function() { openDrawer(btn); });
+        }
+      });
+
+      // Fermeture overlay
+      document.getElementById('pj-drawer-overlay').addEventListener('click', function(e) {
+        if (e.target === this) closeDrawer();
+      });
+
+      // Drag & drop sur chaque zone
+      document.querySelectorAll('.pj-upload-zone').forEach(function(zone, idx) {
+        zone.addEventListener('dragover', function(e) { e.preventDefault(); zone.classList.add('drag-over'); });
+        zone.addEventListener('dragleave', function() { zone.classList.remove('drag-over'); });
+        zone.addEventListener('drop', function(e) {
+          e.preventDefault(); zone.classList.remove('drag-over');
+          var fakeInput = { files: e.dataTransfer.files, value: '' };
+          addFilesToBlock(fakeInput, idx);
+        });
+      });
+    });
 </script>
+
+<!-- ══ DRAWER UPLOAD PJ ══ -->
+<div id="pj-drawer-overlay" class="drawer-overlay">
+  <div class="drawer" role="dialog" aria-modal="true">
+    <div class="drawer-header">
+      <span class="drawer-title">Téléverser</span>
+      <button class="drawer-close" onclick="closeDrawer()" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="drawer-body">
+      <p class="drawer-subtitle">5 pièces justificatives</p>
+
+      <!-- Bloc PJ 0 -->
+      <div class="pj-block">
+        <div class="pj-block-info">
+          <div class="pj-block-title">Attestation provisoire d'assurance RCP</div>
+          <div class="pj-block-desc">Attestation provisoire justifiant de la souscription à une assurance de responsabilité civile professionnelle auprès d'une compagnie de votre choix, précisant quels sont les membres…</div>
+          <button class="pj-block-model">Télécharger le modèle</button>
+        </div>
+        <div class="pj-upload-zone" id="drop-zone-0">
+          <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onchange="addFilesToBlock(this,0)" />
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <p class="pj-upload-text"><strong>Parcourir</strong> ou Glisser-déposer</p>
+          <p class="pj-upload-formats">Formats acceptés jpg, pdf, docx&nbsp;( Taille max 30 MB)</p>
+        </div>
+        <div class="pj-file-list" id="pj-file-list-0"></div>
+      </div>
+
+      <!-- Bloc PJ 1 -->
+      <div class="pj-block">
+        <div class="pj-block-info">
+          <div class="pj-block-title">Attestation du conjoint - apport en nature, de biens et droits</div>
+          <div class="pj-block-desc">Attestation provisoire justifiant de la souscription à une assurance de responsabilité civile professionnelle auprès d'une compagnie …</div>
+          <button class="pj-block-model">Télécharger le modèle</button>
+        </div>
+        <div class="pj-upload-zone" id="drop-zone-1">
+          <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onchange="addFilesToBlock(this,1)" />
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <p class="pj-upload-text"><strong>Parcourir</strong> ou Glisser-déposer</p>
+          <p class="pj-upload-formats">Formats acceptés jpg, pdf, docx&nbsp;( Taille max 30 MB)</p>
+        </div>
+        <div class="pj-file-list" id="pj-file-list-1"></div>
+      </div>
+
+      <!-- Bloc PJ 2 -->
+      <div class="pj-block">
+        <div class="pj-block-info">
+          <div class="pj-block-title">Attestation d'admission à l'épreuve écrite d'aptitude, ou dispense</div>
+          <div class="pj-block-desc">Attestation d'admission à l'épreuve écrite d'aptitude délivrée par le ministère de l'Enseignement supérieur ou avis de la CCFPEC dispensant de l'examen.</div>
+        </div>
+        <div class="pj-upload-zone" id="drop-zone-2">
+          <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onchange="addFilesToBlock(this,2)" />
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <p class="pj-upload-text"><strong>Parcourir</strong> ou Glisser-déposer</p>
+          <p class="pj-upload-formats">Formats acceptés jpg, pdf, docx&nbsp;( Taille max 30 MB)</p>
+        </div>
+        <div class="pj-file-list" id="pj-file-list-2"></div>
+      </div>
+
+      <!-- Bloc PJ 3 -->
+      <div class="pj-block">
+        <div class="pj-block-info">
+          <div class="pj-block-title">Copie de la carte d'identité ou passeport</div>
+          <div class="pj-block-desc">Document d'identité officiel en cours de validité (recto-verso pour la carte d'identité).</div>
+        </div>
+        <div class="pj-upload-zone" id="drop-zone-3">
+          <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onchange="addFilesToBlock(this,3)" />
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <p class="pj-upload-text"><strong>Parcourir</strong> ou Glisser-déposer</p>
+          <p class="pj-upload-formats">Formats acceptés jpg, pdf, docx&nbsp;( Taille max 30 MB)</p>
+        </div>
+        <div class="pj-file-list" id="pj-file-list-3"></div>
+      </div>
+
+      <!-- Bloc PJ 4 -->
+      <div class="pj-block">
+        <div class="pj-block-info">
+          <div class="pj-block-title">Justificatif de domicile de moins de 3 mois</div>
+          <div class="pj-block-desc">Facture d'eau, d'électricité, de gaz, quittance de loyer ou relevé bancaire datant de moins de 3 mois.</div>
+        </div>
+        <div class="pj-upload-zone" id="drop-zone-4">
+          <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onchange="addFilesToBlock(this,4)" />
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <p class="pj-upload-text"><strong>Parcourir</strong> ou Glisser-déposer</p>
+          <p class="pj-upload-formats">Formats acceptés jpg, pdf, docx&nbsp;( Taille max 30 MB)</p>
+        </div>
+        <div class="pj-file-list" id="pj-file-list-4"></div>
+      </div>
+    </div>
+
+    <div class="drawer-footer">
+      <button class="btn-cancel" onclick="closeDrawer()">Annuler</button>
+      <button class="btn-submit">Soumettre</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

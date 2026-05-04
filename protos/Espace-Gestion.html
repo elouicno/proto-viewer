@@ -637,14 +637,17 @@ function AdresseActuelleSection({ adresse, validee, title = "Adresse pro", cabin
       </button>
       {open && (
         <div className="mt-2 px-2 flex items-start justify-between gap-3">
-          <div>
+          <div className="flex-1">
             {cabinetName && (
               <p
                 onClick={onCabinetClick}
                 className="text-[13px] text-[#0250D9] font-semibold leading-[22px] cursor-pointer hover:underline"
               >{cabinetName}</p>
             )}
-            <div className="text-[13px] text-[#2E2E2E] leading-[22px] whitespace-pre-line font-medium">{adresse}</div>
+            <div className="flex items-end gap-2 border-b border-[#C9C9C9] pb-1 hover:border-[#0250D9] transition-colors cursor-pointer group">
+              <div className="text-[13px] text-[#2E2E2E] leading-[22px] whitespace-pre-line font-medium flex-1">{adresse}</div>
+              <Pencil size={14} className="text-[#5C5C5C] shrink-0 opacity-60 mb-0.5" />
+            </div>
           </div>
           {validee && (
             <div className="flex items-center gap-1.5 text-[12px] text-[#1A7A45] font-medium shrink-0 mt-0.5">
@@ -1196,19 +1199,19 @@ function DockedUtilityBar() {
 
 const DEMANDES_LIST = [
   { num: "#043512789", type: "Inscription secondaire PM",   nomComptable: "Cabinet Conseil & Associés",    demandeur: "Cabinet Solutions EC",   profil: "Article 27",                    statut: "Soumise",  dateSoumission: "22/07/2025", statutPieces: "Non conforme", proprietaire: "Thomas André" },
-  { num: "#043512800", type: "Radiation PP",                nomComptable: "Société Fiduciaire Nationale", demandeur: "Société TechConseil",      profil: "Expert-comptable en entreprise", statut: "Soumise",  dateSoumission: "17/10/2025", statutPieces: "Demandée",     proprietaire: "Lucas Vidal" },
-  { num: "#043512811", type: "Inscription principale PP",   nomComptable: "Cabinet Durand & Partners",    demandeur: "Groupe d'Expertise Sud",   profil: "Article 7bis",                  statut: "Soumise",  dateSoumission: "11/02/2025", statutPieces: "Conforme",     proprietaire: "Alexandre Lefevre" },
-  { num: "#043512822", type: "Inscription principal PM",    nomComptable: "Cabinet XYZ",                  demandeur: "Emma David",               profil: "Diplômé d'expertise comptable", statut: "Affectée", dateSoumission: "26/05/2025", statutPieces: "A examiner",   proprietaire: "Alexandre Bernard" },
+  { num: "#043512800", type: "Radiation PP",                nomComptable: "Société Fiduciaire Nationale", demandeur: "Laurent Bernard",          profil: "Expert-comptable en entreprise", statut: "Soumise",  dateSoumission: "17/10/2025", statutPieces: "Demandée",     proprietaire: "Lucas Vidal" },
+  { num: "#043512811", type: "Inscription principale PP",   nomComptable: "Cabinet Durand & Partners",    demandeur: "Marc Dupont",              profil: "Article 7bis",                  statut: "Soumise",  dateSoumission: "11/02/2025", statutPieces: "Conforme",     proprietaire: "Alexandre Lefevre" },
+  { num: "#043512822", type: "Inscription principal PM",    nomComptable: "Cabinet XYZ",                  demandeur: "Cabinet David & Associés", profil: "Diplômé d'expertise comptable", statut: "Affectée", dateSoumission: "26/05/2025", statutPieces: "A examiner",   proprietaire: "Alexandre Bernard" },
   { num: "#043512833", type: "Inscription secondaire PP",   nomComptable: "Cabinet Juridique Martin",     demandeur: "Camille Durand",           profil: "Article 83 bis",                statut: "Affectée", dateSoumission: "07/04/2025", statutPieces: "Conforme",     proprietaire: "Alexandre Roche" },
   { num: "#043512844", type: "Omission PP",                 nomComptable: "Cabinet Expert Conseil",       demandeur: "Camille Vincent",          profil: "Article 27",                    statut: "Affectée", dateSoumission: "09/11/2025", statutPieces: "Conforme",     proprietaire: "Emma Rousseau" },
-  { num: "#043512855", type: "Inscription secondaire PM",   nomComptable: "Société Conseil Premium",      demandeur: "Lucas André",              profil: "Article 7bis",                  statut: "Soumise",  dateSoumission: "07/04/2025", statutPieces: "A examiner",   proprietaire: "Camille David" },
+  { num: "#043512855", type: "Inscription secondaire PM",   nomComptable: "Société Conseil Premium",      demandeur: "Cabinet André Conseil",    profil: "Article 7bis",                  statut: "Soumise",  dateSoumission: "07/04/2025", statutPieces: "A examiner",   proprietaire: "Camille David" },
   { num: "#043512866", type: "Radiation PP",                nomComptable: "Étude Collaborative",          demandeur: "Emma Durand",              profil: "Article 83 bis",                statut: "Affectée", dateSoumission: "16/03/2025", statutPieces: "A examiner",   proprietaire: "Lucas François" },
   { num: "#043512877", type: "Inscription principale PP",   nomComptable: "Réseau Professionnel",         demandeur: "Thomas Giraud",            profil: "Expert-comptable en entreprise", statut: "Soumise",  dateSoumission: "19/01/2025", statutPieces: "Demandée",     proprietaire: "Lucas Clement" },
   { num: "#043512888", type: "Omission PP",                 nomComptable: "Étude Partenaires",            demandeur: "Alexandre André",          profil: "Article 7bis",                  statut: "Affectée", dateSoumission: "09/12/2025", statutPieces: "Non conforme", proprietaire: "Emma David" },
-  { num: "#043512899", type: "Inscription principal PM",    nomComptable: "Cabinet Fiscal Expert",        demandeur: "Marie Leblanc",            profil: "Article 27",                    statut: "Soumise",  dateSoumission: "14/06/2025", statutPieces: "Conforme",     proprietaire: "Pierre Martin" },
+  { num: "#043512899", type: "Inscription principal PM",    nomComptable: "Cabinet Fiscal Expert",        demandeur: "Cabinet Leblanc & Partners", profil: "Article 27",                  statut: "Soumise",  dateSoumission: "14/06/2025", statutPieces: "Conforme",     proprietaire: "Pierre Martin" },
   { num: "#043512910", type: "Inscription secondaire PP",   nomComptable: "Conseil & Patrimoine",         demandeur: "Nicolas Dupont",           profil: "Article 83 bis",                statut: "Affectée", dateSoumission: "03/08/2025", statutPieces: "Non conforme", proprietaire: "Sophie Bernard" },
   { num: "#043512921", type: "Radiation PP",                nomComptable: "Cabinet Alliance",             demandeur: "Isabelle Moreau",          profil: "Diplômé d'expertise comptable", statut: "Soumise",  dateSoumission: "25/09/2025", statutPieces: "Demandée",     proprietaire: "Jean-Pierre Roux" },
-  { num: "#043512932", type: "Inscription secondaire PM",   nomComptable: "Fiduciaire du Nord",           demandeur: "François Petit",           profil: "Expert-comptable en entreprise", statut: "Affectée", dateSoumission: "12/11/2025", statutPieces: "A examiner",   proprietaire: "Claire Fontaine" },
+  { num: "#043512932", type: "Inscription secondaire PM",   nomComptable: "Fiduciaire du Nord",           demandeur: "Cabinet Petit & Associés", profil: "Expert-comptable en entreprise", statut: "Affectée", dateSoumission: "12/11/2025", statutPieces: "A examiner",   proprietaire: "Claire Fontaine" },
   { num: "#043512943", type: "Omission PP",                 nomComptable: "Cabinet Meridien",             demandeur: "Sylvie Garnier",           profil: "Article 7bis",                  statut: "Soumise",  dateSoumission: "28/01/2025", statutPieces: "Conforme",     proprietaire: "Marc Dubois" },
 ];
 
@@ -1299,14 +1302,14 @@ function DemandesListViewHeader() {
   );
 }
 
-function DataTableDemandesView({ onContactClick }) {
+function DataTableDemandesView({ onContactClick, onDemandeClick }) {
   const [selected, setSelected] = useState({});
   const toggle = (i) => setSelected(prev => { const n = {...prev}; if (n[i]) delete n[i]; else n[i] = true; return n; });
   const toggleAll = () => { const allChecked = DEMANDES_LIST.length > 0 && DEMANDES_LIST.every((_, i) => selected[i]); setSelected(allChecked ? {} : Object.fromEntries(DEMANDES_LIST.map((_, i) => [i, true]))); };
   const cols = [
     { key: "num",          label: "N° de la demande",              width: "140px" },
     { key: "type",         label: "Type de demande",               width: "220px" },
-    { key: "nomComptable", label: "Nom du comptable",              width: "180px" },
+    { key: "nomComptable", label: "Nom du compte",                 width: "180px" },
     { key: "demandeur",    label: "Demandeur",                     width: "180px" },
     { key: "profil",       label: "Profil du demandeur",           width: "200px" },
     { key: "statut",       label: "Statut",                        width: "110px" },
@@ -1340,7 +1343,7 @@ function DataTableDemandesView({ onContactClick }) {
             >
               <td className="px-2 py-2"><input type="checkbox" className="w-4 h-4 accent-[#0250D9] cursor-pointer" checked={!!selected[i]} onChange={() => toggle(i)} onClick={e => e.stopPropagation()} /></td>
               <td className="px-2 py-2">
-                <a href="javascript:void(0)" onClick={e => e.preventDefault()} className="text-[#0250D9] underline font-medium">{row.num}</a>
+                <a href="javascript:void(0)" onClick={e => { e.preventDefault(); e.stopPropagation(); if(onDemandeClick) onDemandeClick(row); }} className="text-[#0250D9] underline font-medium">{row.num}</a>
               </td>
               <td className="px-2 py-2 text-[#2E2E2E] max-w-[220px]">
                 <span className="block truncate">{row.type}</span>
@@ -1373,12 +1376,12 @@ function DataTableDemandesView({ onContactClick }) {
   );
 }
 
-function DemandesListViewPage({ onContactClick }) {
+function DemandesListViewPage({ onContactClick, onDemandeClick }) {
   return (
     <>
       <DemandesListViewHeader />
       <div className="flex-1 overflow-auto bg-white mx-4 rounded-t-lg">
-        <DataTableDemandesView onContactClick={onContactClick} />
+        <DataTableDemandesView onContactClick={onContactClick} onDemandeClick={onDemandeClick} />
       </div>
     </>
   );
@@ -4290,11 +4293,33 @@ function SocieteRecordPage({ societe, onAccountClick }) {
                           </button>
                         </div>
                         <div className="overflow-x-auto">
-                          <table className="w-full text-[12px] border-collapse border border-[#C9C9C9]" style={{minWidth:640}}>
+                          <table className="w-full text-[12px] border-collapse border border-[#C9C9C9]" style={{minWidth:900}}>
                             <thead><tr>
-                              {["Inscription","Conseil","N° inscription","Statut","Compagnie","Année","Début","Fin"].map(h=><th key={h} className={thCls}>{h}</th>)}
+                              {["Inscription","Conseil","N° inscription","Statut","Compagnie","Année","Début","Fin","N° Contrat","N° Police","N° Chrono","Date Att.","Min. couvert","Commentaire"].map(h=><th key={h} className={thCls}>{h}</th>)}
                             </tr></thead>
-                            <tbody><tr><td colSpan={8} className="px-2 py-6 text-center text-[#9E9E9E] text-[11px] border border-[#C9C9C9]">Aucune assurance</td></tr></tbody>
+                            <tbody>
+                              {[
+                                ["PRINCIPAL","IDF","14-00833900-...","EN EXE.","VERSPIEREN","2022","01/01/2022","31/12/2022","4116146","118269730","","","",""],
+                                ["PRINCIPAL","IDF","14-00833900-...","EN EXE.","VERSPIEREN","2016","01/01/2016","31/12/2016","4116146","118269730","","","",""],
+                                ["PRINCIPAL","IDF","14-00833900-...","EN EXE.","VERSPIEREN","2015","01/01/2015","31/12/2015","4116146","118269730","","","",""],
+                                ["PRINCIPAL","IDF","14-00833900-...","EN EXE.","VERSPIEREN","2014","01/01/2014","31/12/2014","4116146","118269730","","","",""],
+                                ["PRINCIPAL","IDF","14-00833900-...","EN EXE.","VERSPIEREN","2013","01/01/2013","31/12/2013","4116146","118269730","","","",""],
+                                ["PRINCIPAL","IDF","14-00833900-...","EN EXE.","VERSPIEREN","2012","01/01/2012","31/12/2012","4116146","118269730","","","",""],
+                                ["PRINCIPAL","IDF","14-00833900-...","EN EXE.","VERSPIEREN","2011","01/01/2011","31/12/2011","4116146","118269730","","","",""],
+                                ["PRINCIPAL","IDF","14-00833900-...","EN EXE.","VERSPIEREN","2010","01/01/2010","31/12/2010","4116146","118269730","","","",""],
+                                ["PRINCIPAL","IDF","14-00833900-...","EN EXE.","VERSPIEREN","2009","01/01/2009","31/12/2009","4116146","118269730","","","",""],
+                                ["PRINCIPAL","IDF","14-00833900-...","EN EXE.","VERSPIEREN","2008","01/01/2008","31/12/2008","4116146","118269730","","","",""],
+                                ["PRINCIPAL","IDF","14-00833900-...","EN EXE.","COMPTA ASSUR","2006","01/01/2006","31/12/2006","1690N09509","1690N09509","","","",""],
+                                ["PRINCIPAL","IDF","14-00833900-...","EN EXE.","COMPTA ASSUR","2005","01/01/2005","31/12/2005","1690N09509","1690N09509","","12/06/2006","",""],
+                                ["PRINCIPAL","IDF","14-00833900-...","EN EXE.","COMPTA ASSUR","2004","01/01/2004","31/12/2004","1690N09509","1690N09509","","09/03/2004","",""],
+                              ].map((row, ri) => (
+                                <tr key={ri} className={ri % 2 === 0 ? "bg-white" : "bg-[#F9F9F9]"}>
+                                  {row.map((cell, ci) => (
+                                    <td key={ci} className="px-2 py-1 border border-[#C9C9C9] whitespace-nowrap">{cell}</td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
                           </table>
                         </div>
                       </div>
@@ -4318,13 +4343,25 @@ function SocieteRecordPage({ societe, onAccountClick }) {
                         <div className="overflow-x-auto mb-3">
                           <table className="w-full text-[12px] border-collapse border border-[#C9C9C9]" style={{minWidth:580}}>
                             <thead><tr>
-                              {["Compagnie","N° Contrat","N° Police","Début","Fin","N° Chrono","Date Attestation"].map(h=><th key={h} className={thCls}>{h}</th>)}
+                              {["Compagnie","N° Contrat","N° Police","Début","Fin","N° Chrono","Date Attestation","Minimum couvert","Commentaire"].map(h=><th key={h} className={thCls}>{h}</th>)}
                             </tr></thead>
-                            <tbody><tr><td colSpan={7} className="px-2 py-6 text-center text-[#9E9E9E] text-[11px] border border-[#C9C9C9]">Aucune assurance</td></tr></tbody>
+                            <tbody>
+                              <tr className="bg-[#CCFFCC]">
+                                <td className="px-2 py-1 border border-[#C9C9C9] text-[#007700] font-semibold whitespace-nowrap">VERSPIEREN</td>
+                                <td className="px-2 py-1 border border-[#C9C9C9] text-[#007700] whitespace-nowrap">004116146</td>
+                                <td className="px-2 py-1 border border-[#C9C9C9] text-[#007700] whitespace-nowrap">118269730</td>
+                                <td className="px-2 py-1 border border-[#C9C9C9] text-[#007700] whitespace-nowrap">01/01/2008</td>
+                                <td className="px-2 py-1 border border-[#C9C9C9]"></td>
+                                <td className="px-2 py-1 border border-[#C9C9C9]"></td>
+                                <td className="px-2 py-1 border border-[#C9C9C9]"></td>
+                                <td className="px-2 py-1 border border-[#C9C9C9]"></td>
+                                <td className="px-2 py-1 border border-[#C9C9C9]"></td>
+                              </tr>
+                            </tbody>
                           </table>
                         </div>
                         <div className="grid grid-cols-1 gap-y-2">
-                          {[["Souscripteur",""],["Compagnie d'assurance",""],["Numéro contrat",""],["Numéro police",""],["Date de début",""],["Date de fin",""],["Numéro chrono",""],["Date de l'attestation",""],["Minimum légal couvert",""],["Commentaire",""]].map(([l,v])=>(
+                          {[["Souscripteur",""],["Compagnie d'assurance","VERSPIEREN"],["Numéro contrat","004116146"],["Numéro police","118269730"],["Date de début","01/01/2008"],["Date de fin",""],["Numéro chrono",""],["Date de l'attestation",""],["Minimum légal couvert",""],["Commentaire",""]].map(([l,v])=>(
                             <div key={l} className="flex items-center gap-2">
                               <span className="text-[12px] text-[#5C5C5C] w-44 text-right shrink-0">{l} :</span>
                               <input type="text" defaultValue={v} className="flex-1 max-w-xs border border-[#C9C9C9] rounded text-[12px] px-2 py-1 focus:outline-none focus:border-[#0250D9]"/>
@@ -5725,8 +5762,8 @@ function ContactRecordPage({ demande, onAccountClick }) {
       <ContactPageHeader name={demande.demandeur} />
       <HighlightsPanel fields={highlights} />
       <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 pt-[1px]">
-        <div className="flex gap-3 w-full">
-          <div className="w-1/2 min-w-0">
+        <div className="grid grid-cols-2 gap-3 w-full">
+          <div className="min-w-0">
             <div className="bg-white rounded-[20px] overflow-hidden">
               <div className="px-4 pt-4 pb-3">
                 <ContactTabBar activeTab={activeTab} onTabChange={setActiveTab} />
@@ -6097,7 +6134,7 @@ function ContactRecordPage({ demande, onAccountClick }) {
               </div>
             </div>
           </div>
-          <div className="w-1/2 min-w-0 flex flex-col gap-3">
+          <div className="min-w-0 flex flex-col gap-3">
             {/* Activités */}
             <ActivitesPanel onAccountClick={onAccountClick} />
             {/* Participations */}
@@ -6119,6 +6156,522 @@ function ContactRecordPage({ demande, onAccountClick }) {
             <DemandesContactPanel />
             {/* Pièces */}
             <PiecesPanel />
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// DemandeRecordPage — fiche détaillée d'une demande
+// ══════════════════════════════════════════════════════════════
+
+const DEMANDE_PATH_STEPS = [
+  { key: "recu",        label: "Reçu",                       done: true  },
+  { key: "verifie",     label: "Vérifié",                    done: true  },
+  { key: "complet",     label: "Complet",                    done: true  },
+  { key: "complete",    label: "Complète",                   done: false, current: false },
+  { key: "commission",  label: "Prête pour commission",     done: false, current: false },
+  { key: "session",     label: "Prête pour session",          done: false, current: false },
+  { key: "ferme",       label: "Fermé",                      done: false, current: true  },
+];
+
+function DemandePathStep({ step, index, total, onClick }) {
+  const isFirst = index === 0;
+  const isLast  = index === total - 1;
+
+  /* ── SVG-based chevron path (same technique as Record.html PathStep) ── */
+  const D = 10;   // profondeur de la pointe en unités viewBox
+  const R = 14;   // rayon arrondi des extrémités (= H/2 pour un demi-cercle parfait)
+  const W = 100;  // largeur de base en unités viewBox
+  const H = 28;   // hauteur en px (viewBox height)
+
+  const bg        = step.done ? "#acf3e4" : step.current ? "#032d60" : "#e5e5e5";
+  const textColor = step.current ? "white" : "#03234d";
+
+  // Premier : arrondi gauche + pointe droite
+  // Dernier : encoche gauche + arrondi droit
+  // Milieu  : encoche gauche + pointe droite
+  let shapePath;
+  if (isFirst) {
+    shapePath = `M${R},0 L${W},0 L${W+D},${H/2} L${W},${H} L${R},${H} A${R},${R} 0 0,1 ${R},0 Z`;
+  } else if (isLast) {
+    shapePath = `M0,0 L${W-R},0 A${R},${R} 0 0,1 ${W-R},${H} L0,${H} L${D},${H/2} Z`;
+  } else {
+    shapePath = `M0,0 L${W},0 L${W+D},${H/2} L${W},${H} L0,${H} L${D},${H/2} Z`;
+  }
+
+  // viewBox width : W+D pour premier/milieu (la pointe dépasse), W pour le dernier
+  const vbW = isLast ? W : W + D;
+
+  return (
+    <div
+      onClick={onClick}
+      style={{
+        flex: 1, minWidth: 0, height: H,
+        position: "relative",
+        marginRight: isLast ? 0 : "-5px",
+        cursor: onClick ? "pointer" : "default",
+      }}
+    >
+      {/* Forme SVG — s'étire en largeur, overflow visible pour la pointe */}
+      <svg
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", overflow: "visible" }}
+        viewBox={`0 0 ${vbW} ${H}`}
+        preserveAspectRatio="none"
+      >
+        <path d={shapePath} fill={bg} />
+      </svg>
+
+      {/* Contenu centré */}
+      <div style={{
+        position: "absolute", inset: 0,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        paddingLeft:  isFirst ? R + 4 : D + 8,
+        paddingRight: isLast  ? R + 4 : D + 4,
+      }}>
+        {step.done ? (
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#056764" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        ) : (
+          <span style={{fontSize:11, color:textColor, fontWeight:step.current?600:400, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis"}}>{step.label}</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════
+   MODALE ASSURANCES — ouvre au clic sur l'étape "Fermé"
+   2 onglets × 1 tableau, style PEP/SLDS moderne
+   ══════════════════════════════════════════════════════ */
+const ASSURANCE_COLS = ["Inscription","Conseil","N° inscription","Statut","Compagnie","Année","Début","Fin"];
+
+function AssurancesModal({ onClose }) {
+  const [tab, setTab] = React.useState("before2022");
+
+  const tabs = [
+    { key: "before2022", label: "Assurances (jusqu'à fin 2022)" },
+    { key: "from2023",   label: "Assurances (à partir de 2023)"  },
+  ];
+
+  return (
+    <div
+      onClick={onClose}
+      style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.45)",zIndex:9000,
+              display:"flex",alignItems:"center",justifyContent:"center"}}
+    >
+      <div
+        onClick={e=>e.stopPropagation()}
+        style={{background:"white",borderRadius:12,width:720,maxHeight:"80vh",
+                boxShadow:"0 8px 40px rgba(0,0,0,0.22)",overflow:"hidden",
+                display:"flex",flexDirection:"column",position:"relative"}}
+      >
+        {/* ── En-tête ── */}
+        <div style={{padding:"20px 24px 0",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
+          <h2 style={{fontSize:17,fontWeight:700,color:"#032d60",margin:0}}>Assurances de la demande</h2>
+          <button
+            onClick={onClose}
+            style={{width:28,height:28,borderRadius:"50%",border:"none",background:"#e5e5e5",
+                    cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}
+          >
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#444" strokeWidth="2.5" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
+        {/* ── Onglets ── */}
+        <div style={{display:"flex",borderBottom:"1px solid #e5e5e5",margin:"12px 0 0",flexShrink:0}}>
+          {tabs.map(t => (
+            <button
+              key={t.key}
+              onClick={()=>setTab(t.key)}
+              style={{
+                padding:"10px 20px",fontSize:13,border:"none",background:"none",cursor:"pointer",
+                fontWeight: tab===t.key ? 600 : 400,
+                color:      tab===t.key ? "#0176d3" : "#5c5c5c",
+                borderBottom: tab===t.key ? "2px solid #0176d3" : "2px solid transparent",
+                marginBottom: -1,
+                transition:"color .15s,border-color .15s",
+              }}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* ── Sous-titre ── */}
+        <div style={{padding:"8px 16px",background:"#f0f7ff",borderBottom:"1px solid #d1e8ff",
+                     display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
+          {/* icône radio-style */}
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="8" r="7" stroke="#0176d3" strokeWidth="1.5" fill="white"/>
+            <circle cx="8" cy="8" r="3.5" fill="#0176d3"/>
+          </svg>
+          <span style={{fontSize:12,fontWeight:600,color:"#032d60"}}>
+            Liste des assurances des établissements EN EXERCICE
+          </span>
+        </div>
+
+        {/* ── Tableau ── */}
+        <div style={{overflowY:"auto",flex:1}}>
+          <table style={{width:"100%",borderCollapse:"collapse",fontSize:12,tableLayout:"fixed"}}>
+            <thead style={{position:"sticky",top:0,zIndex:1}}>
+              <tr style={{background:"#f3f3f3",borderBottom:"1px solid #c9c9c9"}}>
+                {ASSURANCE_COLS.map(col => (
+                  <th key={col} style={{padding:"7px 10px",textAlign:"left",fontWeight:600,
+                                        color:"#444",whiteSpace:"nowrap",borderRight:"1px solid #e5e5e5"}}>
+                    {col}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {/* Pas de données — état vide */}
+              <tr>
+                <td colSpan={ASSURANCE_COLS.length}
+                    style={{padding:"48px 16px",textAlign:"center",color:"#999",fontSize:13}}>
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#c9c9c9" strokeWidth="1.5" style={{display:"block",margin:"0 auto 10px"}}>
+                    <rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/>
+                    <line x1="9" y1="21" x2="9" y2="9"/>
+                  </svg>
+                  Aucune assurance enregistrée
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* ── Pied ── */}
+        <div style={{borderTop:"1px solid #e5e5e5",padding:"10px 20px",
+                     display:"flex",justifyContent:"flex-end",flexShrink:0}}>
+          <button
+            onClick={onClose}
+            style={{padding:"6px 20px",borderRadius:6,border:"1px solid #c9c9c9",
+                    background:"white",fontSize:13,cursor:"pointer",color:"#444"}}
+          >
+            Fermer
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const CLOSED_OPTIONS = [
+  { value: "acceptee", label: "Fermée-acceptée" },
+  { value: "refusee",  label: "Fermée-refusée" },
+  { value: "abandonnee", label: "Fermée-abandonnée" },
+];
+
+function FermerDemandeModal({ onClose }) {
+  const [selected, setSelected] = React.useState(null);
+  const [open, setOpen] = React.useState(true);
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.45)",zIndex:9000,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={onClose}>
+      <div style={{background:"white",borderRadius:12,width:500,boxShadow:"0 8px 32px rgba(0,0,0,0.22)",overflow:"visible",position:"relative"}} onClick={e=>e.stopPropagation()}>
+        {/* Close */}
+        <button onClick={onClose} style={{position:"absolute",top:12,right:12,width:28,height:28,borderRadius:"50%",border:"none",background:"#e5e5e5",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#444" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        {/* Title */}
+        <div style={{padding:"24px 24px 0",textAlign:"center"}}>
+          <h2 style={{fontSize:18,fontWeight:700,color:"#032d60",margin:0}}>Fermer cette demande</h2>
+        </div>
+        {/* Body */}
+        <div style={{padding:"20px 24px 24px"}}>
+          <label style={{fontSize:12,fontWeight:600,color:"#444",display:"block",marginBottom:6}}>
+            <span style={{color:"#c23934"}}>*</span> Statut
+          </label>
+          {/* Custom select */}
+          <div style={{position:"relative"}}>
+            <div
+              onClick={()=>setOpen(o=>!o)}
+              style={{border:"1px solid #c9c9c9",borderRadius:6,padding:"8px 12px",fontSize:13,color:selected?"#032d60":"#888",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between",background:"white"}}
+            >
+              <span style={{display:"flex",alignItems:"center",gap:8}}>
+                {selected ? null : <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#aaa" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>}
+                {selected ? CLOSED_OPTIONS.find(o=>o.value===selected)?.label : "Sélectionnez une étape fermée..."}
+              </span>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            {open && (
+              <div style={{position:"absolute",left:0,right:0,top:"100%",marginTop:2,border:"1px solid #c9c9c9",borderRadius:6,background:"white",boxShadow:"0 4px 16px rgba(0,0,0,0.12)",zIndex:100,overflow:"hidden"}}>
+                {CLOSED_OPTIONS.map((opt,i) => (
+                  <div
+                    key={opt.value}
+                    onClick={()=>{setSelected(opt.value);setOpen(false);}}
+                    style={{
+                      padding:"10px 14px",fontSize:13,cursor:"pointer",
+                      background: i===0 ? "#0176d3" : "white",
+                      color: i===0 ? "white" : "#032d60",
+                    }}
+                    onMouseEnter={e=>{if(i!==0||selected!==opt.value)e.currentTarget.style.background=i===0?"#0176d3":"#f3f3f3"}}
+                    onMouseLeave={e=>{e.currentTarget.style.background=i===0?"#0176d3":"white"}}
+                  >
+                    {opt.label}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+        {/* Footer */}
+        <div style={{borderTop:"1px solid #e5e5e5",padding:"12px 24px",display:"flex",justifyContent:"flex-end",gap:8}}>
+          <button onClick={onClose} style={{padding:"6px 16px",borderRadius:6,border:"1px solid #c9c9c9",background:"white",fontSize:13,cursor:"pointer",color:"#444"}}>Annuler</button>
+          <button style={{padding:"6px 16px",borderRadius:6,border:"none",background:selected?"#0176d3":"#c9c9c9",color:"white",fontSize:13,fontWeight:600,cursor:selected?"pointer":"default"}} disabled={!selected}>Confirmer</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DemandePathBar() {
+  const [showModal,       setShowModal]       = React.useState(false);
+  const [showAssurances,  setShowAssurances]  = React.useState(false);
+  return (
+    <>
+      {showModal      && <FermerDemandeModal  onClose={()=>setShowModal(false)} />}
+      {showAssurances && <AssurancesModal     onClose={()=>setShowAssurances(false)} />}
+      <div className="bg-white px-2 border-b border-[#E5E5E5] flex items-center gap-1" style={{height:48}}>
+        {/* Expand button */}
+        <button style={{width:28,height:28,borderRadius:"50%",border:"1px solid #C9C9C9",background:"white",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,cursor:"pointer"}}>
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+            <circle cx="16" cy="16" r="15" stroke="#c9c9c9" strokeWidth="1.5" fill="white"/>
+            <path d="M13 10L19 16L13 22" stroke="#5c5c5c" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+        {/* Steps — le step "ferme" est cliquable */}
+        <div style={{display:"flex", alignItems:"center", flex:1, height:28, overflow:"visible"}}>
+          {DEMANDE_PATH_STEPS.map((s, i) => (
+            <DemandePathStep
+              key={s.key}
+              step={s}
+              index={i}
+              total={DEMANDE_PATH_STEPS.length}
+              onClick={s.key === "ferme" ? ()=>setShowModal(true) : undefined}
+            />
+          ))}
+        </div>
+        {/* CTA button */}
+        <button onClick={()=>setShowModal(true)} style={{flexShrink:0,height:28,padding:"0 12px",borderRadius:9999,background:"#066afe",color:"white",fontSize:11,fontWeight:600,border:"none",cursor:"pointer",whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:5}}>
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Sélectionner Statut fermé(e)
+        </button>
+      </div>
+    </>
+  );
+}
+
+function DemandeFormField({ label, value, isLink, onClick, isAvatar }) {
+  return (
+    <div className="flex flex-col gap-0.5 py-2 border-b border-[#C9C9C9]">
+      <p className="text-[12px] text-[#5C5C5C] leading-[17px]">{label}</p>
+      <div className="flex items-center justify-between min-h-[22px]">
+        {isAvatar ? (
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-5 rounded-full bg-[#0250D9] flex items-center justify-center">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="white"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+            </div>
+            <span className="text-[13px] text-[#0250D9]">{value}</span>
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#5C5C5C" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="23" y1="11" x2="17" y2="11"/><line x1="20" y1="8" x2="20" y2="14"/></svg>
+          </div>
+        ) : isLink ? (
+          <span onClick={onClick} className="text-[13px] text-[#0250D9] cursor-pointer hover:underline">{value}</span>
+        ) : (
+          <span className="text-[13px] text-[#2E2E2E]">{value || " "}</span>
+        )}
+        {!isAvatar && (
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#C9C9C9" strokeWidth="1.5" className="shrink-0"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function DemandeInfosSection({ demande }) {
+  const [open, setOpen] = React.useState(true);
+  return (
+    <div>
+      <button onClick={() => setOpen(o => !o)} className="flex items-center gap-2 w-full h-8 px-2 rounded-lg bg-[#F3F3F3] mb-3">
+        {open ? <ChevronDown size={12} className="text-[#5C5C5C]" /> : <ChevronRight size={12} className="text-[#5C5C5C]" />}
+        <span className="text-[15px] text-[#2E2E2E] font-medium">Informations concernant la demande</span>
+      </button>
+      {open && (
+        <div className="grid grid-cols-2 gap-x-8">
+          {/* Colonne gauche */}
+          <div>
+            <DemandeFormField label="Type de demande"              value={demande.type} />
+            <DemandeFormField label="Conseil régional de l'ordre"  value="Bretagne"             isLink />
+            <DemandeFormField label="Statut"                       value="Complète" />
+            <DemandeFormField label="Demandeur"                    value={demande.demandeur}    isLink />
+            <DemandeFormField label="Qualité du demandeur"         value="Expert Comptable" />
+            <DemandeFormField label="Profil du demandeur"          value={demande.profil} />
+            <DemandeFormField label="Statut des pièces justificatives" value={demande.statutPieces} />
+            <DemandeFormField label="Lieu principal d'exercice"    value="10 Rue de la Gare 91800 Brunoy – FR" />
+            <DemandeFormField label="Dossier d'Inscription"        value="DOSSINSC-0102"        isLink />
+          </div>
+          {/* Colonne droite */}
+          <div>
+            <DemandeFormField label="Date de soumission"           value={demande.dateSoumission + " 15:10"} />
+            <DemandeFormField label="Date de session"              value="Session-04/05/2026"   isLink />
+            <DemandeFormField label="Date d'effet"                 value="04/05/2026" />
+            <DemandeFormField label="Prise d'effet souhaitée"      value="Dès la décision du conseil régional" />
+            <DemandeFormField label="Date de commission/comité"    value="" />
+            <DemandeFormField label="Date/Heure d'ouverture"       value={demande.dateSoumission + " 14:15"} />
+            <DemandeFormField label="Date/Heure de fermeture"      value="" />
+            <DemandeFormField label="Propriétaire de la requête"   value={demande.proprietaire} isAvatar />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DemandeRenseignementsSection() {
+  const [open, setOpen] = React.useState(false);
+  return (
+    <div className="mt-2">
+      <button onClick={() => setOpen(o => !o)} className="flex items-center gap-2 w-full h-8 px-2 rounded-lg bg-[#F3F3F3]">
+        {open ? <ChevronDown size={12} className="text-[#5C5C5C]" /> : <ChevronRight size={12} className="text-[#5C5C5C]" />}
+        <span className="text-[15px] text-[#2E2E2E] font-medium">Renseignements personnels</span>
+      </button>
+    </div>
+  );
+}
+
+function DemandePiecesInlinePanel() {
+  const [search, setSearch] = React.useState("");
+  const [typeFilter, setTypeFilter] = React.useState("all");
+  const pills = ["Tous","PDF","Word","Excel","PPT","Image","Autre"];
+  return (
+    <div className="bg-white rounded-[20px] overflow-hidden flex flex-col" style={{boxShadow:"0 0 1.49px rgba(0,0,0,0.09),0 1.4px 1.5px rgba(0,0,0,0.09)"}}>
+      {/* Tab header */}
+      <div className="flex items-center border-b border-[#E5E5E5] px-4" style={{height:40}}>
+        <span className="text-[14px] font-bold text-[#0250D9]" style={{borderBottom:"3px solid #0250D9",height:"100%",display:"flex",alignItems:"center"}}>Pièces</span>
+      </div>
+      {/* Toolbar */}
+      <div className="flex items-center gap-2 px-3 pt-3 flex-wrap">
+        <div className="flex-1 min-w-[100px] flex items-center gap-2 border border-[#C9C9C9] rounded-lg px-2" style={{height:30}}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Rechercher..." className="flex-1 border-none outline-none text-[12px] bg-transparent" style={{fontFamily:"inherit"}} />
+        </div>
+        <select className="border border-[#C9C9C9] rounded-lg text-[12px] bg-white cursor-pointer" style={{height:30,padding:"0 8px",fontFamily:"inherit"}}>
+          <option>PJ</option><option>Courriers</option>
+        </select>
+        <button className="flex items-center gap-1 border border-[#C9C9C9] rounded-lg bg-white text-[12px] text-[#374151]" style={{height:30,padding:"0 10px",fontFamily:"inherit",whiteSpace:"nowrap"}}>
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Télécharger ZIP (0)
+        </button>
+        <button className="flex items-center gap-1 border border-[#C9C9C9] rounded-lg bg-white text-[12px] text-[#374151]" style={{height:30,padding:"0 10px",fontFamily:"inherit",whiteSpace:"nowrap"}}>
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Demander une pièce
+        </button>
+        <button className="flex items-center gap-1 rounded-lg text-white text-[12px] font-semibold bg-[#0250D9]" style={{height:30,padding:"0 12px",fontFamily:"inherit",border:"none",whiteSpace:"nowrap"}}>
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Téléverser
+        </button>
+      </div>
+      {/* Filter pills */}
+      <div className="flex items-center gap-1.5 px-3 pt-2 pb-2 flex-wrap">
+        {pills.map(p => (
+          <button key={p} onClick={() => setTypeFilter(p)}
+            className="h-6 rounded-full text-[12px] px-3"
+            style={{border:typeFilter===p?"2px solid #0250D9":"1px solid #C9C9C9",background:typeFilter===p?"#EEF4FF":"white",color:typeFilter===p?"#0250D9":"#374151",fontWeight:typeFilter===p?600:400,fontFamily:"inherit",cursor:"pointer"}}>
+            {p}
+          </button>
+        ))}
+        <span className="ml-auto text-[12px] text-[#5C5C5C]">0 fichier</span>
+      </div>
+      {/* Empty state */}
+      <div className="flex flex-col items-center justify-center py-10 gap-3">
+        <div className="w-12 h-12 border border-[#E5E5E5] rounded-lg flex items-center justify-center bg-[#F9F9F9]">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#C9C9C9" strokeWidth="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+        <p className="text-[13px] text-[#9E9E9E]">Aucune pièce</p>
+      </div>
+    </div>
+  );
+}
+
+function DemandeRecordPage({ demande, onContactClick }) {
+  const [activeTab, setActiveTab] = React.useState("details");
+  // Numéro lisible : retire le # et prend max 8 chiffres
+  const numDisplay = demande.num.replace("#","").slice(-8).padStart(8,"0");
+
+  const highlights = [
+    { label: "Type de demande",               value: demande.type },
+    { label: "Demandeur",                      value: (() => { const p = demande.demandeur.trim().split(" "); return `${p[p.length-1].toUpperCase()} ${p.slice(0,-1).join(" ")}`; })(), isLink: true, onClick: () => onContactClick && onContactClick(demande) },
+    { label: "Conseil régional de l'ordre",   value: "Bretagne" },
+    { label: "SUPRA",                          value: "" },
+    { label: "Date de session",                value: "Session-04/05/2026" },
+    { label: "Statut des pièces justificatives", value: demande.statutPieces },
+    { label: "Lieu principal d'exercice",      value: "10 Rue de la Gare 91800 Brunoy – FR" },
+  ];
+
+  return (
+    <>
+      {/* Header */}
+      <div className="bg-[#F3F3F3] px-4 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded bg-[#E8384F] flex items-center justify-center">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="white"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+            </div>
+            <div>
+              <p className="text-[13px] text-[#5C5C5C] leading-[18px]">Demande</p>
+              <p className="text-[28px] text-[#03234D] leading-[35px] font-light">{numDisplay}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="flex border border-[#5C5C5C] rounded-full overflow-hidden">
+              <button className="px-4 h-8 text-[14px] text-[#0250D9] bg-white border-r border-[#5C5C5C]">Modifier</button>
+              <button className="px-4 h-8 text-[14px] text-[#0250D9] bg-white border-r border-[#5C5C5C]">Supprimer</button>
+              <button className="px-4 h-8 text-[14px] text-[#0250D9] bg-white">Générer le récépissé</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      {/* Highlights */}
+      <HighlightsPanel fields={highlights} />
+      {/* Path bar */}
+      <DemandePathBar />
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 pt-3">
+        <div className="grid grid-cols-2 gap-3 w-full">
+          {/* Colonne gauche 50% */}
+          <div className="min-w-0">
+            <div className="bg-white rounded-[20px] overflow-hidden px-4 pt-4 pb-4" style={{boxShadow:"0 0 1.49px rgba(0,0,0,0.09),0 1.4px 1.5px rgba(0,0,0,0.09)"}}>
+              {/* Tabs */}
+              <div className="flex gap-0 border-b border-[#C9C9C9] mb-4">
+                {[["details","Détails"],["pieces","Pièces Justificatives"],["examen","Examen"]].map(([k,l]) => (
+                  <button key={k} onClick={() => setActiveTab(k)}
+                    className={`px-4 py-2 text-[13px] border-b-2 -mb-px transition-colors ${activeTab===k ? "border-[#0250D9] text-[#0250D9] font-semibold" : "border-transparent text-[#2E2E2E] hover:bg-[#F3F3F3]"}`}>
+                    {l}
+                  </button>
+                ))}
+              </div>
+              {activeTab === "details" && (
+                <div>
+                  <DemandeInfosSection demande={demande} />
+                  <DemandeRenseignementsSection />
+                </div>
+              )}
+              {activeTab === "pieces" && (
+                <div className="py-6 text-center text-[13px] text-[#9E9E9E]">Aucune pièce justificative</div>
+              )}
+              {activeTab === "examen" && (
+                <div className="py-6 text-center text-[13px] text-[#9E9E9E]">Aucun examen</div>
+              )}
+            </div>
+          </div>
+          {/* Colonne droite 1/3 */}
+          {/* Colonne droite 50% */}
+          <div className="min-w-0">
+            <DemandePiecesInlinePanel />
           </div>
         </div>
       </div>
@@ -6215,6 +6768,17 @@ function initTabsFromHash() {
     if (row) return [{ type: "groupe", id: hash, label: row.libelle, data: row }];
     return [{ type: "groupe", id: hash, label: num, data: { numero: num, libelle: num } }];
   }
+  if (hash.startsWith("demande:")) {
+    const num = hash.slice("demande:".length);
+    const row = DEMANDES_LIST.find(d => d.num === num);
+    if (row) return [{ type: "demande", id: hash, label: row.num, data: row }];
+    // Fallback minimal pour éviter la page blanche même si le num est inconnu
+    return [{ type: "demande", id: hash, label: num, data: {
+      num, type: "", demandeur: "", statut: "Soumise",
+      dateSoumission: "", statutPieces: "", proprietaire: "",
+      nomComptable: "", profil: ""
+    }}];
+  }
   return [];
 }
 
@@ -6230,7 +6794,17 @@ function App() {
   // Back / Forward — écoute sur la bonne fenêtre
   React.useEffect(() => {
     const target = IN_IFRAME ? window.parent : window;
-    const onPop = () => setActivePageState(hashToPage(readCurrentHash()));
+    const onPop = () => {
+      const newPage = hashToPage(readCurrentHash());
+      setActivePageState(newPage);
+      // Si l'onglet cible n'est pas encore ouvert, le reconstruire depuis le hash
+      setOpenTabs(prev => {
+        if (prev.find(t => t.id === newPage)) return prev; // déjà là
+        const restored = initTabsFromHash();
+        if (restored.length === 0) return prev;
+        return [...prev, ...restored.filter(r => !prev.find(p => p.id === r.id))];
+      });
+    };
     try { target.addEventListener("popstate", onPop); }
     catch(e) { window.addEventListener("popstate", onPop); }
     return () => {
@@ -6274,6 +6848,16 @@ function App() {
     setOpenTabs(prev => {
       const exists = prev.find(t => t.id === tabId);
       if (!exists) return [...prev, { type: "societe", id: tabId, label: societe.denomination, data: societe }];
+      return prev;
+    });
+    setActivePage(tabId);
+  };
+
+  const handleNavigateToDemande = (row) => {
+    const tabId = "demande:" + row.num;
+    setOpenTabs(prev => {
+      const exists = prev.find(t => t.id === tabId);
+      if (!exists) return [...prev, { type: "demande", id: tabId, label: row.num, data: row }];
       return prev;
     });
     setActivePage(tabId);
@@ -6362,12 +6946,13 @@ function App() {
       </div>
 
       {/* ── Page content ── */}
-      {isDemandesActive && <DemandesListViewPage onContactClick={handleNavigateToContact} />}
+      {isDemandesActive && <DemandesListViewPage onContactClick={handleNavigateToContact} onDemandeClick={handleNavigateToDemande} />}
       {isListActive && <ListViewPage onNavigateToRecord={handleNavigateToRecord} />}
       {isGroupesActive && <GroupesListViewPage onNavigateToGroupe={handleNavigateToGroupe} />}
       {activeTab && activeTab.type === "record" && <RecordPage row={activeTab.data} />}
       {activeTab && activeTab.type === "formations" && <FormationsPage row={activeTab.data} />}
       {activeTab && activeTab.type === "groupe" && <GroupeRecordPage groupe={activeTab.data} onNavigateToRecord={handleNavigateToRecord} />}
+      {activeTab && activeTab.type === "demande" && <DemandeRecordPage demande={activeTab.data} onContactClick={handleNavigateToContact} />}
       {activeTab && activeTab.type === "contact" && <ContactRecordPage demande={activeTab.data} onAccountClick={handleNavigateToAccount} />}
       {activeTab && activeTab.type === "account" && <AccountRecordPage account={activeTab.data} onSocieteClick={handleNavigateToSociete} />}
       {activeTab && activeTab.type === "societe" && <SocieteRecordPage societe={activeTab.data} onAccountClick={handleNavigateToAccount} />}
