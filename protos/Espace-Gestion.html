@@ -228,20 +228,20 @@ function buildRecordData(row) {
   const reinscrSessionDate = `18/${String(reinscrMonth + 2 > 12 ? reinscrMonth - 10 : reinscrMonth + 2).padStart(2,"0")}/${reinscrMonth + 2 > 12 ? reinscrYear + 1 : reinscrYear}`;
 
   const motifsHistorique = [
-    { cr: crShort, crOrigine: crShort, numInscription: row.numInscription, motif: "INSCRIPTION AU STAGE", type: "D", effet: row.dateEffet, session: sessionDate, decision: "Validé" },
+    { cr: crShort, crOrigine: crShort, numInscription: row.numInscription, motif: "INSCRIPTION AU STAGE", type: "D", effet: row.dateEffet, session: sessionDate, decision: "Validé", qualite: "STA" },
   ];
   // Add REINSCRIPTION for année 2+
   if (annee >= 2) {
-    motifsHistorique.push({ cr: crShort, crOrigine: crShort, numInscription: row.numInscription, motif: "REINSCRIPTION", type: "D", effet: reinscrDate, session: reinscrSessionDate, decision: "Validé" });
+    motifsHistorique.push({ cr: crShort, crOrigine: crShort, numInscription: row.numInscription, motif: "REINSCRIPTION", type: "D", effet: reinscrDate, session: reinscrSessionDate, decision: "Validé", qualite: "STA" });
   }
   // Add SUSPENSION + REPRISE for suspended
   if (row.statut === "Suspendu") {
     const suspDate = `01/${String(mEff + 6 > 12 ? mEff - 6 : mEff + 6).padStart(2,"0")}/${mEff + 6 > 12 ? yEff + 1 : yEff}`;
-    motifsHistorique.push({ cr: crShort, crOrigine: crShort, numInscription: row.numInscription, motif: "SUSPENSION", type: "D", effet: suspDate, session: "", decision: "Validé" });
+    motifsHistorique.push({ cr: crShort, crOrigine: crShort, numInscription: row.numInscription, motif: "SUSPENSION", type: "D", effet: suspDate, session: "", decision: "Validé", qualite: "STA" });
   }
   // Add FIN DE STAGE for terminé
   if (row.statut === "Stage terminé") {
-    motifsHistorique.push({ cr: crShort, crOrigine: crShort, numInscription: row.numInscription, motif: "ATTESTATION DE FIN DE STAGE", type: "D", effet: row.dateFin || "", session: "", decision: "Validé" });
+    motifsHistorique.push({ cr: crShort, crOrigine: crShort, numInscription: row.numInscription, motif: "ATTESTATION DE FIN DE STAGE", type: "D", effet: row.dateFin || "", session: "", decision: "Validé", qualite: "STA" });
   }
 
   const motifsEnAttente = [];
@@ -555,10 +555,7 @@ function HighlightsPanel({ fields }) {
 
 const RECORD_TABS = [
   { key: "individu", label: "Individu" },
-  { key: "motifs", label: "Demandes" },
   { key: "stage", label: "Stage" },
-  { key: "formations", label: "Formations" },
-  { key: "obligations", label: "Obligations" },
 ];
 
 function TabBar({ activeTab, onTabChange }) {
@@ -908,7 +905,8 @@ function EditableField({ label, value, onChange, readOnly, isLink, onClick }) {
   );
 }
 
-function CardSection({ icon, iconBg, title, count, children }) {
+function CardSection({ icon, iconBg, title, count, children, defaultOpen = true }) {
+  const [open, setOpen] = useState(defaultOpen);
   return (
     <div className="bg-white rounded-[20px] overflow-hidden">
       <div className="flex items-center gap-2 px-4 py-3">
@@ -918,11 +916,14 @@ function CardSection({ icon, iconBg, title, count, children }) {
         <span className="flex-1 text-[20px] text-[#03234D] leading-[28px]">
           {title}{count !== undefined ? ` (${count})` : ""}
         </span>
-        <button className="w-8 h-8 border border-[#5C5C5C] rounded-full flex items-center justify-center bg-white">
-          <ChevronDown size={14} className="text-[#5C5C5C]" />
+        <button onClick={() => setOpen(o => !o)} className="w-8 h-8 border border-[#5C5C5C] rounded-full flex items-center justify-center bg-white hover:bg-[#F3F3F3] transition-colors">
+          {open
+            ? <ChevronDown size={14} className="text-[#5C5C5C]" />
+            : <ChevronRight size={14} className="text-[#5C5C5C]" />
+          }
         </button>
       </div>
-      {children && <div className="px-4 pb-4">{children}</div>}
+      {open && children && <div className="px-4 pb-4">{children}</div>}
     </div>
   );
 }
@@ -1849,6 +1850,108 @@ function FormationsPage({ row }) {
   );
 }
 
+/* ══════════════════════════════════════════════════════════════
+   DemandesPanel — Historique des motifs + Motifs en attente
+   ══════════════════════════════════════════════════════════════ */
+function DemandesPanel({ motifsHistorique, motifsEnAttente }) {
+  const [historiqueOpen, setHistoriqueOpen] = useState(true);
+  const thCls = "px-3 py-2 border-b border-[#C9C9C9] text-[11px] font-semibold text-[#5C5C5C] whitespace-nowrap";
+  const tdCls = "px-3 py-2 text-[12px] text-[#2E2E2E] whitespace-nowrap";
+  return (
+    <div className="flex flex-col gap-3 mt-1">
+
+      {/* ── Historique des motifs ── */}
+      <div className="border border-[#E5E5E5] rounded-lg overflow-hidden">
+        <button onClick={() => setHistoriqueOpen(o => !o)}
+          className="w-full flex items-center gap-2 px-3 py-2.5 text-left bg-[#F9FAFB] hover:bg-[#F3F3F3] transition-colors">
+          {historiqueOpen
+            ? <ChevronDown size={12} className="text-[#5C5C5C] shrink-0" />
+            : <ChevronRight size={12} className="text-[#5C5C5C] shrink-0" />}
+          <span className="text-[13px] font-semibold text-[#03234D]">Historique des motifs</span>
+          <span className="ml-1 text-[11px] text-[#5C5C5C]">({motifsHistorique.length})</span>
+        </button>
+        {historiqueOpen && (
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-[#F3F3F3]">
+                  <th className={thCls}>CR</th>
+                  <th className={thCls}>CR Origine du Motif</th>
+                  <th className={thCls}>N° inscription</th>
+                  <th className={thCls}>Motif</th>
+                  <th className={thCls}>Type</th>
+                  <th className={thCls}>Effet</th>
+                  <th className={thCls}>Session</th>
+                  <th className={thCls}>Décision</th>
+                  <th className={thCls}>Qualité</th>
+                </tr>
+              </thead>
+              <tbody>
+                {motifsHistorique.map((m, i) => (
+                  <tr key={i} className="border-t border-[#E5E5E5] hover:bg-[#FAFAFA]">
+                    <td className={tdCls}>{m.cr}</td>
+                    <td className={tdCls}>{m.crOrigine}</td>
+                    <td className={tdCls}>{m.numInscription}</td>
+                    <td className={`${tdCls} font-medium`}>{m.motif}</td>
+                    <td className={tdCls}>{m.type}</td>
+                    <td className={tdCls}>{m.effet}</td>
+                    <td className={tdCls}>{m.session}</td>
+                    <td className={tdCls}>
+                      <span className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-medium ${m.decision === "Validé" ? "bg-[#E6F4EA] text-[#1B7F37]" : "bg-[#FFF3E0] text-[#E65100]"}`}>
+                        {m.decision}
+                      </span>
+                    </td>
+                    <td className={tdCls}>{m.qualite}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* ── Motifs en attente ── style page contact ── */}
+      <div>
+        <div className="text-[12px] font-bold text-[#03234D] bg-[#D6E4F7] px-3 py-1.5 mb-2">Motifs en attente</div>
+        <div className="flex items-center gap-2 mb-2">
+          <button className="flex items-center gap-1 px-2 py-1 bg-[#4CAF50] text-white rounded text-[11px] font-semibold">
+            <Plus size={11}/> Ajouter
+          </button>
+          <button className="flex items-center gap-1 px-2 py-1 bg-[#F44336] text-white rounded text-[11px] font-semibold">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="white" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg> Supprimer
+          </button>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-[12px] border-collapse" style={{minWidth:520}}>
+            <thead>
+              <tr className="bg-[#F3F3F3] text-[#5C5C5C]">
+                {["Motif","Effet","Session","Décision","Echéance","Commentaire"].map(h => (
+                  <th key={h} className="px-2 py-1.5 text-left border-b border-[#C9C9C9] font-semibold whitespace-nowrap text-[11px]">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {motifsEnAttente.length === 0 && (
+                <tr><td colSpan={6} className="px-2 py-3 text-[12px] text-[#5C5C5C] italic">Aucune demande en attente</td></tr>
+              )}
+              {motifsEnAttente.map((m, i) => (
+                <tr key={i} className="border-b border-[#E5E5E5] hover:bg-[#EEF4FF] cursor-pointer">
+                  <td className="px-2 py-1.5 font-semibold text-[#0250D9] whitespace-nowrap">{m.motif}</td>
+                  <td className="px-2 py-1.5 whitespace-nowrap">{m.effet}</td>
+                  <td className="px-2 py-1.5 whitespace-nowrap">{m.session}</td>
+                  <td className="px-2 py-1.5">{m.decision}</td>
+                  <td className="px-2 py-1.5">{m.echeance}</td>
+                  <td className="px-2 py-1.5 text-[#5C5C5C] truncate max-w-[160px]">{m.commentaire}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function RecordPage({ row }) {
   const [activeTab, setActiveTab] = useState("stage");
   const data = buildRecordData(row);
@@ -1874,92 +1977,6 @@ function RecordPage({ row }) {
                   </div>
                 )}
 
-                {/* ═══ ONGLET MOTIFS ═══ */}
-                {activeTab === "motifs" && (
-                  <div className="mt-3 flex flex-col gap-3">
-                    {/* Historique des motifs — table */}
-                    <div className="bg-white rounded-[8px] border border-[#C9C9C9] overflow-hidden">
-                      <button className="w-full flex items-center gap-2 px-4 py-3 text-left" onClick={() => {}}>
-                        <ChevronDown size={14} className="text-[#5C5C5C]" />
-                        <span className="text-[14px] font-semibold text-[#03234D]">Historique des motifs</span>
-                        <span className="ml-1 text-[12px] text-[#5C5C5C]">({data.motifsHistorique.length})</span>
-                      </button>
-                      <div className="px-4 pb-4">
-                        <table className="w-full text-[13px] border-collapse">
-                          <thead>
-                            <tr className="bg-[#F3F3F3] text-[#5C5C5C] text-[12px] font-medium text-left">
-                              <th className="px-3 py-2 border-b border-[#C9C9C9]">CR</th>
-                              <th className="px-3 py-2 border-b border-[#C9C9C9]">CR Origine</th>
-                              <th className="px-3 py-2 border-b border-[#C9C9C9]">N° inscription</th>
-                              <th className="px-3 py-2 border-b border-[#C9C9C9]">Motif</th>
-                              <th className="px-3 py-2 border-b border-[#C9C9C9]">Type</th>
-                              <th className="px-3 py-2 border-b border-[#C9C9C9]">Effet</th>
-                              <th className="px-3 py-2 border-b border-[#C9C9C9]">Session</th>
-                              <th className="px-3 py-2 border-b border-[#C9C9C9]">Décision</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {data.motifsHistorique.map((m, i) => (
-                              <tr key={i} className="border-b border-[#E5E5E5] hover:bg-[#F9F9F9]">
-                                <td className="px-3 py-2 text-[#2E2E2E]">{m.cr}</td>
-                                <td className="px-3 py-2 text-[#2E2E2E]">{m.crOrigine}</td>
-                                <td className="px-3 py-2 text-[#2E2E2E]">{m.numInscription}</td>
-                                <td className="px-3 py-2 text-[#2E2E2E] font-medium">{m.motif}</td>
-                                <td className="px-3 py-2 text-[#2E2E2E]">{m.type}</td>
-                                <td className="px-3 py-2 text-[#2E2E2E]">{m.effet}</td>
-                                <td className="px-3 py-2 text-[#2E2E2E]">{m.session}</td>
-                                <td className="px-3 py-2">
-                                  <span className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-medium ${m.decision === "Validé" ? "bg-[#E6F4EA] text-[#1B7F37]" : "bg-[#FFF3E0] text-[#E65100]"}`}>{m.decision}</span>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-
-                    {/* Demandes en attente — table */}
-                    <div className="bg-white rounded-[8px] border border-[#C9C9C9] overflow-hidden">
-                      <button className="w-full flex items-center gap-2 px-4 py-3 text-left" onClick={() => {}}>
-                        <ChevronRight size={14} className="text-[#5C5C5C]" />
-                        <span className="text-[14px] font-semibold text-[#03234D]">Demandes en attente</span>
-                        <span className="ml-1 text-[12px] text-[#5C5C5C]">({data.motifsEnAttente.length})</span>
-                      </button>
-                      {data.motifsEnAttente.length > 0 && (
-                        <div className="px-4 pb-4">
-                          <table className="w-full text-[13px] border-collapse">
-                            <thead>
-                              <tr className="bg-[#F3F3F3] text-[#5C5C5C] text-[12px] font-medium text-left">
-                                <th className="px-3 py-2 border-b border-[#C9C9C9]">Motif</th>
-                                <th className="px-3 py-2 border-b border-[#C9C9C9]">Effet</th>
-                                <th className="px-3 py-2 border-b border-[#C9C9C9]">Session</th>
-                                <th className="px-3 py-2 border-b border-[#C9C9C9]">Décision</th>
-                                <th className="px-3 py-2 border-b border-[#C9C9C9]">Echéance</th>
-                                <th className="px-3 py-2 border-b border-[#C9C9C9]">Commentaire</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {data.motifsEnAttente.map((m, i) => (
-                                <tr key={i} className="border-b border-[#E5E5E5] hover:bg-[#F9F9F9]">
-                                  <td className="px-3 py-2 text-[#2E2E2E] font-medium">{m.motif}</td>
-                                  <td className="px-3 py-2 text-[#2E2E2E]">{m.effet}</td>
-                                  <td className="px-3 py-2 text-[#2E2E2E]">{m.session}</td>
-                                  <td className="px-3 py-2 text-[#2E2E2E]">{m.decision}</td>
-                                  <td className="px-3 py-2 text-[#2E2E2E]">{m.echeance}</td>
-                                  <td className="px-3 py-2 text-[#2E2E2E]">{m.commentaire}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      )}
-                      {data.motifsEnAttente.length === 0 && (
-                        <div className="px-4 pb-4 text-[13px] text-[#5C5C5C] italic">Aucune demande en attente</div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
                 {/* ═══ ONGLET STAGE ═══ */}
                 {activeTab === "stage" && (
                   <div className="mt-3">
@@ -1971,26 +1988,21 @@ function RecordPage({ row }) {
                   </div>
                 )}
 
-                {/* ═══ ONGLET FORMATIONS ═══ */}
-                {activeTab === "formations" && (
-                  <div className="mt-3">
-                    <FormationsTable data={data.formations} />
-                  </div>
-                )}
-
-                {/* ═══ ONGLET OBLIGATIONS ═══ */}
-                {activeTab === "obligations" && (
-                  <div className="mt-3">
-                    <ObligationsPanel data={data.obligations} />
-                  </div>
-                )}
-
               </div>
             </div>
           </div>
           <div className="w-[698px] flex flex-col gap-3">
-            <CardSection icon={<Star size={12} className="text-white" />} iconBg="bg-[#0250D9]" title="Attestation">
+            <CardSection icon={<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>} iconBg="bg-[#5C2D91]" title="Obligations" defaultOpen={true}>
+              <ObligationsPanel data={data.obligations} />
+            </CardSection>
+            <CardSection icon={<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>} iconBg="bg-[#06A77D]" title="Formations" defaultOpen={true}>
+              <FormationsTable data={data.formations} />
+            </CardSection>
+            <CardSection icon={<Star size={12} className="text-white" />} iconBg="bg-[#0250D9]" title="Attestation" defaultOpen={true}>
               <AttestationPanel data={data.attestation} />
+            </CardSection>
+            <CardSection icon={<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>} iconBg="bg-[#C45500]" title="Demandes" defaultOpen={true}>
+              <DemandesPanel motifsHistorique={data.motifsHistorique} motifsEnAttente={data.motifsEnAttente} />
             </CardSection>
           </div>
         </div>
@@ -6706,7 +6718,7 @@ function DemandeAttentePJPathBar() {
             <path d="M13 10L19 16L13 22" stroke="#5c5c5c" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </button>
-        {/* Steps */}
+        {/* Steps — même composant DemandePathStep que la page demande */}
         <div style={{display:"flex", alignItems:"center", flex:1, height:28, overflow:"visible"}}>
           {STEPS_PJ_PATH.map((s, i) => (
             <DemandePathStep
