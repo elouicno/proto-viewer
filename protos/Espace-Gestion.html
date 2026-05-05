@@ -3187,8 +3187,7 @@ function buildContactData(demande) {
     [{ label: "Adresse Ordinale",    value: "Adresse personnelle",      readOnly: true  }, { label: "Contrôleur de stage",value: ""                                             }],
     [{ label: "E-mail",              value: ""                                           }, { label: "Diffusion adresse",  value: "Oui"                                          }],
     [{ label: "Mobile",              value: ""                                           }, { label: "EIRL",               value: ""                                             }],
-    [{ label: "Téléphone",           value: ""                                           }, { label: "Fax",                value: ""                                             }],
-    [{ label: "Site internet",       value: ""                                           }],
+    [{ label: "Téléphone",           value: ""                                           }, { label: "Site internet",      value: ""                                             }],
   ];
 
   // ── Section Cotisations ───────────────────────────────────────
@@ -3198,8 +3197,7 @@ function buildContactData(demande) {
 
   // ── Section Coordonnées priorisées ────────────────────────────
   const coordonneesFields = [
-    [{ label: "Téléphone",  value: "(Tél. fixe prof.)",  readOnly: true }, { label: "Fax",   value: "", readOnly: true }],
-    [{ label: "Email",      value: "(E-mail prof.)",     readOnly: true }],
+    [{ label: "Téléphone",  value: "(Tél. fixe prof.)",  readOnly: true }, { label: "Email", value: "(E-mail prof.)", readOnly: true }],
   ];
 
   // ── Section Comptexpert ───────────────────────────────────────
@@ -3224,8 +3222,7 @@ function buildContactData(demande) {
     adresseValidee: true,
     coordFields: [
       [{ label: "Mobile",    value: ""             }, { label: "Téléphone", value: generatedPhone }],
-      [{ label: "E-mail",    value: generatedEmail }, { label: "Fax",       value: ""             }],
-      [{ label: "Site web",  value: "" }],
+      [{ label: "E-mail",    value: generatedEmail }, { label: "Site web",  value: ""             }],
     ],
   };
   const adresseProData = {
@@ -4597,7 +4594,7 @@ function AccountRecordPage({ account, onSocieteClick }) {
                     <AdresseActuelleSection adresse={"7 RUE MARCEL RENAULT\n75017 PARIS\nFRANCE"} validee={true} title="Adresse" />
                     <ExpandableSection title="Coordonnées" defaultOpen={true} fields={[
                       [{label:"Téléphone", value:"01 46 55 14 62"}, {label:"E-mail", value:"f.abtan@abtan-aec.fr"}],
-                      [{label:"Fax",       value:"—"},              {label:"Site web", value:"—"}],
+                      [{label:"Site web",  value:"—"},              {label:"",         value:""}],
                     ]} />
                     <ExpandableSection title="Cotisations" defaultOpen={true} fields={[
                       [{label:"Solde cotisation",        value:"0,00"}, {label:"Dernière année de cotisation", value:"—"}],
@@ -4677,7 +4674,6 @@ function AccountRecordPage({ account, onSocieteClick }) {
                         {label:"Nom",       value:"M AAFIR OTMAN"},
                         {label:"Email",     value:"ot.aafir@gmail.com"},
                         {label:"Téléphone", value:""},
-                        {label:"Fax",       value:""},
                         {label:"Ville",     value:""},
                       ].map(f=>(
                         <div key={f.label} className="flex gap-4 text-[13px]">
@@ -4703,7 +4699,7 @@ function AccountRecordPage({ account, onSocieteClick }) {
                     />
                     <ExpandableSection title="Coordonnées" defaultOpen={true} fields={[
                       [{label:"Téléphone", value:"01 46 55 14 62"}, {label:"E-mail", value:"f.abtan@abtan-aec.fr"}],
-                      [{label:"Fax",       value:"—"},              {label:"Site web", value:"—"}],
+                      [{label:"Site web",  value:"—"},              {label:"",         value:""}],
                     ]} />
                   </div>
                 )}
@@ -5882,7 +5878,6 @@ function ContactRecordPage({ demande, onAccountClick, onDemandeAttentePJClick })
                         {label:"Nom",       value:"M AAFIR OTMAN"},
                         {label:"Email",     value:"ot.aafir@gmail.com"},
                         {label:"Téléphone", value:""},
-                        {label:"Fax",       value:""},
                         {label:"Ville",     value:""},
                       ].map(f => (
                         <div key={f.label} className="flex gap-4 text-[13px]">
