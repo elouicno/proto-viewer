@@ -89,6 +89,14 @@ const CP_MAP = {
   "Occitanie": "31000", "Provence-Alpes-Côte d'Azur": "13001", "Corse": "20000",
 };
 
+const VILLES_MAP = {
+  "Île-de-France": "PARIS", "Hauts-de-France": "LILLE", "Grand-Est": "STRASBOURG",
+  "Normandie": "ROUEN", "Bretagne": "RENNES", "Auvergne-Rhône-Alpes": "LYON",
+  "Pays de la Loire": "NANTES", "Centre-Val de Loire": "TOURS",
+  "Bourgogne-Franche-Comté": "DIJON", "Nouvelle Aquitaine": "BORDEAUX",
+  "Occitanie": "TOULOUSE", "Provence-Alpes-Côte d'Azur": "MARSEILLE", "Corse": "AJACCIO",
+};
+
 const ALL_FORMATIONS = [
   // ── Cycle 1 (1re année) — 7 formations ──
   { ref: "MP110", cycle: 1, intitule: "Découverte de la profession comptable", formats: ["E-learning", "Présentiel"], description: "Chiffres clés, organisation EC/CAC, déontologie, normes, contraintes et avantages des deux professions." },
@@ -289,6 +297,66 @@ function buildRecordData(row) {
     [{ label: "Qualité", value: "SEC", readOnly: ro }, { label: "CP", value: cp, readOnly: ro }],
   ];
 
+  // ── Données structurées (format tableau) pour les 3 sections Stage ──
+  const numSupraEmp = `${crCode}${String(Math.abs(hashStr(employeur)) % 10000000000).padStart(10,"0")}`;
+  const msNum = `${crCode}0001${String(hashStr(ms) % 9999).padStart(4,"0")}01`;
+  const ville = VILLES_MAP[row.cr] || "VILLE";
+
+  const groupesData = [{
+    numero: row.groupePrincipal,
+    an: row.anneeStage,
+    libelle: `${row.groupePrincipal} - SL (EX AP) / ${controleur.split(" ")[0] === "MME" ? "MME" : "M"} ${controleur.split(" ").slice(1).join(" ")}`,
+    rattrapage: "Non",
+    principal: "Oui",
+    dateEffet: row.dateEffet,
+    dateFin: row.dateFin || "",
+  }];
+
+  const periodesData = {
+    rows: [{
+      debut: row.dateEffet,
+      fin: row.dateFin || "",
+      duree: "",
+      typeStage: "CABINET OU SOCIETE D'EXPERTISE COMPTABLE",
+      maitre: ms,
+      commentaire: "",
+      valide: true,
+    }],
+    stats: {
+      valides: moisValides,
+      invalides: 0,
+      suspension: row.statut === "Suspendu" ? 3 : 0,
+      total: moisValides,
+      dureeStage: moisValides,
+    },
+    detail: {
+      cursus: "TRAVAUX 200 HEURES",
+      nature: "CABINET OU SOCIETE D'EXPERTISE COMPTABLE",
+      localisation: "FRANCE METROPOLE",
+      debut: row.dateEffet,
+      fin: row.dateFin || "",
+      maitre: `${msNum}  ${ms}`,
+      maitreCac: "",
+      coMaitreAgc: "",
+      commentaire: "",
+    },
+  };
+
+  const employeursData = {
+    rows: [{
+      conseil: crCode,
+      numSupra: numSupraEmp,
+      numInscription: numSupraEmp,
+      effet: row.dateEffet,
+      fin: "",
+      denomination: employeur,
+      qualite: "SEC",
+      cp: cp,
+      ville: ville,
+      statut: "EN EXERCICE",
+    }],
+  };
+
   // ATTESTATION (12 Stage > Attestation) — arbre de synthèse + formulaire
   const hCAC = annee === 1 ? 0 : annee === 2 ? 32 : 64;
   const hSemCAC = 0;
@@ -418,7 +486,7 @@ function buildRecordData(row) {
     };
   });
 
-  return { highlights, identite, dossier, adresses, diplomes, modeExercice, motifsHistorique, motifsEnAttente, stageGeneral, encadrement, groupes, periodes, employeurFields, obligations, formations, attestation, diplomesTab };
+  return { highlights, identite, dossier, adresses, diplomes, modeExercice, motifsHistorique, motifsEnAttente, stageGeneral, encadrement, groupes, periodes, employeurFields, obligations, formations, attestation, diplomesTab, groupesData, periodesData, employeursData };
 }
 
 // Simple deterministic hash for consistent data generation
@@ -691,6 +759,257 @@ function AdressesTab({ perso, pro }) {
     <div className="mt-3 flex flex-col gap-1">
       <AdressePanel title="Adresse perso" adresse={perso.adresseComplete} validee={perso.adresseValidee} coordFields={perso.coordFields} defaultOpen={true}  />
       <AdressePanel title="Adresse pro"   adresse={pro.adresseComplete}   validee={pro.adresseValidee}   coordFields={pro.coordFields}   defaultOpen={false} />
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// GroupesSection — tableau Groupes style legacy
+// ══════════════════════════════════════════════════════════════
+function GroupesSection({ data, defaultOpen = false }) {
+  const [open, setOpen] = useState(defaultOpen);
+  const thCls = "px-2 py-1.5 text-left text-[11px] font-semibold text-[#5C5C5C] whitespace-nowrap border-b border-[#C9C9C9]";
+  const tdCls = "px-2 py-1.5 text-[12px] text-[#2E2E2E] whitespace-nowrap";
+  return (
+    <div className="w-full pb-3">
+      <button onClick={() => setOpen(o => !o)} className="flex items-center gap-2 w-full h-8 px-2 rounded-lg bg-[#F3F3F3]">
+        {open ? <ChevronDown size={12} className="text-[#5C5C5C]" /> : <ChevronRight size={12} className="text-[#5C5C5C]" />}
+        <span className="text-[16px] text-[#2E2E2E] leading-[22px]">Groupes</span>
+      </button>
+      {open && (
+        <div className="mt-2">
+          <div className="flex items-center gap-2 mb-2">
+            <button className="flex items-center gap-1 px-2 py-1 bg-[#4CAF50] text-white rounded-full text-[11px] font-semibold">
+              <Plus size={11}/> Ajouter
+            </button>
+          </div>
+          <div className="overflow-x-auto border border-[#E5E5E5] rounded">
+            <table className="w-full border-collapse text-[12px]">
+              <thead>
+                <tr className="bg-[#F3F3F3]">
+                  <th className={thCls}>N° Groupe</th>
+                  <th className={thCls}>An</th>
+                  <th className={thCls}>Libellé</th>
+                  <th className={thCls}>Rattrapage</th>
+                  <th className={thCls}>Groupe Princi.</th>
+                  <th className={thCls}>Date d'effet</th>
+                  <th className={thCls}>Date de fin</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.map((g, i) => (
+                  <tr key={i} className="border-t border-[#E5E5E5] hover:bg-[#EEF4FF] cursor-pointer">
+                    <td className={`${tdCls} text-[#0250D9] font-medium`}>{g.numero}</td>
+                    <td className={tdCls}>{g.an}</td>
+                    <td className={`${tdCls} max-w-[180px] truncate`}>{g.libelle}</td>
+                    <td className={tdCls}>{g.rattrapage}</td>
+                    <td className={tdCls}>{g.principal}</td>
+                    <td className={tdCls}>{g.dateEffet}</td>
+                    <td className={tdCls}>{g.dateFin}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// PeriodesSection — tableau Périodes + stats + form détail
+// ══════════════════════════════════════════════════════════════
+function PeriodesSection({ data, defaultOpen = false }) {
+  const [open, setOpen] = useState(defaultOpen);
+  const [selected, setSelected] = useState(0);
+  const thCls = "px-2 py-1.5 text-left text-[11px] font-semibold text-[#5C5C5C] whitespace-nowrap border-b border-[#C9C9C9]";
+  const tdCls = "px-2 py-1.5 text-[12px] text-[#2E2E2E]";
+  const labelCls = "text-[12px] text-[#5C5C5C] font-semibold whitespace-nowrap";
+  const inputCls = "flex-1 border border-[#C9C9C9] rounded px-2 py-0.5 text-[12px] bg-white focus:outline-none focus:border-[#0250D9]";
+  const det = data.detail;
+  const s = data.stats;
+  return (
+    <div className="w-full pb-3">
+      <button onClick={() => setOpen(o => !o)} className="flex items-center gap-2 w-full h-8 px-2 rounded-lg bg-[#F3F3F3]">
+        {open ? <ChevronDown size={12} className="text-[#5C5C5C]" /> : <ChevronRight size={12} className="text-[#5C5C5C]" />}
+        <span className="text-[16px] text-[#2E2E2E] leading-[22px]">Périodes</span>
+      </button>
+      {open && (
+        <div className="mt-2 flex flex-col gap-2">
+          {/* Boutons */}
+          <div className="flex items-center gap-2">
+            <button className="flex items-center gap-1 px-2 py-1 bg-[#4CAF50] text-white rounded-full text-[11px] font-semibold"><Plus size={11}/> Ajouter</button>
+            <button className="flex items-center gap-1 px-2 py-1 bg-[#F44336] text-white rounded-full text-[11px] font-semibold">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="white" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg> Supprimer
+            </button>
+          </div>
+          {/* Tableau */}
+          <div className="overflow-x-auto border border-[#E5E5E5] rounded">
+            <table className="w-full border-collapse text-[12px]">
+              <thead>
+                <tr className="bg-[#F3F3F3]">
+                  <th className="w-7 px-1 py-1.5 border-b border-[#C9C9C9]"></th>
+                  <th className={thCls}>Début</th>
+                  <th className={thCls}>Fin</th>
+                  <th className={thCls}>Durée</th>
+                  <th className={thCls}>Type de Stage</th>
+                  <th className={thCls}>Maître de Stage</th>
+                  <th className={thCls}>Commentaire</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.rows.map((p, i) => (
+                  <tr key={i} onClick={() => setSelected(i)} className={`border-t border-[#E5E5E5] cursor-pointer ${selected === i ? "bg-[#EEF4FF]" : "hover:bg-[#FAFAFA]"}`}>
+                    <td className="px-1 py-1.5 text-center">
+                      {p.valide && <span className="inline-block w-5 h-5 bg-[#43A047] text-white text-[10px] font-bold rounded flex items-center justify-center">V</span>}
+                    </td>
+                    <td className={tdCls}>{p.debut}</td>
+                    <td className={tdCls}>{p.fin}</td>
+                    <td className={tdCls}>{p.duree}</td>
+                    <td className={`${tdCls} max-w-[140px] truncate`}>{p.typeStage}</td>
+                    <td className={tdCls}>{p.maitre}</td>
+                    <td className={tdCls}>{p.commentaire}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="px-2 py-1 text-[11px] text-[#5C5C5C] border-t border-[#E5E5E5]">Total : 0</div>
+          </div>
+          {/* Stats */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-1 py-1 bg-[#F9FAFB] border border-[#E5E5E5] rounded text-[11px]">
+            <span className="text-[#5C5C5C] font-medium">Situation à la date du jour :</span>
+            <span>Valides : <strong>{s.valides}</strong></span>
+            <span>Invalides : <strong>{s.invalides}</strong></span>
+            <span>de Suspension : <strong>{s.suspension}</strong></span>
+            <span>Total : <strong>{s.total}</strong></span>
+            <span>Durée du stage : <strong>{s.dureeStage}</strong></span>
+          </div>
+          {/* Formulaire détail période sélectionnée */}
+          <div className="border border-[#E5E5E5] rounded p-3 flex flex-col gap-2 bg-white">
+            <div className="text-[11px] font-bold text-[#0250D9] mb-1">Stage :</div>
+            {[
+              { label: "Cursus :", value: det.cursus, type: "select" },
+              { label: "Nature :", value: det.nature, type: "select" },
+              { label: "Localisation :", value: det.localisation, type: "select" },
+            ].map(f => (
+              <div key={f.label} className="flex items-center gap-2">
+                <span className={`${labelCls} w-[90px]`}>{f.label}</span>
+                <select className="flex-1 border border-[#C9C9C9] rounded px-2 py-0.5 text-[12px] bg-white focus:outline-none">
+                  <option>{f.value}</option>
+                </select>
+              </div>
+            ))}
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className={labelCls}>Début :</span>
+                <input type="date" defaultValue={det.debut.split("/").reverse().join("-")} className="border border-[#C9C9C9] rounded px-2 py-0.5 text-[12px] bg-white focus:outline-none" style={{width:120}} />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={labelCls}>Fin :</span>
+                <input type="date" defaultValue={det.fin ? det.fin.split("/").reverse().join("-") : ""} className="border border-[#C9C9C9] rounded px-2 py-0.5 text-[12px] bg-white focus:outline-none" style={{width:120}} />
+              </div>
+            </div>
+            {[
+              { label: "Maître de stage :", value: det.maitre },
+              { label: "Maître de stage CAC :", value: det.maitreCac },
+              { label: "Co-maître de stage AGC :", value: det.coMaitreAgc },
+            ].map(f => (
+              <div key={f.label} className="flex items-center gap-2">
+                <span className={`${labelCls} w-[160px]`}>{f.label}</span>
+                <div className="flex items-center gap-1 flex-1">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#5C5C5C" strokeWidth="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                  <input className={inputCls} defaultValue={f.value} />
+                </div>
+              </div>
+            ))}
+            <div className="flex items-center gap-2">
+              <span className={`${labelCls} w-[160px]`}>Commentaire :</span>
+              <input className={inputCls} defaultValue={det.commentaire} />
+            </div>
+            <div className="flex justify-end mt-1">
+              <button className="flex items-center gap-1.5 px-3 py-1 border border-[#C9C9C9] rounded text-[11px] font-medium text-[#2E2E2E] bg-white hover:bg-[#F3F3F3]">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none"><circle cx="12" cy="12" r="10" fill="#E53935"/><polyline points="7 12 10 15 17 9" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                Invalidation
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// EmployeursSection — tableau Employeurs + formulaire ajout
+// ══════════════════════════════════════════════════════════════
+function EmployeursSection({ data, defaultOpen = false }) {
+  const [open, setOpen] = useState(defaultOpen);
+  const thCls = "px-2 py-1.5 text-left text-[11px] font-semibold text-[#5C5C5C] whitespace-nowrap border-b border-[#C9C9C9]";
+  const tdCls = "px-2 py-1.5 text-[12px] text-[#2E2E2E] whitespace-nowrap";
+  const labelCls = "text-[12px] font-bold text-[#03234D] whitespace-nowrap";
+  const inputCls = "flex-1 border border-[#C9C9C9] rounded px-2 py-0.5 text-[12px] bg-white focus:outline-none focus:border-[#0250D9]";
+  return (
+    <div className="w-full pb-3">
+      <button onClick={() => setOpen(o => !o)} className="flex items-center gap-2 w-full h-8 px-2 rounded-lg bg-[#F3F3F3]">
+        {open ? <ChevronDown size={12} className="text-[#5C5C5C]" /> : <ChevronRight size={12} className="text-[#5C5C5C]" />}
+        <span className="text-[16px] text-[#2E2E2E] leading-[22px]">Employeurs</span>
+      </button>
+      {open && (
+        <div className="mt-2 flex flex-col gap-2">
+          {/* Header */}
+          <div className="flex items-center gap-3">
+            <button className="flex items-center gap-1 px-2 py-1 bg-[#4CAF50] text-white rounded-full text-[11px] font-semibold"><Plus size={11}/> Ajouter</button>
+            <span className="text-[11px] text-[#5C5C5C]">Liste des employeurs à la date du jour</span>
+          </div>
+          {/* Tableau */}
+          <div className="overflow-x-auto border border-[#E5E5E5] rounded">
+            <table className="w-full border-collapse text-[12px]">
+              <thead>
+                <tr className="bg-[#F3F3F3]">
+                  {["Conseil","N° supra","N° inscription","Effet","Fin","Dénomination ou num","Qualité","CP","Ville","Statut"].map(h => (
+                    <th key={h} className={thCls}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {data.rows.map((e, i) => (
+                  <tr key={i} className="border-t border-[#E5E5E5] hover:bg-[#EEF4FF] cursor-pointer">
+                    <td className={tdCls}>{e.conseil}</td>
+                    <td className={tdCls}>{e.numSupra}</td>
+                    <td className={`${tdCls} text-[#0250D9] font-medium`}>{e.numInscription}</td>
+                    <td className={tdCls}>{e.effet}</td>
+                    <td className={tdCls}>{e.fin}</td>
+                    <td className={`${tdCls} max-w-[130px] truncate`}>{e.denomination}</td>
+                    <td className={tdCls}>{e.qualite}</td>
+                    <td className={tdCls}>{e.cp}</td>
+                    <td className={`${tdCls} max-w-[90px] truncate`}>{e.ville}</td>
+                    <td className={`${tdCls} max-w-[80px] truncate`}>{e.statut}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {/* Formulaire */}
+          <div className="border border-[#E5E5E5] rounded p-3 flex flex-col gap-2 bg-white">
+            {["N° Supra","N° Inscription","Nom"].map(f => (
+              <div key={f} className="flex items-center gap-2">
+                <span className={`${labelCls} w-[110px]`}>{f} :</span>
+                <input className={inputCls} />
+              </div>
+            ))}
+            {["Date d'effet","Date de fin"].map(f => (
+              <div key={f} className="flex items-center gap-2">
+                <span className={`${labelCls} w-[110px]`}>{f} :</span>
+                <div className="flex items-center gap-1">
+                  <input type="date" className="border border-[#C9C9C9] rounded px-2 py-0.5 text-[12px] bg-white focus:outline-none" style={{width:130}} />
+                </div>
+              </div>
+            ))}
+            <p className="text-[11px] font-bold text-[#2E2E2E] mt-1">Les champs en gras sont obligatoires</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -2268,9 +2587,9 @@ function RecordPage({ row }) {
                   <div className="mt-3">
                     <ExpandableSection title="Informations générales" fields={data.stageGeneral} />
                     <ExpandableSection title="Encadrement" fields={data.encadrement} />
-                    <GroupesEditableSection fields={data.groupes} defaultOpen={false} />
-                    <ExpandableSection title="Périodes" fields={data.periodes} defaultOpen={false} />
-                    <ExpandableSection title="Employeurs" fields={data.employeurFields} defaultOpen={false} />
+                    <GroupesSection data={data.groupesData} defaultOpen={false} />
+                    <PeriodesSection data={data.periodesData} defaultOpen={false} />
+                    <EmployeursSection data={data.employeursData} defaultOpen={false} />
                   </div>
                 )}
 
