@@ -3282,8 +3282,9 @@ function PiecesStatusBadge({ fileId, status, isOpen, onToggle, onSelect }) {
     </div>
   );
 }
-function PiecesPanel() {
-  const [files, setFiles] = useState(() => PIECES_FILES_INIT.map(f=>({...f})));
+function PiecesPanel({ initialFiles }) {
+  const _init = initialFiles || PIECES_FILES_INIT;
+  const [files, setFiles] = useState(() => _init.map(f=>({...f})));
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusDdId, setStatusDdId] = useState(null);
@@ -3670,7 +3671,7 @@ function BureauxPanel() {
 // ══════════════════════════════════════════════════════════════
 // DemandesContactPanel — panel droit Demandes (fiche contact)
 // ══════════════════════════════════════════════════════════════
-function DemandesContactPanel() {
+function DemandesContactPanel({ onDemandeAttentePJClick }) {
   const [open, setOpen] = useState(false);
   const rows = [
     { cr:"IDF", crOrig:"IDF", num:"14-00017408-...", demande:"ACTIVITE BNC - FIN",        type:"B", effet:"30/06/2023", session:"05/10/2023", decision:"Validé", qualite:"EC",       qualAvant:"EC",   statut:"CLASSE",  statAvant:"EN EXE." },
@@ -3749,13 +3750,13 @@ function DemandesContactPanel() {
                 </tr>
               </thead>
               <tbody>
-                <tr className="border-b border-[#E5E5E5] hover:bg-[#F9F9F9]">
+                <tr className="border-b border-[#E5E5E5] hover:bg-[#EEF4FF] cursor-pointer" onClick={() => onDemandeAttentePJClick && onDemandeAttentePJClick()}>
                   <td className="px-2 py-1.5 whitespace-nowrap">
-                    <span className="font-semibold text-[#2E2E2E]">INSCRIPTION IP PP</span>
+                    <span className="font-semibold text-[#0250D9] hover:underline">Inscription PP - attente PJ</span>
                   </td>
                   <td className="px-2 py-1.5 whitespace-nowrap">14/03/2026</td>
-                  <td className="px-2 py-1.5"></td>
-                  <td className="px-2 py-1.5"></td>
+                  <td className="px-2 py-1.5 whitespace-nowrap">14/03/2026</td>
+                  <td className="px-2 py-1.5">Favorable</td>
                   <td className="px-2 py-1.5">Conseil</td>
                   <td className="px-2 py-1.5 text-[#5C5C5C] truncate max-w-[160px]">INSCRIPTION DE RIBAUT</td>
                 </tr>
@@ -5758,7 +5759,7 @@ function CommissionsTab() {
   );
 }
 
-function ContactRecordPage({ demande, onAccountClick }) {
+function ContactRecordPage({ demande, onAccountClick, onDemandeAttentePJClick }) {
   const [activeTab, setActiveTab] = useState("individu");
   const data = buildContactData(demande);
   const highlights = data.highlights.map(f =>
@@ -6162,7 +6163,7 @@ function ContactRecordPage({ demande, onAccountClick }) {
             {/* Bureaux */}
             <BureauxPanel />
             {/* Demandes */}
-            <DemandesContactPanel />
+            <DemandesContactPanel onDemandeAttentePJClick={onDemandeAttentePJClick} />
             {/* Pièces */}
             <PiecesPanel />
           </div>
@@ -6656,7 +6657,7 @@ function DemandeRecordPage({ demande, onContactClick }) {
             <div className="bg-white rounded-[20px] overflow-hidden px-4 pt-4 pb-4" style={{boxShadow:"0 0 1.49px rgba(0,0,0,0.09),0 1.4px 1.5px rgba(0,0,0,0.09)"}}>
               {/* Tabs */}
               <div className="flex gap-0 border-b border-[#C9C9C9] mb-4">
-                {[["details","Détails"],["pieces","Pièces Justificatives"],["examen","Examen"]].map(([k,l]) => (
+                {[["details","Détails"],["examen","Examen"]].map(([k,l]) => (
                   <button key={k} onClick={() => setActiveTab(k)}
                     className={`px-4 py-2 text-[13px] border-b-2 -mb-px transition-colors ${activeTab===k ? "border-[#0250D9] text-[#0250D9] font-semibold" : "border-transparent text-[#2E2E2E] hover:bg-[#F3F3F3]"}`}>
                     {l}
@@ -6669,9 +6670,6 @@ function DemandeRecordPage({ demande, onContactClick }) {
                   <DemandeRenseignementsSection />
                 </div>
               )}
-              {activeTab === "pieces" && (
-                <div className="py-6 text-center text-[13px] text-[#9E9E9E]">Aucune pièce justificative</div>
-              )}
               {activeTab === "examen" && (
                 <div className="py-6 text-center text-[13px] text-[#9E9E9E]">Aucun examen</div>
               )}
@@ -6682,6 +6680,225 @@ function DemandeRecordPage({ demande, onContactClick }) {
           <div className="min-w-0">
             <DemandePiecesInlinePanel />
           </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+const STEPS_PJ_PATH = [
+  { key: "attente_pj",  label: "Inscrit en attente PJ", done: false, current: true  },
+  { key: "incomplete",  label: "Incomplète",             done: false, current: false },
+  { key: "complete",    label: "Complète",               done: false, current: false },
+  { key: "ferme",       label: "Fermé",                  done: false, current: false },
+];
+
+function DemandeAttentePJPathBar() {
+  const [showModal, setShowModal] = React.useState(false);
+  return (
+    <>
+      {showModal && <FermerDemandeModal onClose={() => setShowModal(false)} />}
+      <div className="bg-white px-2 border-b border-[#E5E5E5] flex items-center gap-1" style={{height:48}}>
+        {/* Expand button */}
+        <button style={{width:28,height:28,borderRadius:"50%",border:"1px solid #C9C9C9",background:"white",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,cursor:"pointer"}}>
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+            <circle cx="16" cy="16" r="15" stroke="#c9c9c9" strokeWidth="1.5" fill="white"/>
+            <path d="M13 10L19 16L13 22" stroke="#5c5c5c" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+        {/* Steps */}
+        <div style={{display:"flex", alignItems:"center", flex:1, height:28, overflow:"visible"}}>
+          {STEPS_PJ_PATH.map((s, i) => (
+            <DemandePathStep
+              key={s.key}
+              step={s}
+              index={i}
+              total={STEPS_PJ_PATH.length}
+              onClick={s.key === "ferme" ? () => setShowModal(true) : undefined}
+            />
+          ))}
+        </div>
+        {/* CTA button */}
+        <button onClick={() => setShowModal(true)} style={{flexShrink:0,height:28,padding:"0 12px",borderRadius:9999,background:"#066afe",color:"white",fontSize:11,fontWeight:600,border:"none",cursor:"pointer",whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:5}}>
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Sélectionner Statut fermé(e)
+        </button>
+      </div>
+    </>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// DemandeAttentePJPage — fiche détaillée "Inscription PP - attente PJ"
+// ══════════════════════════════════════════════════════════════
+function DemandeAttentePJPage() {
+  const DEMANDE_PJ = {
+    typeDemande:  'Inscription en attente PJ',
+    typeParent:   'Inscription Principale PP',
+    numParent:    '00001320',
+    demandeur:    'DUPONT Marc',
+    cro:          'Occitanie',
+    dateSession:  '14/03/2026',
+    effet:        '14/03/2026',
+    decision:     'Favorable',
+    statutPJ:     'À examiner',
+  };
+
+  const [assureur,   setAssureur]   = useState('');
+  const [numContrat, setNumContrat] = useState('');
+  const [dateDebut,  setDateDebut]  = useState('');
+  const [dateFin,    setDateFin]    = useState('');
+  const [dateAttest, setDateAttest] = useState('');
+  const [modeAttest, setModeAttest] = useState('auto');
+
+  const ASSUREURS = ['', 'Verspieren', 'MMA', 'AXA', 'Allianz', 'Groupama', 'MAIF', 'SMACL', 'Autre'];
+
+  const highlights = [
+    { label: "Type de demande",           value: DEMANDE_PJ.typeDemande },
+    { label: "Type de la demande parent", value: DEMANDE_PJ.typeParent },
+    { label: "Demandeur",                 value: DEMANDE_PJ.demandeur, isLink: true, onClick: () => {} },
+    { label: "CRO",                       value: DEMANDE_PJ.cro },
+    { label: "Date de session",           value: DEMANDE_PJ.dateSession },
+    { label: "Statut des PJ",             value: DEMANDE_PJ.statutPJ },
+  ];
+
+  return (
+    <>
+      {/* Header — même pattern que ContactPageHeader */}
+      <div className="bg-[#F3F3F3] px-4 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded bg-[#1264C8] flex items-center justify-center">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="white" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            <div>
+              <p className="text-[13px] text-[#5C5C5C] leading-[18px]">Demande</p>
+              <p className="text-[28px] text-[#03234D] leading-[35px]">Inscription PP – attente PJ</p>
+            </div>
+          </div>
+          <div className="flex border border-[#5C5C5C] rounded-full overflow-hidden">
+            <button className="px-4 h-8 text-[14px] text-[#0250D9] bg-white border-r border-[#5C5C5C]">Modifier</button>
+            <button className="px-4 h-8 text-[14px] text-[#0250D9] bg-white">Supprimer</button>
+          </div>
+        </div>
+      </div>
+
+      {/* Highlights — composant existant */}
+      <HighlightsPanel fields={highlights} />
+
+      {/* Progress stepper — même pattern que DemandePathBar */}
+      <DemandeAttentePJPathBar />
+
+      {/* Corps — même grille 2 colonnes que les autres pages */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 pt-[6px]">
+        <div className="grid grid-cols-2 gap-3 w-full items-start">
+
+          {/* Colonne gauche : Détails */}
+          <div className="min-w-0">
+            <div className="bg-white rounded-[20px] overflow-hidden">
+              <div className="px-4 pt-4 pb-3">
+                {/* Tab "Détails" */}
+                <div className="flex w-full mb-1">
+                  <button className="px-3 h-10 text-[14px] font-semibold text-[#0250D9] border-b-[3px] border-[#0250D9] whitespace-nowrap">Détails</button>
+                  <div className="flex-1 border-b border-[#C9C9C9]" />
+                </div>
+
+                {/* Section : Information */}
+                <ExpandableSection title="Information concernant la demande" defaultOpen={true}>
+                  <div className="flex gap-3 mt-1">
+                    <EditableField label="Type demande"  value={DEMANDE_PJ.typeDemande} readOnly />
+                    <EditableField label="Type du parent" value={DEMANDE_PJ.typeParent} readOnly />
+                  </div>
+                  <div className="flex gap-3">
+                    <EditableField label="N° demande parent" value={DEMANDE_PJ.numParent} readOnly isLink onClick={() => {}} />
+                    <EditableField label="Demandeur"         value={DEMANDE_PJ.demandeur} readOnly isLink onClick={() => {}} />
+                  </div>
+                  <div className="flex gap-3">
+                    <EditableField label="CRO"          value={DEMANDE_PJ.cro}         readOnly />
+                    <EditableField label="Date d'effet" value={DEMANDE_PJ.effet}        readOnly />
+                  </div>
+                  <div className="flex gap-3">
+                    <EditableField label="Date de session" value={DEMANDE_PJ.dateSession} readOnly />
+                    <EditableField label="Décision"        value={DEMANDE_PJ.decision}    readOnly />
+                  </div>
+                </ExpandableSection>
+
+                {/* Section : Assurance */}
+                <ExpandableSection title="Assurance" defaultOpen={false}>
+                  {/* Assureur — select avec même style border-b que EditableField */}
+                  <div className="flex gap-3 mt-1">
+                    <div className="flex-1 pl-1 pb-1">
+                      <p className="text-[13px] text-[#5C5C5C] leading-[18px]">Assureur <span style={{color:'#FF2B44'}}>*</span></p>
+                      <div className="flex items-center gap-1 border-b border-[#C9C9C9] min-h-[24px] pb-1 pt-0.5 hover:border-[#0250D9] transition-colors">
+                        <select value={assureur} onChange={e => setAssureur(e.target.value)}
+                          className="flex-1 text-[13px] text-[#2E2E2E] bg-transparent outline-none border-none cursor-pointer" style={{fontFamily:'inherit'}}>
+                          {ASSUREURS.map(a => <option key={a} value={a}>{a || '— Sélectionner —'}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="flex-1 pl-1 pb-1">
+                      <p className="text-[13px] text-[#5C5C5C] leading-[18px]">N° de contrat</p>
+                      <div className="flex items-center gap-1 border-b border-[#C9C9C9] min-h-[24px] pb-1 pt-0.5 hover:border-[#0250D9] transition-colors">
+                        <input value={numContrat} onChange={e => setNumContrat(e.target.value)} placeholder="Ex : ASS-2026-000123"
+                          className="flex-1 text-[13px] text-[#2E2E2E] bg-transparent outline-none border-none"
+                          style={{fontFamily:'inherit'}} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Dates couverture */}
+                  <div className="flex gap-3">
+                    <div className="flex-1 pl-1 pb-1">
+                      <p className="text-[13px] text-[#5C5C5C] leading-[18px]">Date de début de couverture <span style={{color:'#FF2B44'}}>*</span></p>
+                      <div className="flex items-center gap-1 border-b border-[#C9C9C9] min-h-[24px] pb-1 pt-0.5 hover:border-[#0250D9] transition-colors">
+                        <input type="date" value={dateDebut} onChange={e => setDateDebut(e.target.value)}
+                          className="flex-1 text-[13px] text-[#2E2E2E] bg-transparent outline-none border-none"
+                          style={{fontFamily:'inherit'}} />
+                      </div>
+                    </div>
+                    <div className="flex-1 pl-1 pb-1">
+                      <p className="text-[13px] text-[#5C5C5C] leading-[18px]">Date de fin de couverture <span style={{color:'#FF2B44'}}>*</span></p>
+                      <div className="flex items-center gap-1 border-b border-[#C9C9C9] min-h-[24px] pb-1 pt-0.5 hover:border-[#0250D9] transition-colors">
+                        <input type="date" value={dateFin} onChange={e => setDateFin(e.target.value)}
+                          className="flex-1 text-[13px] text-[#2E2E2E] bg-transparent outline-none border-none"
+                          style={{fontFamily:'inherit'}} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Date attestation + toggle auto/manuel */}
+                  <div className="flex-1 pl-1 pb-1 mt-1">
+                    <p className="text-[13px] text-[#5C5C5C] leading-[18px] mb-1">Date de l'attestation</p>
+                    <div className="flex gap-2 mb-2">
+                      {[['auto', 'Intégration auto (Verspieren)'], ['manuel', 'Saisie manuelle']].map(([val, lbl]) => (
+                        <button key={val} onClick={() => setModeAttest(val)} className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium border transition-colors ${modeAttest === val ? 'bg-[#EEF4FF] border-[#0250D9] text-[#0250D9]' : 'bg-white border-[#C9C9C9] text-[#5C5C5C]'}`}>
+                          {lbl}
+                        </button>
+                      ))}
+                    </div>
+                    {modeAttest === 'auto'
+                      ? <div className="flex items-center gap-1 border-b border-[#C9C9C9] min-h-[24px] pb-1 pt-0.5">
+                          <span className="flex-1 text-[12px] text-[#5C5C5C] italic">Renseignée automatiquement via le flux Verspieren</span>
+                        </div>
+                      : <div className="flex items-center gap-1 border-b border-[#C9C9C9] min-h-[24px] pb-1 pt-0.5 hover:border-[#0250D9] transition-colors">
+                          <input type="date" value={dateAttest} onChange={e => setDateAttest(e.target.value)}
+                            className="flex-1 text-[13px] text-[#2E2E2E] bg-transparent outline-none border-none"
+                            style={{fontFamily:'inherit'}} />
+                        </div>
+                    }
+                  </div>
+                </ExpandableSection>
+              </div>
+            </div>
+          </div>
+
+          {/* Colonne droite : Pièces — composant existant réutilisé */}
+          <div className="min-w-0">
+            <PiecesPanel initialFiles={[
+              { id: 1, name: "Prestation_de_serment.pdf", type: "pdf", date: "14/03/2026", status: "demandee", category: "Serment", instructions: "Prestation de serment devant le tribunal judiciaire compétent", relance: "—" }
+            ]} />
+          </div>
+
         </div>
       </div>
     </>
@@ -6788,6 +7005,9 @@ function initTabsFromHash() {
       nomComptable: "", profil: ""
     }}];
   }
+  if (hash.startsWith("demande-attente-pj:")) {
+    return [{ type: "demande-attente-pj", id: hash, label: "Inscription PP – attente PJ", data: {} }];
+  }
   return [];
 }
 
@@ -6858,6 +7078,15 @@ function App() {
       const exists = prev.find(t => t.id === tabId);
       if (!exists) return [...prev, { type: "societe", id: tabId, label: societe.denomination, data: societe }];
       return prev;
+    });
+    setActivePage(tabId);
+  };
+
+  const handleNavigateToDemandeAttentePJ = () => {
+    const tabId = "demande-attente-pj:inscr-pp-ribaut";
+    setOpenTabs(prev => {
+      if (prev.find(t => t.id === tabId)) return prev;
+      return [...prev, { type: "demande-attente-pj", id: tabId, label: "Inscription PP – attente PJ", data: {} }];
     });
     setActivePage(tabId);
   };
@@ -6962,7 +7191,8 @@ function App() {
       {activeTab && activeTab.type === "formations" && <FormationsPage row={activeTab.data} />}
       {activeTab && activeTab.type === "groupe" && <GroupeRecordPage groupe={activeTab.data} onNavigateToRecord={handleNavigateToRecord} />}
       {activeTab && activeTab.type === "demande" && <DemandeRecordPage demande={activeTab.data} onContactClick={handleNavigateToContact} />}
-      {activeTab && activeTab.type === "contact" && <ContactRecordPage demande={activeTab.data} onAccountClick={handleNavigateToAccount} />}
+      {activeTab && activeTab.type === "demande-attente-pj" && <DemandeAttentePJPage />}
+      {activeTab && activeTab.type === "contact" && <ContactRecordPage demande={activeTab.data} onAccountClick={handleNavigateToAccount} onDemandeAttentePJClick={handleNavigateToDemandeAttentePJ} />}
       {activeTab && activeTab.type === "account" && <AccountRecordPage account={activeTab.data} onSocieteClick={handleNavigateToSociete} />}
       {activeTab && activeTab.type === "societe" && <SocieteRecordPage societe={activeTab.data} onAccountClick={handleNavigateToAccount} />}
 
