@@ -221,7 +221,8 @@ function buildRecordData(row) {
 
   // ═══ ONGLET MOTIFS ═══
 
-  const crShort = row.cr.substring(0,3).toUpperCase();
+  const crShortMap = { "Île-de-France": "IDF", "île-de-France": "IDF" };
+  const crShort = crShortMap[row.cr] || row.cr.substring(0,3).toUpperCase();
   const reinscrMonth = mEff + 14 > 12 ? ((mEff + 14 - 1) % 12) + 1 : mEff + 14;
   const reinscrYear = mEff + 14 > 12 ? yEff + Math.floor((mEff + 13) / 12) : yEff;
   const reinscrDate = `01/${String(reinscrMonth).padStart(2,"0")}/${reinscrYear}`;
@@ -1612,6 +1613,69 @@ function AttestationPanel({ data }) {
           </div>
         </AttestationTreeNode>
       </div>
+
+      {/* ── Champs complémentaires sous les 8 expands ── */}
+      <div className="mt-3 flex flex-col gap-3">
+
+        {/* Ligne : Date attestation / Date fin de stage / Date édition */}
+        <div className="flex items-center gap-6 flex-wrap">
+          {[["Date de l'attestation","dateAttest"],["Date de fin de stage","dateFin"],["Date de l'édition","dateEdition"]].map(([lbl, key]) => (
+            <div key={key} className="flex items-center gap-2">
+              <span className="text-[12px] text-[#5C5C5C] shrink-0">{lbl} :</span>
+              <input type="date" className="border border-[#C9C9C9] rounded px-2 py-0.5 text-[12px] bg-white focus:outline-none focus:border-[#0250D9]" style={{width:120}} />
+            </div>
+          ))}
+        </div>
+
+        {/* Bloc CRS */}
+        <div className="border border-[#0250D9] rounded p-3 flex flex-col gap-2">
+          <p className="text-[12px] font-semibold text-[#0250D9]">Inscription à une réunion du Comité régional du stage en vue de la validation du stage</p>
+          <div className="flex items-center gap-8 flex-wrap">
+            <div className="flex items-center gap-2">
+              <span className="text-[12px] text-[#5C5C5C] shrink-0">Date :</span>
+              <input type="date" className="border border-[#C9C9C9] rounded px-2 py-0.5 text-[12px] bg-white focus:outline-none focus:border-[#0250D9]" style={{width:120}} />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[12px] text-[#5C5C5C] shrink-0">Validation du CRS :</span>
+              <select className="border border-[#C9C9C9] rounded px-2 py-0.5 text-[12px] bg-white focus:outline-none focus:border-[#0250D9]" style={{width:100}}>
+                <option value=""></option>
+                <option>Oui</option>
+                <option>Non</option>
+              </select>
+              <button className="w-5 h-5 rounded-full bg-[#E53935] flex items-center justify-center">
+                <svg viewBox="0 0 24 24" width="10" height="10" fill="none"><line x1="6" y1="6" x2="18" y2="18" stroke="white" strokeWidth="2.5" strokeLinecap="round"/><line x1="18" y1="6" x2="6" y2="18" stroke="white" strokeWidth="2.5" strokeLinecap="round"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Commentaire */}
+        <div className="flex items-center gap-2">
+          <span className="text-[12px] text-[#5C5C5C] shrink-0">Commentaire :</span>
+          <input type="text" className="flex-1 border border-[#C9C9C9] rounded px-2 py-0.5 text-[12px] bg-white focus:outline-none focus:border-[#0250D9]" />
+        </div>
+
+        {/* Attestation Conformité CRCC + Fiche Générale de Synthèse */}
+        <div className="flex items-center gap-8 flex-wrap">
+          <div className="flex items-center gap-2">
+            <span className="text-[12px] text-[#5C5C5C] shrink-0">Attestation de Conformité CRCC :</span>
+            <select className="border border-[#C9C9C9] rounded px-2 py-0.5 text-[12px] bg-white focus:outline-none focus:border-[#0250D9]" style={{width:100}}>
+              <option value=""></option>
+              <option>Oui</option>
+              <option>Non</option>
+            </select>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[12px] text-[#5C5C5C] shrink-0">Fiche Générale de Synthèse :</span>
+            <select className="border border-[#C9C9C9] rounded px-2 py-0.5 text-[12px] bg-white focus:outline-none focus:border-[#0250D9]" style={{width:100}}>
+              <option value=""></option>
+              <option>Oui</option>
+              <option>Non</option>
+            </select>
+          </div>
+        </div>
+
+      </div>
     </div>
   );
 }
@@ -1851,24 +1915,242 @@ function FormationsPage({ row }) {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   DemandesPanel — Historique des motifs + Motifs en attente
+   NouvelleDemandeModal — modale création demande (fiche stagiaire)
    ══════════════════════════════════════════════════════════════ */
-function DemandesPanel({ motifsHistorique, motifsEnAttente }) {
+function NouvelleDemandeModal({ numInscription, stagiaireName, onClose, onValider }) {
+  const today = new Date().toISOString().slice(0,10);
+  const [form, setForm] = React.useState({
+    demande: "", dateEffet: "", echeance: "Conseil", dateDemande: today,
+    ag: "", commentaire: "", statut: "EN EXERCICE", qualite: "STAGIAIRE - REGIME 81",
+    session: "", conseil: "", commission: "", avis: "", commentaireCommission: "",
+  });
+  const set = (k, v) => setForm(f => ({...f, [k]: v}));
+
+  const inputCls  = "w-full border border-[#C9C9C9] rounded px-2 py-1 text-[13px] bg-white focus:outline-none focus:border-[#0250D9]";
+  const selectCls = "border border-[#C9C9C9] rounded px-2 py-1 text-[13px] bg-white focus:outline-none focus:border-[#0250D9]";
+  const labelCls  = "text-[13px] font-semibold text-[#1A1A1A] shrink-0";
+
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center" style={{background:"rgba(0,0,0,0.4)"}}>
+      <div className="bg-[#EEF3FA] rounded shadow-xl flex flex-col" style={{width:720, maxHeight:"90vh", overflow:"hidden"}}>
+
+        {/* ── Titre ── */}
+        <div className="flex items-center justify-between px-4 py-2 bg-[#C8D9EE] border-b border-[#B0C4DE] rounded-t">
+          <span className="text-[13px] font-semibold text-[#03234D]">
+            Demandes &lt; {numInscription} &gt; {stagiaireName}
+          </span>
+          <button onClick={onClose} className="text-[#5C5C5C] hover:text-[#C00] text-[16px] font-bold leading-none">✕</button>
+        </div>
+
+        <div className="overflow-y-auto flex-1 px-4 py-3 flex flex-col gap-3">
+
+          {/* ── Section Information demande ── */}
+          <div className="bg-[#EEF3FA] border border-[#B0C4DE] rounded p-3 flex flex-col gap-3">
+            <div className="text-[13px] font-bold text-[#0250D9] mb-1">Information demande</div>
+
+            {/* Ligne 1 : Demande */}
+            <div className="flex items-center gap-2">
+              <span className={labelCls} style={{width:100}}>Demande :</span>
+              <select value={form.demande} onChange={e => set("demande", e.target.value)} className={`${selectCls} flex-1`}>
+                <option value=""></option>
+                <option>INSCRIPTION AU STAGE</option>
+                <option>REINSCRIPTION</option>
+                <option>SUSPENSION</option>
+                <option>REPRISE</option>
+                <option>ATTESTATION DE FIN DE STAGE</option>
+                <option>TRANSFERT</option>
+              </select>
+            </div>
+
+            {/* Ligne 2 : Date d'effet + Echéance + Date demande + AG */}
+            <div className="flex items-center gap-4 flex-wrap">
+              <div className="flex items-center gap-2">
+                <span className={labelCls}>Date d'effet :</span>
+                <input type="date" value={form.dateEffet} onChange={e => set("dateEffet", e.target.value)} className={`${selectCls}`} style={{width:130}} />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={labelCls}>Echéance :</span>
+                <select value={form.echeance} onChange={e => set("echeance", e.target.value)} className={selectCls} style={{width:120}}>
+                  <option>Conseil</option>
+                  <option>Immédiate</option>
+                </select>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={labelCls}>Date demande :</span>
+                <input type="date" value={form.dateDemande} onChange={e => set("dateDemande", e.target.value)} className={selectCls} style={{width:130}} />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={labelCls}>AG :</span>
+                <input type="date" value={form.ag} onChange={e => set("ag", e.target.value)} className={selectCls} style={{width:130}} />
+              </div>
+            </div>
+
+            {/* Ligne 3 : Commentaire */}
+            <div className="flex items-start gap-2">
+              <span className={`${labelCls} mt-1`} style={{width:100}}>Commentaire :</span>
+              <textarea value={form.commentaire} onChange={e => set("commentaire", e.target.value)}
+                className={`${inputCls} flex-1`} rows={3} />
+            </div>
+
+            {/* Ligne 4 : Statut + Qualité */}
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2 flex-1">
+                <span className={labelCls} style={{width:55}}>Statut :</span>
+                <select value={form.statut} onChange={e => set("statut", e.target.value)} className={`${selectCls} flex-1`}>
+                  <option value=""></option>
+                  <option>EN ATTENTE</option>
+                  <option>EN EXERCICE</option>
+                  <option>SUSPENDU</option>
+                  <option>CLASSÉ</option>
+                  <option>TRF ARRIVEE</option>
+                </select>
+              </div>
+              <div className="flex items-center gap-2 flex-1">
+                <span className={labelCls} style={{width:55}}>Qualité :</span>
+                <select value={form.qualite} onChange={e => set("qualite", e.target.value)} className={`${selectCls} flex-1`}>
+                  <option value=""></option>
+                  <option>EXPERT-COMPTABLE</option>
+                  <option>EXPERT-COMPTABLE EN LIBRE PRESTATION DE SERVICE</option>
+                  <option>EXPERT-COMPTABLE EN EXERCICE PARTIEL</option>
+                  <option>EXPERT-COMPTABLE EN ENTREPRISE</option>
+                  <option>STAGIAIRE - REGIME 81</option>
+                  <option>MEMORIALISTE</option>
+                  <option>DIPLOME - NON INSCRIT</option>
+                  <option>EXPERT-COMPTABLE HONORAIRE</option>
+                  <option>83Q-SALARIE AGC AUT A EXERC EC</option>
+                  <option>83T-SALARIE AGC AUT A EXERC EC</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Bas : Conseil + Commission décisionnaire ── */}
+          <div className="flex gap-3 min-w-0">
+            {/* Colonne gauche */}
+            <div className="flex flex-col gap-2 min-w-0" style={{flex:"0 0 220px"}}>
+              <div className="flex items-center gap-2 min-w-0">
+                <span className={labelCls} style={{width:55, flexShrink:0}}>Conseil :</span>
+                <select value={form.conseil} onChange={e => set("conseil", e.target.value)} className={selectCls} style={{flex:1, minWidth:0, maxWidth:"100%"}}>
+                  <option value=""></option>
+                  <option>AUVERGNE-RHÔNE-ALPES</option>
+                  <option>BOURGOGNE FRANCHE-COMTÉ</option>
+                  <option>BRETAGNE</option>
+                  <option>CENTRE-VAL DE LOIRE</option>
+                  <option>CONSEIL NATIONAL DE L'ORDRE DES EXPERTS-COMPTABLES</option>
+                  <option>CORSE</option>
+                  <option>GRAND EST</option>
+                  <option>GUADELOUPE</option>
+                  <option>GUYANE</option>
+                  <option>HAUTS-DE-FRANCE</option>
+                  <option>LA REUNION</option>
+                  <option>MARTINIQUE</option>
+                  <option>MAYOTTE</option>
+                  <option>NORMANDIE</option>
+                  <option>NOUVELLE-AQUITAINE</option>
+                  <option>OCCITANIE</option>
+                  <option>PAYS DE LA LOIRE</option>
+                  <option>PROVENCE-ALPES-CÔTE D'AZUR</option>
+                  <option>ÎLE-DE-FRANCE</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Colonne droite : Commission décisionnaire */}
+            <div className="flex-1 border border-[#B0C4DE] rounded p-3 flex flex-col gap-2 bg-[#EEF3FA]">
+              <div className="text-[13px] font-bold text-[#0250D9] mb-1">Commission décisionnaire</div>
+              <div className="flex items-center gap-2">
+                <span className={labelCls} style={{width:90}}>Commission :</span>
+                <select value={form.commission} onChange={e => set("commission", e.target.value)} className={`${selectCls} flex-1`}>
+                  <option value=""></option>
+                  <option>TABLEAU</option>
+                  <option>STAGE</option>
+                  <option>DIP</option>
+                  <option>INFORMATIONS</option>
+                  <option>CRD</option>
+                  <option>ACTION SOCIALE</option>
+                  <option>ARTICLE 42 BIS</option>
+                </select>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={labelCls} style={{width:90}}>Avis :</span>
+                <select value={form.avis} onChange={e => set("avis", e.target.value)} className={`${selectCls} flex-1`}>
+                  <option value=""></option>
+                  <option>Favorable</option>
+                  <option>Défavorable</option>
+                </select>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className={`${labelCls} mt-1`} style={{width:90}}>Commentaire :</span>
+                <textarea value={form.commentaireCommission} onChange={e => set("commentaireCommission", e.target.value)}
+                  className={`${inputCls} flex-1`} rows={3} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Boutons footer ── */}
+        <div className="flex items-center justify-end gap-2 px-4 py-2 bg-[#DDE8F5] border-t border-[#B0C4DE] rounded-b">
+          <button onClick={onClose} className="flex items-center gap-1.5 px-4 py-1.5 bg-white border border-[#C9C9C9] rounded text-[13px] font-medium text-[#2E2E2E] hover:bg-[#F3F3F3] transition-colors">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none"><circle cx="12" cy="12" r="10" fill="#E53935"/><line x1="7" y1="7" x2="17" y2="17" stroke="white" strokeWidth="2.5" strokeLinecap="round"/><line x1="17" y1="7" x2="7" y2="17" stroke="white" strokeWidth="2.5" strokeLinecap="round"/></svg>
+            Fermer
+          </button>
+          <button
+            onClick={() => {
+              if (!form.demande) return;
+              const newRow = {
+                cr: "IDF",
+                crOrigine: "IDF",
+                numInscription: numInscription,
+                motif: form.demande,
+                type: form.echeance || "Conseil",
+                effet: form.dateEffet || today,
+                session: form.dateDemande || today,
+                decision: "Validé",
+                qualite: form.qualite,
+              };
+              if (onValider) onValider({ newRow, qualite: form.qualite });
+            }}
+            className="flex items-center gap-1.5 px-4 py-1.5 bg-white border border-[#C9C9C9] rounded text-[13px] font-medium text-[#2E2E2E] hover:bg-[#F3F3F3] transition-colors"
+          >
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none"><circle cx="12" cy="12" r="10" fill="#43A047"/><polyline points="7 12 10 15 17 9" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            Valider
+          </button>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════
+   DemandesPanel — Historique des demandes + Demandes en attente
+   ══════════════════════════════════════════════════════════════ */
+function DemandesPanel({ motifsHistorique: initialHistorique, motifsEnAttente, numInscription, stagiaireName, onQualiteChange }) {
   const [historiqueOpen, setHistoriqueOpen] = useState(true);
+  const [showModal, setShowModal]           = useState(false);
+  const [historique, setHistorique]         = useState(initialHistorique || []);
   const thCls = "px-3 py-2 border-b border-[#C9C9C9] text-[11px] font-semibold text-[#5C5C5C] whitespace-nowrap";
   const tdCls = "px-3 py-2 text-[12px] text-[#2E2E2E] whitespace-nowrap";
+
+  const handleValider = ({ newRow, qualite }) => {
+    setHistorique(h => [...h, newRow]);
+    if (qualite && onQualiteChange) onQualiteChange(qualite);
+    setShowModal(false);
+  };
+
   return (
     <div className="flex flex-col gap-3 mt-1">
+      {showModal && <NouvelleDemandeModal numInscription={numInscription} stagiaireName={stagiaireName} onClose={() => setShowModal(false)} onValider={handleValider} />}
 
-      {/* ── Historique des motifs ── */}
+      {/* ── Historique des demandes ── */}
       <div className="border border-[#E5E5E5] rounded-lg overflow-hidden">
         <button onClick={() => setHistoriqueOpen(o => !o)}
           className="w-full flex items-center gap-2 px-3 py-2.5 text-left bg-[#F9FAFB] hover:bg-[#F3F3F3] transition-colors">
           {historiqueOpen
             ? <ChevronDown size={12} className="text-[#5C5C5C] shrink-0" />
             : <ChevronRight size={12} className="text-[#5C5C5C] shrink-0" />}
-          <span className="text-[13px] font-semibold text-[#03234D]">Historique des motifs</span>
-          <span className="ml-1 text-[11px] text-[#5C5C5C]">({motifsHistorique.length})</span>
+          <span className="text-[13px] font-semibold text-[#03234D]">Historique des demandes</span>
+          <span className="ml-1 text-[11px] text-[#5C5C5C]">({historique.length})</span>
         </button>
         {historiqueOpen && (
           <div className="overflow-x-auto">
@@ -1887,7 +2169,7 @@ function DemandesPanel({ motifsHistorique, motifsEnAttente }) {
                 </tr>
               </thead>
               <tbody>
-                {motifsHistorique.map((m, i) => (
+                {historique.map((m, i) => (
                   <tr key={i} className="border-t border-[#E5E5E5] hover:bg-[#FAFAFA]">
                     <td className={tdCls}>{m.cr}</td>
                     <td className={tdCls}>{m.crOrigine}</td>
@@ -1912,9 +2194,9 @@ function DemandesPanel({ motifsHistorique, motifsEnAttente }) {
 
       {/* ── Motifs en attente ── style page contact ── */}
       <div>
-        <div className="text-[12px] font-bold text-[#03234D] bg-[#D6E4F7] px-3 py-1.5 mb-2">Motifs en attente</div>
+        <div className="text-[12px] font-bold text-[#03234D] bg-[#D6E4F7] px-3 py-1.5 mb-2">Demandes en attente</div>
         <div className="flex items-center gap-2 mb-2">
-          <button className="flex items-center gap-1 px-2 py-1 bg-[#4CAF50] text-white rounded text-[11px] font-semibold">
+          <button onClick={() => setShowModal(true)} className="flex items-center gap-1 px-2 py-1 bg-[#4CAF50] text-white rounded text-[11px] font-semibold">
             <Plus size={11}/> Ajouter
           </button>
           <button className="flex items-center gap-1 px-2 py-1 bg-[#F44336] text-white rounded text-[11px] font-semibold">
@@ -1925,7 +2207,7 @@ function DemandesPanel({ motifsHistorique, motifsEnAttente }) {
           <table className="w-full text-[12px] border-collapse" style={{minWidth:520}}>
             <thead>
               <tr className="bg-[#F3F3F3] text-[#5C5C5C]">
-                {["Motif","Effet","Session","Décision","Echéance","Commentaire"].map(h => (
+                {["Demande","Effet","Session","Décision","Echéance","Commentaire"].map(h => (
                   <th key={h} className="px-2 py-1.5 text-left border-b border-[#C9C9C9] font-semibold whitespace-nowrap text-[11px]">{h}</th>
                 ))}
               </tr>
@@ -1955,10 +2237,14 @@ function DemandesPanel({ motifsHistorique, motifsEnAttente }) {
 function RecordPage({ row }) {
   const [activeTab, setActiveTab] = useState("stage");
   const data = buildRecordData(row);
+  const [qualiteHeader, setQualite] = useState(data.highlights.find(h => h.label === "Qualité")?.value || "");
+
+  const highlights = data.highlights.map(h => h.label === "Qualité" ? {...h, value: qualiteHeader} : h);
+
   return (
     <>
       <PageHeader stagiaireName={row.stagiaire} />
-      <HighlightsPanel fields={data.highlights} />
+      <HighlightsPanel fields={highlights} />
       <div className="flex-1 overflow-auto px-4 pt-[1px]">
         <div className="flex gap-3 max-w-[1408px]">
           <div className="w-[698px] shrink-0">
@@ -2002,7 +2288,7 @@ function RecordPage({ row }) {
               <AttestationPanel data={data.attestation} />
             </CardSection>
             <CardSection icon={<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>} iconBg="bg-[#C45500]" title="Demandes" defaultOpen={true}>
-              <DemandesPanel motifsHistorique={data.motifsHistorique} motifsEnAttente={data.motifsEnAttente} />
+              <DemandesPanel motifsHistorique={data.motifsHistorique} motifsEnAttente={data.motifsEnAttente} numInscription={row.numInscription} stagiaireName={row.stagiaire} onQualiteChange={(q) => setQualite(q)} />
             </CardSection>
           </div>
         </div>
@@ -6198,55 +6484,40 @@ function DemandePathStep({ step, index, total, onClick }) {
   const isFirst = index === 0;
   const isLast  = index === total - 1;
 
-  /* ── SVG-based chevron path (same technique as Record.html PathStep) ── */
-  const D = 10;   // profondeur de la pointe en unités viewBox
-  const R = 14;   // rayon arrondi des extrémités (= H/2 pour un demi-cercle parfait)
-  const W = 100;  // largeur de base en unités viewBox
-  const H = 28;   // hauteur en px (viewBox height)
+  /* ── CSS clip-path chevron — profondeur D fixe en px, jamais de distorsion ── */
+  const D = 10;  // profondeur de la pointe (px, constant quelle que soit la largeur)
+  const R = 14;  // rayon des extrémités arrondies (= hauteur/2)
 
   const bg        = step.done ? "#acf3e4" : step.current ? "#032d60" : "#e5e5e5";
   const textColor = step.current ? "white" : "#03234d";
 
-  // Premier : arrondi gauche + pointe droite
-  // Dernier : encoche gauche + arrondi droit
-  // Milieu  : encoche gauche + pointe droite
-  let shapePath;
-  if (isFirst) {
-    shapePath = `M${R},0 L${W},0 L${W+D},${H/2} L${W},${H} L${R},${H} A${R},${R} 0 0,1 ${R},0 Z`;
-  } else if (isLast) {
-    shapePath = `M0,0 L${W-R},0 A${R},${R} 0 0,1 ${W-R},${H} L0,${H} L${D},${H/2} Z`;
-  } else {
-    shapePath = `M0,0 L${W},0 L${W+D},${H/2} L${W},${H} L0,${H} L${D},${H/2} Z`;
-  }
-
-  // viewBox width : W+D pour premier/milieu (la pointe dépasse), W pour le dernier
-  const vbW = isLast ? W : W + D;
+  // clip-path : pointe droite sur tous sauf dernier, rien sur le dernier (arrondi via border-radius)
+  const clipPath = isLast
+    ? undefined
+    : `polygon(0 0, calc(100% - ${D}px) 0, 100% 50%, calc(100% - ${D}px) 100%, 0 100%)`;
 
   return (
     <div
       onClick={onClick}
       style={{
-        flex: 1, minWidth: 0, height: H,
+        flex: 1, minWidth: 0, height: 28,
         position: "relative",
-        marginRight: isLast ? 0 : "-5px",
+        // Arrondi des extrémités via border-radius + overflow hidden (sans SVG)
+        borderRadius: isFirst ? `${R}px 0 0 ${R}px` : isLast ? `0 ${R}px ${R}px 0` : 0,
+        overflow: "hidden",
+        // Chevauchement pour que la pointe de chaque step couvre le début du suivant
+        marginRight: isLast ? 0 : `-${D}px`,
+        zIndex: total - index,
         cursor: onClick ? "pointer" : "default",
       }}
     >
-      {/* Forme SVG — s'étire en largeur, overflow visible pour la pointe */}
-      <svg
-        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", overflow: "visible" }}
-        viewBox={`0 0 ${vbW} ${H}`}
-        preserveAspectRatio="none"
-      >
-        <path d={shapePath} fill={bg} />
-      </svg>
-
-      {/* Contenu centré */}
       <div style={{
         position: "absolute", inset: 0,
+        background: bg,
+        clipPath: clipPath,
         display: "flex", alignItems: "center", justifyContent: "center",
         paddingLeft:  isFirst ? R + 4 : D + 8,
-        paddingRight: isLast  ? R + 4 : D + 4,
+        paddingRight: isLast  ? R + 4 : D + 8,
       }}>
         {step.done ? (
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#056764" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -6756,7 +7027,6 @@ function DemandeAttentePJPage() {
   const [dateDebut,  setDateDebut]  = useState('');
   const [dateFin,    setDateFin]    = useState('');
   const [dateAttest, setDateAttest] = useState('');
-  const [modeAttest, setModeAttest] = useState('auto');
 
   const ASSUREURS = ['', 'Verspieren', 'MMA', 'AXA', 'Allianz', 'Groupama', 'MAIF', 'SMACL', 'Autre'];
 
@@ -6873,26 +7143,14 @@ function DemandeAttentePJPage() {
                     </div>
                   </div>
 
-                  {/* Date attestation + toggle auto/manuel */}
+                  {/* Date attestation */}
                   <div className="flex-1 pl-1 pb-1 mt-1">
                     <p className="text-[13px] text-[#5C5C5C] leading-[18px] mb-1">Date de l'attestation</p>
-                    <div className="flex gap-2 mb-2">
-                      {[['auto', 'Intégration auto (Verspieren)'], ['manuel', 'Saisie manuelle']].map(([val, lbl]) => (
-                        <button key={val} onClick={() => setModeAttest(val)} className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium border transition-colors ${modeAttest === val ? 'bg-[#EEF4FF] border-[#0250D9] text-[#0250D9]' : 'bg-white border-[#C9C9C9] text-[#5C5C5C]'}`}>
-                          {lbl}
-                        </button>
-                      ))}
+                    <div className="flex items-center gap-1 border-b border-[#C9C9C9] min-h-[24px] pb-1 pt-0.5 hover:border-[#0250D9] transition-colors">
+                      <input type="date" value={dateAttest} onChange={e => setDateAttest(e.target.value)}
+                        className="flex-1 text-[13px] text-[#2E2E2E] bg-transparent outline-none border-none"
+                        style={{fontFamily:'inherit'}} />
                     </div>
-                    {modeAttest === 'auto'
-                      ? <div className="flex items-center gap-1 border-b border-[#C9C9C9] min-h-[24px] pb-1 pt-0.5">
-                          <span className="flex-1 text-[12px] text-[#5C5C5C] italic">Renseignée automatiquement via le flux Verspieren</span>
-                        </div>
-                      : <div className="flex items-center gap-1 border-b border-[#C9C9C9] min-h-[24px] pb-1 pt-0.5 hover:border-[#0250D9] transition-colors">
-                          <input type="date" value={dateAttest} onChange={e => setDateAttest(e.target.value)}
-                            className="flex-1 text-[13px] text-[#2E2E2E] bg-transparent outline-none border-none"
-                            style={{fontFamily:'inherit'}} />
-                        </div>
-                    }
                   </div>
                 </ExpandableSection>
               </div>
