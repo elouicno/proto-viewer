@@ -2234,16 +2234,550 @@ function FormationsPage({ row }) {
 }
 
 /* ══════════════════════════════════════════════════════════════
+   Motifs par Qualité — mapping Excel colonne D → colonne B
+   ══════════════════════════════════════════════════════════════ */
+const MOTIFS_PAR_QUALITE = {
+  "EXPERT-COMPTABLE": [
+    "INSCRIPTION","DEPART REGION","DECES","ACTIVITE BNC - DEBUT","INSCRIPTION SECONDAIRE",
+    "INSCRIPTION ARTICLE 7 BIS","ANNULATION D'OFFICE D'UNE INSCRIPTION SANS SUITE","AUTRES MOTIFS",
+    "INSCRIPTION BUREAU/ETABLISSEMENT SECONDAIRE","INSCRIPTION ARTICLE 26","INSCRIPTION ARTICLE 27",
+    "INSCRIPTION 83 BIS","INSCRIPTION ARTICLE 83 SEPTIES (CAFCAC)","REFUS D'INSCRIPTION (PP)",
+    "CHANGEMENT EMPLOYEUR","CHANGEMENT QUALITE","SUSPENSION - OMISSION","SUSPENSION - MATERNITE",
+    "RADIATION POUR RETRAITE","RADIATION POUR DEMISSION","RADIATION POUR NON-PAIEMENT CAVEC",
+    "HONORARIAT","RADIATION POUR COTISATIONS IMPAYEES","DECES AVEC ADMINISTRATION PROVISOIRE",
+    "RADIATION POUR DEFAUT D'ASSURANCE EN RCP","ANNULATION VOLONTAIRE D'UNE INSCRIPTION SANS SUITE",
+    "DOSSIER/BUREAU/ETABLISSEMENT SECONDAIRE DEVIENT PRINCIPAL",
+    "FERMETURE DOSSIER/BUREAU/ETABLISSEMENT SECONDAIRE","ACTIVITE BNC - FIN",
+    "RADIATION MESURE DISCIPLINAIRE","SUSPENSION MESURE DISCIPLINAIRE",
+    "DEMISSION AVEC DEMANDE HONORARIAT","REINSCRIPTION",
+    "REINSCRIPTION APRES SUSPENSION DISCIPLINAIRE AVEC DATE EFFET OBLIGATOIRE",
+    "REINTEGRATION APRES DECISION CNT","REGULARISATION COTISATIONS DE SUSPENDUS",
+    "RETOUR SUSPENDU - REGULARISATIONS COTISATIONS","RÉINTÉGRATION",
+    "RÉINTÉGRATION APRÈS RÉGULARISATION DE COTISATION IMPAYÉES"
+  ],
+  "EXPERT-COMPTABLE|EN EXERCICE": [
+    "DEPART REGION",
+    "CHANGEMENT EMPLOYEUR",
+    "CHANGEMENT QUALITE",
+    "SUSPENSION - OMISSION",
+    "SUSPENSION - MATERNITE",
+    "DECES",
+    "RADIATION POUR RETRAITE",
+    "RADIATION POUR DEMISSION",
+    "RADIATION POUR NON-PAIEMENT CAVEC",
+    "ACTIVITE BNC - DEBUT",
+    "HONORARIAT",
+    "RADIATION POUR COTISATIONS IMPAYEES",
+    "DECES AVEC ADMINISTRATION PROVISOIRE",
+    "RADIATION POUR DEFAUT D'ASSURANCE EN RCP",
+    "AUTRES MOTIFS",
+    "ANNULATION VOLONTAIRE D'UNE INSCRIPTION SANS SUITE",
+    "DOSSIER/BUREAU/ETABLISSEMENT SECONDAIRE DEVIENT PRINCIPAL",
+    "FERMETURE DOSSIER/BUREAU/ETABLISSEMENT SECONDAIRE",
+    "ACTIVITE BNC - FIN",
+    "RADIATION MESURE DISCIPLINAIRE",
+    "SUSPENSION MESURE DISCIPLINAIRE"
+  ],
+  "EXPERT-COMPTABLE EN LIBRE PRESTATION DE SERVICE": [
+    "INSCRIPTION","DEPART REGION","DECES","ACTIVITE BNC - DEBUT","INSCRIPTION SECONDAIRE",
+    "INSCRIPTION ARTICLE 7 BIS","ANNULATION D'OFFICE D'UNE INSCRIPTION SANS SUITE","AUTRES MOTIFS",
+    "INSCRIPTION ARTICLE 26","INSCRIPTION ARTICLE 27","INSCRIPTION 83 BIS",
+    "INSCRIPTION ARTICLE 83 SEPTIES (CAFCAC)","REFUS D'INSCRIPTION (PP)",
+    "CHANGEMENT EMPLOYEUR","CHANGEMENT QUALITE","SUSPENSION - OMISSION","SUSPENSION - MATERNITE",
+    "RADIATION POUR RETRAITE","RADIATION POUR DEMISSION","RADIATION POUR NON-PAIEMENT CAVEC",
+    "HONORARIAT","RADIATION POUR COTISATIONS IMPAYEES","DECES AVEC ADMINISTRATION PROVISOIRE",
+    "RADIATION POUR DEFAUT D'ASSURANCE EN RCP","ANNULATION VOLONTAIRE D'UNE INSCRIPTION SANS SUITE",
+    "DOSSIER/BUREAU/ETABLISSEMENT SECONDAIRE DEVIENT PRINCIPAL",
+    "FERMETURE DOSSIER/BUREAU/ETABLISSEMENT SECONDAIRE","ACTIVITE BNC - FIN",
+    "RADIATION MESURE DISCIPLINAIRE","SUSPENSION MESURE DISCIPLINAIRE",
+    "DEMISSION AVEC DEMANDE HONORARIAT","REINSCRIPTION",
+    "REINSCRIPTION APRES SUSPENSION DISCIPLINAIRE AVEC DATE EFFET OBLIGATOIRE",
+    "REINTEGRATION APRES DECISION CNT","REGULARISATION COTISATIONS DE SUSPENDUS",
+    "RETOUR SUSPENDU - REGULARISATIONS COTISATIONS","RÉINTÉGRATION",
+    "RÉINTÉGRATION APRÈS RÉGULARISATION DE COTISATION IMPAYÉES"
+  ],
+  "EXPERT-COMPTABLE EN EXERCICE PARTIEL": [
+    "INSCRIPTION","DEPART REGION","DECES","ACTIVITE BNC - DEBUT","INSCRIPTION SECONDAIRE",
+    "INSCRIPTION ARTICLE 7 BIS","ANNULATION D'OFFICE D'UNE INSCRIPTION SANS SUITE","AUTRES MOTIFS",
+    "INSCRIPTION ARTICLE 26","INSCRIPTION ARTICLE 27","INSCRIPTION 83 BIS",
+    "INSCRIPTION ARTICLE 83 SEPTIES (CAFCAC)","REFUS D'INSCRIPTION (PP)",
+    "CHANGEMENT EMPLOYEUR","CHANGEMENT QUALITE","SUSPENSION - OMISSION","SUSPENSION - MATERNITE",
+    "RADIATION POUR RETRAITE","RADIATION POUR DEMISSION","RADIATION POUR NON-PAIEMENT CAVEC",
+    "HONORARIAT","RADIATION POUR COTISATIONS IMPAYEES","DECES AVEC ADMINISTRATION PROVISOIRE",
+    "RADIATION POUR DEFAUT D'ASSURANCE EN RCP","ANNULATION VOLONTAIRE D'UNE INSCRIPTION SANS SUITE",
+    "DOSSIER/BUREAU/ETABLISSEMENT SECONDAIRE DEVIENT PRINCIPAL",
+    "FERMETURE DOSSIER/BUREAU/ETABLISSEMENT SECONDAIRE","ACTIVITE BNC - FIN",
+    "RADIATION MESURE DISCIPLINAIRE","SUSPENSION MESURE DISCIPLINAIRE",
+    "DEMISSION AVEC DEMANDE HONORARIAT","REINSCRIPTION",
+    "REINSCRIPTION APRES SUSPENSION DISCIPLINAIRE AVEC DATE EFFET OBLIGATOIRE",
+    "REINTEGRATION APRES DECISION CNT","REGULARISATION COTISATIONS DE SUSPENDUS",
+    "RETOUR SUSPENDU - REGULARISATIONS COTISATIONS","RÉINTÉGRATION",
+    "RÉINTÉGRATION APRÈS RÉGULARISATION DE COTISATION IMPAYÉES"
+  ],
+  "EXPERT-COMPTABLE EN ENTREPRISE": [
+    "INSCRIPTION","DEPART REGION","DECES","ACTIVITE BNC - DEBUT","INSCRIPTION SECONDAIRE",
+    "INSCRIPTION ARTICLE 7 BIS","ANNULATION D'OFFICE D'UNE INSCRIPTION SANS SUITE","AUTRES MOTIFS",
+    "INSCRIPTION ARTICLE 26","INSCRIPTION ARTICLE 27","INSCRIPTION 83 BIS",
+    "INSCRIPTION ARTICLE 83 SEPTIES (CAFCAC)","REFUS D'INSCRIPTION (PP)",
+    "CHANGEMENT EMPLOYEUR","CHANGEMENT QUALITE","SUSPENSION - OMISSION","SUSPENSION - MATERNITE",
+    "RADIATION POUR RETRAITE","RADIATION POUR DEMISSION","RADIATION POUR NON-PAIEMENT CAVEC",
+    "HONORARIAT","RADIATION POUR COTISATIONS IMPAYEES","DECES AVEC ADMINISTRATION PROVISOIRE",
+    "RADIATION POUR DEFAUT D'ASSURANCE EN RCP","ANNULATION VOLONTAIRE D'UNE INSCRIPTION SANS SUITE",
+    "DOSSIER/BUREAU/ETABLISSEMENT SECONDAIRE DEVIENT PRINCIPAL",
+    "FERMETURE DOSSIER/BUREAU/ETABLISSEMENT SECONDAIRE","ACTIVITE BNC - FIN",
+    "RADIATION MESURE DISCIPLINAIRE","SUSPENSION MESURE DISCIPLINAIRE",
+    "DEMISSION AVEC DEMANDE HONORARIAT","REINSCRIPTION",
+    "REINSCRIPTION APRES SUSPENSION DISCIPLINAIRE AVEC DATE EFFET OBLIGATOIRE",
+    "REINTEGRATION APRES DECISION CNT","REGULARISATION COTISATIONS DE SUSPENDUS",
+    "RETOUR SUSPENDU - REGULARISATIONS COTISATIONS","RÉINTÉGRATION",
+    "RÉINTÉGRATION APRÈS RÉGULARISATION DE COTISATION IMPAYÉES"
+  ],
+  "STAGIAIRE - REGIME 81|EN EXERCICE": [
+    "DEPART REGION",
+    "PROLONGATION DE STAGE",
+    "CHANGEMENT MAITRE DE STAGE",
+    "CHANGEMENT CONTROLEUR",
+    "CHANGEMENT EMPLOYEUR",
+    "SUSPENSION STAGIAIRE",
+    "SUSPENSION - MATERNITE",
+    "DECES",
+    "RADIATION POUR DEMISSION",
+    "INVALIDATION - ABSENCE 1 JOURNEE D'ETUDES",
+    "RADIATION POUR DESCF INCOMPLET UV1",
+    "RADIATION POUR  DESCF INCOMPLET UV2",
+    "RADIATION POUR COTISATIONS IMPAYEES",
+    "INVALIDATION - RAPPORT NON REMIS",
+    "ATTESTATION DE FIN DE STAGE",
+    "SUSPENSION - DESCF INCOMPLET",
+    "INVALIDATION - ABSENCE FICHE SUIVI DES FORMATIONS",
+    "INVALIDATION - ABSENCE SUIVI JOURNEES TECHNIQUES",
+    "ANNULATION D'OFFICE D'UNE INSCRIPTION SANS SUITE",
+    "MAINTIEN 4ÈME ANNEE",
+    "MAINTIEN 5ÈME ANNEE",
+    "AUTRES MOTIFS",
+    "ANNULATION VOLONTAIRE D'UNE INSCRIPTION SANS SUITE",
+    "SUSPENSION - ATTENTE PIECES CHANGEMENT  MAITRE DE STAGE",
+    "INVALIDATION - ABSENCE FICHE TRAVAUX PROFESSIONNELS",
+    "RADIATION APRES 1 AN DE MAINTIEN AU TABLEAU",
+    "RADIATION APRES 2 ANS DE MAINTIEN AU TABLEAU",
+    "RADIATION MESURE DISCIPLINAIRE",
+    "RADIATION OBLIGATIONS LIEES AU STAGE NON REMPLIES",
+    "RADIATION SUSPENSION > 12 MOIS",
+    "RADIATION SUSPENSION > 24 MOIS",
+    "SUSPENSION MESURE DISCIPLINAIRE",
+    "ANNULATION - INVALIDATION CNT",
+    "STAGE U.E. 2EME ANNEE ACCORDEE",
+    "SUSPENSION ACCORDEE POUR UNE 2EME ANNEE",
+    "OBTENTION DEC",
+    "SUSPENSION - DSCG INCOMPLET",
+    "DELAI SUPPLEMENTAIRE (PREMIER DELAI DE 6 MOIS)",
+    "DELAI SUPPLEMENTAIRE (DEUXIEME DELAI DE 6 MOIS)",
+    "RENOUVELLEMENT ATTESTATION DE FIN DE STAGE"
+  ],
+  "MEMORIALISTE": [
+    "DEPART REGION","DECES","INSCRIPTION ARTICLE 7 BIS","INSCRIPTION ARTICLE 83 SEPTIES (CAFCAC)",
+    "ABANDON DU CURSUS","OBTENTION DEC",
+    "RADIATION AUTOMATIQUE POUR ATTESTATION DE FIN DE STAGE CADUQUE",
+    "RENOUVELLEMENT ATTESTATION DE FIN DE STAGE",
+    "PROROGATION ATTESTATION DE FIN DE STAGE (REPORT DE NOTES 2 ANS)",
+    "PROROGATION ATTESTATION DE FIN DE STAGE (COVID 1 AN)"
+  ],
+  "DIPLOME - NON INSCRIT": [
+    "INSCRIPTION","DEPART REGION","DECES","INSCRIPTION ARTICLE 7 BIS",
+    "INSCRIPTION ARTICLE 26","INSCRIPTION ARTICLE 27"
+  ],
+  "EXPERT-COMPTABLE HONORAIRE": [
+    "DEPART REGION","DECES","AUTRES MOTIFS","REINSCRIPTION"
+  ],
+  "83Q-SALARIE AGC AUT A EXERC EC": [
+    "INSCRIPTION","DEPART REGION","DECES","INSCRIPTION SECONDAIRE","AUTRES MOTIFS",
+    "INSCRIPTION BUREAU/ETABLISSEMENT SECONDAIRE","CHANGEMENT QUALITE",
+    "RADIATION POUR RETRAITE","RADIATION POUR DEMISSION","RADIATION POUR COTISATIONS IMPAYEES",
+    "RADIATION POUR DEFAUT D'ASSURANCE EN RCP",
+    "DOSSIER/BUREAU/ETABLISSEMENT SECONDAIRE DEVIENT PRINCIPAL",
+    "FERMETURE DOSSIER/BUREAU/ETABLISSEMENT SECONDAIRE","RADIATION MESURE DISCIPLINAIRE",
+    "REINSCRIPTION","REINTEGRATION APRES DECISION CNT",
+    "RÉINTÉGRATION APRÈS RÉGULARISATION DE COTISATION IMPAYÉES"
+  ],
+  "83T-SALARIE AGC AUT A EXERC EC": [
+    "INSCRIPTION","DEPART REGION","DECES","INSCRIPTION SECONDAIRE","AUTRES MOTIFS",
+    "INSCRIPTION BUREAU/ETABLISSEMENT SECONDAIRE","CHANGEMENT EMPLOYEUR","CHANGEMENT QUALITE",
+    "SUSPENSION - OMISSION","SUSPENSION - MATERNITE","RADIATION POUR RETRAITE",
+    "RADIATION POUR DEMISSION","RADIATION POUR COTISATIONS IMPAYEES",
+    "RADIATION POUR DEFAUT D'ASSURANCE EN RCP",
+    "DOSSIER/BUREAU/ETABLISSEMENT SECONDAIRE DEVIENT PRINCIPAL",
+    "FERMETURE DOSSIER/BUREAU/ETABLISSEMENT SECONDAIRE","RADIATION MESURE DISCIPLINAIRE",
+    "SUSPENSION MESURE DISCIPLINAIRE","REINSCRIPTION","REINTEGRATION APRES DECISION CNT",
+    "RÉINTÉGRATION","RÉINTÉGRATION APRÈS RÉGULARISATION DE COTISATION IMPAYÉES"
+  ]
+};
+
+/* ══════════════════════════════════════════════════════════════
+   MOTIFS_FEUIL1 — mapping Motif → [{commission, statut}, ...]
+   Source : onglet Feuil1 du fichier "Liste des Motifs par qualités.xlsx"
+   Pour chaque motif, on liste les combinaisons valides (commission, statut)
+   ══════════════════════════════════════════════════════════════ */
+const MOTIFS_FEUIL1 = {
+  "INSCRIPTION": [
+    { commission:"TABLEAU", statut:"EN EXERCICE" },
+    { commission:"TABLEAU", statut:"CLASSE" },
+    { commission:"ARTICLE 42 BIS", statut:"EN EXERCICE" }
+  ],
+  "REINSCRIPTION": [
+    { commission:"TABLEAU", statut:"EN EXERCICE" },
+    { commission:"STAGE", statut:"EN EXERCICE" }
+  ],
+  "CHANGEMENT DENOMINATION SOCIALE": [
+    { commission:"INFORMATIONS", statut:"EN EXERCICE" }
+  ],
+  "DEPART REGION": [
+    { commission:"TABLEAU", statut:"TRF DEPART" },
+    { commission:"STAGE", statut:"TRF DEPART" }
+  ],
+  "MODIFICATION SIEGE SOCIAL": [
+    { commission:"INFORMATIONS", statut:"EN EXERCICE" },
+    { commission:"INFORMATIONS", statut:"CLASSE" }
+  ],
+  "MODIFICATION FORME SOCIALE": [
+    { commission:"INFORMATIONS", statut:"EN EXERCICE" }
+  ],
+  "RADIATION POUR CHANGEMENT D'OBJET SOCIAL": [
+    { commission:"TABLEAU", statut:"CLASSE" }
+  ],
+  "CHANGEMENT ADMINISTRATEUR": [
+    { commission:"INFORMATIONS", statut:"EN EXERCICE" }
+  ],
+  "CHANGEMENT PRESIDENT": [
+    { commission:"INFORMATIONS", statut:"EN EXERCICE" }
+  ],
+  "CHANGEMENT GERANT": [
+    { commission:"INFORMATIONS", statut:"EN EXERCICE" }
+  ],
+  "MODIFICATION REPARTITION DU CAPITAL": [
+    { commission:"INFORMATIONS", statut:"EN EXERCICE" }
+  ],
+  "CHANGEMENT DIRIGEANT": [
+    { commission:"INFORMATIONS", statut:"EN EXERCICE" }
+  ],
+  "CHANGEMENT MEMBRE DE SURVEILLANCE": [
+    { commission:"INFORMATIONS", statut:"EN EXERCICE" }
+  ],
+  "CHANGEMENT MEMBRE DU DIRECTOIRE": [
+    { commission:"INFORMATIONS", statut:"EN EXERCICE" }
+  ],
+  "PROLONGATION DE STAGE": [
+    { commission:"STAGE", statut:"EN EXERCICE" }
+  ],
+  "CHANGEMENT CONTROLEUR": [
+    { commission:"INFORMATIONS", statut:"EN EXERCICE" }
+  ],
+  "CHANGEMENT EMPLOYEUR": [
+    { commission:"TABLEAU", statut:"EN EXERCICE" },
+    { commission:"INFORMATIONS", statut:"EN EXERCICE" }
+  ],
+  "CHANGEMENT QUALITE": [
+    { commission:"TABLEAU", statut:"EN EXERCICE" }
+  ],
+  "SUSPENSION STAGIAIRE": [
+    { commission:"STAGE", statut:"SUSPENDU" }
+  ],
+  "SUSPENSION - OMISSION": [
+    { commission:"TABLEAU", statut:"SUSPENDU" }
+  ],
+  "SUSPENSION - MATERNITE": [
+    { commission:"INFORMATIONS", statut:"SUSPENDU" }
+  ],
+  "DECES": [
+    { commission:"TABLEAU", statut:"CLASSE" },
+    { commission:"STAGE", statut:"CLASSE" },
+    { commission:"INFORMATIONS", statut:"CLASSE" }
+  ],
+  "RADIATION POUR RETRAITE": [
+    { commission:"TABLEAU", statut:"CLASSE" }
+  ],
+  "RADIATION POUR DEMISSION": [
+    { commission:"TABLEAU", statut:"CLASSE" },
+    { commission:"STAGE", statut:"CLASSE" }
+  ],
+  "RADIATION POUR NON-PAIEMENT CAVEC": [
+    { commission:"TABLEAU", statut:"CLASSE" }
+  ],
+  "ACTIVITE BNC - DEBUT": [
+    { commission:"INFORMATIONS", statut:"EN EXERCICE" }
+  ],
+  "DISSOLUTION": [
+    { commission:"TABLEAU", statut:"CLASSE" }
+  ],
+  "LIQUIDATION": [
+    { commission:"TABLEAU", statut:"CLASSE" }
+  ],
+  "HONORARIAT": [
+    { commission:"TABLEAU", statut:"EN EXERCICE" }
+  ],
+  "MODIFICATIONS STATUTAIRES": [
+    { commission:"TABLEAU", statut:"EN EXERCICE" }
+  ],
+  "RADIATION POUR DESCF INCOMPLET UV1": [
+    { commission:"STAGE", statut:"CLASSE" }
+  ],
+  "RADIATION POUR  DESCF INCOMPLET UV2": [
+    { commission:"STAGE", statut:"CLASSE" }
+  ],
+  "RADIATION POUR COTISATIONS IMPAYEES": [
+    { commission:"TABLEAU", statut:"CLASSE" }
+  ],
+  "INSCRIPTION SECONDAIRE": [
+    { commission:"TABLEAU", statut:"EN EXERCICE" },
+    { commission:"TABLEAU", statut:"CLASSE" },
+    { commission:"ARTICLE 42 BIS", statut:"EN EXERCICE" }
+  ],
+  "DECES AVEC ADMINISTRATION PROVISOIRE": [
+    { commission:"TABLEAU", statut:"CLASSE" }
+  ],
+  "RADIATION POUR DEFAUT D'ASSURANCE EN RCP": [
+    { commission:"TABLEAU", statut:"CLASSE" }
+  ],
+  "INSCRIPTION ARTICLE 7 BIS": [
+    { commission:"TABLEAU", statut:"EN EXERCICE" }
+  ],
+  "ATTESTATION DE FIN DE STAGE": [
+    { commission:"INFORMATIONS", statut:"EN EXERCICE" }
+  ],
+  "SUSPENSION - DESCF INCOMPLET": [
+    { commission:"INFORMATIONS", statut:"SUSPENDU" }
+  ],
+  "ANNULATION D'OFFICE D'UNE INSCRIPTION SANS SUITE": [
+    { commission:"TABLEAU", statut:"EN ATTENTE" },
+    { commission:"TABLEAU", statut:"CLASSE" },
+    { commission:"INFORMATIONS", statut:"CLASSE" }
+  ],
+  "ANNULATION VOLONTAIRE D'UNE INSCRIPTION SANS SUITE": [
+    { commission:"TABLEAU", statut:"CLASSE" },
+    { commission:"STAGE", statut:"CLASSE" }
+  ],
+  "SUSPENSION - ATTENTE PIECES CHANGEMENT  MAITRE DE STAGE": [
+    { commission:"INFORMATIONS", statut:"EN ATTENTE" },
+    { commission:"INFORMATIONS", statut:"EN EXERCICE" },
+    { commission:"INFORMATIONS", statut:"SUSPENDU" }
+  ],
+  "AUGMENTATION DE CAPITAL": [
+    { commission:"INFORMATIONS", statut:"EN EXERCICE" }
+  ],
+  "DOSSIER/BUREAU/ETABLISSEMENT SECONDAIRE DEVIENT PRINCIPAL": [
+    { commission:"TABLEAU", statut:"EN EXERCICE" }
+  ],
+  "DIMINUTION DE CAPITAL": [
+    { commission:"INFORMATIONS", statut:"EN EXERCICE" }
+  ],
+  "FERMETURE DOSSIER/BUREAU/ETABLISSEMENT SECONDAIRE": [
+    { commission:"TABLEAU", statut:"CLASSE" }
+  ],
+  "ACTIVITE BNC - FIN": [
+    { commission:"INFORMATIONS", statut:"CLASSE" }
+  ],
+  "FUSION/ABSORPTION": [
+    { commission:"TABLEAU", statut:"EN EXERCICE" }
+  ],
+  "INSCRIPTION BUREAU/ETABLISSEMENT SECONDAIRE": [
+    { commission:"TABLEAU", statut:"EN EXERCICE" },
+    { commission:"TABLEAU", statut:"CLASSE" },
+    { commission:"ARTICLE 42 BIS", statut:"EN EXERCICE" }
+  ],
+  "RADIATION APRES 1 AN DE MAINTIEN AU TABLEAU": [
+    { commission:"STAGE", statut:"CLASSE" }
+  ],
+  "RADIATION APRES 2 ANS DE MAINTIEN AU TABLEAU": [
+    { commission:"STAGE", statut:"CLASSE" }
+  ],
+  "RADIATION MESURE DISCIPLINAIRE": [
+    { commission:"TABLEAU", statut:"CLASSE" },
+    { commission:"STAGE", statut:"CLASSE" }
+  ],
+  "RADIATION OBLIGATIONS LIEES AU STAGE NON REMPLIES": [
+    { commission:"STAGE", statut:"CLASSE" }
+  ],
+  "RADIATION SUSPENSION > 12 MOIS": [
+    { commission:"STAGE", statut:"CLASSE" }
+  ],
+  "RADIATION SUSPENSION > 24 MOIS": [
+    { commission:"STAGE", statut:"CLASSE" }
+  ],
+  "SUSPENSION MESURE DISCIPLINAIRE": [
+    { commission:"TABLEAU", statut:"SUSPENDU" },
+    { commission:"STAGE", statut:"SUSPENDU" }
+  ],
+  "INSCRIPTION AU STAGE": [
+    { commission:"STAGE", statut:"EN EXERCICE" },
+    { commission:"STAGE", statut:"CLASSE" }
+  ],
+  "CHANGEMENT D'OBJET SOCIAL (SANS RADIATION)": [
+    { commission:"TABLEAU", statut:"EN EXERCICE" }
+  ],
+  "CHANGEMENT DIRECTEUR GENERAL": [
+    { commission:"INFORMATIONS", statut:"EN EXERCICE" }
+  ],
+  "CHANGEMENT RESPONSABLE ORDINAL": [
+    { commission:"INFORMATIONS", statut:"EN EXERCICE" }
+  ],
+  "REINSCRIPTION APRES SUSPENSION DISCIPLINAIRE AVEC DATE EFFET OBLIGATOIRE": [
+    { commission:"INFORMATIONS", statut:"EN EXERCICE" }
+  ],
+  "REINTEGRATION APRES DECISION CNT": [
+    { commission:"TABLEAU", statut:"EN EXERCICE" },
+    { commission:"STAGE", statut:"EN EXERCICE" }
+  ],
+  "ANNULATION - INVALIDATION CNT": [
+    { commission:"INFORMATIONS", statut:"EN EXERCICE" },
+    { commission:"INFORMATIONS", statut:"SUSPENDU" }
+  ],
+  "STAGE U.E. 2EME ANNEE ACCORDEE": [
+    { commission:"INFORMATIONS", statut:"EN EXERCICE" }
+  ],
+  "SUSPENSION ACCORDEE POUR UNE 2EME ANNEE": [
+    { commission:"INFORMATIONS", statut:"SUSPENDU" }
+  ],
+  "INSCRIPTION ARTICLE 26": [
+    { commission:"TABLEAU", statut:"EN EXERCICE" }
+  ],
+  "INSCRIPTION ARTICLE 27": [
+    { commission:"TABLEAU", statut:"EN EXERCICE" }
+  ],
+  "ABANDON DU CURSUS": [
+    { commission:"INFORMATIONS", statut:"CLASSE" }
+  ],
+  "OBTENTION DEC": [
+    { commission:"INFORMATIONS", statut:"CLASSE" }
+  ],
+  "TRANSMISSION UNIVERSELLE DU PATRIMOINE": [
+    { commission:"TABLEAU", statut:"EN EXERCICE" }
+  ],
+  "INSCRIPTION 83 BIS": [
+    { commission:"ARTICLE 42 BIS", statut:"EN EXERCICE" }
+  ],
+  "INSCRIPTION ARTICLE 83 SEPTIES (CAFCAC)": [
+    { commission:"TABLEAU", statut:"EN EXERCICE" }
+  ],
+  "REGULARISATION COTISATIONS DE SUSPENDUS": [
+    { commission:"INFORMATIONS", statut:"EN EXERCICE" }
+  ],
+  "RETOUR SUSPENDU - REGULARISATIONS COTISATIONS": [
+    { commission:"INFORMATIONS", statut:"SUSPENDU" },
+    { commission:"INFORMATIONS", statut:"CLASSE" }
+  ],
+  "DEMISSION AVEC DEMANDE HONORARIAT": [
+    { commission:"TABLEAU", statut:"CLASSE" }
+  ],
+  "RÉINTÉGRATION APRÈS RÉGULARISATION DE COTISATION IMPAYÉES": [
+    { commission:"TABLEAU", statut:"EN EXERCICE" },
+    { commission:"STAGE", statut:"EN EXERCICE" }
+  ],
+  "RÉINTÉGRATION": [
+    { commission:"TABLEAU", statut:"EN EXERCICE" },
+    { commission:"STAGE", statut:"EN EXERCICE" }
+  ],
+  "REFUS D'INSCRIPTION (PP)": [
+    { commission:"TABLEAU", statut:"CLASSE" },
+    { commission:"INFORMATIONS", statut:"CLASSE" }
+  ],
+  "REFUS D'INSCRIPTION (PM)": [
+    { commission:"TABLEAU", statut:"CLASSE" },
+    { commission:"STAGE", statut:"CLASSE" }
+  ],
+  "MISE EN SOMMEIL": [
+    { commission:"TABLEAU", statut:"CLASSE" },
+    { commission:"STAGE", statut:"CLASSE" }
+  ],
+  "CESSATION D'ACTIVITÉ": [
+    { commission:"TABLEAU", statut:"CLASSE" },
+    { commission:"STAGE", statut:"CLASSE" }
+  ],
+  "SUSPENSION - DSCG INCOMPLET": [
+    { commission:"INFORMATIONS", statut:"SUSPENDU" }
+  ],
+  "RADIATION- DSCG INCOMPLET": [
+    { commission:"STAGE", statut:"CLASSE" }
+  ],
+  "DELAI SUPPLEMENTAIRE (PREMIER DELAI DE 6 MOIS)": [
+    { commission:"STAGE", statut:"EN EXERCICE" }
+  ],
+  "DELAI SUPPLEMENTAIRE (DEUXIEME DELAI DE 6 MOIS)": [
+    { commission:"STAGE", statut:"EN EXERCICE" }
+  ],
+  "RADIATION AUTOMATIQUE POUR ATTESTATION DE FIN DE STAGE CADUQUE": [
+    { commission:"TABLEAU", statut:"CLASSE" }
+  ],
+  "RENOUVELLEMENT ATTESTATION DE FIN DE STAGE": [
+    { commission:"STAGE", statut:"EN EXERCICE" },
+    { commission:"STAGE", statut:"CLASSE" }
+  ],
+  "PROROGATION ATTESTATION DE FIN DE STAGE (REPORT DE NOTES 2 ANS)": [
+    { commission:"STAGE", statut:"EN EXERCICE" }
+  ],
+  "PROROGATION ATTESTATION DE FIN DE STAGE (COVID 1 AN)": [
+    { commission:"STAGE", statut:"EN EXERCICE" }
+  ],
+  "COMPETENCE SPECIALISEE": [
+    { commission:"TABLEAU", statut:"EN EXERCICE" }
+  ],
+  "RADIATION ARTICLE 7-III": [
+    { commission:"TABLEAU", statut:"CLASSE" }
+  ],
+  "RADIATION PAR DÉCISION DE LA COMMISSION 42BIS": [
+    { commission:"TABLEAU", statut:"CLASSE" }
+  ]
+};
+
+/* ══════════════════════════════════════════════════════════════
+   COMMISSIONS_VALIDES_PAR_QUALITE
+   Restreint les commissions disponibles selon la qualité du stagiaire/EC.
+   Pour STAGIAIRE - REGIME 81 : seules STAGE et INFORMATIONS sont valides
+   (TABLEAU et ARTICLE 42 BIS sont réservées aux EC inscrits / au tableau).
+   Si la qualité n'est pas listée ici, aucun filtre n'est appliqué.
+   ══════════════════════════════════════════════════════════════ */
+const COMMISSIONS_VALIDES_PAR_QUALITE = {
+  "STAGIAIRE - REGIME 81": ["STAGE", "INFORMATIONS"],
+  "EXPERT-COMPTABLE": ["TABLEAU", "ARTICLE 42 BIS"]
+};
+
+function getRulesForMotif(motif, qualite) {
+  const rules = MOTIFS_FEUIL1[motif];
+  if (!rules) return null;
+  const allowed = COMMISSIONS_VALIDES_PAR_QUALITE[qualite];
+  if (!allowed) return rules;
+  const filtered = rules.filter(r => allowed.includes(r.commission));
+  return filtered.length > 0 ? filtered : null;
+}
+
+/* ══════════════════════════════════════════════════════════════
    NouvelleDemandeModal — modale création demande (fiche stagiaire)
    ══════════════════════════════════════════════════════════════ */
-function NouvelleDemandeModal({ numInscription, stagiaireName, onClose, onValider }) {
+function NouvelleDemandeModal({ numInscription, stagiaireName, qualite: initialQualite, initialStatut, onClose, onValider }) {
   const today = new Date().toISOString().slice(0,10);
   const [form, setForm] = React.useState({
     demande: "", dateEffet: "", echeance: "Conseil", dateDemande: today,
-    ag: "", commentaire: "", statut: "EN EXERCICE", qualite: "STAGIAIRE - REGIME 81",
+    ag: "", commentaire: "", statut: initialStatut || "EN EXERCICE", qualite: initialQualite || "STAGIAIRE - REGIME 81",
+    nouveauStatut: "", nouvelleQualite: "",
     session: "", conseil: "", commission: "", avis: "", commentaireCommission: "",
   });
   const set = (k, v) => setForm(f => ({...f, [k]: v}));
+
+  // ── Auto-remplissage Statut + Commission selon le Motif sélectionné (source : Feuil1)
+  //    + filtrage par qualité (ex. stagiaire : exclut TABLEAU et ARTICLE 42 BIS)
+  React.useEffect(() => {
+    const rules = getRulesForMotif(form.demande, form.qualite);
+    if (!rules) {
+      // Motif inconnu de Feuil1 (ou aucune commission compatible avec la qualité)
+      setForm(f => ({...f, nouveauStatut: "", commission: ""}));
+      return;
+    }
+    const statuts = [...new Set(rules.map(r => r.statut))];
+    const commissions = [...new Set(rules.map(r => r.commission))];
+    setForm(f => ({
+      ...f,
+      nouveauStatut: statuts.length === 1 ? statuts[0] : "",
+      commission: commissions.length === 1 ? commissions[0] : "",
+    }));
+  }, [form.demande]);
 
   const inputCls  = "w-full border border-[#C9C9C9] rounded px-2 py-1 text-[13px] bg-white focus:outline-none focus:border-[#0250D9]";
   const selectCls = "border border-[#C9C9C9] rounded px-2 py-1 text-[13px] bg-white focus:outline-none focus:border-[#0250D9]";
@@ -2256,28 +2790,25 @@ function NouvelleDemandeModal({ numInscription, stagiaireName, onClose, onValide
         {/* ── Titre ── */}
         <div className="flex items-center justify-between px-4 py-2 bg-[#C8D9EE] border-b border-[#B0C4DE] rounded-t">
           <span className="text-[13px] font-semibold text-[#03234D]">
-            Demandes &lt; {numInscription} &gt; {stagiaireName}
+            Motifs &lt; {numInscription} &gt; {stagiaireName}
           </span>
           <button onClick={onClose} className="text-[#5C5C5C] hover:text-[#C00] text-[16px] font-bold leading-none">✕</button>
         </div>
 
         <div className="overflow-y-auto flex-1 px-4 py-3 flex flex-col gap-3">
 
-          {/* ── Section Information demande ── */}
+          {/* ── Section Information motif ── */}
           <div className="bg-[#EEF3FA] border border-[#B0C4DE] rounded p-3 flex flex-col gap-3">
-            <div className="text-[13px] font-bold text-[#0250D9] mb-1">Information demande</div>
+            <div className="text-[13px] font-bold text-[#0250D9] mb-1">Information motif</div>
 
-            {/* Ligne 1 : Demande */}
+            {/* Ligne 1 : Motif */}
             <div className="flex items-center gap-2">
-              <span className={labelCls} style={{width:100}}>Demande :</span>
+              <span className={labelCls} style={{width:100}}>Motif :</span>
               <select value={form.demande} onChange={e => set("demande", e.target.value)} className={`${selectCls} flex-1`}>
                 <option value=""></option>
-                <option>INSCRIPTION AU STAGE</option>
-                <option>REINSCRIPTION</option>
-                <option>SUSPENSION</option>
-                <option>REPRISE</option>
-                <option>ATTESTATION DE FIN DE STAGE</option>
-                <option>TRANSFERT</option>
+                {(MOTIFS_PAR_QUALITE[`${form.qualite}|${form.statut}`] || MOTIFS_PAR_QUALITE[form.qualite] || []).map(m => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
               </select>
             </div>
 
@@ -2308,25 +2839,69 @@ function NouvelleDemandeModal({ numInscription, stagiaireName, onClose, onValide
             <div className="flex items-start gap-2">
               <span className={`${labelCls} mt-1`} style={{width:100}}>Commentaire :</span>
               <textarea value={form.commentaire} onChange={e => set("commentaire", e.target.value)}
-                className={`${inputCls} flex-1`} rows={3} />
+                className={`${inputCls} flex-1`} rows={2} />
             </div>
 
-            {/* Ligne 4 : Statut + Qualité */}
+            {/* Ligne 4 : Statut (lecture seule) + Qualité (lecture seule) */}
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2 flex-1">
                 <span className={labelCls} style={{width:55}}>Statut :</span>
-                <select value={form.statut} onChange={e => set("statut", e.target.value)} className={`${selectCls} flex-1`}>
-                  <option value=""></option>
-                  <option>EN ATTENTE</option>
-                  <option>EN EXERCICE</option>
-                  <option>SUSPENDU</option>
-                  <option>CLASSÉ</option>
-                  <option>TRF ARRIVEE</option>
-                </select>
+                <span className="text-[13px] text-[#1A1A1A]">{form.statut}</span>
               </div>
               <div className="flex items-center gap-2 flex-1">
                 <span className={labelCls} style={{width:55}}>Qualité :</span>
-                <select value={form.qualite} onChange={e => set("qualite", e.target.value)} className={`${selectCls} flex-1`}>
+                <span className="text-[13px] text-[#1A1A1A]">{form.qualite}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Section Nouvelle situation ── */}
+          <div className="bg-[#EEF3FA] border border-[#B0C4DE] rounded p-3 flex flex-col gap-2">
+            <div className="text-[13px] font-bold text-[#0250D9] mb-1">Nouvelle situation</div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 shrink-0">
+                <span className={labelCls} style={{width:55}}>Statut :</span>
+                {(() => {
+                  const rules = getRulesForMotif(form.demande, form.qualite);
+                  const fallback = ["EN ATTENTE","EN EXERCICE","SUSPENDU","CLASSÉ","TRF ARRIVEE","TRF DEPART","CLASSE"];
+                  let opts = fallback;
+                  let locked = false;
+                  if (rules) {
+                    const filtered = form.commission ? rules.filter(r => r.commission === form.commission) : rules;
+                    opts = [...new Set(filtered.map(r => r.statut))];
+                    locked = opts.length === 1;
+                  }
+                  const cls = `${selectCls}${locked ? " bg-[#FFF8DB] border-[#E5C100]" : ""}`;
+                  return (
+                    <select
+                      value={form.nouveauStatut}
+                      onChange={e => {
+                        const v = e.target.value;
+                        // Couplage : si une seule commission compatible, on la fixe
+                        if (rules && v) {
+                          const compat = [...new Set(rules.filter(r => r.statut === v).map(r => r.commission))];
+                          setForm(f => ({
+                            ...f,
+                            nouveauStatut: v,
+                            commission: compat.length === 1 ? compat[0] : (compat.includes(f.commission) ? f.commission : "")
+                          }));
+                        } else {
+                          set("nouveauStatut", v);
+                        }
+                      }}
+                      disabled={locked}
+                      className={cls}
+                      style={{width:140}}
+                    >
+                      {!locked && <option value=""></option>}
+                      {opts.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  );
+                })()}
+              </div>
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <span className={labelCls} style={{width:55}}>Qualité :</span>
+                <select value={form.nouvelleQualite} onChange={e => set("nouvelleQualite", e.target.value)} className={`${selectCls} flex-1`}>
                   <option value=""></option>
                   <option>EXPERT-COMPTABLE</option>
                   <option>EXPERT-COMPTABLE EN LIBRE PRESTATION DE SERVICE</option>
@@ -2341,68 +2916,93 @@ function NouvelleDemandeModal({ numInscription, stagiaireName, onClose, onValide
                 </select>
               </div>
             </div>
+            <div className="flex items-center gap-2 mt-1">
+              <span className={labelCls} style={{width:55}}>Conseil :</span>
+              <select value={form.conseil} onChange={e => set("conseil", e.target.value)} className={`${selectCls} flex-1`}>
+                <option value=""></option>
+                <option>AUVERGNE-RHÔNE-ALPES</option>
+                <option>BOURGOGNE FRANCHE-COMTÉ</option>
+                <option>BRETAGNE</option>
+                <option>CENTRE-VAL DE LOIRE</option>
+                <option>CONSEIL NATIONAL DE L'ORDRE DES EXPERTS-COMPTABLES</option>
+                <option>CORSE</option>
+                <option>GRAND EST</option>
+                <option>GUADELOUPE</option>
+                <option>GUYANE</option>
+                <option>HAUTS-DE-FRANCE</option>
+                <option>LA REUNION</option>
+                <option>MARTINIQUE</option>
+                <option>MAYOTTE</option>
+                <option>NORMANDIE</option>
+                <option>NOUVELLE-AQUITAINE</option>
+                <option>OCCITANIE</option>
+                <option>PAYS DE LA LOIRE</option>
+                <option>PROVENCE-ALPES-CÔTE D'AZUR</option>
+                <option>ÎLE-DE-FRANCE</option>
+              </select>
+            </div>
           </div>
 
-          {/* ── Bas : Conseil + Commission décisionnaire ── */}
-          <div className="flex gap-3 min-w-0">
-            {/* Colonne gauche */}
-            <div className="flex flex-col gap-2 min-w-0" style={{flex:"0 0 220px"}}>
-              <div className="flex items-center gap-2 min-w-0">
-                <span className={labelCls} style={{width:55, flexShrink:0}}>Conseil :</span>
-                <select value={form.conseil} onChange={e => set("conseil", e.target.value)} className={selectCls} style={{flex:1, minWidth:0, maxWidth:"100%"}}>
-                  <option value=""></option>
-                  <option>AUVERGNE-RHÔNE-ALPES</option>
-                  <option>BOURGOGNE FRANCHE-COMTÉ</option>
-                  <option>BRETAGNE</option>
-                  <option>CENTRE-VAL DE LOIRE</option>
-                  <option>CONSEIL NATIONAL DE L'ORDRE DES EXPERTS-COMPTABLES</option>
-                  <option>CORSE</option>
-                  <option>GRAND EST</option>
-                  <option>GUADELOUPE</option>
-                  <option>GUYANE</option>
-                  <option>HAUTS-DE-FRANCE</option>
-                  <option>LA REUNION</option>
-                  <option>MARTINIQUE</option>
-                  <option>MAYOTTE</option>
-                  <option>NORMANDIE</option>
-                  <option>NOUVELLE-AQUITAINE</option>
-                  <option>OCCITANIE</option>
-                  <option>PAYS DE LA LOIRE</option>
-                  <option>PROVENCE-ALPES-CÔTE D'AZUR</option>
-                  <option>ÎLE-DE-FRANCE</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Colonne droite : Commission décisionnaire */}
-            <div className="flex-1 border border-[#B0C4DE] rounded p-3 flex flex-col gap-2 bg-[#EEF3FA]">
-              <div className="text-[13px] font-bold text-[#0250D9] mb-1">Commission décisionnaire</div>
+          {/* ── Commission décisionnaire ── */}
+          <div className="border border-[#B0C4DE] rounded p-3 flex flex-col gap-2 bg-[#EEF3FA]">
+            <div className="text-[13px] font-bold text-[#0250D9] mb-1">Commission décisionnaire</div>
+            <div className="flex items-center gap-4 flex-wrap">
               <div className="flex items-center gap-2">
                 <span className={labelCls} style={{width:90}}>Commission :</span>
-                <select value={form.commission} onChange={e => set("commission", e.target.value)} className={`${selectCls} flex-1`}>
-                  <option value=""></option>
-                  <option>TABLEAU</option>
-                  <option>STAGE</option>
-                  <option>DIP</option>
-                  <option>INFORMATIONS</option>
-                  <option>CRD</option>
-                  <option>ACTION SOCIALE</option>
-                  <option>ARTICLE 42 BIS</option>
-                </select>
+                {(() => {
+                  const rules = getRulesForMotif(form.demande, form.qualite);
+                  // Fallback : si la qualité a un filtre, on n'affiche que les commissions autorisées
+                  const allowed = COMMISSIONS_VALIDES_PAR_QUALITE[form.qualite];
+                  const fullList = ["TABLEAU","STAGE","DIP","INFORMATIONS","CRD","ACTION SOCIALE","ARTICLE 42 BIS"];
+                  const fallback = allowed ? fullList.filter(c => allowed.includes(c)) : fullList;
+                  let opts = fallback;
+                  let locked = false;
+                  if (rules) {
+                    const filtered = form.nouveauStatut ? rules.filter(r => r.statut === form.nouveauStatut) : rules;
+                    opts = [...new Set(filtered.map(r => r.commission))];
+                    locked = opts.length === 1;
+                  }
+                  const cls = `${selectCls}${locked ? " bg-[#FFF8DB] border-[#E5C100]" : ""}`;
+                  return (
+                    <select
+                      value={form.commission}
+                      onChange={e => {
+                        const v = e.target.value;
+                        // Couplage : si un seul statut compatible, on le fixe
+                        if (rules && v) {
+                          const compat = [...new Set(rules.filter(r => r.commission === v).map(r => r.statut))];
+                          setForm(f => ({
+                            ...f,
+                            commission: v,
+                            nouveauStatut: compat.length === 1 ? compat[0] : (compat.includes(f.nouveauStatut) ? f.nouveauStatut : "")
+                          }));
+                        } else {
+                          set("commission", v);
+                        }
+                      }}
+                      disabled={locked}
+                      className={cls}
+                      style={{width:170}}
+                    >
+                      {!locked && <option value=""></option>}
+                      {opts.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  );
+                })()}
               </div>
               <div className="flex items-center gap-2">
-                <span className={labelCls} style={{width:90}}>Avis :</span>
-                <select value={form.avis} onChange={e => set("avis", e.target.value)} className={`${selectCls} flex-1`}>
+                <span className={labelCls} style={{width:35}}>Avis :</span>
+                <select value={form.avis} onChange={e => set("avis", e.target.value)} className={`${selectCls}`} style={{width:130}}>
                   <option value=""></option>
                   <option>Favorable</option>
                   <option>Défavorable</option>
                 </select>
               </div>
-              <div className="flex items-start gap-2">
-                <span className={`${labelCls} mt-1`} style={{width:90}}>Commentaire :</span>
-                <textarea value={form.commentaireCommission} onChange={e => set("commentaireCommission", e.target.value)}
-                  className={`${inputCls} flex-1`} rows={3} />
-              </div>
+            </div>
+            <div className="flex items-start gap-2 mt-1">
+              <span className={`${labelCls} mt-1`} style={{width:90}}>Commentaire :</span>
+              <textarea value={form.commentaireCommission} onChange={e => set("commentaireCommission", e.target.value)}
+                className={`${inputCls} flex-1`} rows={2} />
             </div>
           </div>
         </div>
@@ -2426,8 +3026,16 @@ function NouvelleDemandeModal({ numInscription, stagiaireName, onClose, onValide
                 session: form.dateDemande || today,
                 decision: "Validé",
                 qualite: form.qualite,
+                ag: form.ag,
+                conseil: form.conseil,
+                commission: form.commission,
+                avis: form.avis,
+                commentaire: form.commentaire,
+                commentaireCommission: form.commentaireCommission,
+                nouveauStatut: form.nouveauStatut,
+                nouvelleQualite: form.nouvelleQualite,
               };
-              if (onValider) onValider({ newRow, qualite: form.qualite });
+              if (onValider) onValider({ newRow, qualite: form.nouvelleQualite || form.qualite });
             }}
             className="flex items-center gap-1.5 px-4 py-1.5 bg-white border border-[#C9C9C9] rounded text-[13px] font-medium text-[#2E2E2E] hover:bg-[#F3F3F3] transition-colors"
           >
@@ -2444,7 +3052,7 @@ function NouvelleDemandeModal({ numInscription, stagiaireName, onClose, onValide
 /* ══════════════════════════════════════════════════════════════
    DemandesPanel — Historique des demandes + Demandes en attente
    ══════════════════════════════════════════════════════════════ */
-function DemandesPanel({ motifsHistorique: initialHistorique, motifsEnAttente, numInscription, stagiaireName, onQualiteChange }) {
+function DemandesPanel({ motifsHistorique: initialHistorique, motifsEnAttente, numInscription, stagiaireName, qualite: currentQualite, onQualiteChange }) {
   const [historiqueOpen, setHistoriqueOpen] = useState(true);
   const [showModal, setShowModal]           = useState(false);
   const [historique, setHistorique]         = useState(initialHistorique || []);
@@ -2459,7 +3067,7 @@ function DemandesPanel({ motifsHistorique: initialHistorique, motifsEnAttente, n
 
   return (
     <div className="flex flex-col gap-3 mt-1">
-      {showModal && <NouvelleDemandeModal numInscription={numInscription} stagiaireName={stagiaireName} onClose={() => setShowModal(false)} onValider={handleValider} />}
+      {showModal && <NouvelleDemandeModal numInscription={numInscription} stagiaireName={stagiaireName} qualite={currentQualite} onClose={() => setShowModal(false)} onValider={handleValider} />}
 
       {/* ── Historique des demandes ── */}
       <div className="border border-[#E5E5E5] rounded-lg overflow-hidden">
@@ -2607,7 +3215,7 @@ function RecordPage({ row }) {
               <AttestationPanel data={data.attestation} />
             </CardSection>
             <CardSection icon={<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>} iconBg="bg-[#C45500]" title="Demandes" defaultOpen={true}>
-              <DemandesPanel motifsHistorique={data.motifsHistorique} motifsEnAttente={data.motifsEnAttente} numInscription={row.numInscription} stagiaireName={row.stagiaire} onQualiteChange={(q) => setQualite(q)} />
+              <DemandesPanel motifsHistorique={data.motifsHistorique} motifsEnAttente={data.motifsEnAttente} numInscription={row.numInscription} stagiaireName={row.stagiaire} qualite={qualiteHeader} onQualiteChange={(q) => setQualite(q)} />
             </CardSection>
           </div>
         </div>
@@ -4285,8 +4893,12 @@ function BureauxPanel() {
 // ══════════════════════════════════════════════════════════════
 // DemandesContactPanel — panel droit Demandes (fiche contact)
 // ══════════════════════════════════════════════════════════════
-function DemandesContactPanel({ onDemandeAttentePJClick }) {
+function DemandesContactPanel({ onDemandeAttentePJClick, contactName = "DUPONT Marc", numInscription = "02 43512811 01" }) {
   const [open, setOpen] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [demandesAttente, setDemandesAttente] = useState([
+    { demande:"Inscription PP - attente PJ", effet:"14/03/2026", session:"14/03/2026", decision:"Favorable", echeance:"Conseil", commentaire:"INSCRIPTION DE RIBAUT", isPJ:true }
+  ]);
   const rows = [
     { cr:"IDF", crOrig:"IDF", num:"14-00017408-...", demande:"ACTIVITE BNC - FIN",        type:"B", effet:"30/06/2023", session:"05/10/2023", decision:"Validé", qualite:"EC",       qualAvant:"EC",   statut:"CLASSE",  statAvant:"EN EXE." },
     { cr:"IDF", crOrig:"IDF", num:"14-00017408-...", demande:"INSCRIPTION",               type:"B", effet:"06/07/2022", session:"19/07/2022", decision:"Validé", qualite:"EC",       qualAvant:"EC",   statut:"EN EXE.", statAvant:"EN ATT." },
@@ -4350,7 +4962,12 @@ function DemandesContactPanel({ onDemandeAttentePJClick }) {
           <div>
             <div className="text-[12px] font-bold text-[#03234D] bg-[#D6E4F7] px-3 py-1.5 mb-2">Demandes en attente</div>
             <div className="flex items-center gap-2 mb-2">
-              <button className="flex items-center gap-1 px-2 py-1 bg-[#4CAF50] text-white rounded text-[11px] font-semibold"><Plus size={11}/> Ajouter</button>
+              <button
+                onClick={() => setShowModal(true)}
+                className="flex items-center gap-1 px-2 py-1 bg-[#4CAF50] text-white rounded text-[11px] font-semibold"
+              >
+                <Plus size={11}/> Ajouter
+              </button>
               <button className="flex items-center gap-1 px-2 py-1 bg-[#F44336] text-white rounded text-[11px] font-semibold">
                 <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="white" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg> Supprimer
               </button>
@@ -4364,20 +4981,52 @@ function DemandesContactPanel({ onDemandeAttentePJClick }) {
                 </tr>
               </thead>
               <tbody>
-                <tr className="border-b border-[#E5E5E5] hover:bg-[#EEF4FF] cursor-pointer" onClick={() => onDemandeAttentePJClick && onDemandeAttentePJClick()}>
-                  <td className="px-2 py-1.5 whitespace-nowrap">
-                    <span className="font-semibold text-[#0250D9] hover:underline">Inscription PP - attente PJ</span>
-                  </td>
-                  <td className="px-2 py-1.5 whitespace-nowrap">14/03/2026</td>
-                  <td className="px-2 py-1.5 whitespace-nowrap">14/03/2026</td>
-                  <td className="px-2 py-1.5">Favorable</td>
-                  <td className="px-2 py-1.5">Conseil</td>
-                  <td className="px-2 py-1.5 text-[#5C5C5C] truncate max-w-[160px]">INSCRIPTION DE RIBAUT</td>
-                </tr>
+                {demandesAttente.length === 0 && (
+                  <tr><td colSpan={6} className="px-2 py-3 text-[12px] text-[#5C5C5C] italic">Aucune demande en attente</td></tr>
+                )}
+                {demandesAttente.map((d, i) => (
+                  <tr key={i} className="border-b border-[#E5E5E5] hover:bg-[#EEF4FF] cursor-pointer"
+                      onClick={() => d.isPJ && onDemandeAttentePJClick && onDemandeAttentePJClick()}>
+                    <td className="px-2 py-1.5 whitespace-nowrap">
+                      <span className="font-semibold text-[#0250D9] hover:underline">{d.demande}</span>
+                    </td>
+                    <td className="px-2 py-1.5 whitespace-nowrap">{d.effet}</td>
+                    <td className="px-2 py-1.5 whitespace-nowrap">{d.session}</td>
+                    <td className="px-2 py-1.5">{d.decision}</td>
+                    <td className="px-2 py-1.5">{d.echeance}</td>
+                    <td className="px-2 py-1.5 text-[#5C5C5C] truncate max-w-[160px]">{d.commentaire}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
         </div>
+      )}
+
+      {/* Modale d'ajout — qualité EC EN EXERCICE pour la page Contact */}
+      {showModal && (
+        <NouvelleDemandeModal
+          numInscription={numInscription}
+          stagiaireName={contactName}
+          qualite="EXPERT-COMPTABLE"
+          initialStatut="EN EXERCICE"
+          onClose={() => setShowModal(false)}
+          onValider={({ newRow }) => {
+            setDemandesAttente(arr => [
+              ...arr,
+              {
+                demande: newRow.motif,
+                effet: newRow.effet,
+                session: newRow.session,
+                decision: newRow.avis || "—",
+                echeance: newRow.type || "Conseil",
+                commentaire: newRow.commentaire || newRow.commentaireCommission || "",
+                isPJ: false,
+              }
+            ]);
+            setShowModal(false);
+          }}
+        />
       )}
     </div>
   );
