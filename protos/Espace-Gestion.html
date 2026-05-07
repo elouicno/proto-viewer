@@ -7205,7 +7205,146 @@ function ContactRecordPage({ demande, onAccountClick, onDemandeAttentePJClick })
                 )}
                 {activeTab === "commissions" && <CommissionsTab />}
                 {activeTab === "stage" && (
-                  <div className="mt-3" />
+                  <div className="mt-3 flex flex-col gap-3">
+
+                    {/* ── Bloc Paramètres généraux du stage ── */}
+                    <div className="bg-[#EEF3FA] border border-[#B0C4DE] rounded p-3 flex flex-col gap-2">
+                      <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[12px] text-[#5C5C5C] w-44 shrink-0 text-right">Réduction:</span>
+                          <select className="border border-[#C9C9C9] rounded px-2 py-1 text-[12px] bg-white" style={{width:220}}>
+                            <option value=""></option>
+                            <option>Aucune</option>
+                            <option>6 mois</option>
+                            <option>12 mois</option>
+                          </select>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[12px] text-[#5C5C5C] w-44 shrink-0 text-right">Nb de Mois du Stage:</span>
+                          <input type="text" defaultValue="36" className="border border-[#C9C9C9] rounded px-2 py-1 text-[12px] bg-white font-semibold text-center" style={{width:70}} />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[12px] text-[#5C5C5C] w-44 shrink-0 text-right">Cursus de Formation:</span>
+                          <select className="border border-[#C9C9C9] rounded px-2 py-1 text-[12px] bg-white" defaultValue="3" style={{width:70}}>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                          </select>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[12px] text-[#5C5C5C] w-44 shrink-0 text-right">Année de stage:</span>
+                          <select className="border border-[#C9C9C9] rounded px-2 py-1 text-[12px] bg-white" defaultValue="3" style={{width:70}}>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                          </select>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[12px] text-[#5C5C5C] w-44 shrink-0 text-right">Stage EC/CAC:</span>
+                          <select className="border border-[#C9C9C9] rounded px-2 py-1 text-[12px] bg-white" defaultValue="Oui" style={{width:80}}>
+                            <option>Oui</option>
+                            <option>Non</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* ── Bloc Élément en cours ── */}
+                    <div className="bg-[#EEF3FA] border border-[#B0C4DE] rounded p-3 flex flex-col gap-2">
+                      <div className="text-[13px] font-bold text-[#0250D9] mb-1">Élément en cours</div>
+                      <div className="grid grid-cols-3 gap-x-6 gap-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[12px] text-[#5C5C5C] w-32 shrink-0">Date de début:</span>
+                          <span className="text-[12px] font-semibold text-[#1A1A1A]">01/03/2022</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[12px] text-[#5C5C5C] w-24 shrink-0">Date de Fin:</span>
+                          <span className="text-[12px] font-semibold text-[#1A1A1A]">—</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[12px] text-[#5C5C5C] w-20 shrink-0">Durée:</span>
+                          <span className="text-[12px] font-semibold text-[#1A1A1A]">—</span>
+                        </div>
+
+                        <div className="col-span-3 flex items-center gap-2">
+                          <span className="text-[12px] text-[#5C5C5C] w-32 shrink-0">Maître de stage:</span>
+                          <span className="text-[12px] font-semibold text-[#1A1A1A]">140007629001</span>
+                          <span className="text-[12px] font-semibold text-[#0250D9]">M GARCIA ZUNIGA ALEXIS</span>
+                        </div>
+
+                        <div className="col-span-3 flex items-center gap-2">
+                          <span className="text-[12px] text-[#5C5C5C] w-32 shrink-0">Maître de stage CAC:</span>
+                          <span className="text-[12px] font-semibold text-[#1A1A1A]">141042100001</span>
+                          <span className="text-[12px] font-semibold text-[#0250D9]">MME BOURGE LE BOUCHER LAURENCE</span>
+                        </div>
+
+                        <div className="col-span-3 flex items-center gap-2">
+                          <span className="text-[12px] text-[#5C5C5C] w-32 shrink-0">Maître de stage AGC:</span>
+                          <span className="text-[12px] text-[#9AA3B2]">—</span>
+                        </div>
+
+                        <div className="col-span-3 flex items-center gap-2">
+                          <span className="text-[12px] text-[#5C5C5C] w-32 shrink-0">Type de cursus:</span>
+                          <span className="text-[12px] font-semibold text-[#1A1A1A]">TRAVAUX 200 HEURES</span>
+                        </div>
+
+                        <div className="col-span-3 flex items-center gap-2">
+                          <span className="text-[12px] text-[#5C5C5C] w-32 shrink-0">Type de stage:</span>
+                          <span className="text-[12px] font-semibold text-[#1A1A1A]">CABINET OU SOCIETE D'EXPERTISE COMPTABLE</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* ── Bloc Encadrement / situation ── */}
+                    <div className="bg-[#EEF3FA] border border-[#B0C4DE] rounded p-3 flex flex-col gap-2">
+                      <div className="grid grid-cols-3 gap-x-6 gap-y-2">
+                        <div className="col-span-3 flex items-center gap-2">
+                          <span className="text-[12px] text-[#5C5C5C] w-32 shrink-0">Contrôleur:</span>
+                          <span className="text-[12px] font-semibold text-[#1A1A1A]">140001555101</span>
+                          <span className="text-[12px] font-semibold text-[#0250D9]">MME SABBAH PAGES SABRINA</span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <span className="text-[12px] text-[#5C5C5C] w-20 shrink-0">CR:</span>
+                          <span className="text-[12px] font-semibold text-[#1A1A1A]">14</span>
+                        </div>
+                        <div className="col-span-2 flex items-center gap-2">
+                          <span className="text-[12px] text-[#5C5C5C] w-32 shrink-0">Groupe Principal:</span>
+                          <span className="text-[12px] font-semibold text-[#1A1A1A]">22023</span>
+                          <span className="text-[12px] text-[#5C5C5C]">—</span>
+                          <span className="text-[12px] font-semibold text-[#1A1A1A]">22023 - SA / MME SABBAH PAGES</span>
+                        </div>
+
+                        <div className="col-span-3 flex items-center gap-2 pt-1 border-t border-[#D1DCEB]">
+                          <span className="text-[12px] text-[#5C5C5C] shrink-0">Situation à la date du jour (07/05/2026):</span>
+                          <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-[#D6F5E3] text-[#1A7A45]">EN EXERCICE</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* ── Bloc Nombre de mois ── */}
+                    <div className="bg-[#EEF3FA] border border-[#B0C4DE] rounded p-3 flex flex-col gap-2">
+                      <div className="text-[13px] font-bold text-[#0250D9] mb-1">Nombre de mois</div>
+                      <div className="flex items-center justify-between flex-wrap gap-y-2">
+                        <span className="text-[12px] text-[#5C5C5C]">Situation à la date du jour :</span>
+                        {[
+                          { label: "Validés",          value: "50" },
+                          { label: "Invalidés",        value: "0"  },
+                          { label: "de Suspension",    value: "0"  },
+                          { label: "Total",            value: "50" },
+                          { label: "Durée de stage",   value: "50" },
+                        ].map(c => (
+                          <div key={c.label} className="flex items-center gap-2">
+                            <span className="text-[12px] text-[#5C5C5C]">{c.label}:</span>
+                            <span className="text-[12px] font-bold text-[#1A1A1A]">{c.value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                  </div>
                 )}
                 {activeTab === "declarations" && (
                   <div className="mt-3 flex flex-col gap-4">
