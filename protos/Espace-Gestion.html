@@ -157,14 +157,17 @@ function buildRecordData(row) {
   const prenom = nameParts.slice(1).join(" ") || "";
 
   const anneeLabel = annee === 1 ? "1 an" : annee === 2 ? "2 ans" : "3 ans";
+  const dureeStage = row.cursusFormation === "2" ? "2 ans" : "3 ans";
   const highlights = [
     { label: "Stagiaire", value: row.stagiaire, isLink: true },
     { label: "N° Supra", value: supra },
-    { label: "Qualité", value: "STAGIAIRE - REGIME 81" },
+    { label: "Qualité", value: "EXPERT-COMPTABLE STAGIAIRE" },
     { label: "Statut", value: statutUpper },
     { label: "Employeur", value: employeur },
     { label: "Maître de stage", value: ms },
     { label: "Année de stage", value: anneeLabel },
+    { label: "Durée du stage", value: dureeStage },
+    { label: "Conseil régional", value: row.cr },
     { label: "Mobile", value: `06 ${String(hashStr(row.stagiaire) % 100).padStart(2,"0")} ${String(hashStr(nom) % 100).padStart(2,"0")} ${String(hashStr(prenom) % 100).padStart(2,"0")} ${String(hashStr(supra) % 100).padStart(2,"0")}` },
     { label: "Mail", value: `${prenom.toLowerCase()}.${nom.toLowerCase()}@gmail.com` },
   ];
@@ -173,7 +176,7 @@ function buildRecordData(row) {
 
   // Identité (01 Individu - IDENTITE) — 13 éditables, 4 lecture seule
   const identite = [
-    [{ label: "Qualité", value: "STAGIAIRE - REGIME 81", readOnly: ro }, { label: "Date inscription", value: row.dateEffet, readOnly: ro }],
+    [{ label: "Qualité", value: "EXPERT-COMPTABLE STAGIAIRE", readOnly: ro }, { label: "Date inscription", value: row.dateEffet, readOnly: ro }],
     [{ label: "Titre", value: prenom.endsWith("e") || prenom.endsWith("a") ? "MADAME" : "MONSIEUR" }, { label: "Nom d'usage", value: nom }],
     [{ label: "Prénom", value: prenom }, { label: "Nom marital", value: "" }],
     [{ label: "Nom de famille", value: nom }, { label: "Pays de naissance", value: "FRANCE" }],
@@ -211,20 +214,38 @@ function buildRecordData(row) {
 
   // Diplômes tab — table rows + formulaire détail
   const diplomesTab = [
-    { code: "312", diplome: row.dscg === "Complet" ? "DSCG" : "DSCG sauf UE 1", annee: String(yEff - 1), justificatifs: "Oui", dateDiplome: "", titrememoire: "" },
-    { code: "313", diplome: "DGC INTEC", annee: String(yEff - 3), justificatifs: "Oui", dateDiplome: `15/09/${yEff - 3}`, titrememoire: "" },
-    { code: "314", diplome: "Master CCA", annee: String(yEff - 2), justificatifs: "Oui", dateDiplome: `30/06/${yEff - 2}`, titrememoire: "" },
+    { code: "311", diplome: row.dscg === "Complet" ? "DSCG complet" : "DSCG sauf UE 1", annee: String(yEff - 1), justificatifs: "Oui", dateDiplome: "", titrememoire: "", dateSoutenance: "", note1: "", note2: "", note3: "", commentaire: "" },
   ];
   if (annee >= 3) {
-    diplomesTab.push({ code: "342", diplome: "DEC (mémoire soutenu)", annee: "", justificatifs: "Non", dateDiplome: "", titrememoire: "" });
+    diplomesTab.push({ code: "342", diplome: "DEC (mémoire soutenu)", annee: "", justificatifs: "Non", dateDiplome: "", titrememoire: "", dateSoutenance: "", note1: "", note2: "", note3: "", commentaire: "" });
   }
 
-  // Mode d'exercice (04 — tableau lecture seule)
-  const modeExercice = [
-    [{ label: "Année", value: String(yEff), readOnly: ro }, { label: "N° d'inscription", value: row.numInscription, readOnly: ro }],
-    [{ label: "Type", value: "Dossier", readOnly: ro }, { label: "CAC sous BNC", value: "", readOnly: ro }],
-    [{ label: "EC sous BNC", value: "", readOnly: ro }, { label: "Expertise Judiciaire", value: "Non", readOnly: ro }],
-    [{ label: "Activité chez Personne Morale", value: "", readOnly: ro }],
+  // Cotisations
+  const modeExercice = null; // remplacé par cotisationsData
+  const cotisationsData = {
+    solde: "0,00",
+    derniereAnnee: String(Math.max(yEff, new Date().getFullYear())),
+  };
+
+  // Dossier structuré pour DossierExpandSection
+  const dossierData = {
+    adressePro: `${row.numInscription} ${employeur}`,
+    crCode: crCode,
+    numBase: row.numInscription.split("-")[1] || "00029079",
+    typeInscription: "PRINCIPAL",
+    statut: statutUpper,
+    conseilRegional: row.cr.toUpperCase().replace("Î","Î"),
+    adresseOrdinale: "Adresse personnelle",
+    email: `${prenom.toLowerCase()}.${nom.toLowerCase()}@gmail.com`,
+    mobile: `06 ${String(hashStr(row.stagiaire) % 100).padStart(2,"0")} ${String(hashStr(nom) % 100).padStart(2,"0")} ${String(hashStr(prenom) % 100).padStart(2,"0")} ${String(hashStr(supra) % 100).padStart(2,"0")}`,
+  };
+
+  // ComptExpert (accès portail DEC mémoires)
+  const comptexpert = [
+    [{ label: "Accès Comptexpert", value: "Oui", readOnly: ro }, { label: "Tarif abonnement", value: "20 € / an", readOnly: ro }],
+    [{ label: "Login", value: `${prenom.toLowerCase()}.${nom.toLowerCase()}@comptexpert.fr`, readOnly: ro }, { label: "Expiration", value: `31/12/${yEff}`, readOnly: ro }],
+    [{ label: "Bibliodec — mémoires DEC", value: "+10 000 mémoires disponibles", readOnly: ro }],
+    [{ label: "Portail", value: "www.comptexpert.fr", readOnly: ro }, { label: "IRF rattachée", value: row.cr.toUpperCase(), readOnly: ro }],
   ];
 
   // ═══ ONGLET MOTIFS ═══
@@ -486,7 +507,55 @@ function buildRecordData(row) {
     };
   });
 
-  return { highlights, identite, dossier, adresses, diplomes, modeExercice, motifsHistorique, motifsEnAttente, stageGeneral, encadrement, groupes, periodes, employeurFields, obligations, formations, attestation, diplomesTab, groupesData, periodesData, employeursData };
+  // ─── SF Sections Data ───────────────────────────────────────────
+  const civilite = (prenom.endsWith("e") || prenom.endsWith("a") ? "MADAME" : "MONSIEUR");
+  const dateNaissanceVal = `${String(11 + (hashStr(row.stagiaire) % 20)).padStart(2,"0")}/${String(1 + (hashStr(nom) % 12)).padStart(2,"0")}/${1975 + (hashStr(prenom) % 25)}`;
+  const lieuNaissanceVal = row.cr.toUpperCase().split("-")[0].trim();
+  const adressePersonnelleVal = `${1 + (hashStr(row.stagiaire) % 50)} RUE ${["RONSARD","VOLTAIRE","HUGO","PASTEUR","CURIE"][hashStr(nom) % 5]}, ${cp} ${lieuNaissanceVal}`;
+  const emailPersonnelVal = `${prenom.toLowerCase()}.${nom.toLowerCase()}@gmail.com`;
+  const mobileVal = `06 ${String(hashStr(row.stagiaire) % 100).padStart(2,"0")} ${String(hashStr(nom) % 100).padStart(2,"0")} ${String(hashStr(prenom) % 100).padStart(2,"0")} ${String(hashStr(supra) % 100).padStart(2,"0")}`;
+  const sessionDSCGVal = `Session ${["Mai","Novembre"][Math.abs(hashStr(prenom)) % 2]} ${yEff - 1}`;
+  const ueValideesVal = row.dscg === "Complet" ? "7/7" : `${4 + (Math.abs(hashStr(nom)) % 2)}/7`;
+  const dateLimiteSuspensionVal = `${String(mEff).padStart(2,"0")}/${yEff + 3}`;
+  const numHabCACVal = String(10000 + Math.abs(hashStr(ms)) % 90000);
+  const dateHabCACVal = `01/01/${yEff - 2}`;
+  const siretEmployeurVal = `${String(Math.abs(hashStr(employeur)) % 100000000).padStart(8,"0")} ${String(Math.abs(hashStr(ms)) % 10000).padStart(4,"0")} ${String(Math.abs(hashStr(cp)) % 100).padStart(2,"0")}`;
+  const typeStructureVal = ["SELARL","SAS","SARL","SCP","SELAS"][Math.abs(hashStr(employeur)) % 5];
+  const adresseEmployeurVal = `${1 + (Math.abs(hashStr(employeur)) % 50)} RUE ${["FOCH","DE LA PAIX","DU COMMERCE","MALESHERBES","HAUSSMANN"][Math.abs(hashStr(ms)) % 5]}, ${cp} ${lieuNaissanceVal}`;
+  const groupeLabel = groupesData[0]?.libelle || "—";
+
+  const sfData = {
+    // Identité
+    civilite, nomFamille: nom, nomUsage: nom, prenom,
+    dateNaissance: dateNaissanceVal, lieuNaissance: lieuNaissanceVal, nationalite: "FRANCE",
+    // Coordonnées
+    adressePersonnelle: adressePersonnelleVal, emailPersonnel: emailPersonnelVal,
+    telephonePortable: mobileVal, telephoneFixe: "",
+    // Diplômes
+    filiere: "Expertise Comptable", filiereAutre: "",
+    dscg: row.dscg === "Complet" ? "Complet" : "Partiel",
+    sessionDSCG: sessionDSCGVal, ueValidees: ueValideesVal, dateLimiteSuspension: dateLimiteSuspensionVal,
+    // Dossier
+    numInscription: row.numInscription, typeInscription: "PRINCIPAL",
+    statut: statutUpper, employeur, conseilRegional: row.cr,
+    // Stage — Dates
+    dureeStage, dateDebut: row.dateEffet, dateFin: row.dateFin || "",
+    // Stage — Equipe encadrante
+    maitreInscritOrdre: "OUI", maitre: ms, adresseMS: adresseEmployeurVal,
+    numHabCAC: numHabCACVal, dateHabCAC: dateHabCACVal,
+    secMaitreInscritOrdre: "NON", maitreCAC: msCAC,
+    comaitreInscritOrdre: "NON", comaitre: controleur,
+    controleur,
+    // Stage — Employeur
+    denominationSociale: employeur, siretEmployeur: siretEmployeurVal,
+    adresseEmployeur: adresseEmployeurVal, typeStructure: typeStructureVal,
+    // Stage — Modalités
+    stageCAC: row.cursusFormation === "2" ? "Oui" : "Non",
+    // Stage — Groupe
+    groupeStage: groupeLabel,
+  };
+
+  return { highlights, identite, dossier, dossierData, adresses, diplomes, modeExercice, cotisationsData, comptexpert, sfData, motifsHistorique, motifsEnAttente, stageGeneral, encadrement, groupes, periodes, employeurFields, obligations, formations, attestation, diplomesTab, groupesData, periodesData, employeursData };
 }
 
 // Simple deterministic hash for consistent data generation
@@ -623,7 +692,7 @@ function HighlightsPanel({ fields }) {
 }
 
 const RECORD_TABS = [
-  { key: "individu", label: "Individu" },
+  { key: "individu", label: "Profil" },
   { key: "stage", label: "Stage" },
 ];
 
@@ -712,7 +781,7 @@ function AdresseActuelleSection({ adresse, validee, title = "Adresse pro", cabin
             )}
             <div className="flex items-end gap-2 border-b border-[#C9C9C9] pb-1 hover:border-[#0250D9] transition-colors cursor-pointer group">
               <div className="text-[13px] text-[#2E2E2E] leading-[22px] whitespace-pre-line font-medium flex-1">{adresse}</div>
-              <Pencil size={14} className="text-[#5C5C5C] shrink-0 opacity-60 mb-0.5" />
+              <Pencil size={14} className="text-[#C9C9C9] shrink-0 mb-0.5" />
             </div>
           </div>
           {validee && (
@@ -820,8 +889,7 @@ function GroupesSection({ data, defaultOpen = false }) {
 // ══════════════════════════════════════════════════════════════
 // PeriodesSection — tableau Périodes + stats + form détail
 // ══════════════════════════════════════════════════════════════
-function PeriodesSection({ data, defaultOpen = false }) {
-  const [open, setOpen] = useState(defaultOpen);
+function PeriodesContent({ data }) {
   const [selected, setSelected] = useState(0);
   const thCls = "px-2 py-1.5 text-left text-[11px] font-semibold text-[#5C5C5C] whitespace-nowrap border-b border-[#C9C9C9]";
   const tdCls = "px-2 py-1.5 text-[12px] text-[#2E2E2E]";
@@ -830,13 +898,7 @@ function PeriodesSection({ data, defaultOpen = false }) {
   const det = data.detail;
   const s = data.stats;
   return (
-    <div className="w-full pb-3">
-      <button onClick={() => setOpen(o => !o)} className="flex items-center gap-2 w-full h-8 px-2 rounded-lg bg-[#F3F3F3]">
-        {open ? <ChevronDown size={12} className="text-[#5C5C5C]" /> : <ChevronRight size={12} className="text-[#5C5C5C]" />}
-        <span className="text-[16px] text-[#2E2E2E] leading-[22px]">Périodes</span>
-      </button>
-      {open && (
-        <div className="mt-2 flex flex-col gap-2">
+        <div className="mt-1 flex flex-col gap-2">
           {/* Boutons */}
           <div className="flex items-center gap-2">
             <button className="flex items-center gap-1 px-2 py-1 bg-[#4CAF50] text-white rounded-full text-[11px] font-semibold"><Plus size={11}/> Ajouter</button>
@@ -935,7 +997,18 @@ function PeriodesSection({ data, defaultOpen = false }) {
             </div>
           </div>
         </div>
-      )}
+  );
+}
+
+function PeriodesSection({ data, defaultOpen = false }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="w-full pb-3">
+      <button onClick={() => setOpen(o => !o)} className="flex items-center gap-2 w-full h-8 px-2 rounded-lg bg-[#F3F3F3]">
+        {open ? <ChevronDown size={12} className="text-[#5C5C5C]" /> : <ChevronRight size={12} className="text-[#5C5C5C]" />}
+        <span className="text-[16px] text-[#2E2E2E] leading-[22px]">Périodes</span>
+      </button>
+      {open && <PeriodesContent data={data} />}
     </div>
   );
 }
@@ -1104,7 +1177,7 @@ function GroupesEditableSection({ fields, defaultOpen = false }) {
                           onClick={() => { setEditingNumero(true); setEditingLibelle(false); }}
                         >
                           <span className="flex-1 text-[13px] text-[#2E2E2E] leading-[18px] truncate">{currentNumero || "\u00A0"}</span>
-                          <Pencil size={14} className="text-[#5C5C5C] shrink-0 opacity-60" />
+                          <Pencil size={14} className="text-[#C9C9C9] shrink-0" />
                         </div>
                       )}
                     </div>
@@ -1149,7 +1222,7 @@ function GroupesEditableSection({ fields, defaultOpen = false }) {
                           onClick={() => { setEditingLibelle(true); setEditingNumero(false); }}
                         >
                           <span className="flex-1 text-[13px] text-[#2E2E2E] leading-[18px] truncate">{currentLibelle || "\u00A0"}</span>
-                          <Pencil size={14} className="text-[#5C5C5C] shrink-0 opacity-60" />
+                          <Pencil size={14} className="text-[#C9C9C9] shrink-0" />
                         </div>
                       )}
                     </div>
@@ -1219,7 +1292,7 @@ function EditableField({ label, value, onChange, readOnly, isLink, onClick }) {
         <span className="flex-1 text-[13px] text-[#2E2E2E] leading-[18px] truncate">
           {value || "\u00A0"}
         </span>
-        <Pencil size={14} className="text-[#5C5C5C] shrink-0 opacity-60" />
+        <Pencil size={14} className="text-[#C9C9C9] shrink-0" />
       </div>
     </div>
   );
@@ -2000,6 +2073,284 @@ function AttestationPanel({ data }) {
 }
 
 // ══════════════════════════════════════════════════════════════
+// SF FORM PRIMITIVES — SFField / SFSection / SFSubSection
+// ══════════════════════════════════════════════════════════════
+
+function SFField({ label, value = "", readOnly = false, isLookup = false }) {
+  const [editing, setEditing] = React.useState(false);
+  const [localVal, setLocalVal] = React.useState(value);
+  const commit = () => setEditing(false);
+
+  if (isLookup) {
+    return (
+      <div className="flex flex-col gap-0.5">
+        <p className="text-[11px] text-[#5C5C5C] leading-[15px] font-medium">{label}</p>
+        <div className="flex items-center gap-1.5 border-b border-[#C9C9C9] min-h-[24px] pb-1 pt-0.5 hover:border-[#0250D9] transition-colors cursor-pointer">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#0250D9" strokeWidth="2.5" className="shrink-0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <span className="flex-1 text-[13px] text-[#0250D9] leading-[18px] truncate hover:underline">{value || "—"}</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (readOnly) {
+    return (
+      <div className="flex flex-col gap-0.5">
+        <p className="text-[11px] text-[#5C5C5C] leading-[15px] font-medium">{label}</p>
+        <div className="flex items-center gap-1 border-b border-transparent min-h-[24px] pb-1 pt-0.5">
+          <span className="flex-1 text-[13px] text-[#2E2E2E] leading-[18px] truncate">{value || " "}</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (editing) {
+    return (
+      <div className="flex flex-col gap-0.5">
+        <p className="text-[11px] text-[#5C5C5C] leading-[15px] font-medium">{label}</p>
+        <div className="flex items-center gap-1 border-b-2 border-[#0250D9] min-h-[24px] pb-1 pt-0.5">
+          <input
+            autoFocus
+            className="flex-1 text-[13px] text-[#2E2E2E] leading-[18px] bg-transparent outline-none"
+            value={localVal}
+            onChange={(e) => setLocalVal(e.target.value)}
+            onBlur={commit}
+            onKeyDown={(e) => { if (e.key === "Enter" || e.key === "Escape") commit(); }}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-0.5 cursor-pointer" onClick={() => setEditing(true)}>
+      <p className="text-[11px] text-[#5C5C5C] leading-[15px] font-medium">{label}</p>
+      <div className="flex items-center gap-1 border-b border-[#C9C9C9] min-h-[24px] pb-1 pt-0.5 hover:border-[#0250D9] transition-colors">
+        <span className="flex-1 text-[13px] text-[#2E2E2E] leading-[18px] truncate">{value || " "}</span>
+        <Pencil size={14} className="text-[#C9C9C9] shrink-0" />
+      </div>
+    </div>
+  );
+}
+
+function SFSection({ title, defaultOpen = true, leftFields = [], rightFields = [], children }) {
+  const [open, setOpen] = useState(defaultOpen);
+  const hasFieldCols = leftFields.length > 0 || rightFields.length > 0;
+  return (
+    <div className="w-full">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-2 w-full h-8 px-2 rounded-lg bg-[#F3F3F3] hover:bg-[#EBEBEB] transition-colors"
+      >
+        {open
+          ? <ChevronDown size={12} className="text-[#5C5C5C] shrink-0" />
+          : <ChevronRight size={12} className="text-[#5C5C5C] shrink-0" />}
+        <span className="text-[14px] font-semibold text-[#2E2E2E] leading-[22px]">{title}</span>
+      </button>
+      {open && (
+        <div className="mt-1 px-1 pb-3">
+          {hasFieldCols ? (
+            <div className="grid grid-cols-2 gap-x-5 gap-y-3 pt-2">
+              <div className="flex flex-col gap-3">
+                {leftFields.map((f, i) => <SFField key={i} {...f} />)}
+              </div>
+              <div className="flex flex-col gap-3">
+                {rightFields.map((f, i) => <SFField key={i} {...f} />)}
+              </div>
+            </div>
+          ) : children ? (
+            <div className="mt-1">{children}</div>
+          ) : (
+            <p className="text-[12px] text-[#9C9C9C] italic pt-3 px-1">Section à compléter ultérieurement</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SFSubSection({ title, leftFields = [], rightFields = [] }) {
+  return (
+    <div className="mb-4 last:mb-0">
+      <div className="flex items-center gap-2 mb-2.5">
+        <div className="w-1.5 h-1.5 rounded-full bg-[#0250D9] shrink-0 mt-0.5" />
+        <span className="text-[11px] font-bold text-[#03234D] uppercase tracking-wider">{title}</span>
+        <div className="flex-1 h-px bg-[#E5E5E5]" />
+      </div>
+      <div className="grid grid-cols-2 gap-x-5 gap-y-3 pl-4">
+        <div className="flex flex-col gap-3">
+          {leftFields.map((f, i) => <SFField key={i} {...f} />)}
+        </div>
+        <div className="flex flex-col gap-3">
+          {rightFields.map((f, i) => <SFField key={i} {...f} />)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// COTISATIONS EXPAND SECTION
+// ══════════════════════════════════════════════════════════════
+
+function CotisationsExpandSection({ data, defaultOpen = false }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="w-full pb-3">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-2 w-full h-8 px-2 rounded-lg bg-[#F3F3F3]"
+      >
+        {open ? <ChevronDown size={12} className="text-[#5C5C5C]" /> : <ChevronRight size={12} className="text-[#5C5C5C]" />}
+        <span className="text-[16px] text-[#2E2E2E] leading-[22px]">Cotisations</span>
+      </button>
+      {open && (
+        <div className="mt-2 px-2 py-3 bg-[#EEF3FB] rounded-b-lg border border-[#C9D9EE] text-[13px] text-[#2E2E2E] space-y-2">
+          <div className="flex gap-2">
+            <span className="w-[200px] text-right text-[#5C5C5C]">Solde cotisation :</span>
+            <span className="font-medium">{data.solde}</span>
+          </div>
+          <div className="flex gap-2">
+            <span className="w-[200px] text-right text-[#5C5C5C]">Dernière année de cotisation :</span>
+            <span className="font-medium">{data.derniereAnnee}</span>
+          </div>
+          <div className="flex gap-2 mt-2">
+            <span className="w-[200px]" />
+            <button className="flex items-center gap-1.5 px-3 h-7 border border-[#C9C9C9] bg-white rounded text-[12px] text-[#2E2E2E] hover:bg-[#F3F3F3]">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+              Extrait de compte
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// DOSSIER EXPAND SECTION
+// ══════════════════════════════════════════════════════════════
+
+function DossierExpandSection({ data, defaultOpen = false }) {
+  const [open, setOpen] = useState(defaultOpen);
+  const roInput = "h-7 px-2 text-[13px] border border-[#C9C9C9] rounded bg-[#F3F3F3] text-[#5C5C5C] outline-none w-full";
+  const rwInput = "h-7 px-2 text-[13px] border border-[#C9C9C9] rounded bg-white outline-none w-full focus:border-[#0250D9]";
+  const rwSelect = "h-7 px-2 text-[13px] border border-[#C9C9C9] rounded bg-white outline-none focus:border-[#0250D9]";
+  const lblCls = "text-[12px] text-[#5C5C5C] text-right whitespace-nowrap self-center";
+  const lblGreen = "text-[12px] text-[#4CAF50] font-semibold text-right whitespace-nowrap self-center";
+  return (
+    <div className="w-full pb-3">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-2 w-full h-8 px-2 rounded-lg bg-[#F3F3F3]"
+      >
+        {open ? <ChevronDown size={12} className="text-[#5C5C5C]" /> : <ChevronRight size={12} className="text-[#5C5C5C]" />}
+        <span className="text-[16px] text-[#2E2E2E] leading-[22px]">Dossier</span>
+      </button>
+      {open && (
+        <div className="mt-0 px-3 py-3 bg-[#EEF3FB] border border-[#C9D9EE] rounded-b-lg">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-[13px]">
+            {/* Col gauche */}
+            <div className="flex flex-col gap-2">
+              {/* Adresse pro */}
+              <div className="flex items-center gap-2">
+                <span className={lblCls} style={{width:"130px"}}>Adresse pro. :</span>
+                <div className="flex items-center gap-1 flex-1">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="#E55" stroke="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                  <input className={roInput} readOnly value={data.adressePro} />
+                </div>
+              </div>
+              {/* N° Inscription */}
+              <div className="flex items-center gap-2">
+                <span className="text-[12px] text-[#03234D] font-bold text-right whitespace-nowrap self-center" style={{width:"130px"}}>N° Inscription :</span>
+                <div className="flex gap-1">
+                  <input className={`${roInput} w-[36px] text-center text-[#9C9C9C]`} readOnly value={data.crCode} />
+                  <input className={`${roInput} w-[90px] text-center text-[#9C9C9C]`} readOnly value={data.numBase} />
+                  <input className={`${roInput} w-[28px] text-center text-[#9C9C9C]`} readOnly value="01" />
+                </div>
+              </div>
+              {/* Statut */}
+              <div className="flex items-center gap-2">
+                <span className={lblCls} style={{width:"130px"}}>Statut :</span>
+                <input className={roInput} readOnly value={data.statut} />
+              </div>
+              {/* Diffusion adresse */}
+              <div className="flex items-center gap-2">
+                <span className={lblCls} style={{width:"130px"}}>Diffusion adresse :</span>
+                <select className={`${rwSelect} w-[70px]`}><option>Oui</option><option>Non</option></select>
+              </div>
+              {/* Téléphone */}
+              <div className="flex items-center gap-2">
+                <span className={lblCls} style={{width:"130px"}}>Téléphone :</span>
+                <div className="flex gap-1 items-center">
+                  <div className="flex items-center gap-1 border border-[#C9C9C9] rounded bg-white px-1.5 h-7">
+                    <span className="text-[10px]">🇫🇷</span>
+                    <span className="text-[12px] text-[#2E2E2E]">FRA</span>
+                    <ChevronDown size={9} className="text-[#5C5C5C]" />
+                  </div>
+                  <input className={`${rwInput} w-[130px]`} defaultValue="" />
+                </div>
+              </div>
+            </div>
+            {/* Col droite */}
+            <div className="flex flex-col gap-2">
+              {/* Type d'inscription */}
+              <div className="flex items-center gap-2">
+                <span className={lblCls} style={{width:"140px"}}>Type d'inscription :</span>
+                <input className={rwInput} defaultValue={data.typeInscription} />
+              </div>
+              {/* Conseil Régional */}
+              <div className="flex items-center gap-2">
+                <span className={lblCls} style={{width:"140px"}}>Conseil Regional :</span>
+                <input className={roInput} readOnly value={data.conseilRegional} />
+              </div>
+              {/* Adresse Ordinale */}
+              <div className="flex items-center gap-2">
+                <span className={lblCls} style={{width:"140px"}}>Adresse Ordinale :</span>
+                <div className="flex gap-1 items-center flex-1">
+                  <select className={`${rwSelect} flex-1`}><option>Adresse personnelle</option><option>Adresse professionnelle</option></select>
+                  <ChevronDown size={9} className="text-[#5C5C5C]" />
+                </div>
+              </div>
+              {/* E-mail */}
+              <div className="flex items-center gap-2">
+                <span className={lblGreen} style={{width:"140px"}}>E-mail :</span>
+                <div className="flex gap-1 items-center flex-1">
+                  <input className={`${rwInput} flex-1`} defaultValue={data.email} />
+                  <button className="border border-[#C9C9C9] rounded bg-white px-1 h-7 hover:bg-[#F3F3F3]">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#4CAF50" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                  </button>
+                </div>
+              </div>
+              {/* Mobile */}
+              <div className="flex items-center gap-2">
+                <span className={lblGreen} style={{width:"140px"}}>Mobile :</span>
+                <div className="flex gap-1 items-center flex-1">
+                  <div className="flex items-center gap-1 border border-[#C9C9C9] rounded bg-white px-1.5 h-7">
+                    <span className="text-[10px]">🇫🇷</span>
+                    <span className="text-[12px] text-[#2E2E2E]">FRA</span>
+                    <ChevronDown size={9} className="text-[#5C5C5C]" />
+                  </div>
+                  <input className={`${rwInput} flex-1`} defaultValue={data.mobile} />
+                </div>
+              </div>
+              {/* Document button */}
+              <div className="flex items-center gap-2 mt-1">
+                <span style={{width:"140px"}} />
+                <button className="flex items-center gap-1.5 px-3 h-7 border border-[#C9C9C9] bg-white rounded text-[12px] text-[#2E2E2E] hover:bg-[#F3F3F3]">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  Document
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
 // DIPLÔMES TAB — tableau + formulaire détail (03 Diplomes)
 // ══════════════════════════════════════════════════════════════
 
@@ -2022,123 +2373,168 @@ function DiplomesExpandSection({ data, defaultOpen = false }) {
 }
 
 function DiplomesTab({ data }) {
-  const [selectedIdx, setSelectedIdx] = useState(null);
   const [rows, setRows] = useState(data);
-  const selected = selectedIdx !== null ? rows[selectedIdx] : null;
+  const [selectedIdx, setSelectedIdx] = useState(null);
+  const [form, setForm] = useState({ diplome: "", annee: "", justificatifs: "", dateDiplome: "", titrememoire: "", dateSoutenance: "", note1: "", note2: "", note3: "", commentaire: "" });
+  const [submitted, setSubmitted] = useState(false);
 
-  const updateField = (key, val) => {
-    setRows(prev => prev.map((r, i) => i === selectedIdx ? { ...r, [key]: val } : r));
+  const thCls = "px-2 py-2 text-left text-[12px] font-semibold text-[#03234D] leading-[16px] whitespace-nowrap border-b border-[#C9C9C9] bg-[#F0F0F0]";
+  const tdCls = "px-2 py-1.5 text-[13px] text-[#2E2E2E] leading-[18px]";
+  const lblCls = "text-[13px] text-[#5C5C5C] text-right whitespace-nowrap self-start pt-1.5 font-medium";
+  const inputCls = "h-7 px-2 text-[13px] border border-[#C9C9C9] rounded bg-white outline-none focus:border-[#0250D9] w-full";
+  const inputSmCls = "h-7 px-2 text-[13px] border border-[#C9C9C9] rounded bg-white outline-none focus:border-[#0250D9] w-[60px]";
+
+  const calIcon = <button type="button" className="border border-[#C9C9C9] bg-white rounded px-1 h-7 hover:bg-[#F3F3F3]"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></button>;
+
+  const handleAdd = () => {
+    if (!form.diplome) { setSubmitted(true); return; }
+    setRows(prev => [...prev, { code: String(310 + prev.length + 1), diplome: form.diplome, annee: form.annee, justificatifs: form.justificatifs || "Non", dateDiplome: form.dateDiplome, titrememoire: form.titrememoire, dateSoutenance: form.dateSoutenance, note1: form.note1, note2: form.note2, note3: form.note3, commentaire: form.commentaire }]);
+    setForm({ diplome: "", annee: "", justificatifs: "", dateDiplome: "", titrememoire: "", dateSoutenance: "", note1: "", note2: "", note3: "", commentaire: "" });
+    setSubmitted(false);
   };
 
-  const thCls = "px-3 py-2 text-left text-[12px] font-semibold text-[#03234D] leading-[16px] whitespace-nowrap border-b border-[#C9C9C9]";
-  const tdCls = "px-3 py-2 text-[13px] text-[#2E2E2E] leading-[18px]";
-  const inputCls = "w-full h-8 px-2 text-[13px] border border-[#C9C9C9] rounded-md focus:border-[#0250D9] focus:ring-1 focus:ring-[#0250D9] outline-none";
+  const handleSupprimer = () => {
+    if (selectedIdx === null) return;
+    setRows(prev => prev.filter((_, i) => i !== selectedIdx));
+    setSelectedIdx(null);
+  };
 
   return (
-    <div className="mt-3">
+    <div className="mt-2 bg-[#EEF3FB] border border-[#C9D9EE] rounded-b-lg overflow-hidden">
+      {/* Boutons Ajouter / Supprimer */}
+      <div className="px-3 py-2 flex items-center gap-2 border-b border-[#C9D9EE] bg-[#E4EDF8]">
+        <button onClick={handleAdd} className="flex items-center gap-1 px-3 h-7 bg-white border border-[#C9C9C9] rounded text-[12px] text-[#2E2E2E] hover:bg-[#F3F3F3]">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#4CAF50" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          Ajouter
+        </button>
+        <button onClick={handleSupprimer} className="flex items-center gap-1 px-3 h-7 bg-white border border-[#C9C9C9] rounded text-[12px] text-[#2E2E2E] hover:bg-[#F3F3F3]">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#E53935" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          Supprimer
+        </button>
+      </div>
+
       {/* TABLEAU */}
-      <div className="bg-white rounded-[8px] border border-[#C9C9C9] overflow-hidden">
-        <div className="px-4 py-2.5 flex items-center justify-between">
-          <span className="text-[14px] font-semibold text-[#03234D]">Diplômes ({rows.length})</span>
-        </div>
+      <div className="overflow-x-auto bg-white border-b border-[#C9D9EE]" style={{minHeight:"80px"}}>
         <table className="w-full text-[13px] border-collapse">
           <thead>
-            <tr className="bg-[#F3F3F3]">
-              <th className={thCls} style={{ width: "60px" }}>Code</th>
-              <th className={thCls}>Diplôme</th>
-              <th className={thCls} style={{ width: "65px" }}>Année</th>
-              <th className={thCls} style={{ width: "90px" }}>Justificatifs</th>
-              <th className={thCls} style={{ width: "110px" }}>Date diplôme</th>
+            <tr>
+              <th className={thCls} style={{width:"50px"}}>Code</th>
+              <th className={thCls} style={{width:"160px"}}>Diplôme</th>
+              <th className={thCls} style={{width:"55px"}}>Année</th>
+              <th className={thCls} style={{width:"80px"}}>Justificatifs</th>
+              <th className={thCls} style={{width:"100px"}}>Date diplôme</th>
               <th className={thCls}>Titre du mémoire</th>
+              <th className={thCls} style={{width:"100px"}}>Date de session de soutenance</th>
+              <th className={thCls} style={{width:"60px"}}>1ère note obtenue</th>
+              <th className={thCls} style={{width:"60px"}}>2ème note obtenue</th>
+              <th className={thCls} style={{width:"60px"}}>3ème note obtenue</th>
+              <th className={thCls}>Commentaire</th>
+              <th className={thCls} style={{width:"28px"}}></th>
             </tr>
           </thead>
           <tbody>
             {rows.map((d, i) => (
-              <tr
-                key={i}
-                onClick={() => setSelectedIdx(selectedIdx === i ? null : i)}
-                className={`border-b border-[#E5E5E5] cursor-pointer transition-colors ${selectedIdx === i ? "bg-[#E8F0FE]" : "hover:bg-[#F9F9F9]"}`}
-              >
+              <tr key={i} onClick={() => setSelectedIdx(selectedIdx === i ? null : i)}
+                className={`border-b border-[#E5E5E5] cursor-pointer ${selectedIdx === i ? "bg-[#D6E4F7]" : "hover:bg-[#F5F8FD]"}`}>
                 <td className={tdCls}>{d.code}</td>
-                <td className={tdCls + " font-medium"}>{d.diplome}</td>
+                <td className={tdCls}>{d.diplome}</td>
                 <td className={tdCls}>{d.annee}</td>
                 <td className={tdCls}>{d.justificatifs}</td>
                 <td className={tdCls}>{d.dateDiplome}</td>
-                <td className={tdCls + " text-[#5C5C5C] italic"}>{d.titrememoire || "—"}</td>
+                <td className={tdCls}>{d.titrememoire}</td>
+                <td className={tdCls}>{d.dateSoutenance}</td>
+                <td className={tdCls}>{d.note1}</td>
+                <td className={tdCls}>{d.note2}</td>
+                <td className={tdCls}>{d.note3}</td>
+                <td className={tdCls}>{d.commentaire}</td>
+                <td className={tdCls}></td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
 
-      {/* FORMULAIRE DETAIL */}
-      {selected && (
-        <div className="mt-3 bg-white rounded-[8px] border border-[#C9C9C9] overflow-hidden">
-          <div className="px-4 py-2.5 bg-[#F3F3F3] border-b border-[#C9C9C9] flex items-center justify-between">
-            <span className="text-[14px] font-semibold text-[#03234D]">Détail — {selected.diplome}</span>
-            <button onClick={() => setSelectedIdx(null)} className="text-[12px] text-[#5C5C5C] hover:text-[#03234D]">Fermer</button>
-          </div>
-          <div className="p-4 grid grid-cols-2 gap-x-4 gap-y-3">
-            <div>
-              <label className="block text-[12px] text-[#5C5C5C] mb-1">Diplôme</label>
-              <select value={selected.diplome} onChange={e => updateField("diplome", e.target.value)} className={inputCls + " bg-white"}>
-                <option value="DSCG">DSCG</option>
-                <option value="DSCG sauf UE 1">DSCG sauf UE 1</option>
-                <option value="DGC INTEC">DGC INTEC</option>
-                <option value="Master CCA">Master CCA</option>
-                <option value="DEC (mémoire soutenu)">DEC (mémoire soutenu)</option>
-                <option value="DCG">DCG</option>
-                <option value="Autre">Autre</option>
+      {/* FORMULAIRE AJOUT */}
+      <div className="px-4 py-3 text-[13px] space-y-2 bg-[#EEF3FB]">
+        {/* Diplôme */}
+        <div className="flex items-start gap-3">
+          <span className={lblCls} style={{width:"180px"}}>Diplôme :</span>
+          <div>
+            <div className="flex gap-1 items-center">
+              <select value={form.diplome} onChange={e => setForm(f=>({...f,diplome:e.target.value}))}
+                className={`${inputCls} w-[260px] ${submitted && !form.diplome ? "border-red-500 border-2" : ""}`}>
+                <option value=""></option>
+                <option>DSCG complet</option>
+                <option>DSCG sauf UE 1</option>
+                <option>DEC (mémoire soutenu)</option>
+                <option>DGC INTEC</option>
+                <option>Master CCA</option>
+                <option>DCG</option>
+                <option>Autre</option>
               </select>
+              <ChevronDown size={10} className="text-[#5C5C5C] -ml-5 pointer-events-none" />
             </div>
-            <div>
-              <label className="block text-[12px] text-[#5C5C5C] mb-1">Année Obtention</label>
-              <input type="text" value={selected.annee} onChange={e => updateField("annee", e.target.value)} className={inputCls} />
-            </div>
-            <div>
-              <label className="block text-[12px] text-[#5C5C5C] mb-1">Justificatifs</label>
-              <div className="flex items-center gap-4 h-8">
-                <label className="flex items-center gap-1.5 text-[13px] text-[#2E2E2E] cursor-pointer">
-                  <input type="radio" name="justif" checked={selected.justificatifs === "Oui"} onChange={() => updateField("justificatifs", "Oui")} className="accent-[#0250D9]" />
-                  Oui
-                </label>
-                <label className="flex items-center gap-1.5 text-[13px] text-[#2E2E2E] cursor-pointer">
-                  <input type="radio" name="justif" checked={selected.justificatifs === "Non"} onChange={() => updateField("justificatifs", "Non")} className="accent-[#0250D9]" />
-                  Non
-                </label>
+            {submitted && !form.diplome && (
+              <div className="flex items-center gap-1 mt-0.5 text-[11px] text-[#E53935]">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="#E8A000"><path d="M12 2L1 21h22L12 2zm0 3l8.5 15h-17L12 5zm-1 6v4h2v-4h-2zm0 6v2h2v-2h-2z"/></svg>
+                Champ obligatoire
               </div>
-            </div>
-            <div>
-              <label className="block text-[12px] text-[#5C5C5C] mb-1">Date diplôme</label>
-              <input type="text" placeholder="jj/mm/aaaa" value={selected.dateDiplome} onChange={e => updateField("dateDiplome", e.target.value)} className={inputCls} />
-            </div>
-            <div className="col-span-2">
-              <label className="block text-[12px] text-[#5C5C5C] mb-1">Titre du mémoire</label>
-              <input type="text" value={selected.titrememoire} onChange={e => updateField("titrememoire", e.target.value)} className={inputCls} placeholder="Saisir le titre du mémoire…" />
-            </div>
-            <div>
-              <label className="block text-[12px] text-[#5C5C5C] mb-1">Date de session de soutenance</label>
-              <input type="text" placeholder="jj/mm/aaaa" className={inputCls} />
-            </div>
-            <div>
-              <label className="block text-[12px] text-[#5C5C5C] mb-1">1ère note obtenue</label>
-              <input type="text" placeholder="" className={inputCls} />
-            </div>
-            <div>
-              <label className="block text-[12px] text-[#5C5C5C] mb-1">2ème note obtenue</label>
-              <input type="text" placeholder="" className={inputCls} />
-            </div>
-            <div>
-              <label className="block text-[12px] text-[#5C5C5C] mb-1">3ème note obtenue</label>
-              <input type="text" placeholder="" className={inputCls} />
-            </div>
-            <div className="col-span-2">
-              <label className="block text-[12px] text-[#5C5C5C] mb-1">Commentaire</label>
-              <textarea rows={2} className={"w-full px-2 py-1.5 text-[13px] border border-[#C9C9C9] rounded-md focus:border-[#0250D9] focus:ring-1 focus:ring-[#0250D9] outline-none resize-none"} placeholder="Saisir un commentaire…" />
-            </div>
+            )}
           </div>
         </div>
-      )}
+        {/* Année Obtention */}
+        <div className="flex items-center gap-3">
+          <span className={lblCls} style={{width:"180px"}}>Année Obtention :</span>
+          <input className={`${inputCls} w-[80px]`} value={form.annee} onChange={e => setForm(f=>({...f,annee:e.target.value}))} />
+        </div>
+        {/* Justificatifs */}
+        <div className="flex items-center gap-3">
+          <span className={lblCls} style={{width:"180px"}}>Justificatifs :</span>
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-1.5 cursor-pointer"><input type="radio" name="justif_form" checked={form.justificatifs==="Oui"} onChange={()=>setForm(f=>({...f,justificatifs:"Oui"}))} /> Oui</label>
+            <label className="flex items-center gap-1.5 cursor-pointer"><input type="radio" name="justif_form" checked={form.justificatifs==="Non"} onChange={()=>setForm(f=>({...f,justificatifs:"Non"}))} /> Non</label>
+          </div>
+        </div>
+        {/* Date diplôme */}
+        <div className="flex items-center gap-3">
+          <span className={lblCls} style={{width:"180px"}}>Date diplôme :</span>
+          <div className="flex gap-1 items-center">
+            <input className={`${inputCls} w-[110px]`} placeholder="jj/mm/aaaa" value={form.dateDiplome} onChange={e=>setForm(f=>({...f,dateDiplome:e.target.value}))} />
+            {calIcon}
+          </div>
+        </div>
+        {/* Titre du mémoire */}
+        <div className="flex items-center gap-3">
+          <span className={lblCls} style={{width:"180px"}}>Titre du mémoire :</span>
+          <input className={`${inputCls} w-[380px]`} value={form.titrememoire} onChange={e=>setForm(f=>({...f,titrememoire:e.target.value}))} />
+        </div>
+        {/* Date session soutenance */}
+        <div className="flex items-center gap-3">
+          <span className={lblCls} style={{width:"180px"}}>Date de session de soutenance :</span>
+          <div className="flex gap-1 items-center">
+            <input className={`${inputCls} w-[110px]`} placeholder="jj/mm/aaaa" value={form.dateSoutenance} onChange={e=>setForm(f=>({...f,dateSoutenance:e.target.value}))} />
+            {calIcon}
+          </div>
+        </div>
+        {/* Notes */}
+        <div className="flex items-center gap-3">
+          <span className={lblCls} style={{width:"180px"}}>1ère note obtenue :</span>
+          <input className={inputSmCls} value={form.note1} onChange={e=>setForm(f=>({...f,note1:e.target.value}))} />
+        </div>
+        <div className="flex items-center gap-3">
+          <span className={lblCls} style={{width:"180px"}}>2ème note obtenue :</span>
+          <input className={inputSmCls} value={form.note2} onChange={e=>setForm(f=>({...f,note2:e.target.value}))} />
+        </div>
+        <div className="flex items-center gap-3">
+          <span className={lblCls} style={{width:"180px"}}>3ème note obtenue :</span>
+          <input className={inputSmCls} value={form.note3} onChange={e=>setForm(f=>({...f,note3:e.target.value}))} />
+        </div>
+        {/* Commentaire */}
+        <div className="flex items-center gap-3">
+          <span className={lblCls} style={{width:"180px"}}>Commentaire :</span>
+          <input className={`${inputCls} w-[380px]`} value={form.commentaire} onChange={e=>setForm(f=>({...f,commentaire:e.target.value}))} />
+        </div>
+      </div>
     </div>
   );
 }
@@ -2332,7 +2728,7 @@ const MOTIFS_PAR_QUALITE = {
     "RETOUR SUSPENDU - REGULARISATIONS COTISATIONS","RÉINTÉGRATION",
     "RÉINTÉGRATION APRÈS RÉGULARISATION DE COTISATION IMPAYÉES"
   ],
-  "STAGIAIRE - REGIME 81|EN EXERCICE": [
+  "EXPERT-COMPTABLE STAGIAIRE|EN EXERCICE": [
     "DEPART REGION",
     "PROLONGATION DE STAGE",
     "CHANGEMENT MAITRE DE STAGE",
@@ -2735,7 +3131,7 @@ const MOTIFS_FEUIL1 = {
    Si la qualité n'est pas listée ici, aucun filtre n'est appliqué.
    ══════════════════════════════════════════════════════════════ */
 const COMMISSIONS_VALIDES_PAR_QUALITE = {
-  "STAGIAIRE - REGIME 81": ["STAGE", "INFORMATIONS"],
+  "EXPERT-COMPTABLE STAGIAIRE": ["STAGE", "CRS"],
   "EXPERT-COMPTABLE": ["TABLEAU", "ARTICLE 42 BIS"]
 };
 
@@ -2755,9 +3151,9 @@ function NouvelleDemandeModal({ numInscription, stagiaireName, qualite: initialQ
   const today = new Date().toISOString().slice(0,10);
   const [form, setForm] = React.useState({
     demande: "", dateEffet: "", echeance: "Conseil", dateDemande: today,
-    ag: "", commentaire: "", statut: initialStatut || "EN EXERCICE", qualite: initialQualite || "STAGIAIRE - REGIME 81",
-    nouveauStatut: "", nouvelleQualite: "",
-    session: "", conseil: "", commission: "", avis: "", commentaireCommission: "",
+    ag: "", commentaire: "", statut: initialStatut || "EN EXERCICE", qualite: initialQualite || "EXPERT-COMPTABLE STAGIAIRE",
+    nouveauStatut: "EN EXERCICE", nouvelleQualite: "MÉMORIALISTE",
+    session: "", conseil: "", commission: "CRS " + today, avis: "Favorable", commentaireCommission: "",
   });
   const set = (k, v) => setForm(f => ({...f, [k]: v}));
 
@@ -2790,7 +3186,7 @@ function NouvelleDemandeModal({ numInscription, stagiaireName, qualite: initialQ
         {/* ── Titre ── */}
         <div className="flex items-center justify-between px-4 py-2 bg-[#C8D9EE] border-b border-[#B0C4DE] rounded-t">
           <span className="text-[13px] font-semibold text-[#03234D]">
-            Motifs &lt; {numInscription} &gt; {stagiaireName}
+            Demandes &lt; {numInscription} &gt; {stagiaireName}
           </span>
           <button onClick={onClose} className="text-[#5C5C5C] hover:text-[#C00] text-[16px] font-bold leading-none">✕</button>
         </div>
@@ -2799,11 +3195,11 @@ function NouvelleDemandeModal({ numInscription, stagiaireName, qualite: initialQ
 
           {/* ── Section Information motif ── */}
           <div className="bg-[#EEF3FA] border border-[#B0C4DE] rounded p-3 flex flex-col gap-3">
-            <div className="text-[13px] font-bold text-[#0250D9] mb-1">Information motif</div>
+            <div className="text-[13px] font-bold text-[#0250D9] mb-1">Information demande</div>
 
             {/* Ligne 1 : Motif */}
             <div className="flex items-center gap-2">
-              <span className={labelCls} style={{width:100}}>Motif :</span>
+              <span className={labelCls} style={{width:100}}>Demande :</span>
               <select value={form.demande} onChange={e => set("demande", e.target.value)} className={`${selectCls} flex-1`}>
                 <option value=""></option>
                 {(MOTIFS_PAR_QUALITE[`${form.qualite}|${form.statut}`] || MOTIFS_PAR_QUALITE[form.qualite] || []).map(m => (
@@ -2907,7 +3303,7 @@ function NouvelleDemandeModal({ numInscription, stagiaireName, qualite: initialQ
                   <option>EXPERT-COMPTABLE EN LIBRE PRESTATION DE SERVICE</option>
                   <option>EXPERT-COMPTABLE EN EXERCICE PARTIEL</option>
                   <option>EXPERT-COMPTABLE EN ENTREPRISE</option>
-                  <option>STAGIAIRE - REGIME 81</option>
+                  <option>EXPERT-COMPTABLE STAGIAIRE</option>
                   <option>MEMORIALISTE</option>
                   <option>DIPLOME - NON INSCRIT</option>
                   <option>EXPERT-COMPTABLE HONORAIRE</option>
@@ -3052,7 +3448,7 @@ function NouvelleDemandeModal({ numInscription, stagiaireName, qualite: initialQ
 /* ══════════════════════════════════════════════════════════════
    DemandesPanel — Historique des demandes + Demandes en attente
    ══════════════════════════════════════════════════════════════ */
-function DemandesPanel({ motifsHistorique: initialHistorique, motifsEnAttente, numInscription, stagiaireName, qualite: currentQualite, onQualiteChange }) {
+function DemandesPanel({ motifsHistorique: initialHistorique, motifsEnAttente, numInscription, stagiaireName, qualite: currentQualite, onQualiteChange, onMotifClick }) {
   const [historiqueOpen, setHistoriqueOpen] = useState(true);
   const [showModal, setShowModal]           = useState(false);
   const [historique, setHistorique]         = useState(initialHistorique || []);
@@ -3085,9 +3481,9 @@ function DemandesPanel({ motifsHistorique: initialHistorique, motifsEnAttente, n
               <thead>
                 <tr className="bg-[#F3F3F3]">
                   <th className={thCls}>CR</th>
-                  <th className={thCls}>CR Origine du Motif</th>
+                  <th className={thCls}>CR Origine de la Demande</th>
                   <th className={thCls}>N° inscription</th>
-                  <th className={thCls}>Motif</th>
+                  <th className={thCls}>Demande</th>
                   <th className={thCls}>Type</th>
                   <th className={thCls}>Effet</th>
                   <th className={thCls}>Session</th>
@@ -3097,11 +3493,14 @@ function DemandesPanel({ motifsHistorique: initialHistorique, motifsEnAttente, n
               </thead>
               <tbody>
                 {historique.map((m, i) => (
-                  <tr key={i} className="border-t border-[#E5E5E5] hover:bg-[#FAFAFA]">
+                  <tr key={i}
+                    className="border-t border-[#E5E5E5] hover:bg-[#EEF4FF] cursor-pointer"
+                    onClick={() => onMotifClick && onMotifClick(m)}
+                  >
                     <td className={tdCls}>{m.cr}</td>
                     <td className={tdCls}>{m.crOrigine}</td>
-                    <td className={tdCls}>{m.numInscription}</td>
-                    <td className={`${tdCls} font-medium`}>{m.motif}</td>
+                    <td className={`${tdCls} text-[#0250D9] font-medium hover:underline`}>{m.numInscription}</td>
+                    <td className={`${tdCls} font-medium text-[#0250D9] hover:underline`}>{m.motif}</td>
                     <td className={tdCls}>{m.type}</td>
                     <td className={tdCls}>{m.effet}</td>
                     <td className={tdCls}>{m.session}</td>
@@ -3161,7 +3560,7 @@ function DemandesPanel({ motifsHistorique: initialHistorique, motifsEnAttente, n
   );
 }
 
-function RecordPage({ row }) {
+function RecordPage({ row, onNavigateToMotif }) {
   const [activeTab, setActiveTab] = useState("stage");
   const data = buildRecordData(row);
   const [qualiteHeader, setQualite] = useState(data.highlights.find(h => h.label === "Qualité")?.value || "");
@@ -3179,25 +3578,146 @@ function RecordPage({ row }) {
               <div className="px-4 pt-4 pb-3">
                 <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
 
-                {/* ═══ ONGLET INDIVIDU ═══ */}
+                {/* ═══ ONGLET PROFIL ═══ */}
                 {activeTab === "individu" && (
-                  <div className="mt-3">
-                    <ExpandableSection title="Identité" fields={data.identite} />
-                    <ExpandableSection title="Adresses" fields={data.adresses} defaultOpen={false} />
-                    <ExpandableSection title="Dossier" fields={data.dossier} defaultOpen={false} />
-                    <DiplomesExpandSection data={data.diplomesTab} defaultOpen={false} />
-                    <ExpandableSection title="Mode d'exercice" fields={data.modeExercice} defaultOpen={false} />
+                  <div className="mt-3 flex flex-col gap-2">
+                    <SFSection title="Identité" defaultOpen={true}
+                      leftFields={[
+                        { label: "Civilité",        value: data.sfData.civilite },
+                        { label: "Nom de famille",  value: data.sfData.nomFamille },
+                        { label: "Nom d'usage",     value: data.sfData.nomUsage },
+                        { label: "Prénom",          value: data.sfData.prenom },
+                        { label: "Prénom 3",        value: "" },
+                      ]}
+                      rightFields={[
+                        { label: "Date de naissance", value: data.sfData.dateNaissance },
+                        { label: "Lieu de naissance", value: data.sfData.lieuNaissance },
+                        { label: "Nationalité",       value: data.sfData.nationalite },
+                        { label: "Prénom 2",          value: "" },
+                        { label: "Prénom 4",          value: "" },
+                      ]}
+                    />
+                    <SFSection title="Coordonnées" defaultOpen={true}
+                      leftFields={[
+                        { label: "Adresse personnelle", value: data.sfData.adressePersonnelle },
+                        { label: "E-mail personnel", value: data.sfData.emailPersonnel },
+                      ]}
+                      rightFields={[
+                        { label: "Téléphone portable", value: data.sfData.telephonePortable },
+                        { label: "Téléphone fixe", value: "" },
+                      ]}
+                    />
+                    <SFSection title="Diplômes" defaultOpen={true}
+                      leftFields={[
+                        { label: "Filière", value: data.sfData.filiere },
+                        { label: "Filière autre", value: "" },
+                        { label: "DSCG", value: data.sfData.dscg },
+                      ]}
+                      rightFields={[
+                        { label: "Session DSCG", value: data.sfData.sessionDSCG },
+                        { label: "Unités d'enseignement validées", value: data.sfData.ueValidees },
+                        { label: "Date limite avant suspension", value: data.sfData.dateLimiteSuspension },
+                      ]}
+                    />
+                    <SFSection title="Dossier" defaultOpen={true}
+                      leftFields={[
+                        { label: "Numéro d'inscription", value: data.sfData.numInscription, readOnly: true },
+                        { label: "Type d'inscription", value: data.sfData.typeInscription, readOnly: true },
+                        { label: "Statut", value: data.sfData.statut, readOnly: true },
+                      ]}
+                      rightFields={[
+                        { label: "Employeur", value: data.sfData.employeur, isLookup: true },
+                        { label: "Conseil régional de l'ordre", value: data.sfData.conseilRegional, readOnly: true },
+                      ]}
+                    />
+                    <SFSection title="Cotisations" defaultOpen={true} />
+                    <SFSection title="ComptExpert" defaultOpen={true} />
                   </div>
                 )}
 
                 {/* ═══ ONGLET STAGE ═══ */}
                 {activeTab === "stage" && (
-                  <div className="mt-3">
-                    <ExpandableSection title="Informations générales" fields={data.stageGeneral} />
-                    <ExpandableSection title="Encadrement" fields={data.encadrement} />
-                    <GroupesSection data={data.groupesData} defaultOpen={false} />
-                    <PeriodesSection data={data.periodesData} defaultOpen={false} />
-                    <EmployeursSection data={data.employeursData} defaultOpen={false} />
+                  <div className="mt-3 flex flex-col gap-2">
+                    <SFSection title="Dates du stage" defaultOpen={true}
+                      leftFields={[
+                        { label: "Durée du stage", value: data.sfData.dureeStage, readOnly: true },
+                        { label: "Date début", value: data.sfData.dateDebut, readOnly: true },
+                        { label: "Date fin", value: data.sfData.dateFin },
+                      ]}
+                      rightFields={[]}
+                    />
+                    <SFSection title="Employeur" defaultOpen={true}
+                      leftFields={[
+                        { label: "Employeur", value: data.sfData.employeur, isLookup: true },
+                        { label: "Dénomination sociale", value: data.sfData.denominationSociale },
+                        { label: "SIRET Employeur", value: data.sfData.siretEmployeur },
+                        { label: "Adresse Employeur", value: data.sfData.adresseEmployeur },
+                      ]}
+                      rightFields={[
+                        { label: "Type de structure", value: data.sfData.typeStructure },
+                        { label: "Conseil régional de l'ordre", value: data.sfData.conseilRegional, readOnly: true },
+                      ]}
+                    />
+                    <SFSection title="Equipe encadrante" defaultOpen={true}>
+                      <div className="pt-2 flex flex-col gap-4">
+                        <SFSubSection title="Maître de stage"
+                          leftFields={[
+                            { label: "Maître stage inscrit Ordre", value: data.sfData.maitreInscritOrdre, readOnly: true },
+                            { label: "Maitre De Stage", value: data.sfData.maitre, isLookup: true },
+                            { label: "Adresse professionnelle MS", value: data.sfData.adresseMS },
+                          ]}
+                          rightFields={[
+                            { label: "Numéro d'habilitation CAC MS", value: data.sfData.numHabCAC },
+                            { label: "Date d'obtention de l'habilitation CAC MS", value: data.sfData.dateHabCAC },
+                          ]}
+                        />
+                        <SFSubSection title="Second maître de stage CAC"
+                          leftFields={[
+                            { label: "Sec Maître stage inscrit Ordre", value: data.sfData.secMaitreInscritOrdre, readOnly: true },
+                            { label: "Second maître de stage CAC", value: data.sfData.maitreCAC, isLookup: true },
+                            { label: "Adresse professionnelle MS CAC", value: "" },
+                          ]}
+                          rightFields={[
+                            { label: "Numéro d'habilitation CAC MS CAC", value: "" },
+                            { label: "Date d'obtention de l'habilitation CAC MS CAC", value: "" },
+                          ]}
+                        />
+                        <SFSubSection title="Comaître de stage"
+                          leftFields={[
+                            { label: "Comaître stage inscrit Ordre", value: data.sfData.comaitreInscritOrdre, readOnly: true },
+                            { label: "Comaître de Stage", value: data.sfData.comaitre, isLookup: true },
+                            { label: "Adresse professionnel Comaître de Stage", value: "" },
+                          ]}
+                          rightFields={[]}
+                        />
+                        <SFSubSection title="Contrôleur de stage"
+                          leftFields={[
+                            { label: "Contrôleur de stage", value: data.sfData.controleur, isLookup: true },
+                          ]}
+                          rightFields={[]}
+                        />
+                      </div>
+                    </SFSection>
+                    <SFSection title="Modalités du stage" defaultOpen={true}
+                      leftFields={[
+                        { label: "Type d'inscription", value: data.sfData.typeInscription, readOnly: true },
+                        { label: "Localisation géographique du stage", value: "FRANCE" },
+                        { label: "Demande de réduction de stage", value: "Non" },
+                        { label: "Stage à temps partiel", value: "Non" },
+                        { label: "Type d'emploi principal", value: "Salarié" },
+                      ]}
+                      rightFields={[
+                        { label: "Stage CAC", value: data.sfData.stageCAC },
+                        { label: "Stagiaire francophone", value: "Non" },
+                      ]}
+                    />
+                    <SFSection title="Groupe de stage" defaultOpen={true}
+                      leftFields={[
+                        { label: "Groupe de stage", value: data.sfData.groupeStage, isLookup: true },
+                      ]}
+                      rightFields={[]}
+                    />
+                    <SFSection title="Autres informations" defaultOpen={true} />
                   </div>
                 )}
 
@@ -3211,12 +3731,19 @@ function RecordPage({ row }) {
             <CardSection icon={<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>} iconBg="bg-[#06A77D]" title="Formations" defaultOpen={true}>
               <FormationsTable data={data.formations} />
             </CardSection>
-            <CardSection icon={<Star size={12} className="text-white" />} iconBg="bg-[#0250D9]" title="Attestation" defaultOpen={true}>
-              <AttestationPanel data={data.attestation} />
-            </CardSection>
             <CardSection icon={<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>} iconBg="bg-[#C45500]" title="Demandes" defaultOpen={true}>
-              <DemandesPanel motifsHistorique={data.motifsHistorique} motifsEnAttente={data.motifsEnAttente} numInscription={row.numInscription} stagiaireName={row.stagiaire} qualite={qualiteHeader} onQualiteChange={(q) => setQualite(q)} />
+              <DemandesPanel motifsHistorique={data.motifsHistorique} motifsEnAttente={data.motifsEnAttente} numInscription={row.numInscription} stagiaireName={row.stagiaire} qualite={qualiteHeader} onQualiteChange={(q) => setQualite(q)} onMotifClick={(m) => onNavigateToMotif && onNavigateToMotif({...m, _row: row})} />
             </CardSection>
+            <CardSection icon={<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>} iconBg="bg-[#0F7AC4]" title="Périodes" defaultOpen={false}>
+              <PeriodesContent data={data.periodesData} />
+            </CardSection>
+            <PiecesPanel initialFiles={[
+              { id:1, name:"Contrat_stage_signe.pdf",         type:"pdf",  date:"15/03/2026", status:"conforme",    category:"Contrat",    instructions:"Contrat de stage signé par le stagiaire et le maître de stage", relance:"—" },
+              { id:2, name:"DSCG_Attestation_partielle.pdf",  type:"pdf",  date:"10/03/2026", status:"examiner",    category:"Diplôme",    instructions:"Attestation de réussite partielle au DSCG (4 UE validées minimum)", relance:"20/02/2026" },
+              { id:3, name:"Fiche_engagement_ECS.pdf",        type:"pdf",  date:"05/03/2026", status:"demandee",    category:"Engagement", instructions:"Fiche d'engagement ECS signée (annexe 3 du Guide d'application)", relance:"15/03/2026" },
+              { id:4, name:"Piece_identite_CNI.png",          type:"png",  date:"01/03/2026", status:"conforme",    category:"Identité",   instructions:"Pièce d'identité en cours de validité avec photo", relance:"—" },
+              { id:5, name:"Photo_identite.png",              type:"png",  date:"28/02/2026", status:"examiner",    category:"Identité",   instructions:"Photo d'identité récente sur fond blanc ou gris clair", relance:"—" },
+            ]} />
           </div>
         </div>
       </div>
@@ -5191,7 +5718,7 @@ function SocieteDemandesPanel() {
         <div className="px-4 pb-4 flex flex-col gap-4">
           {/* Motifs */}
           <div>
-            <div className="text-[11px] font-bold text-[#03234D] bg-[#D6E4F7] px-3 py-1.5 mb-2">Motifs</div>
+            <div className="text-[11px] font-bold text-[#03234D] bg-[#D6E4F7] px-3 py-1.5 mb-2">Demandes</div>
             <div className="overflow-x-auto">
               <table className="w-full text-[12px] border-collapse border border-[#C9C9C9]" style={{minWidth:560}}>
                 <thead><tr>
@@ -7761,7 +8288,7 @@ const CLOSED_OPTIONS = [
   { value: "abandonnee", label: "Fermée-abandonnée" },
 ];
 
-function FermerDemandeModal({ onClose }) {
+function FermerDemandeModal({ onClose, onConfirm }) {
   const [selected, setSelected] = React.useState(null);
   const [open, setOpen] = React.useState(true);
   return (
@@ -7816,7 +8343,11 @@ function FermerDemandeModal({ onClose }) {
         {/* Footer */}
         <div style={{borderTop:"1px solid #e5e5e5",padding:"12px 24px",display:"flex",justifyContent:"flex-end",gap:8}}>
           <button onClick={onClose} style={{padding:"6px 16px",borderRadius:6,border:"1px solid #c9c9c9",background:"white",fontSize:13,cursor:"pointer",color:"#444"}}>Annuler</button>
-          <button style={{padding:"6px 16px",borderRadius:6,border:"none",background:selected?"#0176d3":"#c9c9c9",color:"white",fontSize:13,fontWeight:600,cursor:selected?"pointer":"default"}} disabled={!selected}>Confirmer</button>
+          <button
+            style={{padding:"6px 16px",borderRadius:6,border:"none",background:selected?"#0176d3":"#c9c9c9",color:"white",fontSize:13,fontWeight:600,cursor:selected?"pointer":"default"}}
+            disabled={!selected}
+            onClick={() => { if (selected && onConfirm) { onConfirm(selected); onClose(); } }}
+          >Confirmer</button>
         </div>
       </div>
     </div>
@@ -7860,7 +8391,7 @@ function DemandePathBar() {
   );
 }
 
-function DemandeFormField({ label, value, isLink, onClick, isAvatar }) {
+function DemandeFormField({ label, value, isLink, onClick, isAvatar, readOnly = false }) {
   return (
     <div className="flex flex-col gap-0.5 py-2 border-b border-[#C9C9C9]">
       <p className="text-[12px] text-[#5C5C5C] leading-[17px]">{label}</p>
@@ -7878,8 +8409,8 @@ function DemandeFormField({ label, value, isLink, onClick, isAvatar }) {
         ) : (
           <span className="text-[13px] text-[#2E2E2E]">{value || " "}</span>
         )}
-        {!isAvatar && (
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#C9C9C9" strokeWidth="1.5" className="shrink-0"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        {!isAvatar && !readOnly && (
+          <Pencil size={14} className="text-[#C9C9C9] shrink-0" />
         )}
       </div>
     </div>
@@ -7937,16 +8468,38 @@ function DemandeRenseignementsSection() {
   );
 }
 
-function DemandePiecesInlinePanel() {
-  const [search, setSearch] = React.useState("");
-  const [typeFilter, setTypeFilter] = React.useState("all");
+function DemandePiecesInlinePanel({ initialFiles = [], controlledFiles = [] }) {
+  const [search,        setSearch]        = React.useState("");
+  const [typeFilter,    setTypeFilter]    = React.useState("Tous");
+  const [uploadedFiles, setUploadedFiles] = React.useState(initialFiles);
+
+  // Fusionner les fichiers générés (pilotés par le parent) + les uploads locaux
+  const files    = [...controlledFiles, ...uploadedFiles];
+  const setFiles = (updater) => setUploadedFiles(updater);
   const pills = ["Tous","PDF","Word","Excel","PPT","Image","Autre"];
+
+  const today = new Date().toLocaleDateString("fr-FR");
+
+  const PdfIcon = () => (
+    <div className="w-8 h-8 rounded flex items-center justify-center shrink-0" style={{background:"#FDECEA"}}>
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" fill="#E53935" opacity=".15" stroke="#E53935" strokeWidth="1.5"/><polyline points="14 2 14 8 20 8" stroke="#E53935" strokeWidth="1.5" fill="none"/><text x="6" y="18" fontSize="5" fill="#E53935" fontWeight="700" fontFamily="sans-serif">PDF</text></svg>
+    </div>
+  );
+
+  const filtered = files.filter(f => {
+    const matchSearch = f.name.toLowerCase().includes(search.toLowerCase());
+    const matchType   = typeFilter === "Tous" || f.type?.toUpperCase() === typeFilter.toUpperCase();
+    return matchSearch && matchType;
+  });
+
   return (
     <div className="bg-white rounded-[20px] overflow-hidden flex flex-col" style={{boxShadow:"0 0 1.49px rgba(0,0,0,0.09),0 1.4px 1.5px rgba(0,0,0,0.09)"}}>
+
       {/* Tab header */}
       <div className="flex items-center border-b border-[#E5E5E5] px-4" style={{height:40}}>
         <span className="text-[14px] font-bold text-[#0250D9]" style={{borderBottom:"3px solid #0250D9",height:"100%",display:"flex",alignItems:"center"}}>Pièces</span>
       </div>
+
       {/* Toolbar */}
       <div className="flex items-center gap-2 px-3 pt-3 flex-wrap">
         <div className="flex-1 min-w-[100px] flex items-center gap-2 border border-[#C9C9C9] rounded-lg px-2" style={{height:30}}>
@@ -7958,7 +8511,7 @@ function DemandePiecesInlinePanel() {
         </select>
         <button className="flex items-center gap-1 border border-[#C9C9C9] rounded-lg bg-white text-[12px] text-[#374151]" style={{height:30,padding:"0 10px",fontFamily:"inherit",whiteSpace:"nowrap"}}>
           <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Télécharger ZIP (0)
+          Télécharger ZIP ({files.length})
         </button>
         <button className="flex items-center gap-1 border border-[#C9C9C9] rounded-lg bg-white text-[12px] text-[#374151]" style={{height:30,padding:"0 10px",fontFamily:"inherit",whiteSpace:"nowrap"}}>
           <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
@@ -7969,6 +8522,7 @@ function DemandePiecesInlinePanel() {
           Téléverser
         </button>
       </div>
+
       {/* Filter pills */}
       <div className="flex items-center gap-1.5 px-3 pt-2 pb-2 flex-wrap">
         {pills.map(p => (
@@ -7978,15 +8532,38 @@ function DemandePiecesInlinePanel() {
             {p}
           </button>
         ))}
-        <span className="ml-auto text-[12px] text-[#5C5C5C]">0 fichier</span>
+        <span className="ml-auto text-[12px] text-[#5C5C5C]">{filtered.length} fichier{filtered.length>1?"s":""}</span>
       </div>
-      {/* Empty state */}
-      <div className="flex flex-col items-center justify-center py-10 gap-3">
-        <div className="w-12 h-12 border border-[#E5E5E5] rounded-lg flex items-center justify-center bg-[#F9F9F9]">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#C9C9C9" strokeWidth="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+
+      {/* File list or empty state */}
+      {filtered.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-10 gap-3">
+          <div className="w-12 h-12 border border-[#E5E5E5] rounded-lg flex items-center justify-center bg-[#F9F9F9]">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#C9C9C9" strokeWidth="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <p className="text-[13px] text-[#9E9E9E]">Aucune pièce</p>
         </div>
-        <p className="text-[13px] text-[#9E9E9E]">Aucune pièce</p>
-      </div>
+      ) : (
+        <div className="flex flex-col divide-y divide-[#F3F3F3] px-3 pb-3">
+          {filtered.map((f, i) => (
+            <div key={i} className="flex items-center gap-3 py-2.5 hover:bg-[#FAFAFA] rounded-lg px-1 group">
+              <PdfIcon />
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-medium text-[#0250D9] hover:underline cursor-pointer truncate">{f.name}</p>
+                <p className="text-[11px] text-[#9C9C9C] mt-0.5">Généré le {f.date} — {f.size}</p>
+              </div>
+              <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#E6F4EA] text-[#1B7F37]">
+                <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+                Généré
+              </span>
+              <button className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 border border-[#C9C9C9] rounded px-2 h-6 text-[11px] text-[#374151] bg-white hover:bg-[#F3F3F3]">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Télécharger
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -8379,7 +8956,483 @@ function initTabsFromHash() {
   if (hash.startsWith("demande-attente-pj:")) {
     return [{ type: "demande-attente-pj", id: hash, label: "Inscription PP – attente PJ", data: {} }];
   }
+  if (hash.startsWith("motif:")) {
+    // Format: motif:MOTIF_NAME_NUMINSCRIPTION — numInscription suit le dernier "_" qui précède "XX-"
+    const raw  = hash.slice("motif:".length);           // "ATTESTATION_DE_FIN_DE_STAGE_14-00019876-01"
+    // Trouve le N° d'inscription : dernier segment contenant un tiret (ex: "14-00019876-01")
+    const parts = raw.split("_");
+    let numInscription = "";
+    let motifParts = [];
+    for (let i = parts.length - 1; i >= 0; i--) {
+      if (/^\d{2}-\d{8}-\d{2}$/.test(parts[i]) || /^[\dA-Z]{2}-/.test(parts[i])) {
+        numInscription = parts[i];
+        motifParts = parts.slice(0, i);
+        break;
+      }
+    }
+    if (!numInscription) { motifParts = parts; }
+    const motifLabel = motifParts.join(" ");
+    // Tente de retrouver le stagiaire pour récupérer ses données
+    const stagRow = STAGIAIRES_LIST.find(s => s.numInscription === numInscription);
+    const data = {
+      motif: motifLabel,
+      numInscription,
+      type: "Immédiate",
+      effet: new Date().toLocaleDateString("fr-FR"),
+      session: new Date().toLocaleDateString("fr-FR"),
+      decision: "Validé",
+      commission: "CRS " + new Date().toLocaleDateString("fr-FR"),
+      qualite: "EXPERT-COMPTABLE STAGIAIRE",
+      cr: "IDF",
+      nouveauStatut: "EN EXERCICE", nouvelleQualite: "MÉMORIALISTE",
+      conseil: "", avis: "Favorable", commentaire: "", commentaireCommission: "",
+      _row: stagRow || null,
+    };
+    return [{ type: "motif", id: hash, label: motifLabel, data }];
+  }
   return [];
+}
+
+// ══════════════════════════════════════════════════════════════
+// MOTIF DETAIL PAGE — page détaillée d'un motif (même style que DemandeRecordPage)
+// ══════════════════════════════════════════════════════════════
+
+const MOTIF_PATH_STEPS = [
+  { key: "soumise",     label: "Soumise",                  done: true  },
+  { key: "affectee",    label: "Affectée",                 done: true  },
+  { key: "incomplete",  label: "Incomplète",               done: false, current: false },
+  { key: "complete",    label: "Complète",                 done: false, current: false },
+  { key: "commission",  label: "Prête pour commission",    done: false, current: false },
+  { key: "session",     label: "Prête pour la session",    done: false, current: false },
+  { key: "ferme",       label: "Fermée",                   done: false, current: true  },
+];
+
+function MotifPathBar({ onFermerConfirm }) {
+  const [showModal, setShowModal] = React.useState(false);
+  return (
+    <>
+      {showModal && (
+        <FermerDemandeModal
+          onClose={() => setShowModal(false)}
+          onConfirm={(statut) => { if (onFermerConfirm) onFermerConfirm(statut); }}
+        />
+      )}
+      <div className="bg-white px-2 border-b border-[#E5E5E5] flex items-center gap-1" style={{height:48}}>
+        <button style={{width:28,height:28,borderRadius:"50%",border:"1px solid #C9C9C9",background:"white",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,cursor:"pointer"}}>
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+            <circle cx="16" cy="16" r="15" stroke="#c9c9c9" strokeWidth="1.5" fill="white"/>
+            <path d="M13 10L19 16L13 22" stroke="#5c5c5c" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+        <div style={{display:"flex", alignItems:"center", flex:1, height:28, overflow:"visible"}}>
+          {MOTIF_PATH_STEPS.map((s, i) => (
+            <DemandePathStep key={s.key} step={s} index={i} total={MOTIF_PATH_STEPS.length}
+              onClick={s.key === "ferme" ? () => setShowModal(true) : undefined} />
+          ))}
+        </div>
+        <button onClick={() => setShowModal(true)} style={{flexShrink:0,height:28,padding:"0 12px",borderRadius:9999,background:"#066afe",color:"white",fontSize:11,fontWeight:600,border:"none",cursor:"pointer",whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:5}}>
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Sélectionner Statut fermé(e)
+        </button>
+      </div>
+    </>
+  );
+}
+
+function MotifInfoMotifSection({ motif }) {
+  const [open, setOpen] = React.useState(true);
+  const RO = ({ label, value, className = "" }) => (
+    <div className={className}>
+      <DemandeFormField label={label} value={value || "—"} readOnly />
+    </div>
+  );
+  return (
+    <div>
+      <button onClick={() => setOpen(o => !o)} className="flex items-center gap-2 w-full h-8 px-2 rounded-lg bg-[#F3F3F3] mb-3">
+        {open ? <ChevronDown size={12} className="text-[#5C5C5C]" /> : <ChevronRight size={12} className="text-[#5C5C5C]" />}
+        <span className="text-[15px] text-[#2E2E2E] font-medium">Information demande</span>
+      </button>
+      {open && (
+        <div className="px-1">
+          {/* Ligne 1 : Motif pleine largeur */}
+          <DemandeFormField label="Demande" value={motif.motif || "—"} readOnly />
+          {/* Ligne 2 : Date d'effet | Décision | Date demande | AG */}
+          <div className="flex gap-4">
+            <RO label="Date d'effet"  value={motif.effet}    className="flex-1" />
+            <RO label="Décision"      value={motif.decision} className="flex-1" />
+            <RO label="Date demande"  value={motif.session}  className="flex-1" />
+            <RO label="AG"            value={motif.ag}       className="flex-1" />
+          </div>
+          {/* Ligne 3 : Commentaire pleine largeur */}
+          <DemandeFormField label="Commentaire" value={motif.commentaire || "—"} readOnly />
+          {/* Ligne 4 : Statut | Qualité */}
+          <div className="flex gap-4">
+            <RO label="Statut"   value="EN EXERCICE"    className="flex-1" />
+            <RO label="Qualité"  value={motif.qualite}  className="flex-1" />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MotifSituationCommSection({ motif }) {
+  const [open, setOpen] = React.useState(true);
+  const RO = ({ label, value, className = "" }) => (
+    <div className={className}>
+      <DemandeFormField label={label} value={value || "—"} readOnly />
+    </div>
+  );
+  return (
+    <div>
+      <button onClick={() => setOpen(o => !o)} className="flex items-center gap-2 w-full h-8 px-2 rounded-lg bg-[#F3F3F3] mb-3">
+        {open ? <ChevronDown size={12} className="text-[#5C5C5C]" /> : <ChevronRight size={12} className="text-[#5C5C5C]" />}
+        <span className="text-[15px] text-[#2E2E2E] font-medium">Nouvelle situation & Commission</span>
+      </button>
+      {open && (
+        <div className="grid grid-cols-2 gap-x-8 px-1">
+          {/* Colonne gauche — Nouvelle situation */}
+          <div>
+            <p className="text-[12px] font-semibold text-[#0250D9] pb-1 mb-2 border-b border-[#E5E5E5]">Nouvelle situation</p>
+            {/* Statut | Qualité inline */}
+            <div className="flex gap-4">
+              <RO label="Statut"  value={motif.nouveauStatut}    className="flex-1" />
+              <RO label="Qualité" value={motif.nouvelleQualite}  className="flex-1" />
+            </div>
+            {/* Conseil pleine largeur */}
+            <DemandeFormField label="Conseil" value={motif.conseil || "—"} readOnly />
+          </div>
+          {/* Colonne droite — Commission */}
+          <div>
+            <p className="text-[12px] font-semibold text-[#0250D9] pb-1 mb-2 border-b border-[#E5E5E5]">Commission décisionnaire</p>
+            {/* Commission | Avis inline */}
+            <div className="flex gap-4">
+              <RO label="Commission" value={motif.commission} className="flex-1" />
+              <RO label="Avis"       value={motif.avis}       className="flex-1" />
+            </div>
+            {/* Commentaire pleine largeur */}
+            <DemandeFormField label="Commentaire" value={motif.commentaireCommission || "—"} readOnly />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FicheGeneraleSynthese({ sfData = {}, motif = {} }) {
+  const today = new Date().toLocaleDateString("fr-FR");
+  const dureeRaw = sfData.dureeStage || "3 ans";
+  const dureeInit = dureeRaw.includes("2") ? "2" : dureeRaw.includes("1") ? "1" : "3";
+
+  const [form, setForm] = React.useState({
+    conseilRegional: sfData.conseilRegional || "",
+    date: today,
+    civilite: sfData.civilite || "M.",
+    nomNaissance: sfData.nomFamille || "",
+    prenom: sfData.prenom || "",
+    dateNaissance: sfData.dateNaissance || "",
+    numInscription: sfData.numInscription || motif.numInscription || "",
+    adresse: sfData.adressePersonnelle || "",
+    controleur: sfData.controleur || "",
+    stageDebut: sfData.dateDebut || "",
+    stageFin: sfData.dateFin || "",
+    duree: dureeInit,
+    maitres: [
+      { nom: sfData.maitre || "", numCAC: sfData.numHabCAC || "", du: sfData.dateDebut || "", au: sfData.dateFin || "", dateHab: sfData.dateHabCAC || "" },
+      ...Array.from({length:4}, () => ({ nom:"", numCAC:"", du:"", au:"", dateHab:"" })),
+    ],
+    secondMaitres: [
+      { nom: sfData.maitreCAC || "", numCAC:"", du:"", au:"", dateHab:"" },
+      { nom:"", numCAC:"", du:"", au:"", dateHab:"" },
+    ],
+    comaitres: [
+      { nom: sfData.comaitre || "", numCAC:"", du:"", au:"", dateHab:"" },
+      { nom:"", numCAC:"", du:"", au:"", dateHab:"" },
+    ],
+    suspensions: Array.from({length:4}, () => ({ du1:"", au1:"", du2:"", au2:"" })),
+    delais:       { du1:"", au1:"", du2:"", au2:"" },
+    invalidations:{ du1:"", au1:"", du2:"", au2:"" },
+    prolongations:{ du1:"", au1:"", du2:"", au2:"" },
+    cacNom:"", cacPrenom:"", cacDateHab:"",
+    appreciationTravaux:"",
+    a200h: null,
+    appreciationFormation:"",
+    appreciationRapports:"",
+    appreciationGenerale:"",
+  });
+
+  const set    = (k, v) => setForm(f => ({...f, [k]: v}));
+  const setRow = (key, idx, field, v) => setForm(f => ({...f, [key]: f[key].map((r,i) => i===idx ? {...r,[field]:v} : r)}));
+  const setSub = (key, field, v) => setForm(f => ({...f, [key]: {...f[key], [field]: v}}));
+
+  // Section expandable — même style que l'onglet Détails
+  const Section = ({ title, children, defaultOpen = true }) => {
+    const [open, setOpen] = React.useState(defaultOpen);
+    return (
+      <div className="mb-2">
+        <button onClick={() => setOpen(o => !o)} className="flex items-center gap-2 w-full h-8 px-2 rounded-lg bg-[#F3F3F3] mb-3">
+          {open ? <ChevronDown size={12} className="text-[#5C5C5C]" /> : <ChevronRight size={12} className="text-[#5C5C5C]" />}
+          <span className="text-[15px] text-[#2E2E2E] font-medium">{title}</span>
+        </button>
+        {open && <div className="px-1 mb-3">{children}</div>}
+      </div>
+    );
+  };
+
+  // Champ — éditable ou read-only selon prop `ro`
+  const EF = ({ label, value, onChange, ro = false }) => {
+    if (ro) return <DemandeFormField label={label} value={value || "—"} readOnly />;
+    return (
+      <div className="flex flex-col gap-0.5 py-2 border-b border-[#C9C9C9]">
+        <p className="text-[12px] text-[#5C5C5C]">{label}</p>
+        <div className="flex items-center justify-between min-h-[22px]">
+          <input
+            className="text-[13px] text-[#2E2E2E] bg-transparent focus:outline-none flex-1 min-w-0"
+            value={value}
+            onChange={e => onChange(e.target.value)}
+          />
+          <Pencil size={14} className="text-[#C9C9C9] shrink-0" />
+        </div>
+      </div>
+    );
+  };
+
+  // Champ textarea — style DemandeFormField
+  const TA = ({ label, value, onChange, rows = 3 }) => (
+    <div className="flex flex-col gap-0.5 py-2 border-b border-[#C9C9C9]">
+      <p className="text-[12px] text-[#5C5C5C]">{label}</p>
+      <textarea
+        className="text-[13px] text-[#2E2E2E] bg-transparent focus:outline-none resize-y w-full mt-1"
+        rows={rows}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+      />
+    </div>
+  );
+
+  // Ligne de maître de stage — ro = lecture seule
+  const MaitreRow = ({ m, idx, rowKey, label, ro = false }) => (
+    <div className="mb-3">
+      <p className="text-[11px] font-semibold text-[#0250D9] mb-1">{label}</p>
+      <div className="grid grid-cols-2 gap-x-8">
+        <EF ro={ro} label="Nom et prénom"       value={m.nom}     onChange={v => setRow(rowKey,idx,"nom",v)} />
+        <EF ro={ro} label="N° liste CAC"         value={m.numCAC}  onChange={v => setRow(rowKey,idx,"numCAC",v)} />
+        <EF ro={ro} label="Du"                   value={m.du}      onChange={v => setRow(rowKey,idx,"du",v)} />
+        <EF ro={ro} label="Au"                   value={m.au}      onChange={v => setRow(rowKey,idx,"au",v)} />
+        <EF ro={ro} label="Date d'habilitation"  value={m.dateHab} onChange={v => setRow(rowKey,idx,"dateHab",v)} />
+      </div>
+    </div>
+  );
+
+  // Ligne de période
+  const PeriodEF = ({ label, rowKey, isSub }) => {
+    const row_ = isSub !== undefined ? form[rowKey][isSub] : form[rowKey];
+    const upd  = (f, v) => isSub !== undefined ? setRow(rowKey, isSub, f, v) : setSub(rowKey, f, v);
+    return (
+      <div className="mb-2">
+        <p className="text-[12px] text-[#5C5C5C] mb-1">{label}</p>
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2 flex-1">
+            <span className="text-[12px] text-[#5C5C5C] shrink-0">Du</span>
+            <input className="flex-1 border-b border-[#C9C9C9] text-[13px] bg-transparent focus:outline-none" value={row_.du1} onChange={e => upd("du1",e.target.value)} placeholder="jj/mm/aaaa" />
+            <span className="text-[12px] text-[#5C5C5C] shrink-0">au</span>
+            <input className="flex-1 border-b border-[#C9C9C9] text-[13px] bg-transparent focus:outline-none" value={row_.au1} onChange={e => upd("au1",e.target.value)} placeholder="jj/mm/aaaa" />
+          </div>
+          <div className="flex items-center gap-2 flex-1">
+            <span className="text-[12px] text-[#5C5C5C] shrink-0">Du</span>
+            <input className="flex-1 border-b border-[#C9C9C9] text-[13px] bg-transparent focus:outline-none" value={row_.du2} onChange={e => upd("du2",e.target.value)} placeholder="jj/mm/aaaa" />
+            <span className="text-[12px] text-[#5C5C5C] shrink-0">au</span>
+            <input className="flex-1 border-b border-[#C9C9C9] text-[13px] bg-transparent focus:outline-none" value={row_.au2} onChange={e => upd("au2",e.target.value)} placeholder="jj/mm/aaaa" />
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="flex flex-col gap-0">
+
+      {/* ── 1. Identification du stagiaire ── */}
+      <Section title="Identification du stagiaire">
+        <div className="grid grid-cols-2 gap-x-8">
+          <div>
+            <DemandeFormField label="Civilité" value={form.civilite || "—"} readOnly />
+            <DemandeFormField label="Nom de naissance"   value={form.nomNaissance  || "—"} readOnly />
+            <DemandeFormField label="Date de naissance"  value={form.dateNaissance  || "—"} readOnly />
+            <DemandeFormField label="Adresse (domicile)" value={form.adresse        || "—"} readOnly />
+          </div>
+          <div>
+            <DemandeFormField label="Prénom"             value={form.prenom         || "—"} readOnly />
+            <DemandeFormField label="N° inscription"     value={form.numInscription || "—"} readOnly />
+            <DemandeFormField label="Contrôleur du stage" value={form.controleur    || "—"} readOnly />
+          </div>
+        </div>
+      </Section>
+
+      {/* ── 2. Déroulement du stage ── */}
+      <Section title="Déroulement du stage">
+        <div className="grid grid-cols-2 gap-x-8">
+          <DemandeFormField label="Conseil régional de l'Ordre" value={form.conseilRegional || "—"} readOnly />
+          <DemandeFormField label="Date"                         value={form.date            || "—"} readOnly />
+          <DemandeFormField label="Début du stage"               value={form.stageDebut      || "—"} readOnly />
+          <DemandeFormField label="Fin du stage"                 value={form.stageFin        || "—"} readOnly />
+        </div>
+        <DemandeFormField label="Durée réglementaire" value={form.duree ? `${form.duree} an${form.duree!=="1"?"s":""}` : "—"} readOnly />
+      </Section>
+
+      {/* ── 3. Maîtres de stage ── */}
+      <Section title="Maîtres de stage">
+        <p className="text-[11px] font-semibold text-[#5C5C5C] uppercase tracking-wide mb-3">Maîtres de stage agréés</p>
+        {form.maitres.map((m, i) => (
+          <MaitreRow key={i} m={m} idx={i} rowKey="maitres" ro label={i===0 ? "Maître principal" : `Maître ${i+1}`} />
+        ))}
+        <p className="text-[11px] font-semibold text-[#5C5C5C] uppercase tracking-wide mb-3 mt-2">Second maître de stage CAC habilité</p>
+        {form.secondMaitres.map((m, i) => (
+          <MaitreRow key={i} m={m} idx={i} rowKey="secondMaitres" ro label={`Second maître ${i+1}`} />
+        ))}
+        <p className="text-[11px] font-semibold text-[#5C5C5C] uppercase tracking-wide mb-3 mt-2">Co-maître expert-comptable</p>
+        {form.comaitres.map((m, i) => (
+          <MaitreRow key={i} m={m} idx={i} rowKey="comaitres" ro label={`Co-maître ${i+1}`} />
+        ))}
+      </Section>
+
+      {/* ── 4. Périodes particulières ── */}
+      <Section title="Périodes particulières" defaultOpen={false}>
+        {form.suspensions.map((_, i) => (
+          <PeriodEF key={i} label={`Suspension ${i+1}`} rowKey="suspensions" isSub={i} />
+        ))}
+        <PeriodEF label="Délai(s) supplémentaire(s)" rowKey="delais" />
+        <PeriodEF label="Invalidation(s) de stage"   rowKey="invalidations" />
+        <PeriodEF label="Prolongation(s) de stage"   rowKey="prolongations" />
+        <div className="grid grid-cols-2 gap-x-8 mt-2">
+          <EF label="CAC habilité — Nom"          value={form.cacNom}     onChange={v => set("cacNom",v)} />
+          <EF label="CAC habilité — Prénom"        value={form.cacPrenom}  onChange={v => set("cacPrenom",v)} />
+          <EF label="CAC habilité — Date hab."     value={form.cacDateHab} onChange={v => set("cacDateHab",v)} />
+        </div>
+      </Section>
+
+      {/* ── 5. Appréciations ── */}
+      <Section title="Appréciations">
+        <TA label="Travaux professionnels (quantité & qualité)" value={form.appreciationTravaux} onChange={v => set("appreciationTravaux",v)} rows={4} />
+        <div className="flex flex-col gap-0.5 py-2 border-b border-[#C9C9C9]">
+          <p className="text-[12px] text-[#5C5C5C]">A effectué au moins 200 h de missions CAC sur deux années au moins</p>
+          <div className="flex items-center gap-5 mt-1">
+            {[["Oui",true],["Non",false]].map(([lbl,val]) => (
+              <label key={lbl} className="flex items-center gap-1.5 cursor-pointer text-[13px] font-semibold">
+                <input type="radio" name="a200h_fiche" checked={form.a200h===val} onChange={() => set("a200h",val)} />
+                {lbl}
+              </label>
+            ))}
+          </div>
+        </div>
+        <TA label="Cycles de formation (assiduité, participation…)" value={form.appreciationFormation} onChange={v => set("appreciationFormation",v)} rows={3} />
+        <TA label="Rapports semestriels (qualité, sujets…)"         value={form.appreciationRapports}  onChange={v => set("appreciationRapports",v)}  rows={3} />
+        <TA label="Appréciation générale"                           value={form.appreciationGenerale}  onChange={v => set("appreciationGenerale",v)}  rows={4} />
+      </Section>
+
+    </div>
+  );
+}
+
+function MotifDetailPage({ motif }) {
+  const [activeTab,      setActiveTab]      = React.useState("details");
+  const [piecesFiles,    setPiecesFiles]    = React.useState([
+    { name: "Fiche_generale_synthese.pdf", type: "PDF", date: new Date().toLocaleDateString("fr-FR"), size: "142 Ko" },
+  ]);
+  const sfData = motif._row ? buildRecordData(motif._row).sfData : {};
+
+  const handleFermerConfirm = (statut) => {
+    if (statut === "acceptee") {
+      setPiecesFiles(prev => {
+        const exists = prev.some(f => f.name === "Attestation_fin_de_stage.pdf");
+        if (exists) return prev;
+        return [...prev, { name: "Attestation_fin_de_stage.pdf", type: "PDF", date: new Date().toLocaleDateString("fr-FR"), size: "89 Ko" }];
+      });
+    }
+  };
+
+  const highlights = [
+    { label: "N° inscription",            value: motif.numInscription },
+    { label: "Demande",                   value: motif.motif },
+    { label: "Échéance",                  value: motif.type },
+    { label: "Date d'effet",              value: motif.effet },
+    { label: "Décision",                  value: motif.decision },
+    { label: "Commission",                value: motif.commission || "—" },
+    { label: "Qualité",                   value: motif.qualite },
+  ];
+
+  return (
+    <>
+      {/* ── Header ── */}
+      <div className="bg-[#F3F3F3] px-4 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded bg-[#C45500] flex items-center justify-center">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            </div>
+            <div>
+              <p className="text-[13px] text-[#5C5C5C] leading-[18px]">Demande</p>
+              <p className="text-[28px] text-[#03234D] leading-[35px] font-light">{motif.motif}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="flex border border-[#5C5C5C] rounded-full overflow-hidden">
+              <button className="px-4 h-8 text-[14px] text-[#0250D9] bg-white border-r border-[#5C5C5C]">Modifier</button>
+              <button className="px-4 h-8 text-[14px] text-[#0250D9] bg-white border-r border-[#5C5C5C]">Supprimer</button>
+              <button className="px-4 h-8 text-[14px] text-[#0250D9] bg-white">Imprimer</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Highlights ── */}
+      <HighlightsPanel fields={highlights} />
+
+      {/* ── Path bar ── */}
+      <MotifPathBar onFermerConfirm={handleFermerConfirm} />
+
+      {/* ── Contenu ── */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 pt-3">
+        <div className="grid grid-cols-2 gap-3 w-full">
+
+          {/* ── Colonne gauche ── */}
+          <div className="min-w-0">
+            <div className="bg-white rounded-[20px] overflow-hidden px-4 pt-4 pb-4" style={{boxShadow:"0 0 1.49px rgba(0,0,0,0.09),0 1.4px 1.5px rgba(0,0,0,0.09)"}}>
+              {/* Tabs */}
+              <div className="flex gap-0 border-b border-[#C9C9C9] mb-4">
+                {[["details","Détails"],["fiche","Fiche générale de synthèse"],["examen","Examen"]].map(([k,l]) => (
+                  <button key={k} onClick={() => setActiveTab(k)}
+                    className={`px-4 py-2 text-[13px] border-b-2 -mb-px transition-colors ${activeTab===k ? "border-[#0250D9] text-[#0250D9] font-semibold" : "border-transparent text-[#2E2E2E] hover:bg-[#F3F3F3]"}`}>
+                    {l}
+                  </button>
+                ))}
+              </div>
+              {activeTab === "details" && (
+                <div className="flex flex-col gap-2">
+                  <MotifInfoMotifSection motif={motif} />
+                  <MotifSituationCommSection motif={motif} />
+                </div>
+              )}
+              {activeTab === "fiche" && (
+                <div className="overflow-y-auto" style={{maxHeight:"calc(100vh - 320px)"}}>
+                  <FicheGeneraleSynthese sfData={sfData} motif={motif} />
+                </div>
+              )}
+              {activeTab === "examen" && (
+                <div className="py-6 text-center text-[13px] text-[#9E9E9E]">Aucun examen</div>
+              )}
+            </div>
+          </div>
+
+          {/* ── Colonne droite — Pièces ── */}
+          <div className="min-w-0">
+            <DemandePiecesInlinePanel controlledFiles={piecesFiles} />
+          </div>
+
+        </div>
+      </div>
+    </>
+  );
 }
 
 function App() {
@@ -8472,6 +9525,15 @@ function App() {
     setActivePage(tabId);
   };
 
+  const handleNavigateToMotif = (motifRow) => {
+    const tabId = "motif:" + (motifRow.motif || "").replace(/\s+/g,"_") + "_" + (motifRow.numInscription || "");
+    setOpenTabs(prev => {
+      if (prev.find(t => t.id === tabId)) return prev;
+      return [...prev, { type: "motif", id: tabId, label: motifRow.motif, data: motifRow }];
+    });
+    setActivePage(tabId);
+  };
+
   const handleNavigateToGroupe = (row) => {
     const tabId = "groupe:" + row.numero;
     setOpenTabs(prev => {
@@ -8558,7 +9620,8 @@ function App() {
       {isDemandesActive && <DemandesListViewPage onContactClick={handleNavigateToContact} onDemandeClick={handleNavigateToDemande} />}
       {isListActive && <ListViewPage onNavigateToRecord={handleNavigateToRecord} />}
       {isGroupesActive && <GroupesListViewPage onNavigateToGroupe={handleNavigateToGroupe} />}
-      {activeTab && activeTab.type === "record" && <RecordPage row={activeTab.data} />}
+      {activeTab && activeTab.type === "record" && <RecordPage row={activeTab.data} onNavigateToMotif={handleNavigateToMotif} />}
+      {activeTab && activeTab.type === "motif"  && <MotifDetailPage motif={activeTab.data} />}
       {activeTab && activeTab.type === "formations" && <FormationsPage row={activeTab.data} />}
       {activeTab && activeTab.type === "groupe" && <GroupeRecordPage groupe={activeTab.data} onNavigateToRecord={handleNavigateToRecord} />}
       {activeTab && activeTab.type === "demande" && <DemandeRecordPage demande={activeTab.data} onContactClick={handleNavigateToContact} />}
