@@ -24,7 +24,16 @@ self.addEventListener('fetch', (event) => {
           );
         }
 
-        // ── Authenticated → fetch the proto and inject the comment widget ──
+        // ── Skip injection for iframe/frame navigations ──
+        // The viewer loads protos in <iframe> — those requests also have mode:'navigate'
+        // but Sec-Fetch-Dest is 'iframe', not 'document'. Only inject for top-level
+        // navigations (user opening the proto URL directly in a new tab).
+        const dest = event.request.headers.get('Sec-Fetch-Dest');
+        if (dest === 'iframe' || dest === 'frame') {
+          return fetch(event.request);
+        }
+
+        // ── Authenticated top-level navigation → fetch and inject the comment widget ──
         try {
           const response = await fetch(event.request);
 
