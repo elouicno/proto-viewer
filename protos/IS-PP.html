@@ -2198,275 +2198,168 @@ const DOCUMENTS = [{
   required: true,
   template: false
 }];
+const ARCP_ASSUREURS = ['ABEILLE ASSURANCE','AGF','ALLIANZ VIA ASSURANCE','AVIVA','AXA ASSURANCE','AZUR ASSURANCES','BALOISE FRANCE',"CAISSE MUTUELLE D'ASSURANCE",'COMPAGNIE SENEGALAISE ASSURANCE','CONCORDE ASSURANCE','COVEA RISKS','GAN','GENERALI FRANCE','GROUPAMA','GROUPE AZUR','GROUPE U.P.E.','GROUPE VICTOIRE','LA FRANCE ASSURANCE',"LA LILLOISE D'ASSURANCES",'LA SAUVEGARDE','LA SUISSE ASSURANCE','LE CONTINENT','LIBERTY MUTUAL INSURANCE EUROPE LIMITED','MAAF','MMA IARD ASSURANCES MUTUELLES','MUTUELLE ASSURANCE DE LA CORSE','PRESERVATRICE FONCIERE ASSURANCE','RHIN ET MOSELLE','SUN ALLIANCE','UAP','UNION GENERALE DU NORD','WAFA ASSURANCES'];
+const ARCP_COURTIERS = ['AMD','AON','APRIL ENTREPRISE EST','BEASLAS','C M A P','CCA ELYSEE','DELTA ASSURANCE','MINET','OCA','ODASS','SIACI (ANCIENNEMENT DUFLOT)','SOPHIASSUR','VERSPIEREN'];
+
+const ArcpControl = props => {
+  const h = React.createElement;
+  const [focused, setFocused] = React.useState(false);
+  const base = {
+    height: '40px', width: '100%', padding: '0 12px',
+    border: '1px solid ' + (focused ? '#2563EB' : '#C4CBDA'),
+    borderRadius: T.radius, fontSize: '13.5px', fontFamily: T.font,
+    color: T.color.textDark, background: '#fff', boxSizing: 'border-box',
+    boxShadow: focused ? '0 0 0 3px rgba(37,99,235,.15)' : 'none', outline: 'none'
+  };
+  const tag = props.tag || 'input';
+  const p = { ...props, tag: undefined, onFocus: () => setFocused(true), onBlur: () => setFocused(false), style: { ...base, ...(props.style || {}) } };
+  if (tag === 'select') p.style.cursor = 'pointer';
+  return h(tag, p, props.children);
+};
+
+const ArcpField = ({ label, required, full, help, children }) => {
+  const h = React.createElement;
+  return h('div', { style: { display: 'flex', flexDirection: 'column', gap: '6px', minWidth: 0, gridColumn: full ? '1 / -1' : 'auto' } },
+    h('label', { style: { fontSize: '12.5px', fontWeight: 500, color: T.color.textDark } },
+      label, required ? h('span', { style: { color: T.color.primaryRed } }, ' *') : h('span', { style: { color: T.color.gray, fontWeight: 400 } }, ' (si applicable)')),
+    children,
+    help ? h('span', { style: { fontSize: '11.5px', color: T.color.gray } }, help) : null
+  );
+};
+
+const ArcpForm = () => {
+  const h = React.createElement;
+  const [assureur, setAssureur] = React.useState('');
+  const [courtier, setCourtier] = React.useState('');
+  const opt = (v, l) => h('option', { key: v || 'ph', value: v }, l);
+  return h('div', { style: { marginTop: '16px', padding: '16px', border: '1px solid #C7D2FE', borderRadius: T.radius, background: '#F5F7FF' } },
+    h('div', { style: { display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13.5px', fontWeight: 600, color: T.color.textDark, marginBottom: '4px' } },
+      h('svg', { width: '16', height: '16', viewBox: '0 0 24 24', fill: 'none', stroke: '#2563EB', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round' },
+        h('path', { d: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z' })),
+      "Informations de l'attestation RCP"),
+    h('p', { style: { fontSize: '12.5px', color: T.color.gray, lineHeight: '1.5', margin: '0 0 14px 0' } },
+      'Ces champs doivent être complétés pour pouvoir soumettre vos pièces justificatives.'),
+    h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '13px 14px' } },
+      h(ArcpField, { label: 'Assureur', required: true, full: true },
+        h(ArcpControl, { tag: 'select', value: assureur, onChange: e => setAssureur(e.target.value) },
+          opt('', 'Sélectionner un assureur'),
+          ARCP_ASSUREURS.map(a => h('option', { key: a, value: a }, a)),
+          h('option', { key: 'AUTRE', value: 'AUTRE' }, 'Autre'))),
+      assureur === 'AUTRE' && h(ArcpField, { key: 'aa', label: 'Autre assureur, précisez', required: true, full: true, help: '60 caractères maximum' },
+        h(ArcpControl, { tag: 'input', type: 'text', maxLength: 60, placeholder: "Nom de l'assureur" })),
+      h(ArcpField, { label: 'Courtier', full: true },
+        h(ArcpControl, { tag: 'select', value: courtier, onChange: e => setCourtier(e.target.value) },
+          opt('', 'Aucun / non applicable'),
+          ARCP_COURTIERS.map(c => h('option', { key: c, value: c }, c)),
+          h('option', { key: 'AUTRE', value: 'AUTRE' }, 'Autre'))),
+      courtier === 'AUTRE' && h(ArcpField, { key: 'cc', label: 'Autre courtier, précisez', required: true, full: true, help: '60 caractères maximum' },
+        h(ArcpControl, { tag: 'input', type: 'text', maxLength: 60, placeholder: 'Nom du courtier' })),
+      h(ArcpField, { label: 'N° de contrat', required: true, full: true, help: '30 caractères maximum' },
+        h(ArcpControl, { tag: 'input', type: 'text', maxLength: 30, placeholder: 'Ex. 1234567890' })),
+      h(ArcpField, { label: 'Début de couverture', required: true },
+        h(ArcpControl, { tag: 'input', type: 'date' })),
+      h(ArcpField, { label: 'Fin de couverture', required: true },
+        h(ArcpControl, { tag: 'input', type: 'date' }))
+    )
+  );
+};
+
 const Step4Content = ({
   files,
   setFiles,
   showError
 }) => {
-  const [openModal, setOpenModal] = useState(null);
-  const totalFiles = Object.values(files).reduce((acc, arr) => acc + arr.length, 0);
+  const h = React.createElement;
   const requiredDocs = DOCUMENTS.filter(d => d.required);
-  const requiredFilled = requiredDocs.filter(d => (files[d.id] || []).length > 0).length;
-  return /*#__PURE__*/_jsxDEV("div", {
-    children: [/*#__PURE__*/_jsxDEV(StepHeader, {
-      title: "Pièces justificatives"
-    }, void 0, false), /*#__PURE__*/_jsxDEV("div", {
-      style: {
-        padding: '14px 20px',
-        marginBottom: '24px',
-        background: totalFiles > 0 ? T.color.successBg : T.color.bg,
-        border: `1px solid ${totalFiles > 0 ? T.color.successBorder : T.color.border}`,
-        borderRadius: T.radius,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between'
+
+  const setOne = (docId, name) => {
+    setFiles(prev => {
+      const next = { ...prev };
+      if (name) next[docId] = [name]; else delete next[docId];
+      return next;
+    });
+  };
+
+  const UploadZone = ({ docId }) => {
+    const [dragging, setDragging] = React.useState(false);
+    const uploaded = (files[docId] || [])[0];
+    if (uploaded) {
+      return h('div', {
+        style: {
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '14px 16px', background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: T.radius
+        }
       },
-      children: [/*#__PURE__*/_jsxDEV("div", {
-        style: {
-          fontSize: '14px',
-          color: T.color.textDark
-        },
-        children: [/*#__PURE__*/_jsxDEV("strong", {
-          children: totalFiles
-        }, void 0, false), " fichier(s) ajouté(s) · ", /*#__PURE__*/_jsxDEV("strong", {
-          children: [requiredFilled, "/", requiredDocs.length]
-        }, void 0, true), " pièces obligatoires fournies"]
-      }, void 0, true), requiredFilled === requiredDocs.length && totalFiles > 0 && /*#__PURE__*/_jsxDEV("div", {
-        style: {
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px',
-          fontSize: '13px',
-          color: T.color.successText,
-          fontWeight: 500
-        },
-        children: [/*#__PURE__*/_jsxDEV("svg", {
-          width: "16",
-          height: "16",
-          viewBox: "0 0 24 24",
-          fill: "none",
-          stroke: "currentColor",
-          strokeWidth: "2.5",
-          children: /*#__PURE__*/_jsxDEV("polyline", {
-            points: "20 6 9 17 4 12"
-          }, void 0, false)
-        }, void 0, false), "Pièces obligatoires complètes"]
-      }, void 0, true)]
-    }, void 0, true), DOCUMENTS.map(doc => {
-      const docFiles = files[doc.id] || [];
-      const hasFiles = docFiles.length > 0;
-      return /*#__PURE__*/_jsxDEV(Card, {
-        style: {
-          marginBottom: '16px'
-        },
-        children: [/*#__PURE__*/_jsxDEV("div", {
-          style: {
-            display: 'flex',
-            alignItems: 'flex-start',
-            justifyContent: 'space-between',
-            gap: '20px'
-          },
-          children: [/*#__PURE__*/_jsxDEV("div", {
-            style: {
-              flex: 1
-            },
-            children: [/*#__PURE__*/_jsxDEV("div", {
-              style: {
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                marginBottom: '6px'
-              },
-              children: [/*#__PURE__*/_jsxDEV("span", {
-                style: {
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  color: T.color.textDark
-                },
-                children: doc.title
-              }, void 0, false), doc.required ? /*#__PURE__*/_jsxDEV("span", {
-                style: {
-                  fontSize: '11px',
-                  fontWeight: 500,
-                  color: T.color.primaryRed,
-                  background: T.color.redBg,
-                  padding: '2px 8px',
-                  borderRadius: '20px'
-                },
-                children: "Obligatoire"
-              }, void 0, false) : /*#__PURE__*/_jsxDEV("span", {
-                style: {
-                  fontSize: '11px',
-                  fontWeight: 500,
-                  color: T.color.gray,
-                  background: T.color.bg,
-                  padding: '2px 8px',
-                  borderRadius: '20px',
-                  border: `1px solid ${T.color.border}`
-                },
-                children: "Facultatif"
-              }, void 0, false)]
-            }, void 0, true), /*#__PURE__*/_jsxDEV("p", {
-              style: {
-                fontSize: '13px',
-                color: T.color.gray,
-                lineHeight: '20px',
-                marginBottom: doc.template ? '10px' : 0
-              },
-              children: doc.desc
-            }, void 0, false), doc.template && /*#__PURE__*/_jsxDEV("a", {
-              href: "#",
-              onClick: e => e.preventDefault(),
-              style: {
-                fontSize: '13px',
-                color: T.color.primaryBlue,
-                textDecoration: 'none',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '5px',
-                fontWeight: 500
-              },
-              children: [/*#__PURE__*/_jsxDEV("svg", {
-                width: "14",
-                height: "14",
-                viewBox: "0 0 24 24",
-                fill: "none",
-                stroke: "currentColor",
-                strokeWidth: "2",
-                children: [/*#__PURE__*/_jsxDEV("path", {
-                  d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
-                }, void 0, false), /*#__PURE__*/_jsxDEV("polyline", {
-                  points: "7 10 12 15 17 10"
-                }, void 0, false), /*#__PURE__*/_jsxDEV("line", {
-                  x1: "12",
-                  y1: "15",
-                  x2: "12",
-                  y2: "3"
-                }, void 0, false)]
-              }, void 0, true), doc.templateLabel]
-            }, void 0, true)]
-          }, void 0, true), /*#__PURE__*/_jsxDEV("div", {
-            style: {
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'flex-end',
-              gap: '8px'
-            },
-            children: [hasFiles && /*#__PURE__*/_jsxDEV("div", {
-              style: {
-                fontSize: '12px',
-                fontWeight: 500,
-                color: T.color.successText,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px'
-              },
-              children: [/*#__PURE__*/_jsxDEV("svg", {
-                width: "14",
-                height: "14",
-                viewBox: "0 0 24 24",
-                fill: "none",
-                stroke: "currentColor",
-                strokeWidth: "2.5",
-                children: /*#__PURE__*/_jsxDEV("polyline", {
-                  points: "20 6 9 17 4 12"
-                }, void 0, false)
-              }, void 0, false), docFiles.length, " fichier(s)"]
-            }, void 0, true), /*#__PURE__*/_jsxDEV("button", {
-              onClick: () => setOpenModal(doc),
-              style: {
-                height: '36px',
-                padding: '0 16px',
-                border: hasFiles ? `1px solid ${T.color.border}` : 'none',
-                borderRadius: T.radius,
-                background: hasFiles ? T.color.white : T.color.primaryBlue,
-                cursor: 'pointer',
-                fontSize: '13px',
-                fontWeight: 500,
-                color: hasFiles ? T.color.primaryBlue : T.color.white,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                fontFamily: T.font
-              },
-              children: [/*#__PURE__*/_jsxDEV("svg", {
-                width: "14",
-                height: "14",
-                viewBox: "0 0 24 24",
-                fill: "none",
-                stroke: "currentColor",
-                strokeWidth: "2",
-                children: hasFiles ? /*#__PURE__*/_jsxDEV(_Fragment, {
-                  children: [/*#__PURE__*/_jsxDEV("path", {
-                    d: "M12 20h9"
-                  }, void 0, false), /*#__PURE__*/_jsxDEV("path", {
-                    d: "M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"
-                  }, void 0, false)]
-                }, void 0, true) : /*#__PURE__*/_jsxDEV(_Fragment, {
-                  children: [/*#__PURE__*/_jsxDEV("line", {
-                    x1: "12",
-                    y1: "5",
-                    x2: "12",
-                    y2: "19"
-                  }, void 0, false), /*#__PURE__*/_jsxDEV("line", {
-                    x1: "5",
-                    y1: "12",
-                    x2: "19",
-                    y2: "12"
-                  }, void 0, false)]
-                }, void 0, true)
-              }, void 0, false), hasFiles ? 'Modifier' : 'Ajouter des fichiers']
-            }, void 0, true)]
-          }, void 0, true)]
-        }, void 0, true), showError && doc.required && !hasFiles && /*#__PURE__*/_jsxDEV("p", {
-          style: {
-            marginTop: '6px',
-            fontSize: '13px',
-            color: T.color.primaryRed
-          },
-          children: "Erreur:Saisie obligatoire."
-        }, void 0, false), hasFiles && /*#__PURE__*/_jsxDEV("div", {
-          style: {
-            marginTop: '12px',
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: '8px'
-          },
-          children: docFiles.map((fname, i) => /*#__PURE__*/_jsxDEV("div", {
-            style: {
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '4px 10px',
-              background: T.color.successBg,
-              border: `1px solid ${T.color.successBorder}`,
-              borderRadius: '20px',
-              fontSize: '12px',
-              color: T.color.successText
-            },
-            children: [/*#__PURE__*/_jsxDEV("svg", {
-              width: "12",
-              height: "12",
-              viewBox: "0 0 24 24",
-              fill: "none",
-              stroke: "currentColor",
-              strokeWidth: "2",
-              children: [/*#__PURE__*/_jsxDEV("path", {
-                d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-              }, void 0, false), /*#__PURE__*/_jsxDEV("polyline", {
-                points: "14 2 14 8 20 8"
-              }, void 0, false)]
-            }, void 0, true), fname]
-          }, i, true))
-        }, void 0, false)]
-      }, doc.id, true);
-    }), openModal && /*#__PURE__*/_jsxDEV(FileUploadModal, {
-      doc: openModal,
-      onClose: () => setOpenModal(null),
-      files: files,
-      setFiles: setFiles
-    }, void 0, false)]
-  }, void 0, true);
+        h('div', { style: { display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 } },
+          h('svg', { width: '18', height: '18', viewBox: '0 0 24 24', fill: 'none', stroke: '#047857', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', style: { flexShrink: 0 } },
+            h('path', { d: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z' }),
+            h('polyline', { points: '14 2 14 8 20 8' })
+          ),
+          h('span', { style: { fontSize: '14px', color: '#047857', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, uploaded)
+        ),
+        h('button', { onClick: () => setOne(docId, null), title: 'Supprimer',
+          style: { background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: T.color.gray, fontSize: '18px', lineHeight: 1, fontFamily: T.font } }, '×')
+      );
+    }
+    return h('label', {
+      onDragOver: e => { e.preventDefault(); setDragging(true); },
+      onDragLeave: () => setDragging(false),
+      onDrop: e => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files[0]; if (f) setOne(docId, f.name); },
+      style: {
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        gap: '12px', padding: '40px 20px', cursor: 'pointer',
+        border: '1px ' + (dragging ? 'solid ' : 'dashed ') + (dragging ? T.color.primaryBlue : T.color.borderMedium),
+        borderRadius: T.radius, background: dragging ? T.color.infoBg : T.color.white, transition: 'all 0.15s'
+      }
+    },
+      h('input', { type: 'file', accept: '.jpg,.jpeg,.png,.pdf', onChange: e => { const f = e.target.files[0]; if (f) setOne(docId, f.name); }, style: { display: 'none' } }),
+      h('svg', { width: '28', height: '28', viewBox: '0 0 24 24', fill: 'none', stroke: T.color.textDark, strokeWidth: '1.8', strokeLinecap: 'round', strokeLinejoin: 'round' },
+        h('path', { d: 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4' }),
+        h('polyline', { points: '17 8 12 3 7 8' }),
+        h('line', { x1: '12', y1: '3', x2: '12', y2: '15' })
+      ),
+      h('span', { style: { fontSize: '14px', color: T.color.gray } }, 'Cliquer ou déposer des fichiers'),
+      h('span', { style: { marginTop: '2px', display: 'inline-block', padding: '8px 22px', border: '1px solid ' + T.color.border, borderRadius: T.radius, background: T.color.white, fontSize: '14px', fontWeight: 500, color: T.color.textDark } }, 'Parcourir')
+    );
+  };
+
+  return h('div', { style: { display: 'flex', flexDirection: 'column', gap: '24px' } },
+    h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' } },
+      h('div', null,
+        h('h2', { style: { fontSize: '24px', fontWeight: 700, color: T.color.textDark, margin: '0 0 6px 0', lineHeight: '1.3' } }, 'Liste des pièces justificatives à fournir'),
+        h('p', { style: { fontSize: '14px', color: T.color.gray, margin: 0 } }, "Documents requis pour votre dossier d'inscription")
+      ),
+      h('span', { style: { fontSize: '13px', color: T.color.gray, whiteSpace: 'nowrap', marginTop: '4px' } }, '*Champs obligatoires')
+    ),
+    h('div', { style: { background: T.color.infoBg, border: '1px solid ' + T.color.infoBorder, borderRadius: T.radius, padding: '16px 20px' } },
+      h('p', { style: { fontSize: '14px', fontWeight: 700, color: T.color.textDark, margin: '0 0 10px 0' } }, 'Préparez vos documents avant de commencer'),
+      h('ul', { style: { margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '4px' } },
+        ['Formats acceptés : PDF, JPG, JPEG, PNG', 'Taille maximale par fichier : 2 Mo', 'Assurez-vous que vos documents sont lisibles et complets', "Les champs marqués d'un astérisque (*) sont obligatoires"].map((item, i) =>
+          h('li', { key: i, style: { fontSize: '14px', color: T.color.textDark, lineHeight: '22px' } }, item)
+        )
+      )
+    ),
+    DOCUMENTS.map(doc => {
+      const hasFile = (files[doc.id] || []).length > 0;
+      return h('div', {
+        key: doc.id,
+        style: { background: T.color.white, border: '1px solid ' + T.color.border, borderRadius: T.radius, boxShadow: T.shadow.card, padding: '24px' }
+      },
+        h('p', { style: { fontSize: '16px', fontWeight: 700, color: T.color.textDark, margin: '0 0 6px 0', lineHeight: '22px' } },
+          doc.required && h('span', { style: { color: T.color.primaryRed, fontWeight: 700, marginRight: '6px' } }, '*'),
+          doc.title
+        ),
+        doc.desc && h('p', { style: { fontSize: '14px', color: T.color.gray, margin: '0 0 12px 0', lineHeight: '21px' } }, doc.desc),
+        doc.template && h('a', {
+          href: '#', onClick: e => e.preventDefault(),
+          style: { display: 'inline-block', fontSize: '14px', color: T.color.primaryBlue, fontWeight: 500, textDecoration: 'underline', marginBottom: '16px' }
+        }, doc.templateLabel || 'Télécharger le modèle'),
+        h(UploadZone, { docId: doc.id }),
+        doc.id === 'AttestationSouscriptionAssurance' && hasFile && h(ArcpForm, { key: 'arcp' }),
+        showError && doc.required && !hasFile && h('p', { style: { marginTop: '8px', fontSize: '13px', color: T.color.primaryRed } }, 'Erreur : Saisie obligatoire.')
+      );
+    })
+  );
 };
 
 // ============================================================

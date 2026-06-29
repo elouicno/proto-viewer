@@ -913,6 +913,64 @@
     .pj-file-remove:hover { color: var(--red); }
     .pj-file-remove svg { width: 13px; height: 13px; }
 
+    /* ── Mini-formulaire ARCP (apparaît au téléversement de l'attestation) ── */
+    .arcp-form {
+      margin: 0 18px 16px;
+      padding: 14px 16px 16px;
+      border: 1px solid #c7d2fe;
+      border-radius: 8px;
+      background: #f5f7ff;
+      animation: arcpReveal 220ms ease-out;
+    }
+    .arcp-form[hidden] { display: none; }
+    @keyframes arcpReveal {
+      from { opacity: 0; transform: translateY(-4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .arcp-form-head {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13.5px; font-weight: 600; color: var(--navy);
+      margin-bottom: 4px;
+    }
+    .arcp-form-head svg { width: 16px; height: 16px; color: #2563eb; flex-shrink: 0; }
+    .arcp-form-note {
+      font-size: 12.5px; color: var(--text-mid); line-height: 1.5;
+      margin-bottom: 14px;
+    }
+    .arcp-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 13px 14px;
+    }
+    .arcp-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+    .arcp-col-2 { grid-column: 1 / -1; }
+    .arcp-field label { font-size: 12.5px; font-weight: 500; color: var(--navy); }
+    .arcp-field .req { color: var(--red); }
+    .arcp-field .opt { color: var(--text-soft); font-weight: 400; }
+    .arcp-field select,
+    .arcp-field input {
+      height: 40px; width: 100%; padding: 0 12px;
+      border: 1px solid #C4CBDA; border-radius: 6px;
+      font-size: 13.5px; font-family: var(--font); color: var(--navy);
+      background: #fff; box-sizing: border-box;
+      transition: border-color .15s ease, box-shadow .15s ease;
+    }
+    .arcp-field select {
+      appearance: none; -webkit-appearance: none; cursor: pointer;
+      padding-right: 34px;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235A6478' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+      background-repeat: no-repeat; background-position: right 12px center;
+    }
+    .arcp-field input::placeholder { color: var(--text-soft); }
+    .arcp-field select:focus,
+    .arcp-field input:focus {
+      outline: none; border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+    }
+    .arcp-help { font-size: 11.5px; color: var(--text-soft); }
+    .arcp-cond[hidden] { display: none; }
+    @media (max-width: 520px) {
+      .arcp-grid { grid-template-columns: 1fr; }
+    }
+
     /* Footer */
     .drawer-footer {
       display: flex; align-items: center; justify-content: stretch; gap: 12px;
@@ -2307,8 +2365,8 @@
     /* ══════════════════ DRAWER UPLOAD PJ — JS ══════════════════ */
     var PJ_LIST = [
       {
-        title: "Attestation provisoire d'assurance RCP",
-        desc: "Attestation provisoire justifiant de la souscription à une assurance de responsabilité civile professionnelle auprès d'une compagnie de votre choix, précisant quels sont les membres…",
+        title: "Attestation définitive d'assurance RCP",
+        desc: "Attestation définitive d'assurance de responsabilité civile professionnelle délivrée par votre compagnie, précisant l'assureur, le numéro de contrat et la période de couverture.",
         model: true
       },
       {
@@ -2337,6 +2395,14 @@
       var overlay = document.getElementById('pj-drawer-overlay');
       // Reset toutes les listes de fichiers
       overlay.querySelectorAll('.pj-file-list').forEach(function(l) { l.innerHTML = ''; });
+      // Reset du mini-formulaire ARCP
+      var af = document.getElementById('arcp-form');
+      if (af) {
+        af.hidden = true;
+        af.querySelectorAll('input').forEach(function(i) { i.value = ''; });
+        af.querySelectorAll('select').forEach(function(s) { s.selectedIndex = 0; });
+        af.querySelectorAll('.arcp-cond').forEach(function(c) { c.hidden = true; });
+      }
       // Numéro de demande depuis la ligne cliquée
       var meta = document.getElementById('pj-drawer-meta');
       var row = btn ? btn.closest('tr') : null;
@@ -2552,6 +2618,24 @@
       document.body.style.overflow = '';
     }
 
+    /* Affiche/masque le mini-formulaire ARCP selon la présence d'un fichier sur le bloc 0 */
+    function updateArcpVisibility() {
+      var list = document.getElementById('pj-file-list-0');
+      var form = document.getElementById('arcp-form');
+      if (!list || !form) return;
+      form.hidden = list.children.length === 0;
+    }
+
+    /* Affiche le champ "Autre, précisez" quand l'option AUTRE est sélectionnée */
+    function toggleArcpOther(which) {
+      var select = document.getElementById('arcp-' + which);
+      var wrap = document.getElementById('arcp-' + which + '-autre-wrap');
+      if (!select || !wrap) return;
+      var isAutre = select.value === 'AUTRE';
+      wrap.hidden = !isAutre;
+      if (!isAutre) { var inp = wrap.querySelector('input'); if (inp) inp.value = ''; }
+    }
+
     function addFilesToBlock(input, blockIndex) {
       var list = document.getElementById('pj-file-list-' + blockIndex);
       Array.from(input.files).forEach(function(file) {
@@ -2564,10 +2648,11 @@
           '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>' +
           '<span class="pj-file-name">' + file.name + '</span>' +
           '<span class="pj-file-size">' + size + '</span>' +
-          '<button class="pj-file-remove" onclick="this.parentElement.remove()" title="Supprimer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>';
+          '<button class="pj-file-remove" onclick="this.parentElement.remove(); updateArcpVisibility();" title="Supprimer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>';
         list.appendChild(item);
       });
       input.value = '';
+      updateArcpVisibility();
     }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -2628,8 +2713,8 @@
       <!-- Bloc PJ 0 -->
       <div class="pj-block">
         <div class="pj-block-info">
-          <div class="pj-block-title">Attestation provisoire d'assurance RCP</div>
-          <div class="pj-block-desc">Attestation provisoire justifiant de la souscription à une assurance de responsabilité civile professionnelle auprès d'une compagnie de votre choix, précisant quels sont les membres…</div>
+          <div class="pj-block-title">Attestation définitive d'assurance RCP</div>
+          <div class="pj-block-desc">Attestation définitive d'assurance de responsabilité civile professionnelle délivrée par votre compagnie, précisant l'assureur, le numéro de contrat et la période de couverture.</div>
           <button class="pj-block-model">Télécharger le modèle</button>
         </div>
         <div class="pj-upload-zone" id="drop-zone-0">
@@ -2639,6 +2724,106 @@
           <p class="pj-upload-formats">Formats acceptés jpg, pdf, docx&nbsp;( Taille max 30 MB)</p>
         </div>
         <div class="pj-file-list" id="pj-file-list-0"></div>
+
+        <!-- Mini-formulaire ARCP (visible après téléversement de l'attestation définitive) -->
+        <div class="arcp-form" id="arcp-form" hidden>
+          <div class="arcp-form-head">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Informations de l'attestation RCP
+          </div>
+          <p class="arcp-form-note">Ces champs doivent être complétés pour pouvoir soumettre vos pièces justificatives.</p>
+          <div class="arcp-grid">
+            <!-- Assureur -->
+            <div class="arcp-field arcp-col-2">
+              <label for="arcp-assureur">Assureur <span class="req" aria-hidden="true">*</span></label>
+              <select id="arcp-assureur" required aria-required="true" onchange="toggleArcpOther('assureur')">
+                <option value="" disabled selected>Sélectionner un assureur</option>
+                <option value="ABEILLE ASSURANCE">ABEILLE ASSURANCE</option>
+                <option value="AGF">AGF</option>
+                <option value="ALLIANZ VIA ASSURANCE">ALLIANZ VIA ASSURANCE</option>
+                <option value="AVIVA">AVIVA</option>
+                <option value="AXA ASSURANCE">AXA ASSURANCE</option>
+                <option value="AZUR ASSURANCES">AZUR ASSURANCES</option>
+                <option value="BALOISE FRANCE">BALOISE FRANCE</option>
+                <option value="CAISSE MUTUELLE D'ASSURANCE">CAISSE MUTUELLE D'ASSURANCE</option>
+                <option value="COMPAGNIE SENEGALAISE ASSURANCE">COMPAGNIE SENEGALAISE ASSURANCE</option>
+                <option value="CONCORDE ASSURANCE">CONCORDE ASSURANCE</option>
+                <option value="COVEA RISKS">COVEA RISKS</option>
+                <option value="GAN">GAN</option>
+                <option value="GENERALI FRANCE">GENERALI FRANCE</option>
+                <option value="GROUPAMA">GROUPAMA</option>
+                <option value="GROUPE AZUR">GROUPE AZUR</option>
+                <option value="GROUPE U.P.E.">GROUPE U.P.E.</option>
+                <option value="GROUPE VICTOIRE">GROUPE VICTOIRE</option>
+                <option value="LA FRANCE ASSURANCE">LA FRANCE ASSURANCE</option>
+                <option value="LA LILLOISE D'ASSURANCES">LA LILLOISE D'ASSURANCES</option>
+                <option value="LA SAUVEGARDE">LA SAUVEGARDE</option>
+                <option value="LA SUISSE ASSURANCE">LA SUISSE ASSURANCE</option>
+                <option value="LE CONTINENT">LE CONTINENT</option>
+                <option value="LIBERTY MUTUAL INSURANCE EUROPE LIMITED">LIBERTY MUTUAL INSURANCE EUROPE LIMITED</option>
+                <option value="MAAF">MAAF</option>
+                <option value="MMA IARD ASSURANCES MUTUELLES">MMA IARD ASSURANCES MUTUELLES</option>
+                <option value="MUTUELLE ASSURANCE DE LA CORSE">MUTUELLE ASSURANCE DE LA CORSE</option>
+                <option value="PRESERVATRICE FONCIERE ASSURANCE">PRESERVATRICE FONCIERE ASSURANCE</option>
+                <option value="RHIN ET MOSELLE">RHIN ET MOSELLE</option>
+                <option value="SUN ALLIANCE">SUN ALLIANCE</option>
+                <option value="UAP">UAP</option>
+                <option value="UNION GENERALE DU NORD">UNION GENERALE DU NORD</option>
+                <option value="WAFA ASSURANCES">WAFA ASSURANCES</option>
+                <option value="AUTRE">Autre</option>
+              </select>
+            </div>
+            <!-- Assureur — Autre, précisez (conditionnel) -->
+            <div class="arcp-field arcp-col-2 arcp-cond" id="arcp-assureur-autre-wrap" hidden>
+              <label for="arcp-assureur-autre">Autre assureur, précisez <span class="req" aria-hidden="true">*</span></label>
+              <input id="arcp-assureur-autre" type="text" maxlength="60" placeholder="Nom de l'assureur" />
+              <span class="arcp-help">60 caractères maximum</span>
+            </div>
+            <!-- Courtier -->
+            <div class="arcp-field arcp-col-2">
+              <label for="arcp-courtier">Courtier <span class="opt">(si applicable)</span></label>
+              <select id="arcp-courtier" onchange="toggleArcpOther('courtier')">
+                <option value="" selected>Aucun / non applicable</option>
+                <option value="AMD">AMD</option>
+                <option value="AON">AON</option>
+                <option value="APRIL ENTREPRISE EST">APRIL ENTREPRISE EST</option>
+                <option value="BEASLAS">BEASLAS</option>
+                <option value="C M A P">C M A P</option>
+                <option value="CCA ELYSEE">CCA ELYSEE</option>
+                <option value="DELTA ASSURANCE">DELTA ASSURANCE</option>
+                <option value="MINET">MINET</option>
+                <option value="OCA">OCA</option>
+                <option value="ODASS">ODASS</option>
+                <option value="SIACI (ANCIENNEMENT DUFLOT)">SIACI (ANCIENNEMENT DUFLOT)</option>
+                <option value="SOPHIASSUR">SOPHIASSUR</option>
+                <option value="VERSPIEREN">VERSPIEREN</option>
+                <option value="AUTRE">Autre</option>
+              </select>
+            </div>
+            <!-- Courtier — Autre, précisez (conditionnel) -->
+            <div class="arcp-field arcp-col-2 arcp-cond" id="arcp-courtier-autre-wrap" hidden>
+              <label for="arcp-courtier-autre">Autre courtier, précisez <span class="req" aria-hidden="true">*</span></label>
+              <input id="arcp-courtier-autre" type="text" maxlength="60" placeholder="Nom du courtier" />
+              <span class="arcp-help">60 caractères maximum</span>
+            </div>
+            <!-- N° de contrat -->
+            <div class="arcp-field arcp-col-2">
+              <label for="arcp-contrat">N° de contrat <span class="req" aria-hidden="true">*</span></label>
+              <input id="arcp-contrat" type="text" maxlength="30" inputmode="text" placeholder="Ex. 1234567890" />
+              <span class="arcp-help">30 caractères maximum</span>
+            </div>
+            <!-- Début de couverture -->
+            <div class="arcp-field">
+              <label for="arcp-debut">Début de couverture <span class="req" aria-hidden="true">*</span></label>
+              <input id="arcp-debut" type="date" required aria-required="true" />
+            </div>
+            <!-- Fin de couverture -->
+            <div class="arcp-field">
+              <label for="arcp-fin">Fin de couverture <span class="req" aria-hidden="true">*</span></label>
+              <input id="arcp-fin" type="date" required aria-required="true" />
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Bloc PJ 1 -->
