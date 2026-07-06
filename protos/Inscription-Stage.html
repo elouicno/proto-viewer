@@ -1,0 +1,1938 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inscription au stage - Expert-comptable Stagiaire</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body, #root { height: 100%; width: 100%; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F8FAFF; }
+    input, select, button, textarea { font-family: inherit; }
+    select { cursor: pointer; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #C6D1E2; border-radius: 3px; }
+    input::placeholder, textarea::placeholder { color: #A0ABBE; font-style: normal; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script>
+const {
+  useState
+} = React;
+
+/* ============================================================
+   DESIGN TOKENS — repris à l'identique de IP-PM (node Figma 245-18743)
+   ============================================================ */
+const T = {
+  color: {
+    primaryBlue: '#1B324F',
+    primaryRed: '#FF2B44',
+    bg: '#F8FAFF',
+    white: '#FFFFFF',
+    border: '#E1E7F3',
+    borderMedium: '#C6D1E2',
+    gray: '#6E7991',
+    grayLight: '#A0ABBE',
+    textDark: '#111928',
+    radioBg: '#F0F3FA',
+    redBg: '#FDF2F2',
+    red800: '#BB1730',
+    infoBg: '#EFF6FF',
+    infoBorder: '#BFDBFE',
+    infoText: '#1E40AF',
+    upcoming: '#E5EAF4'
+  },
+  shadow: {
+    card: '0px 7px 13px -2px rgba(74,121,144,0.1)',
+    bottomBar: '0px -7px 13px 0px rgba(74,121,144,0.1)'
+  },
+  radius: '8px',
+  gradient: 'linear-gradient(90deg, #FF2B44 0.508%, #1B324F 100%)',
+  font: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+};
+
+/* ============================================================
+   DATA — valeurs réelles relevées sur la cible Figma
+   ============================================================ */
+const STEPS = [{
+  title: "Informations générales",
+  subtitle: "Présentation du stage d'expertise comptable"
+}, {
+  title: "Renseignements personnels",
+  subtitle: "Informations d'identité et de contact"
+}, {
+  title: "Diplômes",
+  subtitle: "Formation et qualifications"
+}, {
+  title: "Renseignements sur le stage",
+  subtitle: "Informations sur votre stage professionnel"
+}, {
+  title: "Renseignements sur le(s) Maître(s) de stage",
+  subtitle: "Coordonnées et informations"
+}, {
+  title: "Pièces justificatives",
+  subtitle: "Documents et justificatifs requis"
+}, {
+  title: "Confirmation et soumission",
+  subtitle: "Validation et envoi de votre dossier"
+}];
+
+// Liste pays exacte (145) — Pays de naissance / Lieu de naissance / Pays
+const PAYS_OPTIONS = ["FRANCE", "BELGIQUE", "PAYS BAS", "ALLEMAGNE", "ITALIE", "ROYAUME-UNI", "IRLANDE", "DANEMARK", "GRECE", "PORTUGAL", "ESPAGNE", "LUXEMBOURG", "NORVEGE", "SUEDE", "FINLANDE", "AUTRICHE", "SUISSE", "ANDORRE", "MALTE", "TURQUIE", "ESTONIE", "LETTONIE", "LITUANIE", "POLOGNE", "REPUBLIQUE TCHEQUE", "SLOVAQUIE", "HONGRIE", "ROUMANIE", "BULGARIE", "ALBANIE", "UKRAINE", "BIELORUSSIE", "MOLDAVIE", "RUSSIE", "GEORGIE", "ARMENIE", "AZERBAIDJAN", "KAZAKHSTAN", "OUZBEKISTAN", "KIRGHIZISTAN", "CROATIE", "BOSNIE HERZEGOVINE", "MACEDOINE (Territoire de l'Anc. Yougoslavie)", "PRINCIPAUTE DE MONACO", "MAROC", "ALGERIE", "TUNISIE", "LIBYE", "EGYPTE", "SOUDAN", "MAURITANIE", "MALI", "BURKINA FASO", "NIGER", "TCHAD", "CAP VERT", "SENEGAL", "GAMBIE", "GUINEE", "SIERRA LEONE", "LIBERIA", "COTE D IVOIRE", "GHANA", "TOGO", "BENIN", "NIGERIA", "CAMEROUN", "REPUBLIQUE CENTRAFRICAINE", "GABON", "CONGO", "REPUBLIQUE DEMOCRATIQUE", "RWANDA", "BURUNDI", "ANGOLA", "ETHIOPIE", "DJIBOUTI", "SOMALIE", "KENYA", "TANZANIE", "MOZAMBIQUE", "MADAGASCAR", "MAURICE", "COMORES", "MAYOTTE", "ZIMBABWE", "AFRIQUE DU SUD", "U S A", "CANADA", "GROENLAND", "MEXIQUE", "GUATEMALA", "HONDURAS", "CUBA", "HAITI", "REPUBLIQUE DOMINICAINE", "GUADELOUPE", "DOMINIQUE", "MARTINIQUE", "COLOMBIE", "VENEZUELA", "GUYANA", "EQUATEUR", "PEROU", "BRESIL", "CHILI", "URUGUAY", "ARGENTINE", "FALKLAND", "CHYPRE", "LIBAN", "SYRIE", "IRAQ", "IRAN", "ISRAEL", "ARABIE SAOUDITE", "BAHREIN", "EMIRATS ARABES UNIS", "AFGHANISTAN", "PAKISTAN", "INDE", "BANGLADESH", "SRI LANKA", "NEPAL", "MYANMAR (ex-BIRMANIE)", "THAILANDE", "LAOS", "VIET NAM", "CAMBODGE", "INDONESIE", "MALAISIE", "SINGAPOUR", "PHILIPPINES", "MONGOLIE", "CHINE", "COREE", "COREE SUD", "JAPON", "TAIWAN", "MACAO", "AUSTRALIE", "NOUVELLE CALEDONIE", "POLYNESIE FRANCAISE", "MONTENEGRO", "KOSOVO", "TERR. DES ETATS-UNIS D'AMERIQUE EN AMERIQUE"];
+const NATIONALITE_OPTIONS = ["Française", "Belge", "Suisse", "Canadienne", "Autre"];
+const FILIERE_OPTIONS = ["Filière DCG/DSCG", "Master CCA", "DSGC INTEC", "Ecole Supérieure de Commerce", "Master européen", "Ecole d'ingénieur", "Autre (Préciser)"];
+const DEMANDE_OPTIONS = ["Une première inscription au stage d'expertise comptable", "Une première inscription au stage d'expertise comptable avec une attestation de fin de stage CAC", "Une réinscription pour AFS caduque"];
+const LIEU_OPTIONS = ["En France métropolitaine & DROM", "En Collectivités d'Outre-Mer (COM) ou en Nouvelle Calédonie", "En Suisse ou à Monaco", "Dans un pays francophone d'Afrique", "Dans un état membre de l'Union Européenne", "Dans un Etat hors Union Européenne"];
+const STRUCTURE_OPTIONS = ["En cabinet d'Expertise-Comptable", "En association de gestion et de comptabilité (AGC)", "Dans une entité autre qu'un cabinet d'Expertise-Comptable (dans le cadre de l'année dérogatoire)"];
+const REDUCTION_OPTIONS = ["Oui, en raison de mon expérience en cabinet (3 ans au cours des 5 dernières années)", "Oui, en raison de mon expérience en qualité de salarié exerçant des fonctions de Direction ou de Contrôle (3 ans au cours des 5 dernières années)", "Non"];
+const CRO_OPTIONS = ["Île de France", "Auvergne-Rhône-Alpes", "Provence-Alpes-Côte d'Azur", "Occitanie", "Nouvelle-Aquitaine", "Grand Est", "Hauts-de-France", "Bretagne", "Pays de la Loire", "Normandie", "Bourgogne-Franche-Comté", "Centre-Val de Loire", "Corse"];
+const DSCG_UE = ["UE 1 : Gestion juridique, fiscale et sociale", "UE 2 : Finance", "UE 3 : Management et contrôle de gestion", "UE 4 : Comptabilité et audit", "UE 5 : Management des systèmes d'information", "UE 6 : Anglais des affaires", "UE 7 : Mémoire"];
+// Profils éligibles au temps réduit — art. 514 (4 catégories)
+const EMPLOI_OPTIONS = ["Professeur agrégé ou titulaire d'un CAPET (économie-gestion, sciences et techniques économiques)", "Professeur ou maître de conférences de l'enseignement supérieur (disciplines juridiques, économiques, gestion, mathématiques ou informatique)", "Enseignant titulaire d'un doctorat, DEA, DESS ou master enseignant dans ces disciplines", "Salarié d'entreprise — fonctions de direction ou de contrôle (au moins 3 ans d'ancienneté)"];
+// Titre du stage — art. 550
+const TITRE_OPTIONS = ["Je souhaite réaliser mon stage au titre de l'expert-comptable", "Je souhaite réaliser mon stage au titre de l'expert-comptable et du commissariat aux comptes"];
+const CAC_MAITRE_OPTIONS = ["Mon maître de stage est habilité au commissariat aux comptes", "Je désigne un co-maître de stage pour réaliser mon stage au titre du commissariat aux comptes"];
+// Lieux « État francophone » (arrêté 8 mars 2010) → ni temps réduit ni année dérogatoire (art. 559)
+const LIEUX_FRANCOPHONES = ["Dans un pays francophone d'Afrique", "En Suisse ou à Monaco"];
+const STRUCTURE_DEROGATOIRE = "Dans une entité autre qu'un cabinet d'Expertise-Comptable (dans le cadre de l'année dérogatoire)";
+// Structures qui déclenchent le bloc employeur + temps partiel + réduction
+const STRUCTURE_WITH_EMPLOYER = ["En cabinet d'Expertise-Comptable", "En association de gestion et de comptabilité (AGC)"];
+
+/* ============================================================
+   NAVBAR
+   ============================================================ */
+const Navbar = () => /*#__PURE__*/React.createElement("div", {
+  style: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 100
+  }
+}, /*#__PURE__*/React.createElement("div", {
+  style: {
+    height: '4px',
+    background: T.gradient
+  }
+}), /*#__PURE__*/React.createElement("div", {
+  style: {
+    height: '76px',
+    background: T.color.white,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '0 32px',
+    borderBottom: `1px solid ${T.color.border}`
+  }
+}, /*#__PURE__*/React.createElement("div", {
+  style: {
+    display: 'flex',
+    flexDirection: 'column'
+  }
+}, /*#__PURE__*/React.createElement("span", {
+  style: {
+    fontSize: '16px',
+    fontWeight: 700,
+    color: T.color.primaryRed,
+    lineHeight: '24px'
+  }
+}, "Expert-comptable Stagiaire"), /*#__PURE__*/React.createElement("span", {
+  style: {
+    fontSize: '18px',
+    fontWeight: 400,
+    color: T.color.primaryBlue,
+    lineHeight: '27px'
+  }
+}, "Inscription au stage")), /*#__PURE__*/React.createElement("button", {
+  style: {
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    fontSize: '14px',
+    color: T.color.textDark,
+    fontFamily: T.font
+  }
+}, "Abandonner", /*#__PURE__*/React.createElement("svg", {
+  width: "16",
+  height: "16",
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: T.color.primaryRed,
+  strokeWidth: "2.5"
+}, /*#__PURE__*/React.createElement("line", {
+  x1: "18",
+  y1: "6",
+  x2: "6",
+  y2: "18"
+}), /*#__PURE__*/React.createElement("line", {
+  x1: "6",
+  y1: "6",
+  x2: "18",
+  y2: "18"
+})))));
+
+/* ============================================================
+   STEPPER
+   ============================================================ */
+const Stepper = ({
+  currentStep
+}) => /*#__PURE__*/React.createElement("div", {
+  style: {
+    width: '340px',
+    minWidth: '340px',
+    padding: '40px 28px',
+    minHeight: '100%'
+  }
+}, STEPS.map((step, idx) => {
+  const stepNum = idx + 1;
+  const isActive = stepNum === currentStep;
+  const isCompleted = stepNum < currentStep;
+  const isLast = idx === STEPS.length - 1;
+  const circleBg = isCompleted ? T.color.primaryBlue : isActive ? T.color.primaryRed : T.color.upcoming;
+  return /*#__PURE__*/React.createElement("div", {
+    key: idx,
+    style: {
+      display: 'flex',
+      flexDirection: 'row'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      width: '28px',
+      flexShrink: 0
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: '28px',
+      height: '28px',
+      borderRadius: '50%',
+      background: circleBg,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexShrink: 0,
+      fontSize: '13px',
+      fontWeight: 600,
+      color: isCompleted || isActive ? T.color.white : T.color.gray
+    }
+  }, isCompleted ? /*#__PURE__*/React.createElement("svg", {
+    width: "14",
+    height: "14",
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: T.color.white,
+    strokeWidth: "3"
+  }, /*#__PURE__*/React.createElement("polyline", {
+    points: "20 6 9 17 4 12"
+  })) : stepNum), !isLast && /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minHeight: '26px',
+      width: 0,
+      borderLeft: `2px dotted ${isCompleted ? T.color.primaryBlue : T.color.borderMedium}`,
+      margin: '4px 0'
+    }
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      paddingLeft: '16px',
+      paddingBottom: isLast ? 0 : '20px',
+      paddingTop: '3px'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: '15px',
+      fontWeight: isActive || isCompleted ? 600 : 500,
+      color: isActive || isCompleted ? T.color.textDark : T.color.gray,
+      lineHeight: '20px'
+    }
+  }, step.title), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: '13px',
+      color: T.color.gray,
+      lineHeight: '18px',
+      marginTop: '2px'
+    }
+  }, step.subtitle)));
+}));
+
+/* ============================================================
+   BOTTOM BAR
+   ============================================================ */
+const OutlineSaveBtn = ({
+  onClick
+}) => /*#__PURE__*/React.createElement("button", {
+  onClick: onClick,
+  style: {
+    height: '44px',
+    padding: '0 20px',
+    border: `1px solid ${T.color.border}`,
+    borderRadius: T.radius,
+    background: T.color.white,
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: 500,
+    color: T.color.textDark,
+    fontFamily: T.font
+  }
+}, "Enregistrer pour plus tard");
+const DarkBtn = ({
+  onClick,
+  disabled,
+  children,
+  iconLeft,
+  iconRight
+}) => /*#__PURE__*/React.createElement("button", {
+  onClick: onClick,
+  disabled: disabled,
+  style: {
+    height: '44px',
+    padding: '0 24px',
+    border: 'none',
+    borderRadius: T.radius,
+    background: disabled ? '#D5DBE7' : T.color.primaryBlue,
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    fontSize: '14px',
+    fontWeight: 600,
+    color: disabled ? '#8A93A6' : T.color.white,
+    fontFamily: T.font,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px'
+  }
+}, iconLeft && /*#__PURE__*/React.createElement("svg", {
+  width: "16",
+  height: "16",
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: "2.5"
+}, /*#__PURE__*/React.createElement("polyline", {
+  points: "15 18 9 12 15 6"
+})), children, iconRight && /*#__PURE__*/React.createElement("svg", {
+  width: "16",
+  height: "16",
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: "2.5"
+}, /*#__PURE__*/React.createElement("polyline", {
+  points: "9 18 15 12 9 6"
+})));
+const BottomBar = ({
+  step,
+  canNext,
+  onNext,
+  onPrev,
+  onSave,
+  nextLabel
+}) => /*#__PURE__*/React.createElement("div", {
+  style: {
+    position: 'fixed',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '80px',
+    background: T.color.white,
+    boxShadow: T.shadow.bottomBar,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '16px',
+    padding: '0 32px',
+    zIndex: 100
+  }
+}, step > 1 && /*#__PURE__*/React.createElement(OutlineSaveBtn, {
+  onClick: onSave
+}), step > 1 && /*#__PURE__*/React.createElement(DarkBtn, {
+  onClick: onPrev,
+  iconLeft: true
+}, "Précédent"), /*#__PURE__*/React.createElement(DarkBtn, {
+  onClick: onNext,
+  disabled: !canNext,
+  iconRight: step !== 1
+}, nextLabel));
+
+/* ============================================================
+   PRIMITIVES
+   ============================================================ */
+const CornerAccent = () => /*#__PURE__*/React.createElement("div", {
+  style: {
+    position: 'absolute',
+    top: '20px',
+    right: '24px'
+  }
+}, /*#__PURE__*/React.createElement("svg", {
+  width: "22",
+  height: "22",
+  viewBox: "0 0 22 22",
+  fill: "none"
+}, /*#__PURE__*/React.createElement("path", {
+  d: "M2 2 H20 V20 Z",
+  fill: T.color.primaryRed
+})));
+const Card = ({
+  title,
+  children
+}) => /*#__PURE__*/React.createElement("div", {
+  style: {
+    position: 'relative',
+    background: T.color.white,
+    border: `1px solid ${T.color.border}`,
+    borderRadius: T.radius,
+    boxShadow: T.shadow.card,
+    marginBottom: '32px',
+    overflow: 'visible'
+  }
+}, /*#__PURE__*/React.createElement(CornerAccent, null), title && /*#__PURE__*/React.createElement("div", {
+  style: {
+    padding: '22px 28px',
+    borderBottom: `1px solid ${T.color.border}`
+  }
+}, /*#__PURE__*/React.createElement("h3", {
+  style: {
+    fontSize: '17px',
+    fontWeight: 600,
+    color: T.color.textDark,
+    margin: 0,
+    lineHeight: '24px'
+  }
+}, title)), /*#__PURE__*/React.createElement("div", {
+  style: {
+    padding: '28px'
+  }
+}, children));
+const Label = ({
+  required,
+  children
+}) => /*#__PURE__*/React.createElement("label", {
+  style: {
+    display: 'block',
+    fontSize: '14px',
+    fontWeight: 500,
+    marginBottom: '8px',
+    color: T.color.textDark
+  }
+}, required && /*#__PURE__*/React.createElement("span", {
+  style: {
+    color: T.color.primaryRed,
+    marginRight: '3px'
+  }
+}, "*"), children);
+const Field = ({
+  label,
+  required,
+  value,
+  onChange,
+  placeholder,
+  type = 'text',
+  maxLength
+}) => {
+  const [focused, setFocused] = useState(false);
+  return /*#__PURE__*/React.createElement("div", null, label && /*#__PURE__*/React.createElement(Label, {
+    required: required
+  }, label), /*#__PURE__*/React.createElement("input", {
+    type: type,
+    placeholder: placeholder || '',
+    value: value || '',
+    maxLength: maxLength,
+    onChange: e => onChange && onChange(e.target.value),
+    onFocus: () => setFocused(true),
+    onBlur: () => setFocused(false),
+    style: {
+      width: '100%',
+      height: '46px',
+      border: `1px solid ${focused ? T.color.primaryBlue : T.color.border}`,
+      borderRadius: T.radius,
+      padding: '0 14px',
+      fontSize: '14px',
+      color: T.color.textDark,
+      background: T.color.white,
+      outline: 'none',
+      transition: 'border-color 0.15s'
+    }
+  }));
+};
+const Select = ({
+  label,
+  required,
+  value,
+  onChange,
+  options,
+  placeholder
+}) => {
+  const [focused, setFocused] = useState(false);
+  return /*#__PURE__*/React.createElement("div", null, label && /*#__PURE__*/React.createElement(Label, {
+    required: required
+  }, label), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'relative'
+    }
+  }, /*#__PURE__*/React.createElement("select", {
+    value: value || '',
+    onChange: e => onChange && onChange(e.target.value),
+    onFocus: () => setFocused(true),
+    onBlur: () => setFocused(false),
+    style: {
+      width: '100%',
+      height: '46px',
+      border: `1px solid ${focused ? T.color.primaryBlue : T.color.border}`,
+      borderRadius: T.radius,
+      padding: '0 40px 0 14px',
+      fontSize: '14px',
+      color: value ? T.color.textDark : T.color.grayLight,
+      background: T.color.white,
+      appearance: 'none',
+      outline: 'none',
+      transition: 'border-color 0.15s'
+    }
+  }, placeholder && /*#__PURE__*/React.createElement("option", {
+    value: ""
+  }, placeholder), options.map((opt, i) => /*#__PURE__*/React.createElement("option", {
+    key: i,
+    value: opt
+  }, opt))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'absolute',
+      right: '14px',
+      top: '50%',
+      transform: 'translateY(-50%)',
+      pointerEvents: 'none'
+    }
+  }, /*#__PURE__*/React.createElement("svg", {
+    width: "16",
+    height: "16",
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: T.color.gray,
+    strokeWidth: "2.5"
+  }, /*#__PURE__*/React.createElement("polyline", {
+    points: "6 9 12 15 18 9"
+  })))));
+};
+const Radio = ({
+  selected,
+  label,
+  onClick
+}) => /*#__PURE__*/React.createElement("div", {
+  onClick: onClick,
+  style: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    cursor: 'pointer'
+  }
+}, /*#__PURE__*/React.createElement("div", {
+  style: {
+    width: '20px',
+    height: '20px',
+    borderRadius: '50%',
+    border: `2px solid ${selected ? T.color.primaryBlue : T.color.borderMedium}`,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0
+  }
+}, selected && /*#__PURE__*/React.createElement("div", {
+  style: {
+    width: '10px',
+    height: '10px',
+    borderRadius: '50%',
+    background: T.color.primaryBlue
+  }
+})), /*#__PURE__*/React.createElement("span", {
+  style: {
+    fontSize: '14px',
+    color: T.color.textDark
+  }
+}, label));
+const RadioGroup = ({
+  options,
+  value,
+  onChange,
+  gap = '40px'
+}) => /*#__PURE__*/React.createElement("div", {
+  style: {
+    display: 'flex',
+    gap,
+    flexWrap: 'wrap'
+  }
+}, options.map(opt => /*#__PURE__*/React.createElement(Radio, {
+  key: opt,
+  label: opt,
+  selected: value === opt,
+  onClick: () => onChange(opt)
+})));
+const Checkbox = ({
+  checked,
+  onClick,
+  children
+}) => /*#__PURE__*/React.createElement("div", {
+  onClick: onClick,
+  style: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '12px',
+    cursor: 'pointer'
+  }
+}, /*#__PURE__*/React.createElement("div", {
+  style: {
+    width: '20px',
+    height: '20px',
+    borderRadius: '4px',
+    border: `2px solid ${checked ? T.color.primaryBlue : T.color.borderMedium}`,
+    background: checked ? T.color.primaryBlue : T.color.white,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+    marginTop: '1px'
+  }
+}, checked && /*#__PURE__*/React.createElement("svg", {
+  width: "12",
+  height: "12",
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: T.color.white,
+  strokeWidth: "3"
+}, /*#__PURE__*/React.createElement("polyline", {
+  points: "20 6 9 17 4 12"
+}))), /*#__PURE__*/React.createElement("span", {
+  style: {
+    fontSize: '14px',
+    color: T.color.textDark,
+    lineHeight: '21px'
+  }
+}, children));
+const InfoIcon = () => /*#__PURE__*/React.createElement("svg", {
+  width: "15",
+  height: "15",
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: T.color.gray,
+  strokeWidth: "2",
+  style: {
+    marginLeft: '5px',
+    verticalAlign: 'middle'
+  }
+}, /*#__PURE__*/React.createElement("circle", {
+  cx: "12",
+  cy: "12",
+  r: "10"
+}), /*#__PURE__*/React.createElement("line", {
+  x1: "12",
+  y1: "16",
+  x2: "12",
+  y2: "12"
+}), /*#__PURE__*/React.createElement("line", {
+  x1: "12",
+  y1: "8",
+  x2: "12.01",
+  y2: "8"
+}));
+// Case à cocher en ligne (épreuves UE)
+const CheckLine = ({
+  checked,
+  onClick,
+  children
+}) => /*#__PURE__*/React.createElement("div", {
+  onClick: onClick,
+  style: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    cursor: 'pointer',
+    padding: '4px 0'
+  }
+}, /*#__PURE__*/React.createElement("div", {
+  style: {
+    width: '18px',
+    height: '18px',
+    borderRadius: '4px',
+    border: `2px solid ${checked ? T.color.primaryBlue : T.color.borderMedium}`,
+    background: checked ? T.color.primaryBlue : T.color.white,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0
+  }
+}, checked && /*#__PURE__*/React.createElement("svg", {
+  width: "11",
+  height: "11",
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: T.color.white,
+  strokeWidth: "3"
+}, /*#__PURE__*/React.createElement("polyline", {
+  points: "20 6 9 17 4 12"
+}))), /*#__PURE__*/React.createElement("span", {
+  style: {
+    fontSize: '14px',
+    color: T.color.textDark
+  }
+}, children));
+// Encart réglementaire (info / avertissement)
+const Note = ({
+  tone,
+  children
+}) => {
+  const c = tone === 'warn' ? {
+    bg: '#FFF7ED',
+    bd: '#FED7AA',
+    fg: '#9A3412'
+  } : {
+    bg: T.color.infoBg,
+    bd: T.color.infoBorder,
+    fg: T.color.infoText
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: c.bg,
+      border: `1px solid ${c.bd}`,
+      borderRadius: T.radius,
+      padding: '12px 14px',
+      fontSize: '13px',
+      color: c.fg,
+      lineHeight: '19px'
+    }
+  }, children);
+};
+const Hint = ({
+  children
+}) => /*#__PURE__*/React.createElement("p", {
+  style: {
+    fontSize: '12.5px',
+    color: T.color.gray,
+    margin: '6px 0 0 0',
+    lineHeight: '18px'
+  }
+}, children);
+// Zone de dépôt de fichier (Charger des fichiers ou déposer)
+const FileDrop = ({
+  label,
+  required
+}) => /*#__PURE__*/React.createElement("div", null, label && /*#__PURE__*/React.createElement(Label, {
+  required: required
+}, label), /*#__PURE__*/React.createElement("div", {
+  style: {
+    border: `1px dashed ${T.color.borderMedium}`,
+    borderRadius: T.radius,
+    background: '#F9FBFE',
+    padding: '22px',
+    textAlign: 'center'
+  }
+}, /*#__PURE__*/React.createElement("svg", {
+  width: "22",
+  height: "22",
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: T.color.gray,
+  strokeWidth: "2",
+  style: {
+    margin: '0 auto 6px'
+  }
+}, /*#__PURE__*/React.createElement("path", {
+  d: "M12 3v12"
+}), /*#__PURE__*/React.createElement("polyline", {
+  points: "7 10 12 15 17 10"
+}), /*#__PURE__*/React.createElement("line", {
+  x1: "5",
+  y1: "20",
+  x2: "19",
+  y2: "20"
+})), /*#__PURE__*/React.createElement("div", {
+  style: {
+    fontSize: '14px',
+    color: T.color.textDark
+  }
+}, /*#__PURE__*/React.createElement("span", {
+  style: {
+    color: T.color.primaryBlue,
+    textDecoration: 'underline',
+    cursor: 'pointer',
+    fontWeight: 500
+  }
+}, "Charger des fichiers"), " ou déposer des fichiers")));
+const CalendarIcon = () => /*#__PURE__*/React.createElement("svg", {
+  width: "18",
+  height: "18",
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: T.color.gray,
+  strokeWidth: "2",
+  style: {
+    flexShrink: 0
+  }
+}, /*#__PURE__*/React.createElement("rect", {
+  x: "3",
+  y: "4",
+  width: "18",
+  height: "18",
+  rx: "2"
+}), /*#__PURE__*/React.createElement("line", {
+  x1: "16",
+  y1: "2",
+  x2: "16",
+  y2: "6"
+}), /*#__PURE__*/React.createElement("line", {
+  x1: "8",
+  y1: "2",
+  x2: "8",
+  y2: "6"
+}), /*#__PURE__*/React.createElement("line", {
+  x1: "3",
+  y1: "10",
+  x2: "21",
+  y2: "10"
+}));
+
+/* ── DATE PICKER (calendrier fonctionnel, porté de IP-PM) ── */
+const DatePicker = ({
+  label,
+  required,
+  value,
+  onChange,
+  placeholder = 'JJ/MM/AAAA'
+}) => {
+  const today = new Date();
+  const [open, setOpen] = useState(false);
+  const [yearOpen, setYearOpen] = useState(false);
+  const [viewYear, setViewYear] = useState(1995);
+  const [viewMonth, setViewMonth] = useState(0);
+  const JOURS = ['lu', 'ma', 'me', 'je', 've', 'sa', 'di'];
+  const MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const firstRaw = new Date(viewYear, viewMonth, 1).getDay();
+  const startDay = firstRaw === 0 ? 6 : firstRaw - 1;
+  const prevMonth = () => {
+    if (viewMonth === 0) {
+      setViewMonth(11);
+      setViewYear(viewYear - 1);
+    } else setViewMonth(viewMonth - 1);
+  };
+  const nextMonth = () => {
+    if (viewMonth === 11) {
+      setViewMonth(0);
+      setViewYear(viewYear + 1);
+    } else setViewMonth(viewMonth + 1);
+  };
+  const selectDay = d => {
+    onChange(`${String(d).padStart(2, '0')}/${String(viewMonth + 1).padStart(2, '0')}/${viewYear}`);
+    setOpen(false);
+  };
+  const parts = (value || '').split('/');
+  const isSel = d => parts.length === 3 && +parts[0] === d && +parts[1] === viewMonth + 1 && +parts[2] === viewYear;
+  const isToday = d => d === today.getDate() && viewMonth === today.getMonth() && viewYear === today.getFullYear();
+  const cells = [];
+  const prevDays = new Date(viewYear, viewMonth, 0).getDate();
+  for (let i = 0; i < startDay; i++) cells.push({
+    day: prevDays - startDay + 1 + i,
+    cur: false
+  });
+  for (let d = 1; d <= daysInMonth; d++) cells.push({
+    day: d,
+    cur: true
+  });
+  let t = 1;
+  while (cells.length < 42) cells.push({
+    day: t++,
+    cur: false
+  });
+  const years = Array.from({
+    length: 91
+  }, (_, i) => today.getFullYear() - 90 + i);
+  return /*#__PURE__*/React.createElement("div", null, label && /*#__PURE__*/React.createElement(Label, {
+    required: required
+  }, label), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'relative'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    onClick: () => setOpen(!open),
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      height: '46px',
+      border: `1px solid ${open ? T.color.primaryBlue : T.color.border}`,
+      borderRadius: T.radius,
+      padding: '0 14px',
+      background: T.color.white,
+      cursor: 'pointer'
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: '14px',
+      color: value ? T.color.textDark : T.color.grayLight
+    }
+  }, value || placeholder), /*#__PURE__*/React.createElement(CalendarIcon, null)), open && /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'absolute',
+      top: '52px',
+      left: 0,
+      zIndex: 60,
+      background: T.color.white,
+      border: `1px solid ${T.color.border}`,
+      borderRadius: T.radius,
+      boxShadow: T.shadow.card,
+      padding: '16px',
+      width: '300px'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: '12px'
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      setYearOpen(false);
+      prevMonth();
+    },
+    style: {
+      background: 'none',
+      border: 'none',
+      cursor: 'pointer',
+      fontSize: '16px',
+      color: T.color.gray,
+      padding: '4px 8px',
+      fontFamily: T.font
+    }
+  }, "‹"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '6px'
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: '14px',
+      fontWeight: 600,
+      color: T.color.textDark
+    }
+  }, MOIS[viewMonth]), /*#__PURE__*/React.createElement("span", {
+    onClick: () => setYearOpen(!yearOpen),
+    style: {
+      fontSize: '14px',
+      fontWeight: 600,
+      color: T.color.primaryBlue,
+      cursor: 'pointer',
+      textDecoration: 'underline',
+      textUnderlineOffset: '2px'
+    }
+  }, viewYear)), /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      setYearOpen(false);
+      nextMonth();
+    },
+    style: {
+      background: 'none',
+      border: 'none',
+      cursor: 'pointer',
+      fontSize: '16px',
+      color: T.color.gray,
+      padding: '4px 8px',
+      fontFamily: T.font
+    }
+  }, "›")), yearOpen ? /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(4, 1fr)',
+      gap: '6px',
+      maxHeight: '200px',
+      overflowY: 'auto',
+      padding: '4px'
+    }
+  }, years.map(y => /*#__PURE__*/React.createElement("div", {
+    key: y,
+    onClick: () => {
+      setViewYear(y);
+      setYearOpen(false);
+    },
+    style: {
+      textAlign: 'center',
+      padding: '8px 4px',
+      fontSize: '13px',
+      cursor: 'pointer',
+      borderRadius: T.radius,
+      fontWeight: y === viewYear ? 700 : 400,
+      color: y === viewYear ? T.color.white : T.color.textDark,
+      background: y === viewYear ? T.color.primaryBlue : 'transparent'
+    }
+  }, y))) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(7, 1fr)',
+      gap: '2px',
+      marginBottom: '4px'
+    }
+  }, JOURS.map(j => /*#__PURE__*/React.createElement("div", {
+    key: j,
+    style: {
+      textAlign: 'center',
+      fontSize: '12px',
+      fontWeight: 500,
+      color: T.color.gray,
+      padding: '4px 0'
+    }
+  }, j))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(7, 1fr)',
+      gap: '2px'
+    }
+  }, cells.map((c, idx) => {
+    const sel = c.cur && isSel(c.day);
+    const tod = c.cur && isToday(c.day);
+    return /*#__PURE__*/React.createElement("div", {
+      key: idx,
+      onClick: c.cur ? () => selectDay(c.day) : undefined,
+      style: {
+        textAlign: 'center',
+        fontSize: '13px',
+        padding: '7px 0',
+        borderRadius: '6px',
+        cursor: c.cur ? 'pointer' : 'default',
+        color: !c.cur ? T.color.borderMedium : sel ? T.color.white : T.color.textDark,
+        background: sel ? T.color.primaryBlue : 'transparent',
+        fontWeight: sel || tod ? 600 : 400,
+        border: tod && !sel ? `1px solid ${T.color.primaryRed}` : '1px solid transparent'
+      }
+    }, c.day);
+  }))))));
+};
+const StepHeader = ({
+  title,
+  subtitle,
+  showRequired
+}) => /*#__PURE__*/React.createElement("div", {
+  style: {
+    marginBottom: '28px',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start'
+  }
+}, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h1", {
+  style: {
+    fontSize: '28px',
+    fontWeight: 700,
+    color: T.color.primaryBlue,
+    margin: '0 0 8px 0',
+    lineHeight: '34px'
+  }
+}, title), /*#__PURE__*/React.createElement("p", {
+  style: {
+    fontSize: '15px',
+    color: T.color.gray,
+    margin: 0
+  }
+}, subtitle)), showRequired && /*#__PURE__*/React.createElement("p", {
+  style: {
+    fontSize: '13px',
+    color: T.color.gray,
+    margin: '4px 0 0 0',
+    whiteSpace: 'nowrap'
+  }
+}, /*#__PURE__*/React.createElement("span", {
+  style: {
+    color: T.color.primaryRed
+  }
+}, "*"), "Champs obligatoires"));
+const Row = ({
+  children,
+  cols = '1fr 1fr'
+}) => /*#__PURE__*/React.createElement("div", {
+  style: {
+    display: 'grid',
+    gridTemplateColumns: cols,
+    gap: '20px'
+  }
+}, children);
+const SubLabel = ({
+  children
+}) => /*#__PURE__*/React.createElement("div", {
+  style: {
+    fontSize: '15px',
+    fontWeight: 600,
+    color: T.color.textDark,
+    margin: '4px 0 16px 0'
+  }
+}, children);
+const Divider = () => /*#__PURE__*/React.createElement("div", {
+  style: {
+    height: '1px',
+    background: T.color.border,
+    margin: '24px 0'
+  }
+});
+
+/* ============================================================
+   STEP 1
+   ============================================================ */
+const P = ({
+  bold,
+  children
+}) => /*#__PURE__*/React.createElement("p", {
+  style: {
+    fontSize: '15px',
+    lineHeight: '25px',
+    color: bold ? T.color.textDark : '#3B4658',
+    fontWeight: bold ? 600 : 400,
+    margin: '0 0 18px 0'
+  }
+}, children);
+const Step1 = ({
+  data,
+  update
+}) => /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(StepHeader, {
+  title: "Informations générales",
+  subtitle: "Informations importantes concernant l'inscription au stage d'expertise comptable"
+}), /*#__PURE__*/React.createElement(Card, null, /*#__PURE__*/React.createElement(P, null, "Vous êtes sur le point de vous inscrire au stage d'expertise comptable."), /*#__PURE__*/React.createElement(P, {
+  bold: true
+}, "Le stage d'expertise comptable en droit commun est d'une durée de trois ans. Il s'inscrit dans le cursus unique d'expertise comptable (DEC). Il permet d'une part d'acquérir une expérience professionnelle solide et, d'autre part, d'apprendre les règles de déontologie qui gouvernent l'exercice de la profession."), /*#__PURE__*/React.createElement(P, null, "Pendant le stage, vous êtes soumis à une obligation de formation dont les modalités sont fixées par les textes en vigueur en matière d'expertise comptable et de responsabilité professionnelle. Les articles de formation qui s'y rattachent précisent les conditions d'application de ces obligations."), /*#__PURE__*/React.createElement(P, null, "Le stage s'effectue sous la tutelle d'un maître de stage inscrit à l'Ordre. Le maître de stage exerce ses fonctions dans le respect des règles établies par le Conseil régional, notamment lors de l'établissement des attestations semestrielles et de fin de stage."), /*#__PURE__*/React.createElement(P, null, "L'attestation de fin de stage est établie par la commission compétente, dans les conditions prévues à l'article 54 du décret relatif à l'exercice de la profession d'expert-comptable."), /*#__PURE__*/React.createElement(P, {
+  bold: true
+}, "Les conditions d'exercice décrites ci-dessus s'appliquent à l'ensemble des stagiaires inscrits, quelle que soit leur situation, dans le respect des règles fixées par le Conseil régional de l'Ordre."), /*#__PURE__*/React.createElement(P, null, "Pour toute question relative aux inscriptions particulières au stage d'expertise comptable, vous pouvez vous adresser à votre Conseil régional de l'Ordre."), /*#__PURE__*/React.createElement("div", {
+  style: {
+    marginTop: '10px'
+  }
+}, /*#__PURE__*/React.createElement(Checkbox, {
+  checked: !!data.confirm,
+  onClick: () => update('confirm', !data.confirm)
+}, "Je confirme avoir bien pris connaissance des informations ci-dessus"))));
+
+/* ============================================================
+   STEP 2
+   ============================================================ */
+const Step2 = ({
+  data,
+  update
+}) => /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(StepHeader, {
+  title: "Renseignements personnels",
+  subtitle: "Informations d'identité et de contact",
+  showRequired: true
+}), /*#__PURE__*/React.createElement(Card, {
+  title: "Etat civil"
+}, /*#__PURE__*/React.createElement("div", {
+  style: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '22px'
+  }
+}, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Label, {
+  required: true
+}, "Civilité"), /*#__PURE__*/React.createElement(RadioGroup, {
+  options: ["Monsieur", "Madame"],
+  value: data.civilite,
+  onChange: v => update('civilite', v)
+})), /*#__PURE__*/React.createElement(Row, null, /*#__PURE__*/React.createElement(Field, {
+  label: /*#__PURE__*/React.createElement("span", null, "Nom de famille", /*#__PURE__*/React.createElement(InfoIcon, null)),
+  required: true,
+  value: data.nom,
+  onChange: v => update('nom', v),
+  placeholder: "NOM DE FAMILLE"
+}), /*#__PURE__*/React.createElement(Field, {
+  label: /*#__PURE__*/React.createElement("span", null, "Nom d'usage", /*#__PURE__*/React.createElement(InfoIcon, null)),
+  value: data.nomUsage,
+  onChange: v => update('nomUsage', v),
+  placeholder: "Nom d'usage si différent"
+})), /*#__PURE__*/React.createElement(Row, null, /*#__PURE__*/React.createElement(Field, {
+  label: "Prénom",
+  required: true,
+  value: data.prenom,
+  onChange: v => update('prenom', v),
+  placeholder: "Premier prénom"
+}), /*#__PURE__*/React.createElement(Field, {
+  label: "Prénom 2",
+  value: data.prenom2,
+  onChange: v => update('prenom2', v),
+  placeholder: "Deuxième prénom"
+})), /*#__PURE__*/React.createElement(Row, null, /*#__PURE__*/React.createElement(Field, {
+  label: "Prénom 3",
+  value: data.prenom3,
+  onChange: v => update('prenom3', v),
+  placeholder: "Troisième prénom"
+}), /*#__PURE__*/React.createElement(Field, {
+  label: "Prénom 4",
+  value: data.prenom4,
+  onChange: v => update('prenom4', v),
+  placeholder: "Quatrième prénom"
+})), /*#__PURE__*/React.createElement(Row, null, /*#__PURE__*/React.createElement(DatePicker, {
+  label: "Date de naissance",
+  required: true,
+  value: data.dateNaissance,
+  onChange: v => update('dateNaissance', v),
+  placeholder: "JJ/MM/AAAA"
+}), /*#__PURE__*/React.createElement(Select, {
+  label: "Pays de naissance",
+  required: true,
+  value: data.paysNaissance,
+  onChange: v => update('paysNaissance', v),
+  options: PAYS_OPTIONS,
+  placeholder: "Sélectionnez"
+})), /*#__PURE__*/React.createElement(Row, null, /*#__PURE__*/React.createElement(Select, {
+  label: "Nationalité",
+  required: true,
+  value: data.nationalite,
+  onChange: v => update('nationalite', v),
+  options: NATIONALITE_OPTIONS,
+  placeholder: "Sélectionnez"
+}), /*#__PURE__*/React.createElement(Select, {
+  label: /*#__PURE__*/React.createElement("span", null, "Lieu de naissance", /*#__PURE__*/React.createElement(InfoIcon, null)),
+  required: true,
+  value: data.lieuNaissance,
+  onChange: v => update('lieuNaissance', v),
+  options: PAYS_OPTIONS,
+  placeholder: "Sélectionnez"
+})))), /*#__PURE__*/React.createElement(Card, {
+  title: "Coordonnées personnelles"
+}, /*#__PURE__*/React.createElement("div", {
+  style: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '22px'
+  }
+}, /*#__PURE__*/React.createElement(Field, {
+  label: "Adresse",
+  required: true,
+  value: data.adresse,
+  onChange: v => update('adresse', v),
+  placeholder: "1 Rue de Rivoli, 75004 Paris, France"
+}), /*#__PURE__*/React.createElement(Field, {
+  label: "Rue",
+  required: true,
+  value: data.rue,
+  onChange: v => update('rue', v),
+  placeholder: "Numéro et nom de rue"
+}), /*#__PURE__*/React.createElement(Field, {
+  label: "Complément d'adresse",
+  value: data.complement,
+  onChange: v => update('complement', v),
+  placeholder: "Bâtiment, étage, etc."
+}), /*#__PURE__*/React.createElement(Row, {
+  cols: "1fr 1fr 1fr"
+}, /*#__PURE__*/React.createElement(Field, {
+  label: "Code postal",
+  required: true,
+  value: data.codePostal,
+  onChange: v => update('codePostal', v),
+  placeholder: "Code postal"
+}), /*#__PURE__*/React.createElement(Field, {
+  label: "Ville",
+  required: true,
+  value: data.ville,
+  onChange: v => update('ville', v),
+  placeholder: "Ville"
+}), /*#__PURE__*/React.createElement(Field, {
+  label: "Pays",
+  required: true,
+  value: data.pays,
+  onChange: v => update('pays', v),
+  placeholder: "France"
+})), /*#__PURE__*/React.createElement(Field, {
+  label: "Adresse email personnelle",
+  required: true,
+  type: "email",
+  value: data.email,
+  onChange: v => update('email', v),
+  placeholder: "exemple@email.fr"
+}), /*#__PURE__*/React.createElement(Row, null, /*#__PURE__*/React.createElement(Field, {
+  label: "Téléphone mobile",
+  required: true,
+  value: data.mobile,
+  onChange: v => update('mobile', v),
+  placeholder: "06 XX XX XX XX"
+}), /*#__PURE__*/React.createElement(Field, {
+  label: "Téléphone fixe",
+  value: data.fixe,
+  onChange: v => update('fixe', v),
+  placeholder: "01 XX XX XX XX"
+})), /*#__PURE__*/React.createElement("p", {
+  style: {
+    fontSize: '13px',
+    color: T.color.gray,
+    margin: 0
+  }
+}, "Vous pouvez exercer l'ensemble des droits qui vous sont octroyés par le RGPD ", /*#__PURE__*/React.createElement("a", {
+  href: "#",
+  style: {
+    color: T.color.primaryRed,
+    textDecoration: 'underline'
+  }
+}, "ici"), "."), /*#__PURE__*/React.createElement(Checkbox, {
+  checked: !!data.engagement,
+  onClick: () => update('engagement', !data.engagement)
+}, /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("span", {
+  style: {
+    color: T.color.primaryRed,
+    marginRight: '3px'
+  }
+}, "*"), "Je m'engage à communiquer au Conseil régional de l'Ordre, dans un délai maximum de deux mois, tout changement intervenu dans mon adresse ou ma situation professionnelle, et à joindre les justificatifs correspondants.")))));
+
+/* ============================================================
+   STEP 3
+   ============================================================ */
+const Step3 = ({
+  data,
+  update
+}) => {
+  const ue = data.ue || {};
+  const nbChecked = DSCG_UE.filter(u => ue[u]).length;
+  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(StepHeader, {
+    title: "Diplômes",
+    subtitle: "Formation et qualifications",
+    showRequired: true
+  }), /*#__PURE__*/React.createElement(Card, {
+    title: "Filière & DSCG"
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontSize: '14px',
+      color: T.color.textDark,
+      margin: '0 0 20px 0'
+    }
+  }, "Veuillez indiquer tous les diplômes obtenus dans votre cursus :"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '22px'
+    }
+  }, /*#__PURE__*/React.createElement(Select, {
+    label: "Quelle filière avez-vous suivi ?",
+    required: true,
+    value: data.filiere,
+    onChange: v => update('filiere', v),
+    options: FILIERE_OPTIONS,
+    placeholder: "Sélectionnez une filière"
+  }), data.filiere === 'Autre (Préciser)' && /*#__PURE__*/React.createElement(Field, {
+    label: "Précisez votre filière",
+    required: true,
+    value: data.filierePrecision,
+    onChange: v => update('filierePrecision', v),
+    placeholder: "Précisez votre filière"
+  })), /*#__PURE__*/React.createElement(Divider, null), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '22px'
+    }
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Label, {
+    required: true
+  }, "Avez-vous obtenu un DSCG complet ?"), /*#__PURE__*/React.createElement(RadioGroup, {
+    options: ["Oui", "Non"],
+    value: data.dscg,
+    onChange: v => update('dscg', v)
+  })), data.dscg === 'Oui' && /*#__PURE__*/React.createElement(Field, {
+    label: "Session",
+    required: true,
+    value: data.session,
+    onChange: v => update('session', v),
+    placeholder: "AAAA",
+    maxLength: 4
+  }), data.dscg === 'Non' && /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '10px'
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontSize: '14px',
+      color: T.color.textDark,
+      margin: 0,
+      lineHeight: '21px'
+    }
+  }, "Si vous avez validé au moins 4 des 7 épreuves obligatoires du DSCG par examen, par dispense ou par VAE, veuillez cocher les cases correspondantes ci-dessous :"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '2px',
+      marginTop: '4px'
+    }
+  }, DSCG_UE.map(u => /*#__PURE__*/React.createElement(CheckLine, {
+    key: u,
+    checked: !!ue[u],
+    onClick: () => update('ue', {
+      ...ue,
+      [u]: !ue[u]
+    })
+  }, u))), nbChecked > 0 && nbChecked < 4 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: '10px',
+      background: T.color.redBg,
+      border: `1px solid #F5C6C6`,
+      borderRadius: T.radius,
+      padding: '12px 14px',
+      fontSize: '13px',
+      color: T.color.red800,
+      lineHeight: '19px'
+    }
+  }, "Vous devez avoir validé au moins 4 des 7 épreuves du DSCG pour compléter votre inscription au stage d’expertise-comptable.")))));
+};
+
+/* ============================================================
+   STEP 4
+   ============================================================ */
+const Step4 = ({
+  data,
+  update,
+  all
+}) => {
+  const dscgIncomplet = all && all.s3 && all.s3.dscg === 'Non'; // Gate 2 (art. 505)
+  const isFranco = LIEUX_FRANCOPHONES.includes(data.lieu); // Gate 1 (art. 559)
+  const structOptions = isFranco ? STRUCTURE_OPTIONS.filter(s => s !== STRUCTURE_DEROGATOIRE) : STRUCTURE_OPTIONS;
+  const showEmployer = STRUCTURE_WITH_EMPLOYER.includes(data.structure);
+  const reductionAsked = data.reduction && data.reduction.startsWith('Oui');
+  const isAGC = data.structure === "En association de gestion et de comptabilité (AGC)";
+  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(StepHeader, {
+    title: "Renseignements sur le stage",
+    subtitle: "Type de stage, lieu, structure employeur...",
+    showRequired: true
+  }), /*#__PURE__*/React.createElement(Card, {
+    title: "Questions sur votre stage"
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '22px'
+    }
+  }, /*#__PURE__*/React.createElement(Select, {
+    label: "Est-ce que votre demande d'inscription concerne :",
+    required: true,
+    value: data.demande,
+    onChange: v => update('demande', v),
+    options: DEMANDE_OPTIONS,
+    placeholder: "Sélectionnez une option"
+  }), data.demande && /*#__PURE__*/React.createElement(Select, {
+    label: "Où allez-vous effectuer votre stage ?",
+    required: true,
+    value: data.lieu,
+    onChange: v => update('lieu', v),
+    options: LIEU_OPTIONS,
+    placeholder: "Sélectionnez votre lieu de stage"
+  }), data.demande && data.lieu && /*#__PURE__*/React.createElement(Select, {
+    label: "Auprès de quel type de structure effectuez-vous votre stage ?",
+    required: true,
+    value: data.structure,
+    onChange: v => update('structure', v),
+    options: structOptions,
+    placeholder: "Sélectionnez le type de structure"
+  }), data.demande && data.lieu && isFranco && /*#__PURE__*/React.createElement(Note, null, "Stage en État francophone : le stage à temps réduit et l'année dérogatoire en entreprise ne sont pas admis (art. 559). Le suivi est assuré par le Conseil national via le CROEC Paris Île-de-France."), data.demande && data.lieu && showEmployer && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: '8px',
+      paddingTop: '24px',
+      borderTop: `1px solid ${T.color.border}`
+    }
+  }, /*#__PURE__*/React.createElement(SubLabel, null, "Saisissez les informations relatives à votre employeur"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '20px'
+    }
+  }, /*#__PURE__*/React.createElement(Field, {
+    label: "SIRET ou Dénomination sociale de l'entité juridique",
+    required: true,
+    value: data.siret,
+    onChange: v => update('siret', v),
+    placeholder: "Cercle des Comptables - 00188282191919 - 06600 - Antibes"
+  }), /*#__PURE__*/React.createElement(Field, {
+    label: "Adresse du siège social",
+    value: data.adresseSiege,
+    onChange: v => update('adresseSiege', v),
+    placeholder: "1 Avenue de la Libération"
+  }), /*#__PURE__*/React.createElement(Field, {
+    label: "Complément d'adresse",
+    value: data.complementSiege,
+    onChange: v => update('complementSiege', v),
+    placeholder: "Bâtiment, étage, etc."
+  }), /*#__PURE__*/React.createElement(Row, {
+    cols: "1fr 1fr 1fr"
+  }, /*#__PURE__*/React.createElement(Field, {
+    label: "Code Postal",
+    value: data.cpSiege,
+    onChange: v => update('cpSiege', v),
+    placeholder: "06600"
+  }), /*#__PURE__*/React.createElement(Field, {
+    label: "Ville",
+    value: data.villeSiege,
+    onChange: v => update('villeSiege', v),
+    placeholder: "Antibes"
+  }), /*#__PURE__*/React.createElement(Field, {
+    label: "Pays",
+    value: data.paysSiege,
+    onChange: v => update('paysSiege', v),
+    placeholder: "France"
+  })), /*#__PURE__*/React.createElement(Field, {
+    label: "SIRET",
+    value: data.siretNum,
+    onChange: v => update('siretNum', v),
+    placeholder: "00188282191919"
+  }), /*#__PURE__*/React.createElement(Row, null, /*#__PURE__*/React.createElement(Field, {
+    label: "Activité de l'entité juridique",
+    required: true,
+    value: data.activite,
+    onChange: v => update('activite', v),
+    placeholder: "Cabinet d'EC"
+  }), /*#__PURE__*/React.createElement(Select, {
+    label: "Votre CRO de rattachement est :",
+    value: data.cro || 'Île de France',
+    onChange: v => update('cro', v),
+    options: CRO_OPTIONS
+  })), isAGC && /*#__PURE__*/React.createElement(Note, null, "Stage en AGC : un co-maître de stage expert-comptable agréé est obligatoire (art. 540-541). Vous le renseignerez à l'étape « Maître(s) de stage »."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      paddingTop: '4px',
+      borderTop: `1px solid ${T.color.border}`
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      paddingTop: '18px'
+    }
+  }, /*#__PURE__*/React.createElement(Label, {
+    required: true
+  }, "Titre du stage"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '14px'
+    }
+  }, TITRE_OPTIONS.map(opt => /*#__PURE__*/React.createElement(Radio, {
+    key: opt,
+    label: opt,
+    selected: data.titre === opt,
+    onClick: () => update('titre', opt)
+  }))), data.titre === TITRE_OPTIONS[1] && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: '14px',
+      marginLeft: '30px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '12px'
+    }
+  }, CAC_MAITRE_OPTIONS.map(opt => /*#__PURE__*/React.createElement(Radio, {
+    key: opt,
+    label: opt,
+    selected: data.cacMaitre === opt,
+    onClick: () => update('cacMaitre', opt)
+  }))))), !isFranco && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Label, {
+    required: true
+  }, "Sollicitez-vous une inscription en stage à temps réduit… ?"), /*#__PURE__*/React.createElement(Hint, null, "Temps réduit : jusqu'à 15 h/hebdomadaires — D. 2012-432 du 30/03/2012, art. 67 al. 3 (art. 514)."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: '8px'
+    }
+  }, /*#__PURE__*/React.createElement(RadioGroup, {
+    options: ["OUI", "NON"],
+    value: data.tempsPartiel,
+    onChange: v => update('tempsPartiel', v)
+  }))), !isFranco && data.tempsPartiel === 'OUI' && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Label, {
+    required: true
+  }, "Veuillez indiquer le type d'emploi principal (un justificatif sera exigé) :"), /*#__PURE__*/React.createElement(Hint, null, "Profils éligibles au temps réduit — art. 514."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '14px',
+      marginTop: '8px'
+    }
+  }, EMPLOI_OPTIONS.map(opt => /*#__PURE__*/React.createElement(Radio, {
+    key: opt,
+    label: opt,
+    selected: data.emploi === opt,
+    onClick: () => update('emploi', opt)
+  })))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Label, {
+    required: true
+  }, "Demande de diminution d'une année de stage"), dscgIncomplet ? /*#__PURE__*/React.createElement(Note, {
+    tone: "warn"
+  }, "Diminution indisponible : le DSCG complet est requis pour bénéficier d'une diminution d'un an (art. 505). Complétez votre DSCG à l'étape « Diplômes ».") : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Select, {
+    value: data.reduction,
+    onChange: v => update('reduction', v),
+    options: REDUCTION_OPTIONS,
+    placeholder: "Sélectionnez une option"
+  }), reductionAsked && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: '14px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '10px'
+    }
+  }, /*#__PURE__*/React.createElement(Note, null, "Pièces à joindre (art. 505) : courrier de demande · accord du maître de stage · CV détaillé · descriptif des postes et missions · organigramme de l'entité · attestation(s) d'emploi."), /*#__PURE__*/React.createElement(FileDrop, {
+    label: "Justificatifs de la demande de diminution",
+    required: true
+  })))))))));
+};
+
+/* ============================================================
+   STEP 5
+   ============================================================ */
+const CollapseHeader = ({
+  children
+}) => /*#__PURE__*/React.createElement("div", {
+  style: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    marginBottom: '20px'
+  }
+}, /*#__PURE__*/React.createElement("svg", {
+  width: "18",
+  height: "18",
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: T.color.gray,
+  strokeWidth: "2.5"
+}, /*#__PURE__*/React.createElement("polyline", {
+  points: "6 9 12 15 18 9"
+})), /*#__PURE__*/React.createElement("span", {
+  style: {
+    fontSize: '15px',
+    fontWeight: 500,
+    color: T.color.gray
+  }
+}, children));
+const Step5 = ({
+  data,
+  update,
+  all
+}) => {
+  const s4 = all && all.s4 || {};
+  // Pré-remplissage d'après la structure choisie à l'étape 4 (art. 550 / 10.3.5)
+  const derivedInscrit = STRUCTURE_WITH_EMPLOYER.includes(s4.structure) ? 'Oui' : s4.structure ? 'Non' : undefined;
+  const inscritVal = data.inscritOrdre !== undefined ? data.inscritOrdre : derivedInscrit;
+  const preRempli = data.inscritOrdre === undefined && derivedInscrit;
+  // Co-maître CAC piloté par le titre du stage (étape 4, art. 550)
+  const needComaitre = s4.titre === TITRE_OPTIONS[1] && s4.cacMaitre === CAC_MAITRE_OPTIONS[1];
+  const maitreHabilite = s4.titre === TITRE_OPTIONS[1] && s4.cacMaitre === CAC_MAITRE_OPTIONS[0];
+  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(StepHeader, {
+    title: "Renseignements sur le(s) Maître(s) de stage",
+    subtitle: "Coordonnées et informations",
+    showRequired: true
+  }), /*#__PURE__*/React.createElement(Card, {
+    title: "Maître de Stage"
+  }, /*#__PURE__*/React.createElement(CollapseHeader, null, "Informations sur le Maître de Stage"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '22px'
+    }
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Label, {
+    required: true
+  }, "Le Maître de stage est-il inscrit à l'Ordre des Experts-Comptables ?"), /*#__PURE__*/React.createElement(RadioGroup, {
+    options: ["Oui", "Non"],
+    value: inscritVal,
+    onChange: v => update('inscritOrdre', v)
+  }), preRempli && /*#__PURE__*/React.createElement(Hint, null, "Pré-rempli d'après la structure choisie à l'étape précédente (modifiable).")), inscritVal === 'Oui' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Field, {
+    label: "Rechercher la personne physique",
+    value: data.recherche,
+    onChange: v => update('recherche', v),
+    placeholder: "Monsieur - Antoine - Roland -"
+  }), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Label, null, "Civilité"), /*#__PURE__*/React.createElement(RadioGroup, {
+    options: ["Madame", "Monsieur"],
+    value: data.civiliteMS,
+    onChange: v => update('civiliteMS', v)
+  })), /*#__PURE__*/React.createElement(Row, null, /*#__PURE__*/React.createElement(Field, {
+    label: "Nom",
+    required: true,
+    value: data.nomMS,
+    onChange: v => update('nomMS', v),
+    placeholder: "Roland"
+  }), /*#__PURE__*/React.createElement(Field, {
+    label: "Prénom",
+    required: true,
+    value: data.prenomMS,
+    onChange: v => update('prenomMS', v),
+    placeholder: "Antoine"
+  })), /*#__PURE__*/React.createElement(Field, {
+    label: "Adresse",
+    value: data.adresseMS,
+    onChange: v => update('adresseMS', v),
+    placeholder: "1 Rue de Rivoli"
+  }), /*#__PURE__*/React.createElement(Row, {
+    cols: "1fr 1fr 1fr"
+  }, /*#__PURE__*/React.createElement(Field, {
+    label: "Code Postal",
+    value: data.cpMS,
+    onChange: v => update('cpMS', v),
+    placeholder: "75004"
+  }), /*#__PURE__*/React.createElement(Field, {
+    label: "Ville",
+    value: data.villeMS,
+    onChange: v => update('villeMS', v),
+    placeholder: "Paris"
+  }), /*#__PURE__*/React.createElement(Field, {
+    label: "Pays",
+    value: data.paysMS,
+    onChange: v => update('paysMS', v),
+    placeholder: "France"
+  }))), inscritVal === 'Non' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Label, {
+    required: true
+  }, "Civilité"), /*#__PURE__*/React.createElement(RadioGroup, {
+    options: ["Madame", "Monsieur"],
+    value: data.civiliteMS,
+    onChange: v => update('civiliteMS', v)
+  })), /*#__PURE__*/React.createElement(Row, null, /*#__PURE__*/React.createElement(Field, {
+    label: "Nom",
+    required: true,
+    value: data.nomMS,
+    onChange: v => update('nomMS', v),
+    placeholder: "Roland"
+  }), /*#__PURE__*/React.createElement(Field, {
+    label: "Prénom",
+    required: true,
+    value: data.prenomMS,
+    onChange: v => update('prenomMS', v),
+    placeholder: "Antoine"
+  })), /*#__PURE__*/React.createElement(Field, {
+    label: "Fonction",
+    value: data.fonctionMS,
+    onChange: v => update('fonctionMS', v),
+    placeholder: "Directeur Financier"
+  }), /*#__PURE__*/React.createElement(Field, {
+    label: "Email",
+    type: "email",
+    value: data.emailMS,
+    onChange: v => update('emailMS', v),
+    placeholder: "antoine.roland@email.com"
+  }), /*#__PURE__*/React.createElement(FileDrop, {
+    label: "Organigramme du Maître de stage",
+    required: true
+  })), maitreHabilite && /*#__PURE__*/React.createElement(Note, null, "Titre EC + CAC : votre maître de stage étant habilité au commissariat aux comptes, aucun co-maître CAC n'est requis (art. 550)."), needComaitre && /*#__PURE__*/React.createElement("div", {
+    style: {
+      paddingTop: '8px',
+      borderTop: `1px solid ${T.color.border}`
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      paddingTop: '18px'
+    }
+  }, /*#__PURE__*/React.createElement(CollapseHeader, null, "Informations sur le co-maître de stage (commissariat aux comptes)")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '22px'
+    }
+  }, /*#__PURE__*/React.createElement(Field, {
+    label: "Rechercher la personne physique",
+    value: data.recherche2,
+    onChange: v => update('recherche2', v),
+    placeholder: "Monsieur - Antoine - Roland -"
+  }), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Label, null, "Civilité"), /*#__PURE__*/React.createElement(RadioGroup, {
+    options: ["Madame", "Monsieur"],
+    value: data.civilite2,
+    onChange: v => update('civilite2', v)
+  })), /*#__PURE__*/React.createElement(Row, null, /*#__PURE__*/React.createElement(Field, {
+    label: "Prénom",
+    required: true,
+    value: data.prenom2MS,
+    onChange: v => update('prenom2MS', v),
+    placeholder: "Antoine"
+  }), /*#__PURE__*/React.createElement(Field, {
+    label: "Nom",
+    required: true,
+    value: data.nom2MS,
+    onChange: v => update('nom2MS', v),
+    placeholder: "Roland"
+  })), /*#__PURE__*/React.createElement(Field, {
+    label: "Adresse",
+    value: data.adresse2MS,
+    onChange: v => update('adresse2MS', v),
+    placeholder: "1 Rue de Rivoli"
+  }), /*#__PURE__*/React.createElement(Row, {
+    cols: "1fr 1fr 1fr"
+  }, /*#__PURE__*/React.createElement(Field, {
+    label: "Code Postal",
+    value: data.cp2MS,
+    onChange: v => update('cp2MS', v),
+    placeholder: "75004"
+  }), /*#__PURE__*/React.createElement(Field, {
+    label: "Ville",
+    value: data.ville2MS,
+    onChange: v => update('ville2MS', v),
+    placeholder: "Paris"
+  }), /*#__PURE__*/React.createElement(Field, {
+    label: "Pays",
+    value: data.pays2MS,
+    onChange: v => update('pays2MS', v),
+    placeholder: "France"
+  })), /*#__PURE__*/React.createElement(Note, null, "Le stage au titre du CAC requiert une convention tripartite EC / CAC / stagiaire et 200 h de travaux CAC réparties sur 2 ans (art. 550, Annexe 6)."))))));
+};
+
+/* ============================================================
+   STEP 6 (placeholder)
+   ============================================================ */
+const Step6 = () => /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+  style: {
+    background: T.color.white,
+    border: `1px solid ${T.color.border}`,
+    borderRadius: T.radius,
+    boxShadow: T.shadow.card,
+    padding: '28px'
+  }
+}, /*#__PURE__*/React.createElement("p", {
+  style: {
+    fontSize: '15px',
+    color: T.color.grayLight,
+    margin: 0
+  }
+}, "Étape 6 - Pièces justificatives à implémenter")));
+
+/* ============================================================
+   STEP 7
+   ============================================================ */
+const Step7 = ({
+  data,
+  update
+}) => /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+  style: {
+    position: 'relative',
+    background: T.color.white,
+    border: `1px solid ${T.color.border}`,
+    borderRadius: T.radius,
+    boxShadow: T.shadow.card,
+    padding: '40px 48px'
+  }
+}, /*#__PURE__*/React.createElement("h2", {
+  style: {
+    fontSize: '24px',
+    fontWeight: 700,
+    color: T.color.textDark,
+    textAlign: 'center',
+    margin: '0 0 12px 0'
+  }
+}, "Confirmation de soumission"), /*#__PURE__*/React.createElement("p", {
+  style: {
+    fontSize: '15px',
+    color: T.color.gray,
+    textAlign: 'center',
+    margin: '0 auto 28px',
+    maxWidth: '620px',
+    lineHeight: '23px'
+  }
+}, "Veuillez relire et confirmer que toutes les informations fournies sont exactes et complètes avant de soumettre votre dossier."), /*#__PURE__*/React.createElement("div", {
+  style: {
+    background: '#F7F9FD',
+    border: `1px solid ${T.color.border}`,
+    borderRadius: T.radius,
+    padding: '24px 28px'
+  }
+}, /*#__PURE__*/React.createElement(Checkbox, {
+  checked: !!data.certif,
+  onClick: () => update('certif', !data.certif)
+}, "Je certifie sur l'honneur l'exactitude des informations contenues dans le présent questionnaire et déclare avoir pris connaissance des conditions d'inscription à l'Ordre des experts-comptables."))));
+
+/* ============================================================
+   APP
+   ============================================================ */
+const App = () => {
+  const [step, setStep] = useState(1);
+  const [f, setF] = useState({
+    s1: {},
+    s2: {},
+    s3: {},
+    s4: {},
+    s5: {},
+    s7: {}
+  });
+  const upd = key => (path, value) => setF(prev => ({
+    ...prev,
+    [key]: {
+      ...prev[key],
+      [path]: value
+    }
+  }));
+
+  // Mode démo : navigation libre. Les astérisques rouges restent affichées,
+  // mais aucun champ ne bloque le passage à l'étape suivante.
+  const canNext = true;
+  const goNext = () => {
+    if (step < 7) {
+      setStep(step + 1);
+      window.scrollTo(0, 0);
+    } else alert('Formulaire soumis avec succès.');
+  };
+  const goPrev = () => {
+    if (step > 1) {
+      setStep(step - 1);
+      window.scrollTo(0, 0);
+    }
+  };
+  const onSave = () => alert('Formulaire enregistré pour plus tard.');
+  const render = () => {
+    switch (step) {
+      case 1:
+        return /*#__PURE__*/React.createElement(Step1, {
+          data: f.s1,
+          update: upd('s1')
+        });
+      case 2:
+        return /*#__PURE__*/React.createElement(Step2, {
+          data: f.s2,
+          update: upd('s2')
+        });
+      case 3:
+        return /*#__PURE__*/React.createElement(Step3, {
+          data: f.s3,
+          update: upd('s3')
+        });
+      case 4:
+        return /*#__PURE__*/React.createElement(Step4, {
+          data: f.s4,
+          update: upd('s4'),
+          all: f
+        });
+      case 5:
+        return /*#__PURE__*/React.createElement(Step5, {
+          data: f.s5,
+          update: upd('s5'),
+          all: f
+        });
+      case 6:
+        return /*#__PURE__*/React.createElement(Step6, null);
+      case 7:
+        return /*#__PURE__*/React.createElement(Step7, {
+          data: f.s7,
+          update: upd('s7')
+        });
+      default:
+        return null;
+    }
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      minHeight: '100vh',
+      background: T.color.bg
+    }
+  }, /*#__PURE__*/React.createElement(Navbar, null), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      paddingTop: '80px',
+      paddingBottom: '80px',
+      minHeight: '100vh'
+    }
+  }, /*#__PURE__*/React.createElement(Stepper, {
+    currentStep: step
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      padding: '40px 48px',
+      maxWidth: '960px'
+    }
+  }, render())), /*#__PURE__*/React.createElement(BottomBar, {
+    step: step,
+    canNext: canNext,
+    onNext: goNext,
+    onPrev: goPrev,
+    onSave: onSave,
+    nextLabel: step === 1 ? 'Continuer' : step === 7 ? 'Soumettre le formulaire' : 'Suivant'
+  }));
+};
+ReactDOM.createRoot(document.getElementById('root')).render(/*#__PURE__*/React.createElement(App, null));
+  </script>
+</body>
+</html>
