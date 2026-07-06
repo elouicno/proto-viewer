@@ -70,6 +70,9 @@ const STEPS = [{
   title: "Diplômes",
   subtitle: "Formation et qualifications"
 }, {
+  title: "Modalités du stage",
+  subtitle: "Titre, durée, temps de travail et diminution"
+}, {
   title: "Renseignements sur le stage",
   subtitle: "Informations sur votre stage professionnel"
 }, {
@@ -95,9 +98,15 @@ const CRO_OPTIONS = ["Île de France", "Auvergne-Rhône-Alpes", "Provence-Alpes-
 const DSCG_UE = ["UE 1 : Gestion juridique, fiscale et sociale", "UE 2 : Finance", "UE 3 : Management et contrôle de gestion", "UE 4 : Comptabilité et audit", "UE 5 : Management des systèmes d'information", "UE 6 : Anglais des affaires", "UE 7 : Mémoire"];
 // Profils éligibles au temps réduit — art. 514 (4 catégories)
 const EMPLOI_OPTIONS = ["Professeur agrégé ou titulaire d'un CAPET (économie-gestion, sciences et techniques économiques)", "Professeur ou maître de conférences de l'enseignement supérieur (disciplines juridiques, économiques, gestion, mathématiques ou informatique)", "Enseignant titulaire d'un doctorat, DEA, DESS ou master enseignant dans ces disciplines", "Salarié d'entreprise — fonctions de direction ou de contrôle (au moins 3 ans d'ancienneté)"];
+// Temps réduit — profil (formulaire officiel) → « Professeur » exige un diplôme justificatif
+const PROFIL_REDUIT_OPTIONS = ["Salarié d'entreprise", "Professeur"];
+// Compagnies régionales des commissaires aux comptes (CRCC) — liste indicative par cour d'appel
+const CRCC_OPTIONS = ["Paris", "Versailles et du Centre", "Aix-en-Provence / Bastia", "Lyon", "Douai", "Rennes", "Bordeaux", "Toulouse", "Montpellier", "Nancy", "Colmar / Metz", "Riom", "Poitiers", "Amiens", "Rouen", "Caen", "Orléans", "Dijon", "Besançon", "Grenoble", "Chambéry", "Nîmes", "Agen", "Pau", "Limoges", "Angers", "Reims", "Basse-Terre (Guadeloupe)", "Fort-de-France (Martinique)", "Saint-Denis (La Réunion)", "Nouméa (Nouvelle-Calédonie)"];
 // Titre du stage — art. 550
 const TITRE_OPTIONS = ["Je souhaite réaliser mon stage au titre de l'expert-comptable", "Je souhaite réaliser mon stage au titre de l'expert-comptable et du commissariat aux comptes"];
 const CAC_MAITRE_OPTIONS = ["Mon maître de stage est habilité au commissariat aux comptes", "Je désigne un co-maître de stage pour réaliser mon stage au titre du commissariat aux comptes"];
+// Diminution d'année de stage — 3 options du formulaire officiel (art. 504-505)
+const DIMINUTION_OPTIONS = ["Vous ne demandez aucune diminution d'année de stage", "Demandez-vous la diminution d'une année de stage au titre d'une expérience professionnelle acquise dans les domaines comptable, juridique, économique ou de gestion (joindre un dossier justificatif) (D. 2012-432 du 30/03/2012, art. 67, al. 2)", "Demandez-vous la diminution de deux années"];
 // Lieux « État francophone » (arrêté 8 mars 2010) → ni temps réduit ni année dérogatoire (art. 559)
 const LIEUX_FRANCOPHONES = ["Dans un pays francophone d'Afrique", "En Suisse ou à Monaco"];
 const STRUCTURE_DEROGATOIRE = "Dans une entité autre qu'un cabinet d'Expertise-Comptable (dans le cadre de l'année dérogatoire)";
@@ -1388,17 +1397,233 @@ const Step3 = ({
 /* ============================================================
    STEP 4
    ============================================================ */
+// ── ÉTAPE : MODALITÉS DU STAGE (reproduite du formulaire officiel OEC Paris — section 3) ──
+const StepModalites = ({
+  data,
+  update,
+  all
+}) => {
+  const dscgIncomplet = all && all.s3 && all.s3.dscg === 'Non'; // gate métier (art. 505)
+  const diminutionDemandee = data.diminution && data.diminution !== DIMINUTION_OPTIONS[0];
+  const tpsReduit = data.tempsStage === 'à temps réduit';
+  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(StepHeader, {
+    title: "Modalités du stage",
+    subtitle: "Titre, durée, temps de travail et diminution éventuelle",
+    showRequired: true
+  }), /*#__PURE__*/React.createElement(Card, {
+    title: "Modalités du stage"
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '24px'
+    }
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Label, {
+    required: true
+  }, "Durée du stage :"), /*#__PURE__*/React.createElement(RadioGroup, {
+    options: ["pour une durée déterminée", "pour une durée indéterminée"],
+    value: data.duree,
+    onChange: v => update('duree', v)
+  }), data.duree === "pour une durée déterminée" && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: '16px'
+    }
+  }, /*#__PURE__*/React.createElement(Row, null, /*#__PURE__*/React.createElement(DatePicker, {
+    label: "Date de début (durée déterminée)",
+    required: true,
+    value: data.dateDebut,
+    onChange: v => update('dateDebut', v),
+    placeholder: "jj/mm/aaaa"
+  }), /*#__PURE__*/React.createElement(DatePicker, {
+    label: "Date de fin (durée déterminée)",
+    required: true,
+    value: data.dateFin,
+    onChange: v => update('dateFin', v),
+    placeholder: "jj/mm/aaaa"
+  })))), /*#__PURE__*/React.createElement(Divider, null), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Label, {
+    required: true
+  }, "Titre du stage :"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '14px'
+    }
+  }, TITRE_OPTIONS.map(opt => /*#__PURE__*/React.createElement(Radio, {
+    key: opt,
+    label: opt,
+    selected: data.titre === opt,
+    onClick: () => update('titre', opt)
+  }))), data.titre === TITRE_OPTIONS[1] && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: '14px',
+      marginLeft: '30px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '12px'
+    }
+  }, CAC_MAITRE_OPTIONS.map(opt => /*#__PURE__*/React.createElement(Radio, {
+    key: opt,
+    label: opt,
+    selected: data.cacMaitre === opt,
+    onClick: () => update('cacMaitre', opt)
+  })))), /*#__PURE__*/React.createElement(Divider, null), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Label, {
+    required: true
+  }, "Effectuez-vous un stage :"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '32px',
+      flexWrap: 'wrap'
+    }
+  }, /*#__PURE__*/React.createElement(Radio, {
+    label: "à temps complet",
+    selected: data.tempsStage === 'à temps complet',
+    onClick: () => update('tempsStage', 'à temps complet')
+  }), /*#__PURE__*/React.createElement(Radio, {
+    label: /*#__PURE__*/React.createElement("span", null, "à temps réduit ", /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: T.color.gray,
+        fontSize: '12.5px'
+      }
+    }, "(15 h/hebdomadaires, D. 2012-432 du 30/03/2012, art. 67 al. 3)")),
+    selected: tpsReduit,
+    onClick: () => update('tempsStage', 'à temps réduit')
+  }))), tpsReduit && /*#__PURE__*/React.createElement(Field, {
+    label: "Nombre d'heures par semaine",
+    required: true,
+    value: data.nbHeures,
+    onChange: v => update('nbHeures', v),
+    placeholder: "15"
+  }), /*#__PURE__*/React.createElement(Row, null, /*#__PURE__*/React.createElement(DatePicker, {
+    label: "Date d'embauche",
+    required: true,
+    value: data.dateEmbauche,
+    onChange: v => update('dateEmbauche', v),
+    placeholder: "jj/mm/aaaa"
+  }), /*#__PURE__*/React.createElement(Field, {
+    label: "Fonction",
+    required: true,
+    value: data.fonction,
+    onChange: v => update('fonction', v),
+    placeholder: "Fonction"
+  })), tpsReduit && /*#__PURE__*/React.createElement("div", {
+    style: {
+      border: `1px solid ${T.color.border}`,
+      borderRadius: T.radius,
+      padding: '18px',
+      background: '#F9FBFE'
+    }
+  }, /*#__PURE__*/React.createElement(RadioGroup, {
+    options: PROFIL_REDUIT_OPTIONS,
+    value: data.profilReduit,
+    onChange: v => update('profilReduit', v)
+  }), data.profilReduit === 'Professeur' && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: '16px'
+    }
+  }, /*#__PURE__*/React.createElement(Field, {
+    label: "Diplôme justificatif",
+    required: true,
+    value: data.diplomeJustif,
+    onChange: v => update('diplomeJustif', v),
+    placeholder: "Diplôme justificatif"
+  })), /*#__PURE__*/React.createElement(Hint, null, "Temps réduit réservé à certains profils (art. 514) — un justificatif est exigé.")), /*#__PURE__*/React.createElement(Divider, null), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Label, {
+    required: true
+  }, "Demander de diminution d'année de stage :"), dscgIncomplet ? /*#__PURE__*/React.createElement(Note, {
+    tone: "warn"
+  }, "Diminution indisponible : le DSCG complet est requis pour bénéficier d'une diminution (art. 505). Complétez votre DSCG à l'étape « Diplômes ».") : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '12px'
+    }
+  }, DIMINUTION_OPTIONS.map(opt => /*#__PURE__*/React.createElement("div", {
+    key: opt,
+    onClick: () => update('diminution', opt),
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: '16px',
+      border: `1px solid ${data.diminution === opt ? T.color.primaryBlue : T.color.border}`,
+      borderRadius: T.radius,
+      padding: '14px 16px',
+      cursor: 'pointer'
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: '14px',
+      color: T.color.textDark,
+      lineHeight: '20px'
+    }
+  }, opt), /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: '20px',
+      height: '20px',
+      borderRadius: '50%',
+      border: `2px solid ${data.diminution === opt ? T.color.primaryBlue : T.color.borderMedium}`,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexShrink: 0
+    }
+  }, data.diminution === opt && /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: '10px',
+      height: '10px',
+      borderRadius: '50%',
+      background: T.color.primaryBlue
+    }
+  }))))), diminutionDemandee && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: '14px'
+    }
+  }, /*#__PURE__*/React.createElement(Note, null, "Un dossier justificatif est à joindre dans l'onglet « Pièces justificatives » (art. 505) : courrier de demande · accord du maître de stage · CV détaillé · descriptif des postes et missions · organigramme de l'entité · attestation(s) d'emploi.")))), /*#__PURE__*/React.createElement(Divider, null), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Label, {
+    required: true
+  }, "Êtes-vous déjà inscrit en stage de commissaire aux comptes ?"), /*#__PURE__*/React.createElement(RadioGroup, {
+    options: ["Oui", "Non"],
+    value: data.dejaCAC,
+    onChange: v => update('dejaCAC', v)
+  }), data.dejaCAC === 'Oui' && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: '16px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '16px'
+    }
+  }, /*#__PURE__*/React.createElement(DatePicker, {
+    label: "Depuis le",
+    required: true,
+    value: data.cacDepuis,
+    onChange: v => update('cacDepuis', v),
+    placeholder: "jj/mm/aaaa"
+  }), /*#__PURE__*/React.createElement(Select, {
+    label: "À la compagnie régionale de :",
+    required: true,
+    value: data.cacCompagnie,
+    onChange: v => update('cacCompagnie', v),
+    options: CRCC_OPTIONS,
+    placeholder: "Choisir"
+  }))))));
+};
 const Step4 = ({
   data,
   update,
   all
 }) => {
-  const dscgIncomplet = all && all.s3 && all.s3.dscg === 'Non'; // Gate 2 (art. 505)
-  const isFranco = LIEUX_FRANCOPHONES.includes(data.lieu); // Gate 1 (art. 559)
+  const sMod = all && all.sMod || {}; // réponses de « Modalités du stage »
+  const isFranco = LIEUX_FRANCOPHONES.includes(data.lieu); // Gate (art. 559)
   const structOptions = isFranco ? STRUCTURE_OPTIONS.filter(s => s !== STRUCTURE_DEROGATOIRE) : STRUCTURE_OPTIONS;
   const showEmployer = STRUCTURE_WITH_EMPLOYER.includes(data.structure);
-  const reductionAsked = data.reduction && data.reduction.startsWith('Oui');
   const isAGC = data.structure === "En association de gestion et de comptabilité (AGC)";
+  const tpsReduitFranco = isFranco && sMod.tempsStage === 'à temps réduit';
+  // Cohérence croisée avec Modalités
+  const dejaCACNon = sMod.dejaCAC === 'Non';
+  const diminutionDemandee = sMod.diminution && sMod.diminution !== DIMINUTION_OPTIONS[0];
+  // Gate 1 : masquer « avec attestation de fin de stage CAC » si pas de stage CAC déclaré
+  const demandeOptions = dejaCACNon ? DEMANDE_OPTIONS.filter(o => o !== DEMANDE_OPTIONS[1]) : DEMANDE_OPTIONS;
+  const conflitDoubleCredit = sMod.diminution === DIMINUTION_OPTIONS[2] && data.demande === DEMANDE_OPTIONS[1];
+  const conflitAFS = diminutionDemandee && data.demande === DEMANDE_OPTIONS[2];
   return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(StepHeader, {
     title: "Renseignements sur le stage",
     subtitle: "Type de stage, lieu, structure employeur...",
@@ -1411,14 +1636,18 @@ const Step4 = ({
       flexDirection: 'column',
       gap: '22px'
     }
-  }, /*#__PURE__*/React.createElement(Select, {
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Select, {
     label: "Est-ce que votre demande d'inscription concerne :",
     required: true,
     value: data.demande,
     onChange: v => update('demande', v),
-    options: DEMANDE_OPTIONS,
+    options: demandeOptions,
     placeholder: "Sélectionnez une option"
-  }), data.demande && /*#__PURE__*/React.createElement(Select, {
+  }), dejaCACNon && /*#__PURE__*/React.createElement(Hint, null, "L'option « avec attestation de fin de stage CAC » est masquée : vous avez indiqué à l'étape « Modalités » ne pas être déjà inscrit en stage de commissaire aux comptes.")), conflitDoubleCredit && /*#__PURE__*/React.createElement(Note, {
+    tone: "warn"
+  }, "Incohérence : l'attestation de fin de stage CAC crédite déjà deux années (art. R. 821-47). Une « diminution de deux années » demandée à l'étape « Modalités » ferait double emploi."), conflitAFS && /*#__PURE__*/React.createElement(Note, {
+    tone: "warn"
+  }, "Incohérence : une réinscription après AFS caduque est un renouvellement d'un an — elle ne se cumule pas avec une diminution de stage (demandée à l'étape « Modalités »). Vérifiez vos réponses."), data.demande && /*#__PURE__*/React.createElement(Select, {
     label: "Où allez-vous effectuer votre stage ?",
     required: true,
     value: data.lieu,
@@ -1432,7 +1661,9 @@ const Step4 = ({
     onChange: v => update('structure', v),
     options: structOptions,
     placeholder: "Sélectionnez le type de structure"
-  }), data.demande && data.lieu && isFranco && /*#__PURE__*/React.createElement(Note, null, "Stage en État francophone : le stage à temps réduit et l'année dérogatoire en entreprise ne sont pas admis (art. 559). Le suivi est assuré par le Conseil national via le CROEC Paris Île-de-France."), data.demande && data.lieu && showEmployer && /*#__PURE__*/React.createElement("div", {
+  }), data.demande && data.lieu && isFranco && /*#__PURE__*/React.createElement(Note, null, "Stage en État francophone : le stage à temps réduit et l'année dérogatoire en entreprise ne sont pas admis (art. 559). Le suivi est assuré par le Conseil national via le CROEC Paris Île-de-France."), tpsReduitFranco && /*#__PURE__*/React.createElement(Note, {
+    tone: "warn"
+  }, "Vous avez choisi un stage à temps réduit à l'étape « Modalités » : ce régime n'est pas admis pour un stage en État francophone (art. 559). Corrigez la modalité ou le lieu."), data.demande && data.lieu && showEmployer && /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: '8px',
       paddingTop: '24px',
@@ -1493,85 +1724,7 @@ const Step4 = ({
     value: data.cro || 'Île de France',
     onChange: v => update('cro', v),
     options: CRO_OPTIONS
-  })), isAGC && /*#__PURE__*/React.createElement(Note, null, "Stage en AGC : un co-maître de stage expert-comptable agréé est obligatoire (art. 540-541). Vous le renseignerez à l'étape « Maître(s) de stage »."), /*#__PURE__*/React.createElement("div", {
-    style: {
-      paddingTop: '4px',
-      borderTop: `1px solid ${T.color.border}`
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      paddingTop: '18px'
-    }
-  }, /*#__PURE__*/React.createElement(Label, {
-    required: true
-  }, "Titre du stage"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '14px'
-    }
-  }, TITRE_OPTIONS.map(opt => /*#__PURE__*/React.createElement(Radio, {
-    key: opt,
-    label: opt,
-    selected: data.titre === opt,
-    onClick: () => update('titre', opt)
-  }))), data.titre === TITRE_OPTIONS[1] && /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginTop: '14px',
-      marginLeft: '30px',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '12px'
-    }
-  }, CAC_MAITRE_OPTIONS.map(opt => /*#__PURE__*/React.createElement(Radio, {
-    key: opt,
-    label: opt,
-    selected: data.cacMaitre === opt,
-    onClick: () => update('cacMaitre', opt)
-  }))))), !isFranco && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Label, {
-    required: true
-  }, "Sollicitez-vous une inscription en stage à temps réduit… ?"), /*#__PURE__*/React.createElement(Hint, null, "Temps réduit : jusqu'à 15 h/hebdomadaires — D. 2012-432 du 30/03/2012, art. 67 al. 3 (art. 514)."), /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginTop: '8px'
-    }
-  }, /*#__PURE__*/React.createElement(RadioGroup, {
-    options: ["OUI", "NON"],
-    value: data.tempsPartiel,
-    onChange: v => update('tempsPartiel', v)
-  }))), !isFranco && data.tempsPartiel === 'OUI' && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Label, {
-    required: true
-  }, "Veuillez indiquer le type d'emploi principal (un justificatif sera exigé) :"), /*#__PURE__*/React.createElement(Hint, null, "Profils éligibles au temps réduit — art. 514."), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '14px',
-      marginTop: '8px'
-    }
-  }, EMPLOI_OPTIONS.map(opt => /*#__PURE__*/React.createElement(Radio, {
-    key: opt,
-    label: opt,
-    selected: data.emploi === opt,
-    onClick: () => update('emploi', opt)
-  })))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Label, {
-    required: true
-  }, "Demande de diminution d'une année de stage"), dscgIncomplet ? /*#__PURE__*/React.createElement(Note, {
-    tone: "warn"
-  }, "Diminution indisponible : le DSCG complet est requis pour bénéficier d'une diminution d'un an (art. 505). Complétez votre DSCG à l'étape « Diplômes ».") : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Select, {
-    value: data.reduction,
-    onChange: v => update('reduction', v),
-    options: REDUCTION_OPTIONS,
-    placeholder: "Sélectionnez une option"
-  }), reductionAsked && /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginTop: '14px',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '10px'
-    }
-  }, /*#__PURE__*/React.createElement(Note, null, "Pièces à joindre (art. 505) : courrier de demande · accord du maître de stage · CV détaillé · descriptif des postes et missions · organigramme de l'entité · attestation(s) d'emploi."), /*#__PURE__*/React.createElement(FileDrop, {
-    label: "Justificatifs de la demande de diminution",
-    required: true
-  })))))))));
+  })), isAGC && /*#__PURE__*/React.createElement(Note, null, "Stage en AGC : un co-maître de stage expert-comptable agréé est obligatoire (art. 540-541). Vous le renseignerez à l'étape « Maître(s) de stage »."))))));
 };
 
 /* ============================================================
@@ -1607,14 +1760,15 @@ const Step5 = ({
   update,
   all
 }) => {
-  const s4 = all && all.s4 || {};
-  // Pré-remplissage d'après la structure choisie à l'étape 4 (art. 550 / 10.3.5)
+  const s4 = all && all.s4 || {}; // Renseignements sur le stage (structure)
+  const sMod = all && all.sMod || {}; // Modalités du stage (titre)
+  // Pré-remplissage d'après la structure choisie (art. 550 / 10.3.5)
   const derivedInscrit = STRUCTURE_WITH_EMPLOYER.includes(s4.structure) ? 'Oui' : s4.structure ? 'Non' : undefined;
   const inscritVal = data.inscritOrdre !== undefined ? data.inscritOrdre : derivedInscrit;
   const preRempli = data.inscritOrdre === undefined && derivedInscrit;
-  // Co-maître CAC piloté par le titre du stage (étape 4, art. 550)
-  const needComaitre = s4.titre === TITRE_OPTIONS[1] && s4.cacMaitre === CAC_MAITRE_OPTIONS[1];
-  const maitreHabilite = s4.titre === TITRE_OPTIONS[1] && s4.cacMaitre === CAC_MAITRE_OPTIONS[0];
+  // Co-maître CAC piloté par le titre du stage (étape Modalités, art. 550)
+  const needComaitre = sMod.titre === TITRE_OPTIONS[1] && sMod.cacMaitre === CAC_MAITRE_OPTIONS[1];
+  const maitreHabilite = sMod.titre === TITRE_OPTIONS[1] && sMod.cacMaitre === CAC_MAITRE_OPTIONS[0];
   return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(StepHeader, {
     title: "Renseignements sur le(s) Maître(s) de stage",
     subtitle: "Coordonnées et informations",
@@ -1841,6 +1995,7 @@ const App = () => {
     s1: {},
     s2: {},
     s3: {},
+    sMod: {},
     s4: {},
     s5: {},
     s7: {}
@@ -1856,8 +2011,9 @@ const App = () => {
   // Mode démo : navigation libre. Les astérisques rouges restent affichées,
   // mais aucun champ ne bloque le passage à l'étape suivante.
   const canNext = true;
+  const LAST = 8;
   const goNext = () => {
-    if (step < 7) {
+    if (step < LAST) {
       setStep(step + 1);
       window.scrollTo(0, 0);
     } else alert('Formulaire soumis avec succès.');
@@ -1887,20 +2043,26 @@ const App = () => {
           update: upd('s3')
         });
       case 4:
+        return /*#__PURE__*/React.createElement(StepModalites, {
+          data: f.sMod,
+          update: upd('sMod'),
+          all: f
+        });
+      case 5:
         return /*#__PURE__*/React.createElement(Step4, {
           data: f.s4,
           update: upd('s4'),
           all: f
         });
-      case 5:
+      case 6:
         return /*#__PURE__*/React.createElement(Step5, {
           data: f.s5,
           update: upd('s5'),
           all: f
         });
-      case 6:
-        return /*#__PURE__*/React.createElement(Step6, null);
       case 7:
+        return /*#__PURE__*/React.createElement(Step6, null);
+      case 8:
         return /*#__PURE__*/React.createElement(Step7, {
           data: f.s7,
           update: upd('s7')
@@ -1935,7 +2097,7 @@ const App = () => {
     onNext: goNext,
     onPrev: goPrev,
     onSave: onSave,
-    nextLabel: step === 1 ? 'Continuer' : step === 7 ? 'Soumettre le formulaire' : 'Suivant'
+    nextLabel: step === 1 ? 'Continuer' : step === LAST ? 'Soumettre le formulaire' : 'Suivant'
   }));
 };
 ReactDOM.createRoot(document.getElementById('root')).render(/*#__PURE__*/React.createElement(App, null));
