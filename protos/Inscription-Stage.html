@@ -347,21 +347,27 @@ const BottomBar = ({
     boxShadow: T.shadow.bottomBar,
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     gap: '16px',
     padding: '0 32px',
     zIndex: 100
   }
-}, step > 1 && /*#__PURE__*/React.createElement(OutlineSaveBtn, {
+}, /*#__PURE__*/React.createElement("div", null, step > 1 && /*#__PURE__*/React.createElement(OutlineSaveBtn, {
   onClick: onSave
-}), step > 1 && /*#__PURE__*/React.createElement(DarkBtn, {
+})), /*#__PURE__*/React.createElement("div", {
+  style: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px'
+  }
+}, step > 1 && /*#__PURE__*/React.createElement(DarkBtn, {
   onClick: onPrev,
   iconLeft: true
 }, "Précédent"), /*#__PURE__*/React.createElement(DarkBtn, {
   onClick: onNext,
   disabled: !canNext,
   iconRight: step !== 1
-}, nextLabel));
+}, nextLabel)));
 
 /* ============================================================
    PRIMITIVES
