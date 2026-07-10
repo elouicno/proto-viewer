@@ -6226,7 +6226,42 @@ const COMMISSIONS_VALIDES_PAR_QUALITE = {
   "EXPERT-COMPTABLE STAGIAIRE": ["STAGE", "CRS"],
   "EXPERT-COMPTABLE": ["TABLEAU", "ARTICLE 42 BIS"]
 };
+/* ══════════════════════════════════════════════════════════════
+   PROCESS_METIER_STG — Motif → {statut, qualite, commission, avis}
+   Source : fichier "Motif_ProcessMetier – STG.xlsx" (1 onglet = 1 motif).
+   Statut/Qualité/Commission verrouillés ; Avis = défaut éditable
+   (vide = l'onglet impose un choix, ex. Départ Région).
+   ══════════════════════════════════════════════════════════════ */
+const PROCESS_METIER_STG = {
+  "DEPART REGION": { "statut": "TRF DEPART", "qualite": "STAGIAIRE - REGIME 81", "commission": "STAGE", "avis": "", "avisChoix": true },
+  "CHANGEMENT MAITRE DE STAGE": { "statut": "EN EXERCICE", "qualite": "STAGIAIRE - REGIME 81", "commission": "INFORMATIONS", "avis": "Favorable", "avisChoix": false },
+  "PROLONGATION DE STAGE": { "statut": "EN EXERCICE", "qualite": "STAGIAIRE - REGIME 81", "commission": "STAGE", "avis": "Favorable", "avisChoix": false },
+  "CHANGEMENT CONTROLEUR": { "statut": "EN EXERCICE", "qualite": "STAGIAIRE - REGIME 81", "commission": "INFORMATIONS", "avis": "Favorable", "avisChoix": false },
+  "CHANGEMENT EMPLOYEUR": { "statut": "EN EXERCICE", "qualite": "STAGIAIRE - REGIME 81", "commission": "INFORMATIONS", "avis": "Favorable", "avisChoix": false },
+  "SUSPENSION STAGIAIRE": { "statut": "SUSPENDU", "qualite": "STAGIAIRE - REGIME 81", "commission": "STAGE", "avis": "Favorable", "avisChoix": false },
+  "SUSPENSION - MATERNITE": { "statut": "SUSPENDU", "qualite": "STAGIAIRE - REGIME 81", "commission": "STAGE", "avis": "Favorable", "avisChoix": false },
+  "RADIATION POUR COTISATIONS IMPAYEES": { "statut": "CLASSE", "qualite": "STAGIAIRE - REGIME 81", "commission": "INFORMATIONS", "avis": "Favorable", "avisChoix": false },
+  "INVALIDATION - RAPPORT NON REMIS": { "statut": "CLASSE", "qualite": "STAGIAIRE - REGIME 81", "commission": "INFORMATIONS", "avis": "Favorable", "avisChoix": false },
+  "ATTESTATION DE FIN DE STAGE": { "statut": "CLASSE", "qualite": "STAGIAIRE - REGIME 81", "commission": "INFORMATIONS", "avis": "Favorable", "avisChoix": false },
+  "INVALIDATION - ABSENCE FICHE SUIVI DES FORMATIONS": { "statut": "CLASSE", "qualite": "STAGIAIRE - REGIME 81", "commission": "INFORMATIONS", "avis": "Favorable", "avisChoix": false },
+  "ANNULATION VOLONTAIRE D'UNE INSCRIPTION SANS SUITE": { "statut": "CLASSE", "qualite": "STAGIAIRE - REGIME 81", "commission": "INFORMATIONS", "avis": "Favorable", "avisChoix": false },
+  "SUSPENSION - ATTENTE PIECES CHANGEMENT  MAITRE DE STAGE": { "statut": "EN EXERCICE", "qualite": "STAGIAIRE - REGIME 81", "commission": "INFORMATIONS", "avis": "Favorable", "avisChoix": false },
+  "INVALIDATION - ABSENCE FICHE TRAVAUX PROFESSIONNELS": { "statut": "CLASSE", "qualite": "STAGIAIRE - REGIME 81", "commission": "INFORMATIONS", "avis": "Favorable", "avisChoix": false },
+  "RADIATION MESURE DISCIPLINAIRE": { "statut": "CLASSE", "qualite": "STAGIAIRE - REGIME 81", "commission": "INFORMATIONS", "avis": "Favorable", "avisChoix": false },
+  "RADIATION OBLIGATIONS LIEES AU STAGE NON REMPLIES": { "statut": "CLASSE", "qualite": "STAGIAIRE - REGIME 81", "commission": "INFORMATIONS", "avis": "Favorable", "avisChoix": false },
+  "RADIATION SUSPENSION > 24 MOIS": { "statut": "CLASSE", "qualite": "STAGIAIRE - REGIME 81", "commission": "INFORMATIONS", "avis": "Favorable", "avisChoix": false },
+  "SUSPENSION MESURE DISCIPLINAIRE": { "statut": "CLASSE", "qualite": "STAGIAIRE - REGIME 81", "commission": "INFORMATIONS", "avis": "Favorable", "avisChoix": false },
+  "ANNULATION - INVALIDATION CNT": { "statut": "CLASSE", "qualite": "STAGIAIRE - REGIME 81", "commission": "INFORMATIONS", "avis": "Favorable", "avisChoix": false },
+  "SUSPENSION - DSCG INCOMPLET": { "statut": "CLASSE", "qualite": "STAGIAIRE - REGIME 81", "commission": "INFORMATIONS", "avis": "Favorable", "avisChoix": false },
+  "DELAI SUPPLEMENTAIRE (PREMIER DELAI DE 6 MOIS)": { "statut": "CLASSE", "qualite": "STAGIAIRE - REGIME 81", "commission": "INFORMATIONS", "avis": "Favorable", "avisChoix": false },
+  "DELAI SUPPLEMENTAIRE (DEUXIEME DELAI DE 6 MOIS)": { "statut": "CLASSE", "qualite": "STAGIAIRE - REGIME 81", "commission": "INFORMATIONS", "avis": "Favorable", "avisChoix": false }
+};
+function getProcessMetierSTG(motif) { return PROCESS_METIER_STG[motif] || null; }
+/* Motifs ProcessMetier STG : la règle (statut+commission) prime sur Feuil1,
+   sans filtrage par qualité (l'Excel fait foi). */
 function getRulesForMotif(motif, qualite) {
+  const pm = PROCESS_METIER_STG[motif];
+  if (pm) return [{ commission: pm.commission, statut: pm.statut }];
   const rules = MOTIFS_FEUIL1[motif];
   if (!rules) return null;
   const allowed = COMMISSIONS_VALIDES_PAR_QUALITE[qualite];
@@ -6272,14 +6307,10 @@ function NouvelleDemandeModal({
   // ── Auto-remplissage Statut + Commission selon le Motif sélectionné (source : Feuil1)
   //    + filtrage par qualité (ex. stagiaire : exclut TABLEAU et ARTICLE 42 BIS)
   React.useEffect(() => {
+    const pm = getProcessMetierSTG(form.demande);
     const rules = getRulesForMotif(form.demande, form.qualite);
     if (!rules) {
-      // Motif inconnu de Feuil1 (ou aucune commission compatible avec la qualité)
-      setForm(f => ({
-        ...f,
-        nouveauStatut: "",
-        commission: ""
-      }));
+      setForm(f => ({ ...f, nouveauStatut: "", commission: "" }));
       return;
     }
     const statuts = [...new Set(rules.map(r => r.statut))];
@@ -6287,7 +6318,9 @@ function NouvelleDemandeModal({
     setForm(f => ({
       ...f,
       nouveauStatut: statuts.length === 1 ? statuts[0] : "",
-      commission: commissions.length === 1 ? commissions[0] : ""
+      commission: commissions.length === 1 ? commissions[0] : "",
+      // Motif ProcessMetier STG : Qualité verrouillée ; Avis = défaut (éditable)
+      ...(pm ? { nouvelleQualite: pm.qualite, avis: pm.avis } : {})
     }));
   }, [form.demande]);
   const inputCls = "w-full border border-[#C9C9C9] rounded px-2 py-1 text-[13px] bg-white focus:outline-none focus:border-[#0250D9]";
@@ -6509,7 +6542,7 @@ function NouvelleDemandeModal({
                   width: 55
                 },
                 children: "Qualité :"
-              }, void 0, false), /*#__PURE__*/_jsxDEV("select", {
+              }, void 0, false), (() => { const pm = getProcessMetierSTG(form.demande); if (pm) { return /*#__PURE__*/_jsxDEV("select", { value: form.nouvelleQualite, disabled: true, title: "Valeur imposée par le motif (ProcessMetier STG)", className: selectCls + " flex-1 bg-[#FFF8DB] border-[#E5C100]", children: /*#__PURE__*/_jsxDEV("option", { value: pm.qualite, children: pm.qualite }, void 0, false) }, void 0, false); } return /*#__PURE__*/_jsxDEV("select", {
                 value: form.nouvelleQualite,
                 onChange: e => set("nouvelleQualite", e.target.value),
                 className: `${selectCls} flex-1`,
@@ -6536,7 +6569,7 @@ function NouvelleDemandeModal({
                 }, void 0, false), /*#__PURE__*/_jsxDEV("option", {
                   children: "83T-SALARIE AGC AUT A EXERC EC"
                 }, void 0, false)]
-              }, void 0, true)]
+              }, void 0, true); })()]
             }, void 0, true)]
           }, void 0, true), /*#__PURE__*/_jsxDEV("div", {
             className: "flex items-center gap-2 mt-1",
