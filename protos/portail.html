@@ -1380,7 +1380,7 @@
     <nav class="sidebar-nav">
 
       <!-- Groupe 1 -->
-      <a class="nav-item" id="nav-accueil" href="#" onclick="switchPage('accueil',this);return false;">
+      <a class="nav-item active" id="nav-accueil" href="#" onclick="switchPage('accueil',this);return false;">
         <!-- heroicons-outline/home -->
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/>
@@ -1407,7 +1407,7 @@
       <div class="nav-divider"></div>
 
       <!-- Groupe 2 -->
-      <a class="nav-item active" id="nav-stage" href="#" onclick="switchPage('stage',this);return false;">
+      <a class="nav-item" id="nav-stage" href="#" onclick="switchPage('stage',this);return false;">
         <!-- heroicons-outline/briefcase -->
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <rect x="2" y="7" width="20" height="14" rx="2"/>
@@ -1458,8 +1458,9 @@
   </aside>
 
   <!-- ══ PAGE: ACCUEIL / DASHBOARD ══ -->
-  <main class="main" id="page-accueil" style="display:none">
-    <div class="dash">
+  <main class="main" id="page-accueil">
+    <div class="lp" id="lp-root"></div>
+    <div class="dash" style="display:none">
 
       <!-- Bandeau -->
       <div class="dash-hero">
@@ -1514,7 +1515,7 @@
   </main>
 
   <!-- ══ MAIN CONTENT ══ -->
-  <main class="main" id="page-stage">
+  <main class="main" id="page-stage" style="display:none">
 
     <h1 class="page-title">Mon stage</h1>
     <p class="page-subtitle">Suivez votre progression et gérez vos obligations et vos formations</p>
@@ -2913,6 +2914,319 @@
     <div class="drawer-body" id="cd-content"></div>
   </div>
 </div>
+
+<!-- ══════════════════ LANDING PEP — ACCUEIL ══════════════════ -->
+<style>
+  .lp { display:flex; flex-direction:column; gap:60px; padding-bottom:36px; }
+  .lp-reveal { opacity:0; transform:translateY(18px); transition:opacity .55s ease, transform .55s ease; }
+  .lp-reveal.in { opacity:1; transform:none; }
+  @media (prefers-reduced-motion:reduce){ .lp-reveal{opacity:1;transform:none;transition:none} .lp-panel-in{animation:none!important} .lp-mock-row{animation:none!important;opacity:1!important} }
+
+  /* HERO */
+  .lp-hero { background:var(--navy); border-radius:18px; padding:50px 48px; color:#fff; display:grid; grid-template-columns:1.08fr .92fr; gap:44px; align-items:center; position:relative; overflow:hidden; }
+  .lp-hero::after { content:""; position:absolute; right:-140px; top:-140px; width:380px; height:380px; border-radius:50%; background:radial-gradient(circle, rgba(200,16,46,.22), transparent 68%); pointer-events:none; }
+  .lp-hero-txt { position:relative; z-index:1; }
+  .lp-eyebrow { font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:#8FA5C4; font-weight:600; }
+  .lp-h1 { font-size:40px; line-height:1.12; font-weight:600; margin:16px 0 0; letter-spacing:-0.02em; }
+  .lp-sub { font-size:16px; line-height:1.55; color:#C3CEDD; margin-top:18px; max-width:430px; }
+  .lp-cta-row { display:flex; gap:12px; margin-top:30px; flex-wrap:wrap; }
+  .lp-btn { font-family:inherit; font-size:13.5px; font-weight:600; padding:12px 22px; border-radius:10px; border:none; cursor:pointer; transition:transform .12s ease, background .15s; }
+  .lp-btn:active { transform:scale(.97); }
+  .lp-btn-primary { background:var(--red); color:#fff; }
+  .lp-btn-primary:hover { background:#A80D26; }
+  .lp-btn-ghost { background:transparent; color:#fff; border:1px solid rgba(255,255,255,.35); }
+  .lp-btn-ghost:hover { background:rgba(255,255,255,.09); }
+  /* hero mock */
+  .lp-hero-vis { position:relative; z-index:1; }
+  .lp-mock { background:#fff; border-radius:16px; padding:14px; box-shadow:0 28px 60px rgba(0,0,0,.32); }
+  .lp-mock-head { display:flex; align-items:center; justify-content:space-between; padding:4px 6px 12px; border-bottom:1px solid var(--border-light); }
+  .lp-mock-head-l { display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; color:var(--navy); }
+  .lp-mock-head-l svg { width:16px; height:16px; color:var(--navy); }
+  .lp-mock-count { background:var(--red); color:#fff; font-size:10px; font-weight:600; border-radius:999px; padding:2px 7px; }
+  .lp-mock-row { display:flex; gap:10px; align-items:flex-start; padding:12px 6px; border-bottom:1px solid var(--border-light); opacity:0; animation:lpRow .5s ease forwards; }
+  .lp-mock-row:last-child { border-bottom:none; }
+  .lp-mock-row:nth-child(2){animation-delay:.10s} .lp-mock-row:nth-child(3){animation-delay:.22s} .lp-mock-row:nth-child(4){animation-delay:.34s}
+  @keyframes lpRow { from{opacity:0;transform:translateX(10px)} to{opacity:1;transform:none} }
+  .lp-mock-pill { font-size:9.5px; font-weight:600; border-radius:999px; padding:3px 9px; white-space:nowrap; margin-top:1px; flex-shrink:0; }
+  .lp-mock-t { font-size:12.5px; font-weight:600; color:var(--navy); }
+  .lp-mock-s { font-size:11px; color:var(--text-mid); margin-top:2px; }
+  .lp-mock-x { margin-left:auto; font-size:10px; color:var(--text-soft); white-space:nowrap; }
+
+  /* SECTION HEADS */
+  .lp-head { text-align:center; max-width:660px; margin:0 auto; }
+  .lp-sec-title { font-size:27px; font-weight:600; color:var(--navy); letter-spacing:-0.02em; line-height:1.22; }
+  .lp-sec-sub { font-size:14.5px; color:var(--text-mid); margin-top:9px; line-height:1.55; }
+
+  /* PERSONA */
+  .lp-pills { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:26px; }
+  .lp-pill { display:flex; align-items:center; gap:8px; padding:10px 16px; border-radius:999px; border:1px solid var(--border); background:#fff; color:var(--text-mid); font-size:13px; font-family:inherit; cursor:pointer; transition:border-color .15s, color .15s, background .15s, transform .12s; }
+  .lp-pill svg { width:16px; height:16px; }
+  .lp-pill:hover { border-color:var(--navy); color:var(--navy); transform:translateY(-1px); }
+  .lp-pill.active { background:var(--navy); color:#fff; border-color:var(--navy); }
+  .lp-panel { max-width:920px; margin:24px auto 0; }
+  .lp-panel-in { animation:lpFade .34s ease; }
+  @keyframes lpFade { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+  .lp-hook { font-size:24px; font-weight:600; color:var(--navy); line-height:1.28; text-align:center; letter-spacing:-0.01em; max-width:720px; margin:0 auto; }
+  .lp-grid4 { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:28px; }
+  .lp-feat { display:flex; gap:13px; background:#fff; border:1px solid var(--border); border-radius:13px; padding:18px 20px; transition:transform .14s ease, box-shadow .14s ease, border-color .14s; }
+  .lp-feat:hover { transform:translateY(-3px); box-shadow:0 12px 26px rgba(27,50,79,.08); border-color:var(--nav-separator); }
+  .lp-feat-ic { width:38px; height:38px; border-radius:10px; background:var(--nav-active-bg); color:var(--navy); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .lp-feat-ic svg { width:19px; height:19px; }
+  .lp-feat-t { font-size:14px; font-weight:600; color:var(--navy); }
+  .lp-feat-s { font-size:12.5px; color:var(--text-mid); line-height:1.5; margin-top:3px; }
+  .lp-gain { text-align:center; margin-top:24px; font-size:14.5px; color:var(--red); font-weight:600; }
+
+  /* CUMUL */
+  .lp-cumul { background:#fff; border:1px solid var(--border); border-radius:18px; padding:44px; text-align:center; }
+  .lp-flow { display:flex; align-items:center; justify-content:center; gap:16px; flex-wrap:wrap; margin-top:30px; }
+  .lp-tile { display:flex; flex-direction:column; align-items:center; gap:9px; width:128px; padding:20px 10px; border:1px solid var(--border); border-radius:14px; background:#fff; transition:border-color .15s, transform .14s, box-shadow .14s; }
+  .lp-tile:hover { border-color:var(--navy); transform:translateY(-4px); box-shadow:0 12px 24px rgba(27,50,79,.09); }
+  .lp-tile svg { width:23px; height:23px; color:var(--navy); }
+  .lp-tile span { font-size:12.5px; color:var(--navy); font-weight:600; }
+  .lp-flow-arrow { color:var(--text-soft); font-size:22px; }
+  .lp-tile-one { background:var(--navy); color:#fff; padding:24px 26px; border-radius:14px; font-size:15px; font-weight:600; white-space:nowrap; }
+
+  /* BENEFITS */
+  .lp-benefits { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+  .lp-benefit { background:#fff; border:1px solid var(--border); border-radius:15px; padding:28px; transition:transform .14s ease, box-shadow .14s ease; }
+  .lp-benefit:hover { transform:translateY(-3px); box-shadow:0 14px 30px rgba(27,50,79,.09); }
+  .lp-benefit-ic { width:46px; height:46px; border-radius:12px; background:#FDECEF; color:var(--red); display:flex; align-items:center; justify-content:center; }
+  .lp-benefit-ic svg { width:22px; height:22px; }
+  .lp-benefit-t { font-size:16px; font-weight:600; color:var(--navy); margin-top:18px; }
+  .lp-benefit-s { font-size:13px; color:var(--text-mid); line-height:1.6; margin-top:8px; }
+
+  /* MODULES */
+  .lp-mods-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+  .lp-modcard { background:#fff; border:1px solid var(--border); border-radius:13px; padding:20px; transition:transform .14s ease, box-shadow .14s ease; }
+  .lp-modcard:hover { transform:translateY(-2px); box-shadow:0 10px 22px rgba(27,50,79,.07); }
+  .lp-modcard-t { font-size:14px; font-weight:600; color:var(--navy); display:flex; align-items:center; gap:11px; }
+  .lp-modcard-ic { width:34px; height:34px; border-radius:9px; background:var(--nav-active-bg); color:var(--navy); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .lp-modcard-ic svg { width:17px; height:17px; }
+  .lp-modcard-s { font-size:12.5px; color:var(--text-mid); line-height:1.55; margin-top:11px; }
+
+  /* FINAL */
+  .lp-final { background:var(--navy); border-radius:18px; padding:46px; text-align:center; }
+  .lp-final-t { color:#fff; font-size:25px; font-weight:600; letter-spacing:-0.01em; }
+  .lp-final-s { color:#AEB9C9; font-size:14px; margin-top:9px; }
+  .lp-final .lp-btn { margin-top:26px; }
+
+  @media (max-width:1180px) {
+    .lp-hero { grid-template-columns:1fr; padding:40px 32px; }
+    .lp-hero-vis { display:none; }
+    .lp-h1 { font-size:30px; }
+    .lp-grid4, .lp-benefits, .lp-mods-grid { grid-template-columns:1fr; }
+  }
+</style>
+
+<script>
+(function () {
+  /* neutralise l'ancien dashboard d'accueil */
+  window.accApply = function () {};
+  var oldDash = document.querySelector('#page-accueil .dash');
+  if (oldDash) oldDash.remove();
+
+  if (window.ACC_ICONS) {
+    ACC_ICONS.bell = '<path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/>';
+  }
+  function ic(n) {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + ((window.ACC_ICONS && ACC_ICONS[n]) || '') + '</svg>';
+  }
+
+  var LP_DATA = {
+    ec: {
+      label: 'Expert-comptable', pic: 'badge',
+      hook: "Votre dossier au Tableau ne devrait pas vous coûter une matinée.",
+      items: [
+        ['file',     'Déposer une demande',   "Inscription, modification, radiation — pièces guidées."],
+        ['progress', "Suivre l'avancement",   "L'état réel du dossier, en direct."],
+        ['mail',     'Vos courriers',         "Décisions et attestations, au même endroit."],
+        ['badge',    'Tableau à jour',        "Adresse, structure, bureau — sans recommandé."]
+      ],
+      gain: "Fini le « où en est mon dossier ? »."
+    },
+    ecs: {
+      label: 'Expert-comptable stagiaire', pic: 'cap',
+      hook: "Trois ans de stage. Zéro échéance découverte trop tard.",
+      items: [
+        ['progress', 'Où vous en êtes',        "Obligations et formations, sur une seule page."],
+        ['upload',   'Déposer vos obligations',"Fiche annuelle, rapports — une seule fois."],
+        ['clock',    'Anticiper les échéances', "Rappel avant, alerte après. Deux mois en jeu."],
+        ['plus',     'Faire une demande',       "Suspension, reprise, délai, changement de MS."]
+      ],
+      gain: "Vous ne découvrez plus un retard trop tard."
+    },
+    mds: {
+      label: 'Maître de stage', pic: 'users',
+      hook: "Vos stagiaires d'un coup d'œil. Vos avis en un clic.",
+      items: [
+        ['users',     'Vos stagiaires',   "Progression et ce qui manque, à jour."],
+        ['checklist', 'Donner votre avis', "Validez, ou demandez une correction précise."],
+        ['bell',      'Au bon moment',     "Sollicité quand une action vous attend."],
+        ['edit',      'Les mouvements',    "Changement de MS, suspension, reprise : avis tracé."]
+      ],
+      gain: "Le suivi de vos stagiaires tient dans un écran."
+    },
+    ctrl: {
+      label: 'Contrôleur de stage', pic: 'checklist',
+      hook: "Contrôler sur pièces, pas sur relances.",
+      items: [
+        ['users',     'Votre portefeuille',     "Qui vous contrôlez, où ils en sont."],
+        ['calendar',  'Entretien de 2e année',  "Rempli en ligne, transmis au stagiaire."],
+        ['checklist', 'Contrôler',              "Valider ou renvoyer, motif à l'appui."],
+        ['clock',     'Alerter à temps',        "Les retards remontent avant la clôture."]
+      ],
+      gain: "Vous contrôlez sur pièces, plus sur relances."
+    },
+    elu: {
+      label: 'Élu du conseil', pic: 'calendar',
+      hook: "Vos dossiers de session, prêts avant la séance.",
+      items: [
+        ['calendar',  'Préparer la session',  "Dossiers instruits et triés avant la séance."],
+        ['checklist', 'Décider en séance',     "Accepter, refuser, compléter — motif enregistré."],
+        ['mail',      'Notifier',              "Le demandeur informé, sans ressaisie."],
+        ['progress',  'Suivre les instances',  "Décisions passées, dossiers en attente."]
+      ],
+      gain: "Moins de préparation, plus de décision."
+    }
+  };
+  var LP_ORDER = ['ec', 'ecs', 'mds', 'ctrl', 'elu'];
+
+  window.lpApply = function (role) {
+    var d = LP_DATA[role];
+    if (!d) return;
+    document.getElementById('lp-panel').innerHTML =
+      '<div class="lp-panel-in">' +
+        '<div class="lp-hook">' + d.hook + '</div>' +
+        '<div class="lp-grid4">' +
+          d.items.map(function (it) {
+            return '<div class="lp-feat"><span class="lp-feat-ic">' + ic(it[0]) + '</span>' +
+                   '<div><div class="lp-feat-t">' + it[1] + '</div><div class="lp-feat-s">' + it[2] + '</div></div></div>';
+          }).join('') +
+        '</div>' +
+        '<div class="lp-gain">' + d.gain + '</div>' +
+      '</div>';
+    document.querySelectorAll('#lp-pills .lp-pill').forEach(function (b) {
+      b.classList.toggle('active', b.dataset.role === role);
+    });
+  };
+
+  var MODS = [
+    ['<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/>', 'Mes demandes', "Déposer, compléter, suivre. Le bon formulaire, les bonnes pièces, et le statut à jour."],
+    ['<rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6l-10 7L2 6"/>', 'Mes courriers', "Décisions, convocations, attestations. Votre courrier ordinal, consultable à tout moment."],
+    ['<path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1 2.5 3 6 3s6-2 6-3v-5"/>', 'Mon stage', "Obligations, formations, échéances, attestation de fin de stage. Votre parcours, en clair."],
+    ['<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M15 9h3M15 13h3M7 15h10"/>', 'Mon tableau', "Votre inscription et celle de votre structure. Mise à jour sans courrier."],
+    ['<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/>', 'Mes stagiaires', "Vue maître de stage et vue contrôleur. Leur progression, vos avis à rendre."],
+    ['<path d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z"/>', 'Mes instances', "Les dossiers de vos sessions, les décisions rendues, ce qui reste à examiner."]
+  ];
+  var BENEFITS = [
+    ['<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+     'Tout au même endroit',
+     "Demandes, courriers, stage, stagiaires, sessions. Vous ne cherchez plus dans votre boîte mail la pièce jointe de mars dernier."],
+    ['<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>',
+     'Le statut, en temps réel',
+     "À compléter, en attente de pièces, complète, décidée. Chaque dossier dit où il en est et ce qu'on attend de vous."],
+    ['<path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/>',
+     'Prévenu avant, pas après',
+     "Les rappels arrivent quand il est encore temps d'agir. Une échéance manquée peut coûter cher — autant ne jamais en arriver là."]
+  ];
+  function svg(paths, sw) {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="' + (sw || 1.8) + '" stroke-linecap="round" stroke-linejoin="round">' + paths + '</svg>';
+  }
+
+  var HERO_MOCK =
+    '<div class="lp-mock">' +
+      '<div class="lp-mock-head"><span class="lp-mock-head-l">' + svg('<path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/>', 1.7) + 'Notifications</span><span class="lp-mock-count">3</span></div>' +
+      '<div class="lp-mock-row"><span class="lp-mock-pill" style="background:#FCEBEB;color:#A32D2D">Alerte</span><div><div class="lp-mock-t">Clôture bloquée</div><div class="lp-mock-s">Régulariser avant le 20 juil.</div></div><span class="lp-mock-x">2 h</span></div>' +
+      '<div class="lp-mock-row"><span class="lp-mock-pill" style="background:#E6F1FB;color:#185FA5">À faire</span><div><div class="lp-mock-t">Rapport à corriger</div><div class="lp-mock-s">Éléments à revoir</div></div><span class="lp-mock-x">hier</span></div>' +
+      '<div class="lp-mock-row"><span class="lp-mock-pill" style="background:#E1F5EE;color:#0F6E56">Info</span><div><div class="lp-mock-t">Inscription acceptée</div><div class="lp-mock-s">Validée en session</div></div><span class="lp-mock-x">3 j</span></div>' +
+    '</div>';
+
+  function lpInit() {
+    var root = document.getElementById('lp-root');
+    if (!root) return;
+    root.innerHTML =
+      '<section class="lp-hero lp-reveal">' +
+        '<div class="lp-hero-txt">' +
+          '<div class="lp-eyebrow">PEP · Portail de l\'Exercice Professionnel</div>' +
+          '<h1 class="lp-h1">Toute votre vie ordinale, au même endroit.</h1>' +
+          '<p class="lp-sub">Inscription, stage, stagiaires, sessions, courriers. Un seul portail — et vous savez toujours où en est chaque dossier.</p>' +
+          '<div class="lp-cta-row">' +
+            '<button class="lp-btn lp-btn-primary" onclick="switchPage(\'stage\', document.getElementById(\'nav-stage\'))">Accéder à mon espace</button>' +
+            '<button class="lp-btn lp-btn-ghost" onclick="switchPage(\'demandes\', document.getElementById(\'nav-demandes\'))">Faire une demande</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="lp-hero-vis">' + HERO_MOCK + '</div>' +
+      '</section>' +
+
+      '<section class="lp-reveal">' +
+        '<div class="lp-head"><div class="lp-sec-title">Ce que ça change, selon votre casquette</div>' +
+        '<div class="lp-sec-sub">Choisissez la vôtre. Si vous en portez plusieurs, elles vous attendent dans le même compte.</div></div>' +
+        '<div class="lp-pills" id="lp-pills" role="tablist"></div>' +
+        '<div class="lp-panel" id="lp-panel"></div>' +
+      '</section>' +
+
+      '<section class="lp-cumul lp-reveal">' +
+        '<div class="lp-head"><div class="lp-sec-title">Plusieurs casquettes ? Un seul compte.</div>' +
+        '<div class="lp-sec-sub">Expert-comptable, maître de stage et élu sont souvent la même personne. Vous ne vous reconnectez pas — vous changez de vue.</div></div>' +
+        '<div class="lp-flow">' +
+          '<div class="lp-tile">' + svg('<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M15 9h3M15 13h3M7 15h10"/>', 1.7) + '<span>Expert-comptable</span></div>' +
+          '<div class="lp-tile">' + svg('<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/>', 1.7) + '<span>Maître de stage</span></div>' +
+          '<div class="lp-tile">' + svg('<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>', 1.7) + '<span>Élu du conseil</span></div>' +
+          '<span class="lp-flow-arrow">→</span>' +
+          '<div class="lp-tile-one">Un seul compte</div>' +
+        '</div>' +
+      '</section>' +
+
+      '<section class="lp-reveal">' +
+        '<div class="lp-head" style="margin-bottom:26px"><div class="lp-sec-title">Trois choses qui changent dès le premier jour</div>' +
+        '<div class="lp-sec-sub">Pas une promesse de transformation. Trois irritants qui disparaissent.</div></div>' +
+        '<div class="lp-benefits">' +
+          BENEFITS.map(function (b) {
+            return '<div class="lp-benefit"><div class="lp-benefit-ic">' + svg(b[0]) + '</div>' +
+                   '<div class="lp-benefit-t">' + b[1] + '</div><div class="lp-benefit-s">' + b[2] + '</div></div>';
+          }).join('') +
+        '</div>' +
+      '</section>' +
+
+      '<section class="lp-reveal">' +
+        '<div class="lp-head" style="margin-bottom:26px"><div class="lp-sec-title">Les six espaces de PEP</div>' +
+        '<div class="lp-sec-sub">Vous n\'en voyez que ce qui vous concerne.</div></div>' +
+        '<div class="lp-mods-grid">' +
+          MODS.map(function (m) {
+            return '<div class="lp-modcard"><div class="lp-modcard-t"><span class="lp-modcard-ic">' + svg(m[0], 1.7) + '</span>' + m[1] + '</div>' +
+                   '<div class="lp-modcard-s">' + m[2] + '</div></div>';
+          }).join('') +
+        '</div>' +
+      '</section>' +
+
+      '<section class="lp-final lp-reveal">' +
+        '<div class="lp-final-t">Votre espace vous attend.</div>' +
+        '<div class="lp-final-s">Votre rôle est déjà reconnu. Il n\'y a rien à paramétrer.</div>' +
+        '<button class="lp-btn lp-btn-primary" onclick="switchPage(\'stage\', document.getElementById(\'nav-stage\'))">Accéder à mon espace</button>' +
+      '</section>';
+
+    document.getElementById('lp-pills').innerHTML = LP_ORDER.map(function (k) {
+      return '<button class="lp-pill" role="tab" data-role="' + k + '" onclick="lpApply(\'' + k + '\')">' + ic(LP_DATA[k].pic) + LP_DATA[k].label + '</button>';
+    }).join('');
+    lpApply('ec');
+
+    if ('IntersectionObserver' in window) {
+      var obs = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); obs.unobserve(e.target); } });
+      }, { threshold: 0.12 });
+      root.querySelectorAll('.lp-reveal').forEach(function (el) { obs.observe(el); });
+    } else {
+      root.querySelectorAll('.lp-reveal').forEach(function (el) { el.classList.add('in'); });
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', lpInit);
+  } else {
+    lpInit();
+  }
+})();
+</script>
 
 </body>
 </html>
