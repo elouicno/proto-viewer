@@ -3089,7 +3089,7 @@
       gain: "Moins de préparation, plus de décision."
     }
   };
-  var LP_ORDER = ['ec', 'ecs', 'mds', 'ctrl', 'elu'];
+  var LP_ORDER = ['ecs', 'ec', 'mds', 'ctrl', 'elu'];
 
   window.lpApply = function (role) {
     var d = LP_DATA[role];
@@ -3147,7 +3147,7 @@
     root.innerHTML =
       '<section class="lp-hero lp-reveal">' +
         '<div class="lp-hero-txt">' +
-          '<div class="lp-eyebrow">PEP · Portail de l\'Exercice Professionnel</div>' +
+          '<div class="lp-eyebrow">PEP · Portail d\'Exercice Professionnel</div>' +
           '<h1 class="lp-h1">Toute votre vie ordinale, au même endroit.</h1>' +
           '<p class="lp-sub">Inscription, stage, stagiaires, sessions, courriers. Un seul portail — et vous savez toujours où en est chaque dossier.</p>' +
           '<div class="lp-cta-row">' +
@@ -3208,7 +3208,7 @@
     document.getElementById('lp-pills').innerHTML = LP_ORDER.map(function (k) {
       return '<button class="lp-pill" role="tab" data-role="' + k + '" onclick="lpApply(\'' + k + '\')">' + ic(LP_DATA[k].pic) + LP_DATA[k].label + '</button>';
     }).join('');
-    lpApply('ec');
+    lpApply('ecs');
 
     if ('IntersectionObserver' in window) {
       var obs = new IntersectionObserver(function (entries) {
