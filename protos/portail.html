@@ -1448,6 +1448,58 @@
     .notif-toggle-read:hover { background: #E9EDF5; color: var(--navy); }
     .notif-toggle-read svg { width: 17px; height: 17px; stroke: currentColor; fill: none; display: block; }
 
+    /* ══════════════════ CONTRÔLEUR DE STAGE ══════════════════ */
+    .ctr-search {
+      width: 100%; box-sizing: border-box; height: 44px; padding: 0 14px;
+      border: 1px solid var(--border); border-radius: 8px; font-family: var(--font);
+      font-size: 15px; color: var(--text-dark); background: #fff;
+    }
+    .ctr-search:focus { outline: none; border-color: var(--navy); }
+    .ctr-toolbar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px; margin-bottom: 20px; }
+    .ctr-field { display: flex; flex-direction: column; gap: 6px; }
+    .ctr-field.grow { flex: 1 1 320px; min-width: 240px; }
+    .ctr-field-label { font-size: 12px; font-weight: 600; color: var(--text-mid); letter-spacing: .2px; }
+    .ctr-select-wrap { position: relative; }
+    .ctr-select {
+      appearance: none; -webkit-appearance: none; width: 100%; min-width: 260px;
+      height: 44px; padding: 0 40px 0 14px; border: 1px solid var(--border); border-radius: 8px;
+      background: #fff; font-family: var(--font); font-size: 15px; font-weight: 600; color: var(--navy); cursor: pointer;
+    }
+    .ctr-select:focus { outline: none; border-color: var(--navy); }
+    .ctr-select-wrap svg { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; stroke: var(--text-soft); fill: none; stroke-width: 2; pointer-events: none; }
+    .ctr-count { font-size: 13px; font-weight: 500; color: var(--text-soft); }
+    .ctr-grouptag {
+      display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 10px;
+      background: #EEF1F7; color: var(--text-mid); font-size: 11px; font-weight: 600; vertical-align: middle;
+    }
+    .ctr-listcount { font-size: 13px; color: var(--text-soft); margin-bottom: 4px; }
+    .ctr-list { display: flex; flex-direction: column; gap: 12px; }
+    .ctr-card { border: 1px solid var(--border); border-radius: 8px; background: #fff; overflow: hidden; }
+    .ctr-card-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 18px; cursor: pointer; transition: background .15s;
+    }
+    .ctr-card-head:hover { background: #F8FAFC; }
+    .ctr-card-id { display: flex; flex-direction: column; gap: 4px; }
+    .ctr-card-name { font-size: 16px; font-weight: 700; color: var(--navy); }
+    .ctr-card-link { font-size: 13px; color: #2563EB; text-decoration: none; }
+    .ctr-card-link:hover { text-decoration: underline; }
+    .ctr-card-chev { width: 20px; height: 20px; stroke: var(--text-soft); fill: none; stroke-width: 2; transition: transform .2s; flex-shrink: 0; }
+    .ctr-card.open .ctr-card-chev { transform: rotate(180deg); }
+    .ctr-card-body { display: none; padding: 0 18px 18px; }
+    .ctr-card.open .ctr-card-body { display: block; }
+    .ctr-body-title { font-size: 13px; font-weight: 600; color: var(--text-mid); margin: 4px 0 10px; }
+    .ctr-empty { text-align: center; color: var(--text-soft); font-style: italic; padding: 40px 0; }
+    /* Badges statut obligations */
+    .obl-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 8px; font-size: 13px; font-weight: 600; line-height: 1; white-space: nowrap; }
+    .obl-badge svg { width: 14px; height: 14px; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .obl-ok   { background: #E6F4ED; color: #1A7A45; }
+    .obl-todo { background: #EAEDFB; color: #4453A6; }
+    .obl-fix  { background: #FDE8EA; color: #C8102E; }
+    .obl-wait { background: #EFF1F5; color: #556072; }
+    .obl-visu { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border: 1px solid var(--border); border-radius: 8px; background: #fff; font-family: var(--font); font-size: 14px; font-weight: 500; color: var(--navy); cursor: pointer; }
+    .obl-visu:hover { background: #F8FAFC; }
+    .obl-visu svg { width: 12px; height: 12px; fill: currentColor; }
   </style>
 </head>
 <body>
@@ -1547,7 +1599,7 @@
 
       <div class="nav-sub">
         <a class="nav-sub-item" href="#">Maître de stage</a>
-        <a class="nav-sub-item" href="#">Contrôleur de stage</a>
+        <a class="nav-sub-item" id="nav-controleur" href="#" onclick="switchPage('controleur',this);return false;">Contrôleur de stage</a>
       </div>
 
       <a class="nav-item" id="nav-instances" href="#" onclick="toggleInstances(this);return false;">
@@ -2148,6 +2200,26 @@
 
   </main>
 
+  <!-- ══ PAGE: CONTRÔLEUR DE STAGE ══ -->
+  <main class="main" id="page-controleur" style="display:none">
+    <h1 class="page-title">Contrôleur de stage</h1>
+    <p class="page-subtitle" style="font-style:italic">Filtrez par groupe, ou recherchez un stagiaire par son nom</p>
+    <div class="ctr-toolbar">
+      <div class="ctr-field">
+        <label class="ctr-field-label" for="ctr-group-select">Groupe</label>
+        <div class="ctr-select-wrap">
+          <select class="ctr-select" id="ctr-group-select" onchange="ctrSelectGroup(parseInt(this.value,10))"></select>
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+      </div>
+      <div class="ctr-field grow">
+        <label class="ctr-field-label" for="ctr-search">Recherche</label>
+        <input class="ctr-search" id="ctr-search" type="text" placeholder="Rechercher un stagiaire par nom ou prénom…" oninput="ctrRenderList()" />
+      </div>
+    </div>
+    <div class="ctr-list" id="ctr-list"></div>
+  </main>
+
   <!-- ══ PAGE CENTRE DE NOTIFICATIONS ══ -->
   <main class="main" id="page-notifications" style="display:none;">
     <h1 class="page-title">Notifications</h1>
@@ -2215,7 +2287,7 @@
     }
 
     function switchPage(page, navEl) {
-      ['page-accueil', 'page-stage', 'page-demandes', 'page-courriers', 'page-notifications', 'page-crs'].forEach(function(id) {
+      ['page-accueil', 'page-stage', 'page-demandes', 'page-courriers', 'page-notifications', 'page-crs', 'page-controleur'].forEach(function(id) {
         var el = document.getElementById(id);
         if (el) el.style.display = 'none';
       });
@@ -3522,5 +3594,144 @@
 })();
 </script>
 
+  <!-- ══ SCRIPT: CONTRÔLEUR DE STAGE (12 groupes × 13 stagiaires) ══ -->
+  <script>
+  (function () {
+    var PRENOMS = ["Amina","Clemence","Tristan","Nada","Naya","Nour","Précilia","Lucas","Emma","Léa","Hugo","Jules","Chloé","Nathan","Manon","Louis","Sarah","Gabriel","Inès","Adam","Camille","Yanis","Sofia","Théo","Jade","Rayan","Lina","Noah","Zoé","Elias","Maya","Ethan","Anaïs","Sami","Romane","Malo","Nour","Ilan","Alice","Marius"];
+    var NOMS = ["Khalfi","Buysse","Junior","Dupont","Martin","Bernard","Lefèvre","Moreau","Rousseau","Garnier","Petit","Fontaine","Benali","Diallo","Nguyen","Da Silva","Lopez","Roux","Girard","Mercier","Dubois","Lambert","Fabre","Blanc","Faure","Chevalier","Robin","Gauthier","Perrin","Morel","Andre","Guerin","Boyer","Denis","Lemaire","Duval","Marchand","Dumont","Aubert","Renard"];
+    var CTRL = "BENECH ERIC"; // contrôleur connecté
+    var GROUPES = ["GROUPE A","GROUPE B","GROUPE C","GROUPE D","GROUPE E","GROUPE F","GROUPE G","GROUPE H","GROUPE I","GROUPE J","GROUPE K","GROUPE L"];
+    // Obligations types : label + statut par défaut (varié par stagiaire) + échéance éventuelle
+    var OBL_TEMPLATE = [
+      { label: "Entretien - de première année",       st: "ok" },
+      { label: "Entretien - de deuxième année",       st: "ok" },
+      { label: "Entretien - de troisième année",      st: "todo" },
+      { label: "Fiche annuelle travaux - Année 1",    st: "todo" },
+      { label: "Fiche annuelle travaux - Année 1",    st: "fix",  ech: "01/06/2027" },
+      { label: "Fiche annuelle travaux - Année 2",    st: "todo" },
+      { label: "Fiche annuelle travaux - Année 2",    st: "wait", ech: "01/06/2028" },
+      { label: "Fiche annuelle travaux - Année 3",    st: "todo" },
+      { label: "Rapport de fin de stage",             st: "todo" }
+    ];
+    var ST_ORDER = ["ok", "todo", "fix", "wait"];
+
+    var ICON = {
+      ok:   '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M8 12l3 3 5-5"/></svg>',
+      todo: '<svg viewBox="0 0 24 24"><path d="M6 3h12M6 21h12M8 3v3.5a4 4 0 004 4 4 4 0 004-4V3M8 21v-3.5a4 4 0 014-4 4 4 0 014 4V21"/></svg>',
+      wait: '<svg viewBox="0 0 24 24"><path d="M6 3h12M6 21h12M8 3v3.5a4 4 0 004 4 4 4 0 004-4V3M8 21v-3.5a4 4 0 014-4 4 4 0 014 4V21"/></svg>',
+      fix:  '<svg viewBox="0 0 24 24"><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>'
+    };
+    function statutBadge(kind) {
+      if (kind === "ok")   return '<span class="obl-badge obl-ok">'   + ICON.ok   + 'Accepté</span>';
+      if (kind === "fix")  return '<span class="obl-badge obl-fix">'  + ICON.fix  + 'À corriger</span>';
+      if (kind === "wait") return '<span class="obl-badge obl-wait">' + ICON.wait + 'En cours d\'approbation Maître de stage</span>';
+      return '<span class="obl-badge obl-todo">' + ICON.todo + 'À venir</span>';
+    }
+
+    // ── Génération déterministe : 12 groupes × 13 stagiaires
+    var GROUPS = [];
+    for (var g = 0; g < 12; g++) {
+      var stagiaires = [];
+      for (var s = 0; s < 13; s++) {
+        var pi = (g * 7 + s * 3) % PRENOMS.length;
+        var ni = (g * 5 + s * 2 + 1) % NOMS.length;
+        var nom = NOMS[ni] + " " + PRENOMS[pi];
+        var off = (g + s) % ST_ORDER.length; // décalage de statut par stagiaire
+        var obligations = OBL_TEMPLATE.map(function (o, oi) {
+          var st = o.st;
+          // fait varier certains statuts d'un stagiaire à l'autre (déterministe)
+          if (oi % 3 === (s % 3)) st = ST_ORDER[(ST_ORDER.indexOf(o.st) + off) % ST_ORDER.length];
+          var ech = o.ech || ((st === "fix" || st === "wait") ? "01/06/202" + (6 + (s % 3)) : "");
+          return { label: o.label, statut: st, echeance: ech };
+        });
+        stagiaires.push({ nom: nom, obligations: obligations });
+      }
+      GROUPS.push({ groupe: GROUPES[g], stagiaires: stagiaires });
+    }
+
+    // Normalisation recherche : minuscules + sans accents ; tous les mots doivent matcher (nom/prénom, ordre libre)
+    function ctrNorm(s) { return (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""); }
+    function ctrMatch(nom, q) {
+      if (!q) return true;
+      var n = ctrNorm(nom);
+      return ctrNorm(q).split(/\s+/).filter(Boolean).every(function (tok) { return n.indexOf(tok) !== -1; });
+    }
+
+    // Sélection 0 = contrôleur (tous ses stagiaires) ; 1..N = groupes
+    var ctrSelected = 0;
+    var totalStagiaires = GROUPS.reduce(function (n, grp) { return n + grp.stagiaires.length; }, 0);
+
+    window.ctrSelectGroup = function (i) {
+      ctrSelected = i;
+      var sel = document.getElementById("ctr-group-select");
+      if (sel && parseInt(sel.value, 10) !== i) sel.value = String(i);
+      ctrRenderList();
+    };
+
+    function ctrRenderSelect() {
+      var sel = document.getElementById("ctr-group-select");
+      if (!sel) return;
+      var opts = ['<option value="0">' + CTRL + ' — tous mes stagiaires (' + totalStagiaires + ')</option>'];
+      GROUPS.forEach(function (grp, i) {
+        opts.push('<option value="' + (i + 1) + '">' + grp.groupe + ' (' + grp.stagiaires.length + ')</option>');
+      });
+      sel.innerHTML = opts.join("");
+      sel.value = String(ctrSelected);
+    }
+
+    window.ctrRenderList = function () {
+      var host = document.getElementById("ctr-list");
+      if (!host) return;
+      var q = (document.getElementById("ctr-search").value || "").trim();
+      // Vue "contrôleur" (onglet 0) = tous les groupes ; sinon le groupe sélectionné
+      var pool = [];
+      if (ctrSelected === 0) {
+        GROUPS.forEach(function (grp) { grp.stagiaires.forEach(function (st) { pool.push({ st: st, groupe: grp.groupe }); }); });
+      } else {
+        GROUPS[ctrSelected - 1].stagiaires.forEach(function (st) { pool.push({ st: st, groupe: GROUPS[ctrSelected - 1].groupe }); });
+      }
+      var rows = pool.filter(function (r) { return ctrMatch(r.st.nom, q); });
+      var countHtml = '<div class="ctr-listcount">' + rows.length + ' stagiaire' + (rows.length > 1 ? "s" : "") + (q ? ' · résultat' + (rows.length > 1 ? "s" : "") + ' pour « ' + q + ' »' : "") + '</div>';
+      if (rows.length === 0) { host.innerHTML = countHtml + '<div class="ctr-empty">Aucun stagiaire trouvé.</div>'; return; }
+      var sortSvg = '<svg class="crs-sort" viewBox="0 0 12 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5L6 3.5l3 3"/><path d="M3 9.5l3 3 3-3"/></svg>';
+      var visuBtn = '<button class="obl-visu" onclick="return false;"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Visualiser</button>';
+      host.innerHTML = countHtml + rows.map(function (r) {
+        var st = r.st;
+        var grpTag = (ctrSelected === 0 ? '<span class="ctr-grouptag">' + r.groupe + '</span>' : '');
+        var body =
+          '<table class="crs-table"><thead><tr>' +
+            '<th style="width:40%"><span class="crs-th-inner">OBLIGATION' + sortSvg + '</span></th>' +
+            '<th style="width:20%"><span class="crs-th-inner">ÉCHÉANCE' + sortSvg + '</span></th>' +
+            '<th style="width:24%"><span class="crs-th-inner">STATUT' + sortSvg + '</span></th>' +
+            '<th style="width:16%">ACTION</th>' +
+          '</tr></thead><tbody>' +
+          st.obligations.map(function (ob) {
+            return '<tr>' +
+              '<td>' + ob.label + '</td>' +
+              '<td>' + (ob.echeance || '') + '</td>' +
+              '<td>' + statutBadge(ob.statut) + '</td>' +
+              '<td>' + (ob.statut === "ok" ? visuBtn : '') + '</td>' +
+            '</tr>';
+          }).join("") +
+          '</tbody></table>';
+        return '<div class="ctr-card">' +
+                 '<div class="ctr-card-head" onclick="this.parentNode.classList.toggle(\'open\')">' +
+                   '<div class="ctr-card-id">' +
+                     '<span class="ctr-card-name">' + st.nom + grpTag + '</span>' +
+                     '<a class="ctr-card-link" href="#" onclick="event.stopPropagation();return false;">Voir le profil</a>' +
+                   '</div>' +
+                   '<svg class="ctr-card-chev" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>' +
+                 '</div>' +
+                 '<div class="ctr-card-body">' + body + '</div>' +
+               '</div>';
+      }).join("");
+    };
+
+    document.addEventListener("DOMContentLoaded", function () {
+      ctrRenderSelect();
+      ctrRenderList();
+    });
+  })();
+  </script>
 </body>
 </html>
