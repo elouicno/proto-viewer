@@ -1,0 +1,39 @@
+name: Update protos.json
+
+on:
+  push:
+    paths:
+      - 'protos/**'
+
+jobs:
+  update-manifest:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate protos.json
+        run: |
+          echo '[' > protos.json
+          first=true
+          for f in protos/*.html protos/*.htm; do
+            [ -f "$f" ] || continue
+            name=$(basename "$f")
+            if [ "$first" = true ]; then
+              first=false
+            else
+              echo ',' >> protos.json
+            fi
+            echo "  \"$name\"" >> protos.json
+          done
+          echo ']' >> protos.json
+          cat protos.json
+
+      - name: Commit protos.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add protos.json
+          git diff --staged --quiet || git commit -m "chore: update protos.json manifest"
+          git push
