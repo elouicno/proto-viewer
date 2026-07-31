@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'protos/**'
+  workflow_dispatch:
 
 jobs:
   update-manifest:
