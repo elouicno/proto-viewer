@@ -146,6 +146,11 @@
 
     .nav-sub-item:hover { color: var(--text-dark); }
 
+    .nav-sub-item.active {
+      color: var(--navy);
+      font-weight: 600;
+    }
+
     .sidebar-bottom {
       padding: 12px 16px 16px;
       border-top: 1px solid var(--border-light);
@@ -567,6 +572,108 @@
     }
     .suivi-table tbody tr:last-child td { border-bottom: none; }
     .suivi-table tbody tr:hover td { background: #F8FAFC; }
+
+    /* ── Tableau CRS (lignes en cartes séparées) ── */
+    .crs-section-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--navy);
+      margin: 24px 0 12px;
+    }
+    .crs-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 8px;
+    }
+    .crs-table thead tr { background: var(--navy); }
+    .crs-table th {
+      padding: 16px 20px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #fff;
+      text-align: left;
+      vertical-align: middle;
+      background: var(--navy);
+    }
+    .crs-table th:first-child { border-radius: 8px 0 0 8px; }
+    .crs-table th:last-child  { border-radius: 0 8px 8px 0; }
+    .crs-th-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .crs-sort {
+      width: 12px; height: 16px;
+      flex-shrink: 0;
+      stroke: #fff; fill: none;
+      opacity: .85;
+    }
+    .crs-table tbody tr { background: #fff; }
+    .crs-table tbody tr:hover td { background: #F8FAFC; }
+    .crs-table td {
+      padding: 18px 20px;
+      font-size: 15px;
+      color: var(--text-dark);
+      background: #fff;
+      border-top: 1px solid var(--border-light);
+      border-bottom: 1px solid var(--border-light);
+      vertical-align: middle;
+      transition: background .12s;
+    }
+    .crs-table td:first-child {
+      border-left: 1px solid var(--border-light);
+      border-radius: 8px 0 0 8px;
+    }
+    .crs-table td:last-child {
+      border-right: 1px solid var(--border-light);
+      border-radius: 0 8px 8px 0;
+    }
+    .crs-stagiaire { font-size: 15px; color: var(--text-dark); display: block; }
+    .crs-demande-link {
+      font-size: 14px;
+      color: #2B5BA8;
+      text-decoration: none;
+      display: block;
+      margin-top: 2px;
+    }
+    .crs-demande-link:hover { text-decoration: underline; }
+    /* Pill recommandation favorable */
+    .crs-reco {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      background: #E8F7EE;
+      color: #1E7F45;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+    .crs-reco svg { width: 14px; height: 14px; stroke: #1E7F45; fill: none; }
+    /* Variantes d'avis */
+    .crs-reco-res { background: #FDEBD9; color: #E07B34; }
+    .crs-reco-res svg { stroke: #E07B34; }
+    .crs-reco-def { background: #FCE4E7; color: #D14356; }
+    .crs-reco-def svg { stroke: #D14356; }
+    /* Placeholder vert quand pas de recommandation */
+    .crs-reco-empty {
+      display: inline-block;
+      width: 22px; height: 7px;
+      border-radius: 4px;
+      background: #CBEBD8;
+    }
+    /* Bouton commentaire */
+    .crs-comment-btn {
+      background: none; border: none; padding: 0; cursor: pointer;
+      display: inline-flex; align-items: center;
+    }
+    .crs-comment-btn svg {
+      width: 26px; height: 26px;
+      stroke: var(--navy); fill: none; stroke-width: 1.6;
+    }
 
     .demande-type-label { font-size: 13.5px; color: var(--navy); display: block; }
     .demande-id-link { font-size: 12px; color: #2B5BA8; text-decoration: none; display: block; margin-top: 2px; }
@@ -1443,16 +1550,20 @@
         <a class="nav-sub-item" href="#">Contrôleur de stage</a>
       </div>
 
-      <a class="nav-item" href="#">
+      <a class="nav-item" id="nav-instances" href="#" onclick="toggleInstances(this);return false;">
         <!-- heroicons-outline/queue-list -->
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z"/>
         </svg>
         Mes instances
-        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M6 9l6 6 6-6"/>
+        <svg class="chevron" id="chevron-instances" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 15l-6-6-6 6"/>
         </svg>
       </a>
+
+      <div class="nav-sub" id="sub-instances">
+        <a class="nav-sub-item" id="nav-crs" href="#" onclick="switchPage('crs',this);return false;">CRS</a>
+      </div>
 
     </nav>
   </aside>
@@ -1832,6 +1943,7 @@
           <div class="demande-item"><a class="demande-item-link" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>Déclarer une suspension du stage</a></div>
           <div class="demande-item"><a class="demande-item-link" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>Déclarer une reprise du stage</a></div>
           <div class="demande-item"><a class="demande-item-link" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>Demander un délai supplémentaire</a></div>
+          <div class="demande-item"><a class="demande-item-link" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>Demander une AFS</a></div>
           <div class="demande-item"><a class="demande-item-link" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>Demander une prorogation de l'AFS</a></div>
           <div class="demande-item"><a class="demande-item-link" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>Arrêter un stage</a></div>
           <div class="demande-item"><a class="demande-item-link" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>Mettre à jour des informations</a></div>
@@ -1932,6 +2044,110 @@
 
   </main>
 
+  <!-- ══ PAGE: MES INSTANCES / CRS ══ -->
+  <main class="main" id="page-crs" style="display:none">
+
+    <h1 class="page-title">CRS</h1>
+
+    <h2 class="crs-section-title">Demandes Stage</h2>
+
+    <table class="crs-table">
+      <thead>
+        <tr>
+          <th style="width:19%">
+            <span class="crs-th-inner">Stagiaire
+              <svg class="crs-sort" viewBox="0 0 12 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5L6 3.5l3 3"/><path d="M3 9.5l3 3 3-3"/></svg>
+            </span>
+          </th>
+          <th style="width:17%">
+            <span class="crs-th-inner">Type de demande
+              <svg class="crs-sort" viewBox="0 0 12 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5L6 3.5l3 3"/><path d="M3 9.5l3 3 3-3"/></svg>
+            </span>
+          </th>
+          <th style="width:18%">
+            <span class="crs-th-inner">Date d'effet
+              <svg class="crs-sort" viewBox="0 0 12 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5L6 3.5l3 3"/><path d="M3 9.5l3 3 3-3"/></svg>
+            </span>
+          </th>
+          <th style="width:17%">
+            <span class="crs-th-inner">Référent
+              <svg class="crs-sort" viewBox="0 0 12 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5L6 3.5l3 3"/><path d="M3 9.5l3 3 3-3"/></svg>
+            </span>
+          </th>
+          <th style="width:17%">
+            <span class="crs-th-inner">Avis permanent
+              <svg class="crs-sort" viewBox="0 0 12 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5L6 3.5l3 3"/><path d="M3 9.5l3 3 3-3"/></svg>
+            </span>
+          </th>
+          <th style="width:17%">
+            <span class="crs-th-inner">Avis commission
+              <svg class="crs-sort" viewBox="0 0 12 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5L6 3.5l3 3"/><path d="M3 9.5l3 3 3-3"/></svg>
+            </span>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="crs-stagiaire">Dupont Nada</span><a class="crs-demande-link" href="demande.html?id=00005290&nom=Dupont%20Nada&type=Inscription%20Stage" target="_blank">Demande00005290</a></td>
+          <td>Inscription Stage</td>
+          <td></td>
+          <td>Sophie Bernard</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td><span class="crs-stagiaire">Dupont naya</span><a class="crs-demande-link" href="demande.html?id=00005198&nom=Dupont%20naya&type=Inscription%20Stage" target="_blank">Demande00005198</a></td>
+          <td>Inscription Stage</td>
+          <td></td>
+          <td>Marc Lefèvre</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td><span class="crs-stagiaire">Junior Tristan</span><a class="crs-demande-link" href="demande.html?id=00005218&nom=Junior%20Tristan&type=Inscription%20Stage" target="_blank">Demande00005218</a></td>
+          <td>Inscription Stage</td>
+          <td></td>
+          <td>Claire Moreau</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td><span class="crs-stagiaire">Khalfi Nour</span><a class="crs-demande-link" href="demande.html?id=00003392&nom=Khalfi%20Nour&type=D%C3%A9claration%2FChangement%20Maitre%20de%20Stage" target="_blank">Demande00003392</a></td>
+          <td>Déclaration/Chang…<br />Maitre de Stage</td>
+          <td></td>
+          <td>Antoine Rousseau</td>
+          <td><span class="crs-reco-empty"></span></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td><span class="crs-stagiaire">Khalfi Nour</span><a class="crs-demande-link" href="demande.html?id=00003395&nom=Khalfi%20Nour&type=D%C3%A9claration%2FChangement%20Maitre%20de%20Stage" target="_blank">Demande00003395</a></td>
+          <td>Déclaration/Chang…<br />Maitre de Stage</td>
+          <td></td>
+          <td>Julie Garnier</td>
+          <td><span class="crs-reco-empty"></span></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td><span class="crs-stagiaire">Martin Précilia</span><a class="crs-demande-link" href="demande.html?id=00005113&nom=Martin%20Pr%C3%A9cilia&type=D%C3%A9claration%2FChangement%20Maitre%20de%20Stage" target="_blank">Demande00005113</a></td>
+          <td>Déclaration/Chang…<br />Maitre de Stage</td>
+          <td></td>
+          <td>Thomas Petit</td>
+          <td><span class="crs-reco-empty"></span></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td><span class="crs-stagiaire">Test Martin</span><a class="crs-demande-link" href="demande.html?id=00001977&nom=Test%20Martin&type=Inscription%20Stage" target="_blank">Demande00001977</a></td>
+          <td>Inscription Stage</td>
+          <td></td>
+          <td>Laura Fontaine</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+
+  </main>
+
   <!-- ══ PAGE CENTRE DE NOTIFICATIONS ══ -->
   <main class="main" id="page-notifications" style="display:none;">
     <h1 class="page-title">Notifications</h1>
@@ -1999,15 +2215,26 @@
     }
 
     function switchPage(page, navEl) {
-      ['page-accueil', 'page-stage', 'page-demandes', 'page-courriers', 'page-notifications'].forEach(function(id) {
+      ['page-accueil', 'page-stage', 'page-demandes', 'page-courriers', 'page-notifications', 'page-crs'].forEach(function(id) {
         var el = document.getElementById(id);
         if (el) el.style.display = 'none';
       });
       document.getElementById('page-' + page).style.display  = 'block';
-      document.querySelectorAll('.nav-item').forEach(function(el) {
+      document.querySelectorAll('.nav-item, .nav-sub-item').forEach(function(el) {
         el.classList.remove('active');
       });
       if (navEl) navEl.classList.add('active');
+    }
+
+    /* Repli / dépli du sous-menu « Mes instances » */
+    function toggleInstances(el) {
+      var sub = document.getElementById('sub-instances');
+      var chev = document.getElementById('chevron-instances');
+      var open = sub.style.display !== 'none';
+      sub.style.display = open ? 'none' : 'block';
+      chev.innerHTML = open
+        ? '<path d="M6 9l6 6 6-6"/>'
+        : '<path d="M18 15l-6-6-6 6"/>';
     }
 
     /* ══════════════════ ACCUEIL — JS adaptatif ══════════════════ */
@@ -3225,6 +3452,73 @@
   } else {
     lpInit();
   }
+})();
+
+/* ── Deep-link : portail.html#crs ouvre directement l'écran CRS ──
+   Utilisé par les liens « DemandeXXXXXXXX » du tableau CRS,
+   qui s'ouvrent dans un nouvel onglet sur cette même page. */
+(function () {
+  function openFromHash() {
+    if (location.hash !== '#crs') return;
+    var navCrs = document.getElementById('nav-crs');
+    var sub    = document.getElementById('sub-instances');
+    var chev   = document.getElementById('chevron-instances');
+    if (sub)  sub.style.display = 'block';
+    if (chev) chev.innerHTML = '<path d="M18 15l-6-6-6 6"/>';
+    if (typeof switchPage === 'function') switchPage('crs', navCrs);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', openFromHash);
+  } else {
+    openFromHash();
+  }
+  window.addEventListener('hashchange', openFromHash);
+})();
+
+/* ── Synchronisation « Votre avis » (demande.html) → colonne Avis commission ──
+   Mise à jour immédiate via window.opener, plus restauration depuis le
+   stockage local au retour sur l'onglet. */
+(function () {
+  var AVIS_KEY = 'pep_avis_commission';
+  var PILLS = {
+    fav: '<span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span>',
+    res: '<span class="crs-reco crs-reco-res"><svg viewBox="0 0 24 24" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Réservé</span>',
+    def: '<span class="crs-reco crs-reco-def"><svg viewBox="0 0 24 24" stroke-width="2.2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>Défavorable</span>'
+  };
+
+  /* Dernière cellule de chaque ligne = colonne « Avis commission », indexée par n° de demande */
+  function cellById() {
+    var map = {};
+    document.querySelectorAll('.crs-table tbody tr').forEach(function (tr) {
+      var a = tr.querySelector('.crs-demande-link');
+      if (!a) return;
+      var id = a.textContent.replace('Demande', '').trim();
+      map[id] = tr.cells[tr.cells.length - 1];
+    });
+    return map;
+  }
+
+  window.setAvisCommission = function (id, key) {
+    var cell = cellById()[id];
+    if (cell && PILLS[key]) cell.innerHTML = PILLS[key];
+  };
+
+  function restore() {
+    var raw;
+    try { raw = localStorage.getItem(AVIS_KEY); } catch (e) { return; }
+    if (!raw) return;
+    var m;
+    try { m = JSON.parse(raw); } catch (e) { return; }
+    Object.keys(m).forEach(function (id) { window.setAvisCommission(id, m[id]); });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', restore);
+  } else {
+    restore();
+  }
+  window.addEventListener('focus', restore);
+  window.addEventListener('storage', restore);
 })();
 </script>
 

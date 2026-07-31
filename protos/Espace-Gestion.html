@@ -1716,7 +1716,7 @@ function HighlightsPanel({
 }
 const RECORD_TABS = [{
   key: "individu",
-  label: "Profil"
+  label: "Individu"
 }, {
   key: "stage",
   label: "Stage"
@@ -3990,8 +3990,104 @@ function DemandesListViewPage({
     }, void 0, false)]
   }, void 0, true);
 }
-function ListViewHeader() {
+const BULK_EN_ATTENTE = {};
+function BulkDemandeModal({ onClose, stagiaires, onRemove, onClearAll }) {
+  const today = new Date().toISOString().slice(0, 10);
+  const [submitted, setSubmitted] = React.useState(0);
+  const [selOpen, setSelOpen] = React.useState(false);
+  const [selQuery, setSelQuery] = React.useState("");
+  const [form, setForm] = React.useState({ demande: "ATTESTATION DE FIN DE STAGE", dateEffet: "", echeance: "Conseil", dateDemande: today, commentaire: "", nouveauStatut: "CLASSE", nouvelleQualite: "STAGIAIRE - REGIME 81", conseil: "", commission: "INFORMATIONS", avis: "Favorable", commentaireCommission: "" });
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+  const BULK_QUALITE = "EXPERT-COMPTABLE STAGIAIRE";
+  // ── Auto-remplissage Statut + Qualité + Commission + Avis selon la Demande (iso fiche stagiaire)
+  React.useEffect(() => {
+    const pm = getProcessMetierSTG(form.demande);
+    const rules = getRulesForMotif(form.demande, BULK_QUALITE);
+    if (!rules) { setForm(f => ({ ...f, nouveauStatut: "", commission: "" })); return; }
+    const statuts = [...new Set(rules.map(r => r.statut))];
+    const commissions = [...new Set(rules.map(r => r.commission))];
+    setForm(f => ({
+      ...f,
+      nouveauStatut: statuts.length === 1 ? statuts[0] : "",
+      commission: commissions.length === 1 ? commissions[0] : "",
+      ...(pm ? { nouvelleQualite: pm.qualite, avis: pm.avis } : {})
+    }));
+  }, [form.demande]);
+  const selNames = stagiaires || [];
+  const demandeOptions = (typeof MOTIFS_PAR_QUALITE !== "undefined" && MOTIFS_PAR_QUALITE["EXPERT-COMPTABLE STAGIAIRE|EN EXERCICE"]) || ["ATTESTATION DE FIN DE STAGE", "RENOUVELLEMENT ATTESTATION DE FIN DE STAGE", "PROLONGATION DE STAGE", "CHANGEMENT MAITRE DE STAGE"];
+  const inputCls = "w-full border border-[#C9C9C9] rounded px-2 py-1 text-[13px] bg-white focus:outline-none focus:border-[#0250D9]";
+  const selectCls = "border border-[#C9C9C9] rounded px-2 py-1 text-[13px] bg-white focus:outline-none focus:border-[#0250D9]";
+  const labelCls = "text-[13px] font-semibold text-[#1A1A1A] shrink-0";
+  const secCls = "bg-[#EEF3FA] border border-[#B0C4DE] rounded p-3 flex flex-col gap-3";
+  const secTitle = "text-[13px] font-bold text-[#0250D9] mb-1";
+  const valider = () => {
+    if (selNames.length === 0 || !form.demande) return;
+    selNames.forEach(name => {
+      if (!BULK_EN_ATTENTE[name]) BULK_EN_ATTENTE[name] = [];
+      BULK_EN_ATTENTE[name].push({ motif: form.demande, effet: form.dateEffet || today, session: form.dateDemande || today, decision: form.avis, echeance: form.echeance, commentaire: form.commentaire });
+    });
+    setSubmitted(selNames.length);
+  };
+  const fieldRow = (label, node, w) => /*#__PURE__*/_jsxDEV("div", { className: "flex items-center gap-2", children: [/*#__PURE__*/_jsxDEV("span", { className: labelCls, style: w ? { width: w } : undefined, children: label }, void 0, false), node] }, void 0, true);
   return /*#__PURE__*/_jsxDEV("div", {
+    className: "fixed inset-0 z-[9999] flex items-center justify-center",
+    style: { background: "rgba(0,0,0,0.4)" },
+    children: /*#__PURE__*/_jsxDEV("div", {
+      className: "bg-[#EEF3FA] rounded shadow-xl flex flex-col",
+      style: { width: 760, maxHeight: "90vh", overflow: "hidden" },
+      children: [/*#__PURE__*/_jsxDEV("div", {
+        className: "flex items-center justify-between px-4 py-2 bg-[#C8D9EE] border-b border-[#B0C4DE] rounded-t",
+        children: [/*#__PURE__*/_jsxDEV("span", { className: "text-[13px] font-semibold text-[#03234D]", children: "Nouvelle demande en masse" }, void 0, false), /*#__PURE__*/_jsxDEV("button", { onClick: onClose, className: "text-[#5C5C5C] hover:text-[#C00] text-[16px] font-bold leading-none", children: "✕" }, void 0, false)]
+      }, void 0, true), submitted > 0 ? /*#__PURE__*/_jsxDEV("div", {
+        className: "px-6 py-10 flex flex-col items-center gap-3 text-center flex-1",
+        children: [/*#__PURE__*/_jsxDEV("div", { className: "w-12 h-12 rounded-full bg-[#E6F4EA] flex items-center justify-center", children: /*#__PURE__*/_jsxDEV("svg", { viewBox: "0 0 24 24", width: 24, height: 24, fill: "none", stroke: "#1B7F37", strokeWidth: 3, strokeLinecap: "round", strokeLinejoin: "round", children: /*#__PURE__*/_jsxDEV("polyline", { points: "20 6 9 17 4 12" }, void 0, false) }, void 0, false) }, void 0, false), /*#__PURE__*/_jsxDEV("p", { className: "text-[15px] font-semibold text-[#03234D]", children: [submitted, " demande(s) « ", form.demande, " » créée(s)"] }, void 0, true), /*#__PURE__*/_jsxDEV("p", { className: "text-[13px] text-[#5C5C5C]", children: "Ajoutée(s) aux « Demandes en attente » des stagiaires sélectionnés." }, void 0, false)]
+      }, void 0, true) : /*#__PURE__*/_jsxDEV("div", {
+        className: "overflow-y-auto flex-1 px-4 py-3 flex flex-col gap-3",
+        children: [/*#__PURE__*/_jsxDEV("div", {
+          className: secCls,
+          children: selNames.length === 0 ? [/*#__PURE__*/_jsxDEV("div", { className: secTitle, children: "Stagiaires concernés (0)" }, void 0, false), /*#__PURE__*/_jsxDEV("p", { className: "text-[13px] text-[#B95C00]", children: "Sélectionnez d'abord des stagiaires dans le tableau (cases à cocher), puis relancez « Faire une nouvelle demande »." }, void 0, false)] : (() => {
+            const preview = selNames.slice(0, 3);
+            const extra = selNames.length - preview.length;
+            const shown = selQuery ? selNames.filter(n => n.toLowerCase().includes(selQuery.toLowerCase())) : selNames;
+            return [/*#__PURE__*/_jsxDEV("div", { className: "flex items-center justify-between gap-2", children: [/*#__PURE__*/_jsxDEV("div", { className: "flex items-center gap-2", children: [/*#__PURE__*/_jsxDEV("span", { className: "inline-flex items-center justify-center min-w-[22px] h-[22px] px-1.5 rounded-full bg-[#0250D9] text-white text-[12px] font-bold", children: selNames.length }, void 0, false), /*#__PURE__*/_jsxDEV("span", { className: "text-[13px] font-bold text-[#0250D9]", children: "stagiaires concernés" }, void 0, false)] }, void 0, true), /*#__PURE__*/_jsxDEV("div", { className: "flex items-center gap-3", children: [onClearAll && /*#__PURE__*/_jsxDEV("button", { onClick: onClearAll, className: "text-[12px] text-[#5C5C5C] hover:text-[#C00] underline", children: "Tout retirer" }, void 0, false), /*#__PURE__*/_jsxDEV("button", { onClick: () => setSelOpen(o => !o), className: "text-[12px] text-[#0250D9] font-medium hover:underline", children: selOpen ? "Masquer la liste ▲" : "Voir / modifier la liste ▼" }, void 0, false)] }, void 0, true)] }, void 0, true), !selOpen && /*#__PURE__*/_jsxDEV("div", { className: "flex flex-wrap items-center gap-1.5", children: [...preview.map(n => /*#__PURE__*/_jsxDEV("span", { className: "text-[12px] bg-white border border-[#B0C4DE] rounded-full px-2.5 py-0.5 text-[#03234D]", children: n }, n, false)), extra > 0 && /*#__PURE__*/_jsxDEV("span", { className: "text-[12px] text-[#5C5C5C]", children: ["+", extra, " autre", extra > 1 ? "s" : ""] }, void 0, true)] }, void 0, true), selOpen && /*#__PURE__*/_jsxDEV("div", { className: "flex flex-col gap-2", children: [selNames.length > 8 && /*#__PURE__*/_jsxDEV("input", { value: selQuery, onChange: e => setSelQuery(e.target.value), placeholder: "Filtrer dans la sélection…", className: inputCls }, void 0, false), /*#__PURE__*/_jsxDEV("div", { style: { maxHeight: 170, overflow: "auto" }, className: "flex flex-wrap gap-1.5 bg-white border border-[#DDE6F0] rounded p-2", children: shown.length === 0 ? /*#__PURE__*/_jsxDEV("span", { className: "text-[12px] text-[#8A8A8A] px-1", children: "Aucun résultat." }, void 0, false) : shown.map(n => /*#__PURE__*/_jsxDEV("span", { className: "inline-flex items-center gap-1 text-[12px] bg-[#EEF4FF] border border-[#B0C4DE] rounded-full pl-2.5 pr-1 py-0.5 text-[#03234D]", children: [n, onRemove && /*#__PURE__*/_jsxDEV("button", { onClick: () => onRemove(n), title: "Retirer", className: "w-4 h-4 rounded-full flex items-center justify-center text-[#5C5C5C] hover:bg-[#C00] hover:text-white leading-none", children: "×" }, void 0, false)] }, n, true)) }, void 0, false)] }, void 0, true)];
+          })()
+        }, void 0, true), /*#__PURE__*/_jsxDEV("div", {
+          className: secCls,
+          children: [/*#__PURE__*/_jsxDEV("div", { className: secTitle, children: "Information demande" }, void 0, false), fieldRow("Demande :", /*#__PURE__*/_jsxDEV("select", { value: form.demande, onChange: e => set("demande", e.target.value), className: selectCls + " flex-1", children: [/*#__PURE__*/_jsxDEV("option", { value: "" }, void 0, false), ...demandeOptions.map(m => /*#__PURE__*/_jsxDEV("option", { value: m, children: m }, m, false))] }, void 0, true), 100), /*#__PURE__*/_jsxDEV("div", { className: "flex items-center gap-4 flex-wrap", children: [fieldRow("Date d'effet :", /*#__PURE__*/_jsxDEV("input", { type: "date", value: form.dateEffet, onChange: e => set("dateEffet", e.target.value), className: selectCls, style: { width: 130 } }, void 0, false)), fieldRow("Echéance :", /*#__PURE__*/_jsxDEV("select", { value: form.echeance, onChange: e => set("echeance", e.target.value), className: selectCls, children: ["Conseil", "Bureau", "AG", "CRS"].map(o => /*#__PURE__*/_jsxDEV("option", { value: o, children: o }, o, false)) }, void 0, false)), fieldRow("Date demande :", /*#__PURE__*/_jsxDEV("input", { type: "date", value: form.dateDemande, onChange: e => set("dateDemande", e.target.value), className: selectCls, style: { width: 130 } }, void 0, false))] }, void 0, true), /*#__PURE__*/_jsxDEV("div", { className: "flex items-start gap-2", children: [/*#__PURE__*/_jsxDEV("span", { className: labelCls, style: { width: 100 }, children: "Commentaire :" }, void 0, false), /*#__PURE__*/_jsxDEV("textarea", { value: form.commentaire, onChange: e => set("commentaire", e.target.value), rows: 2, className: inputCls + " flex-1" }, void 0, false)] }, void 0, true)]
+        }, void 0, true), /*#__PURE__*/_jsxDEV("div", {
+          className: secCls,
+          children: [/*#__PURE__*/_jsxDEV("div", { className: secTitle, children: "Nouvelle situation" }, void 0, false), /*#__PURE__*/_jsxDEV("div", { className: "flex items-center gap-4 flex-wrap", children: [fieldRow("Statut :", (() => {
+            const rules = getRulesForMotif(form.demande, BULK_QUALITE);
+            const opts = rules ? [...new Set(rules.map(r => r.statut))] : [];
+            const locked = opts.length === 1;
+            const cls = selectCls + (locked ? " bg-[#FFF8DB] border-[#E5C100]" : "");
+            return /*#__PURE__*/_jsxDEV("input", { value: form.nouveauStatut, onChange: e => set("nouveauStatut", e.target.value), readOnly: locked, title: locked ? "Valeur imposée par la demande" : undefined, className: cls, style: { width: 150 } }, void 0, false);
+          })()), fieldRow("Qualité :", (() => {
+            const pm = getProcessMetierSTG(form.demande);
+            const cls = selectCls + (pm ? " bg-[#FFF8DB] border-[#E5C100]" : "");
+            return /*#__PURE__*/_jsxDEV("input", { value: form.nouvelleQualite, onChange: e => set("nouvelleQualite", e.target.value), readOnly: !!pm, title: pm ? "Valeur imposée par la demande" : undefined, className: cls, style: { width: 200 } }, void 0, false);
+          })())] }, void 0, true), fieldRow("Conseil :", /*#__PURE__*/_jsxDEV("input", { value: form.conseil, onChange: e => set("conseil", e.target.value), className: inputCls + " flex-1" }, void 0, false), 100)]
+        }, void 0, true), /*#__PURE__*/_jsxDEV("div", {
+          className: secCls,
+          children: [/*#__PURE__*/_jsxDEV("div", { className: secTitle, children: "Commission décisionnaire" }, void 0, false), /*#__PURE__*/_jsxDEV("div", { className: "flex items-center gap-4 flex-wrap", children: [fieldRow("Commission :", (() => {
+            const rules = getRulesForMotif(form.demande, BULK_QUALITE);
+            const opts = rules ? [...new Set(rules.map(r => r.commission))] : [];
+            const locked = opts.length === 1;
+            const cls = selectCls + (locked ? " bg-[#FFF8DB] border-[#E5C100]" : "");
+            return /*#__PURE__*/_jsxDEV("input", { value: form.commission, onChange: e => set("commission", e.target.value), readOnly: locked, title: locked ? "Valeur imposée par la demande" : undefined, className: cls, style: { width: 170 } }, void 0, false);
+          })()), fieldRow("Avis :", /*#__PURE__*/_jsxDEV("select", { value: form.avis, onChange: e => set("avis", e.target.value), className: selectCls, children: ["Favorable", "Défavorable", "En attente"].map(o => /*#__PURE__*/_jsxDEV("option", { value: o, children: o }, o, false)) }, void 0, false))] }, void 0, true), /*#__PURE__*/_jsxDEV("div", { className: "flex items-start gap-2", children: [/*#__PURE__*/_jsxDEV("span", { className: labelCls, style: { width: 100 }, children: "Commentaire :" }, void 0, false), /*#__PURE__*/_jsxDEV("textarea", { value: form.commentaireCommission, onChange: e => set("commentaireCommission", e.target.value), rows: 2, className: inputCls + " flex-1" }, void 0, false)] }, void 0, true)]
+        }, void 0, true)]
+      }, void 0, true), /*#__PURE__*/_jsxDEV("div", {
+        className: "flex items-center justify-end gap-2 px-4 py-2.5 bg-[#EEF3FA] border-t border-[#B0C4DE]",
+        children: submitted > 0 ? /*#__PURE__*/_jsxDEV("button", { onClick: onClose, className: "px-4 py-1.5 bg-[#0250D9] text-white rounded text-[13px] font-medium hover:bg-[#0344B8]", children: "Fermer" }, void 0, false) : [/*#__PURE__*/_jsxDEV("button", { onClick: onClose, className: "px-4 py-1.5 bg-white border border-[#C9C9C9] rounded text-[13px] font-medium text-[#2E2E2E] hover:bg-[#F3F3F3]", children: "Fermer" }, "c", false), /*#__PURE__*/_jsxDEV("button", { onClick: valider, disabled: selNames.length === 0 || !form.demande, className: "px-4 py-1.5 rounded text-[13px] font-medium " + (selNames.length === 0 || !form.demande ? "bg-[#C9C9C9] text-white cursor-not-allowed" : "bg-[#43A047] text-white hover:bg-[#388E3C]"), children: "Valider" }, "v", false)]
+      }, void 0, false)]
+    }, void 0, true)
+  }, void 0, false);
+}
+function ListViewHeader({ stagiaires, onRemoveStagiaire, onClearStagiaires }) {
+  const [showBulk, setShowBulk] = useState(false);
+  return /*#__PURE__*/_jsxDEV(_Fragment, {
+    children: [showBulk && /*#__PURE__*/_jsxDEV(BulkDemandeModal, { onClose: () => setShowBulk(false), stagiaires: stagiaires, onRemove: onRemoveStagiaire, onClearAll: onClearStagiaires }, void 0, false), /*#__PURE__*/_jsxDEV("div", {
     className: "bg-[#F3F3F3] px-4 py-4",
     children: [/*#__PURE__*/_jsxDEV("div", {
       className: "flex items-center justify-between",
@@ -4017,9 +4113,11 @@ function ListViewHeader() {
         children: /*#__PURE__*/_jsxDEV("div", {
           className: "flex border border-[#5C5C5C] rounded-full overflow-hidden",
           children: [/*#__PURE__*/_jsxDEV("button", {
+            onClick: () => setShowBulk(true),
             className: "px-4 h-8 text-[14px] text-[#0250D9] bg-white border-r border-[#5C5C5C]",
-            children: "New"
+            children: "Faire une nouvelle demande"
           }, void 0, false), /*#__PURE__*/_jsxDEV("button", {
+            onClick: () => setShowBulk(true),
             className: "px-2 h-8 bg-white flex items-center justify-center",
             children: /*#__PURE__*/_jsxDEV(ChevronDown, {
               size: 14,
@@ -4035,6 +4133,7 @@ function ListViewHeader() {
         children: [STAGIAIRES_LIST.length, " éléments • Trié par Stagiaire • Mis à jour il y a quelques secondes"]
       }, void 0, true), /*#__PURE__*/_jsxDEV(ListViewToolbar, {}, void 0, false)]
     }, void 0, true)]
+  }, void 0, true)]
   }, void 0, true);
 }
 function StatusBadge({
@@ -4073,9 +4172,13 @@ function StatusBadge({
 }
 function DataTableListView({
   data,
-  onRowClick
+  onRowClick,
+  selected: selectedProp,
+  setSelected: setSelectedProp
 }) {
-  const [selected, setSelected] = useState({});
+  const [selectedInner, setSelectedInner] = useState({});
+  const selected = selectedProp !== undefined ? selectedProp : selectedInner;
+  const setSelected = setSelectedProp || setSelectedInner;
   const toggle = i => setSelected(prev => {
     const n = {
       ...prev
@@ -4224,12 +4327,22 @@ function DataTableListView({
 function ListViewPage({
   onNavigateToRecord
 }) {
+  const [selected, setSelected] = useState({});
+  const selectedNames = STAGIAIRES_LIST.filter((_, i) => selected[i]).map(s => s.stagiaire);
+  const removeStagiaire = name => setSelected(prev => {
+    const n = { ...prev };
+    STAGIAIRES_LIST.forEach((s, i) => { if (n[i] && s.stagiaire === name) delete n[i]; });
+    return n;
+  });
+  const clearStagiaires = () => setSelected({});
   return /*#__PURE__*/_jsxDEV(_Fragment, {
-    children: [/*#__PURE__*/_jsxDEV(ListViewHeader, {}, void 0, false), /*#__PURE__*/_jsxDEV("div", {
+    children: [/*#__PURE__*/_jsxDEV(ListViewHeader, { stagiaires: selectedNames, onRemoveStagiaire: removeStagiaire, onClearStagiaires: clearStagiaires }, void 0, false), /*#__PURE__*/_jsxDEV("div", {
       className: "flex-1 overflow-auto bg-white mx-4 rounded-t-lg",
       children: /*#__PURE__*/_jsxDEV(DataTableListView, {
         data: STAGIAIRES_LIST,
-        onRowClick: onNavigateToRecord
+        onRowClick: onNavigateToRecord,
+        selected: selected,
+        setSelected: setSelected
       }, void 0, false)
     }, void 0, false)]
   }, void 0, true);
@@ -6819,18 +6932,27 @@ function DemandesPanel({
   stagiaireName,
   qualite: currentQualite,
   onQualiteChange,
-  onMotifClick
+  onMotifClick,
+  onNavigateToDemandeStage
 }) {
   const [historiqueOpen, setHistoriqueOpen] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [historique, setHistorique] = useState(initialHistorique || []);
+  const [enAttente, setEnAttente] = useState(() => [...(motifsEnAttente || []), ...((typeof BULK_EN_ATTENTE !== "undefined" && BULK_EN_ATTENTE[stagiaireName]) || [])]);
   const thCls = "px-3 py-2 border-b border-[#C9C9C9] text-[11px] font-semibold text-[#5C5C5C] whitespace-nowrap";
   const tdCls = "px-3 py-2 text-[12px] text-[#2E2E2E] whitespace-nowrap";
   const handleValider = ({
     newRow,
     qualite
   }) => {
-    setHistorique(h => [...h, newRow]);
+    setEnAttente(a => [...a, {
+      motif: newRow.motif,
+      effet: newRow.effet,
+      session: newRow.session,
+      decision: newRow.avis || newRow.decision,
+      echeance: newRow.type,
+      commentaire: newRow.commentaire
+    }]);
     if (qualite && onQualiteChange) onQualiteChange(qualite);
     setShowModal(false);
   };
@@ -6980,17 +7102,24 @@ function DemandesPanel({
               }, h, false))
             }, void 0, false)
           }, void 0, false), /*#__PURE__*/_jsxDEV("tbody", {
-            children: [motifsEnAttente.length === 0 && /*#__PURE__*/_jsxDEV("tr", {
+            children: [enAttente.length === 0 && /*#__PURE__*/_jsxDEV("tr", {
               children: /*#__PURE__*/_jsxDEV("td", {
                 colSpan: 6,
                 className: "px-2 py-3 text-[12px] text-[#5C5C5C] italic",
                 children: "Aucune demande en attente"
               }, void 0, false)
-            }, void 0, false), motifsEnAttente.map((m, i) => /*#__PURE__*/_jsxDEV("tr", {
-              className: "border-b border-[#E5E5E5] hover:bg-[#EEF4FF] cursor-pointer",
+            }, void 0, false), enAttente.map((m, i) => /*#__PURE__*/_jsxDEV("tr", {
+              className: "border-b border-[#E5E5E5] hover:bg-[#EEF4FF]",
               children: [/*#__PURE__*/_jsxDEV("td", {
                 className: "px-2 py-1.5 font-semibold text-[#0250D9] whitespace-nowrap",
-                children: m.motif
+                children: /ATTESTATION DE FIN DE STAGE/i.test(m.motif || "") ? /*#__PURE__*/_jsxDEV("span", {
+                  onClick: () => {
+                    const base = DEMANDES_STAGE_LIST.find(x => x.typeEnr === "Demande AFS") || DEMANDES_STAGE_LIST[0];
+                    onNavigateToDemandeStage && onNavigateToDemandeStage({ ...base, num: "AFS-" + (numInscription || "").replace(/\D/g, "").slice(-6), stagiaire: stagiaireName, dateSession: m.session || base.dateSession, dateEffet: m.effet || base.dateEffet });
+                  },
+                  className: "cursor-pointer hover:underline",
+                  children: m.motif
+                }, void 0, false) : m.motif
               }, void 0, false), /*#__PURE__*/_jsxDEV("td", {
                 className: "px-2 py-1.5 whitespace-nowrap",
                 children: m.effet
@@ -7016,7 +7145,8 @@ function DemandesPanel({
 }
 function RecordPage({
   row,
-  onNavigateToMotif
+  onNavigateToMotif,
+  onNavigateToDemandeStage
 }) {
   const [activeTab, setActiveTab] = useState("stage");
   const data = buildRecordData(row);
@@ -7322,6 +7452,45 @@ function RecordPage({
               strokeWidth: "2.5",
               strokeLinecap: "round",
               strokeLinejoin: "round",
+              children: [/*#__PURE__*/_jsxDEV("rect", {
+                x: "3",
+                y: "4",
+                width: "18",
+                height: "18",
+                rx: "2"
+              }, void 0, false), /*#__PURE__*/_jsxDEV("line", {
+                x1: "16",
+                y1: "2",
+                x2: "16",
+                y2: "6"
+              }, void 0, false), /*#__PURE__*/_jsxDEV("line", {
+                x1: "8",
+                y1: "2",
+                x2: "8",
+                y2: "6"
+              }, void 0, false), /*#__PURE__*/_jsxDEV("line", {
+                x1: "3",
+                y1: "10",
+                x2: "21",
+                y2: "10"
+              }, void 0, false)]
+            }, void 0, true),
+            iconBg: "bg-[#0F7AC4]",
+            title: "Périodes",
+            defaultOpen: false,
+            children: /*#__PURE__*/_jsxDEV(PeriodesContent, {
+              data: data.periodesData
+            }, void 0, false)
+          }, void 0, false), /*#__PURE__*/_jsxDEV(CardSection, {
+            icon: /*#__PURE__*/_jsxDEV("svg", {
+              viewBox: "0 0 24 24",
+              width: "12",
+              height: "12",
+              fill: "none",
+              stroke: "white",
+              strokeWidth: "2.5",
+              strokeLinecap: "round",
+              strokeLinejoin: "round",
               children: [/*#__PURE__*/_jsxDEV("polyline", {
                 points: "9 11 12 14 22 4"
               }, void 0, false), /*#__PURE__*/_jsxDEV("path", {
@@ -7385,46 +7554,8 @@ function RecordPage({
               onMotifClick: m => onNavigateToMotif && onNavigateToMotif({
                 ...m,
                 _row: row
-              })
-            }, void 0, false)
-          }, void 0, false), /*#__PURE__*/_jsxDEV(CardSection, {
-            icon: /*#__PURE__*/_jsxDEV("svg", {
-              viewBox: "0 0 24 24",
-              width: "12",
-              height: "12",
-              fill: "none",
-              stroke: "white",
-              strokeWidth: "2.5",
-              strokeLinecap: "round",
-              strokeLinejoin: "round",
-              children: [/*#__PURE__*/_jsxDEV("rect", {
-                x: "3",
-                y: "4",
-                width: "18",
-                height: "18",
-                rx: "2"
-              }, void 0, false), /*#__PURE__*/_jsxDEV("line", {
-                x1: "16",
-                y1: "2",
-                x2: "16",
-                y2: "6"
-              }, void 0, false), /*#__PURE__*/_jsxDEV("line", {
-                x1: "8",
-                y1: "2",
-                x2: "8",
-                y2: "6"
-              }, void 0, false), /*#__PURE__*/_jsxDEV("line", {
-                x1: "3",
-                y1: "10",
-                x2: "21",
-                y2: "10"
-              }, void 0, false)]
-            }, void 0, true),
-            iconBg: "bg-[#0F7AC4]",
-            title: "Périodes",
-            defaultOpen: false,
-            children: /*#__PURE__*/_jsxDEV(PeriodesContent, {
-              data: data.periodesData
+              }),
+              onNavigateToDemandeStage: onNavigateToDemandeStage
             }, void 0, false)
           }, void 0, false), /*#__PURE__*/_jsxDEV(PiecesPanel, {
             initialFiles: [{
@@ -10136,8 +10267,36 @@ function PiecesStatusBadge({
     }, void 0, false)]
   }, void 0, true);
 }
+function WordEditorPreview({ file, onCancel, onSave }) {
+  const TB = [{ l: "G", cmd: "bold", st: { fontWeight: 800 }, t: "Gras" }, { l: "I", cmd: "italic", st: { fontStyle: "italic" }, t: "Italique" }, { l: "S", cmd: "underline", st: { textDecoration: "underline" }, t: "Souligné" }, { sep: true }, { l: "Titre", cmd: "formatBlock", val: "H2", t: "Titre" }, { l: "Corps", cmd: "formatBlock", val: "P", t: "Paragraphe" }, { sep: true }, { l: "•", cmd: "insertUnorderedList", t: "Liste à puces" }, { l: "1.", cmd: "insertOrderedList", t: "Liste numérotée" }, { sep: true }, { l: "☐←", cmd: "justifyLeft", t: "Aligner à gauche" }, { l: "≡", cmd: "justifyCenter", t: "Centrer" }, { l: "→☐", cmd: "justifyRight", t: "Aligner à droite" }];
+  const btnBase = { minWidth: 34, height: 32, padding: "0 8px", border: "1px solid #E1DFDD", background: "white", borderRadius: 5, cursor: "pointer", fontSize: 14, color: "#201F1E", display: "flex", alignItems: "center", justifyContent: "center" };
+  return /*#__PURE__*/_jsxDEV("div", {
+    onMouseDown: e => {
+      if (e.target === e.currentTarget) onCancel();
+    },
+    style: { position: "fixed", inset: 0, zIndex: 1000, background: "rgba(15,23,42,0.55)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 },
+    children: /*#__PURE__*/_jsxDEV("div", {
+      onMouseDown: e => e.stopPropagation(),
+      style: { width: "min(1040px, 95vw)", height: "min(92vh, 940px)", background: "#E7E6E5", borderRadius: 12, display: "flex", flexDirection: "column", overflow: "hidden", boxShadow: "0 24px 60px rgba(0,0,0,0.45)" },
+      children: [/*#__PURE__*/_jsxDEV("div", {
+        style: { background: "#2B579A", color: "white", padding: "11px 18px", display: "flex", alignItems: "center", gap: 10, flexShrink: 0 },
+        children: [/*#__PURE__*/_jsxDEV("div", { style: { width: 26, height: 26, borderRadius: 5, background: "white", color: "#2B579A", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 15 }, children: "W" }, void 0, false), /*#__PURE__*/_jsxDEV("span", { style: { fontSize: 15, fontWeight: 600 }, children: file.name }, void 0, false), /*#__PURE__*/_jsxDEV("span", { style: { flex: 1 } }, void 0, false), /*#__PURE__*/_jsxDEV("button", { onClick: onCancel, title: "Fermer", "aria-label": "Fermer", style: { background: "rgba(255,255,255,0.12)", border: "none", color: "white", cursor: "pointer", fontSize: 16, width: 32, height: 32, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center" }, children: "✕" }, void 0, false)]
+      }, void 0, true), /*#__PURE__*/_jsxDEV("div", {
+        style: { background: "white", borderBottom: "1px solid #E1DFDD", padding: "8px 14px", display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center", flexShrink: 0 },
+        children: TB.map((b, i) => b.sep ? /*#__PURE__*/_jsxDEV("span", { style: { width: 1, height: 22, background: "#E1DFDD", margin: "0 5px" } }, "s" + i, false) : /*#__PURE__*/_jsxDEV("button", { title: b.t, "aria-label": b.t, onMouseDown: e => e.preventDefault(), onClick: () => document.execCommand(b.cmd, false, b.val || null), style: { ...btnBase, ...(b.st || {}) }, children: b.l }, i, false))
+      }, void 0, false), /*#__PURE__*/_jsxDEV("div", {
+        style: { flex: 1, overflow: "auto", padding: "28px 0", display: "flex", justifyContent: "center", alignItems: "flex-start" },
+        children: /*#__PURE__*/_jsxDEV("div", { contentEditable: true, suppressContentEditableWarning: true, dangerouslySetInnerHTML: { __html: file.content || "" }, style: { width: "min(820px, 92%)", minHeight: "100%", background: "white", boxShadow: "0 2px 16px rgba(0,0,0,0.18)", padding: "64px 76px", fontFamily: "Calibri, 'Segoe UI', Arial, sans-serif", fontSize: 15.5, lineHeight: 1.7, color: "#201F1E", outline: "none" } }, void 0, false)
+      }, void 0, false), /*#__PURE__*/_jsxDEV("div", {
+        style: { background: "white", borderTop: "1px solid #E1DFDD", padding: "12px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexShrink: 0 },
+        children: [/*#__PURE__*/_jsxDEV("span", { style: { fontSize: 12.5, color: "#6B7280" }, children: "Édition simulée — la mise en forme s'applique à la sélection." }, void 0, false), /*#__PURE__*/_jsxDEV("div", { style: { display: "flex", gap: 10 }, children: [/*#__PURE__*/_jsxDEV("button", { onClick: onCancel, style: { padding: "0 18px", height: 40, border: "1px solid #C9C9C9", background: "white", borderRadius: 7, cursor: "pointer", fontSize: 14.5, color: "#201F1E" }, children: "Annuler" }, void 0, false), /*#__PURE__*/_jsxDEV("button", { onClick: onSave, style: { padding: "0 18px", height: 40, border: "none", background: "#C8102E", color: "white", borderRadius: 7, cursor: "pointer", fontSize: 14.5, fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }, children: [/*#__PURE__*/_jsxDEV("svg", { viewBox: "0 0 24 24", width: "16", height: "16", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [/*#__PURE__*/_jsxDEV("path", { d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" }, "p1", false), /*#__PURE__*/_jsxDEV("path", { d: "M14 2v6h6" }, "p2", false)] }, void 0, true), "Enregistrer et convertir en PDF"] }, void 0, true)] }, void 0, true)]
+      }, void 0, true)]
+    }, void 0, false)
+  }, void 0, false);
+}
 function PiecesPanel({
-  initialFiles
+  initialFiles,
+  onReady
 }) {
   const _init = initialFiles || PIECES_FILES_INIT;
   const [files, setFiles] = useState(() => _init.map(f => ({
@@ -10148,6 +10307,7 @@ function PiecesPanel({
   const [statusDdId, setStatusDdId] = useState(null);
   const [ctxId, setCtxId] = useState(null);
   const [previewIdx, setPreviewIdx] = useState(null);
+  const [editorOpen, setEditorOpen] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [showRequest, setShowRequest] = useState(false);
   const [stagedFiles, setStagedFiles] = useState([]);
@@ -10155,6 +10315,17 @@ function PiecesPanel({
   const [reqName, setReqName] = useState("");
   const [reqStatus, setReqStatus] = useState("demandee");
   const [reqMsg, setReqMsg] = useState("");
+  React.useEffect(() => {
+    if (!onReady) return;
+    onReady({
+      addAndPreview: f => {
+        setFiles(prev => prev.some(x => x.name === f.name) ? prev : [f, ...prev]);
+        setTypeFilter("all");
+        setSearch("");
+        setPreviewIdx(0);
+      }
+    });
+  }, []);
   const filtered = files.filter(f => {
     if (typeFilter !== "all" && f.type !== typeFilter) return false;
     if (search && !f.name.toLowerCase().includes(search.toLowerCase())) return false;
@@ -10174,7 +10345,27 @@ function PiecesPanel({
   const openPreview = i => {
     setStatusDdId(null);
     setCtxId(null);
+    const f = filtered[i];
+    if (f && f.editable) {
+      setEditorOpen(true);
+      return;
+    }
     setPreviewIdx(i);
+  };
+  const convertAndSave = () => {
+    const src = files.find(f => f.editable);
+    const base = src ? src.name.replace(/\.[^.]+$/, "") : "Fiche_generale_de_synthese";
+    setFiles(prev => [{
+      id: Date.now(),
+      name: base + ".pdf",
+      type: "pdf",
+      date: new Date().toLocaleDateString("fr-FR"),
+      status: "conforme",
+      category: src ? src.category : "Fiche de synthèse",
+      instructions: "Généré depuis la fiche Word — converti en PDF",
+      relance: "—"
+    }, ...prev]);
+    setEditorOpen(false);
   };
   const addStaged = () => {
     const toAdd = stagedFiles.map((name, i) => ({
@@ -10217,7 +10408,7 @@ function PiecesPanel({
     style: {
       background: "white",
       borderRadius: 20,
-      overflow: "hidden",
+      overflow: "visible",
       position: "relative",
       marginTop: 12
     },
@@ -10463,7 +10654,7 @@ function PiecesPanel({
       }, void 0, true)]
     }, void 0, true), /*#__PURE__*/_jsxDEV("div", {
       style: {
-        overflowX: "auto",
+        overflow: "visible",
         marginTop: 8
       },
       children: /*#__PURE__*/_jsxDEV("table", {
@@ -10879,7 +11070,7 @@ function PiecesPanel({
             }, void 0, false)]
           }, void 0, true)
         }, void 0, false)]
-      }, void 0, true), /*#__PURE__*/_jsxDEV("div", {
+      }, void 0, true), filtered[previewIdx].content ? /*#__PURE__*/_jsxDEV("div", { onClick: e => e.stopPropagation(), style: { flex: 1, overflow: "auto", padding: 24, display: "flex", justifyContent: "center", alignItems: "flex-start", background: "#3f4045" }, children: /*#__PURE__*/_jsxDEV("div", { dangerouslySetInnerHTML: { __html: filtered[previewIdx].content }, style: { width: "min(760px, 94%)", background: "white", boxShadow: "0 2px 14px rgba(0,0,0,0.4)", padding: "56px 64px", fontFamily: "Arial, sans-serif" } }, void 0, false) }, void 0, false) : /*#__PURE__*/_jsxDEV("div", {
         onClick: e => e.stopPropagation(),
         style: {
           flex: 1,
@@ -10947,15 +11138,26 @@ function PiecesPanel({
           children: filtered[previewIdx].instructions
         }, void 0, false)]
       }, void 0, true)]
-    }, void 0, true), showImport && /*#__PURE__*/_jsxDEV("div", {
+    }, void 0, true), editorOpen && files.find(f => f.editable) && /*#__PURE__*/_jsxDEV(WordEditorPreview, {
+      file: files.find(f => f.editable),
+      onCancel: () => setEditorOpen(false),
+      onSave: convertAndSave
+    }, void 0, false), showImport && /*#__PURE__*/_jsxDEV("div", {
       style: {
-        position: "absolute",
-        inset: 0,
+        position: "fixed",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        width: "min(560px, 94vw)",
+        maxHeight: "85vh",
         background: "white",
-        zIndex: 100,
-        borderRadius: 20,
+        zIndex: 1000,
+        borderRadius: 14,
+        border: "1px solid #E5E5E5",
+        boxShadow: "0 10px 34px rgba(0,0,0,0.16)",
         display: "flex",
-        flexDirection: "column"
+        flexDirection: "column",
+        overflow: "hidden"
       },
       children: [/*#__PURE__*/_jsxDEV("div", {
         style: {
@@ -11186,13 +11388,20 @@ function PiecesPanel({
       }, void 0, true)]
     }, void 0, true), showRequest && /*#__PURE__*/_jsxDEV("div", {
       style: {
-        position: "absolute",
-        inset: 0,
+        position: "fixed",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        width: "min(560px, 94vw)",
+        maxHeight: "85vh",
         background: "white",
-        zIndex: 100,
-        borderRadius: 20,
+        zIndex: 1000,
+        borderRadius: 14,
+        border: "1px solid #E5E5E5",
+        boxShadow: "0 10px 34px rgba(0,0,0,0.16)",
         display: "flex",
-        flexDirection: "column"
+        flexDirection: "column",
+        overflow: "hidden"
       },
       children: [/*#__PURE__*/_jsxDEV("div", {
         style: {
@@ -20751,6 +20960,627 @@ function MotifDetailPage({
     }, void 0, false)]
   }, void 0, true);
 }
+// ══════════════════════════════════════════════════════════════
+// DEMANDE STAGE — Liste "Toutes les demandes stage"
+// ══════════════════════════════════════════════════════════════
+const DEMANDES_STAGE_LIST = [
+  { num: "000001", typeEnr: "Inscription au stage", stagiaire: "DUPONT Marie", statut: "Prête pour la commission", typeStage: "Stage classique", cycle: "Année 1", nbMois: "12/36", cabinet: "Cabinet Mazars", maitre: "BERNARD Jacques", controleur: "LEROY Sophie", groupe: "", dateSession: "15/03/2026", dateEffet: "01/04/2026", proprietaire: "DUPONT Jean" },
+  { num: "000002", typeEnr: "Déclarer/Modifier un Maître d...", stagiaire: "MARTIN Lucas", statut: "Affectée", typeStage: "Stage avec réduction", cycle: "Année 2", nbMois: "8/24", cabinet: "KPMG France", maitre: "ROUX Philippe", controleur: "MOREAU Anne", groupe: "Groupe 001", dateSession: "15/03/2026", dateEffet: "01/05/2026", proprietaire: "DUPONT Jean" },
+  { num: "000003", typeEnr: "Déclarer un changement admi...", stagiaire: "PETIT Camille", statut: "Complète", typeStage: "Stage d'un an / Renouvellement AFS", cycle: "Année 1", nbMois: "10/12", cabinet: "Deloitte & Associés", maitre: "FOURNIER Marc", controleur: "GIRARD Isabelle", groupe: "Groupe 003", dateSession: "10/06/2026", dateEffet: "01/07/2026", proprietaire: "LEFEVRE Pierre" },
+  { num: "000004", typeEnr: "Inscription au stage", stagiaire: "LEFEVRE Thomas", statut: "En attente de pièces", typeStage: "Stage d'un an / Renouvellement AFS", cycle: "Année 1", nbMois: "8/12", cabinet: "EY France", maitre: "DURAND Alain", controleur: "LAMBERT Christine", groupe: "", dateSession: "15/03/2026", dateEffet: "01/04/2026", proprietaire: "MARTIN Sophie" },
+  { num: "000005", typeEnr: "Arrêter un stage (suspension/...", stagiaire: "GARCIA Elena", statut: "Soumise", typeStage: "Stage classique", cycle: "Année 2", nbMois: "6/36", cabinet: "PwC France", maitre: "SIMON Pierre", controleur: "MERCIER Nathalie", groupe: "Groupe 002", dateSession: "10/06/2026", dateEffet: "15/06/2026", proprietaire: "MARTIN Sophie" },
+  { num: "000006", typeEnr: "Demander une prorogation AFS", stagiaire: "ROBERT Julien", statut: "Fermé", typeStage: "Stage avec réduction", cycle: "Année 3", nbMois: "20/24", cabinet: "Grant Thornton", maitre: "DUBOIS Gérard", controleur: "FONTAINE Cécile", groupe: "Groupe 002", dateSession: "15/09/2026", dateEffet: "01/10/2026", proprietaire: "MARTIN Sophie" },
+  { num: "000007", typeEnr: "Inscription au stage", stagiaire: "MOREL Claire", statut: "Prête pour la session", typeStage: "Stage classique", cycle: "Année 1", nbMois: "3/36", cabinet: "BDO France", maitre: "LAURENT Michel", controleur: "CHEVALIER Diane", groupe: "", dateSession: "15/03/2026", dateEffet: "01/04/2026", proprietaire: "LEFEVRE Pierre" },
+  { num: "000008", typeEnr: "Déclarer/Modifier un Maître d...", stagiaire: "LAMBERT Hugo", statut: "Affectée", typeStage: "Stage d'un an / Renouvellement AFS", cycle: "Année 1", nbMois: "9/12", cabinet: "RSM France", maitre: "BONNET Yves", controleur: "ROBIN Élodie", groupe: "Groupe 001", dateSession: "10/06/2026", dateEffet: "01/07/2026", proprietaire: "DUPONT Jean" },
+  { num: "000009", typeEnr: "Inscription au stage", stagiaire: "BONNET Léa", statut: "En attente de pièces", typeStage: "Stage d'un an / Renouvellement AFS", cycle: "Année 1", nbMois: "10/12", cabinet: "Fiducial Expertise", maitre: "LEMAIRE Bruno", controleur: "GARNIER Sandrine", groupe: "", dateSession: "15/09/2026", dateEffet: "01/10/2026", proprietaire: "DUPONT Jean" },
+  { num: "000010", typeEnr: "Déclarer un changement admi...", stagiaire: "MERCIER Antoine", statut: "Complète", typeStage: "Stage avec réduction", cycle: "Année 1", nbMois: "16/24", cabinet: "Crowe Horwath", maitre: "PERRIN Jean-Luc", controleur: "BLANC Valérie", groupe: "Groupe 003", dateSession: "15/03/2026", dateEffet: "01/05/2026", proprietaire: "LEFEVRE Pierre" },
+  { num: "000011", typeEnr: "Arrêter un stage (suspension/...", stagiaire: "CHEVALIER Sarah", statut: "Soumise", typeStage: "Stage classique", cycle: "Année 2", nbMois: "9/36", cabinet: "Mazars SA", maitre: "HENRY François", controleur: "ROUSSEAU Marie-Claire", groupe: "Groupe 002", dateSession: "10/06/2026", dateEffet: "15/07/2026", proprietaire: "MARTIN Sophie" },
+  { num: "000012", typeEnr: "Inscription au stage", stagiaire: "DURAND Émilie", statut: "Prête pour la commission", typeStage: "Stage d'un an / Renouvellement AFS", cycle: "Année 1", nbMois: "11/12", cabinet: "In Extenso", maitre: "MASSON Thierry", controleur: "ANDRE Pauline", groupe: "", dateSession: "15/09/2026", dateEffet: "01/10/2026", proprietaire: "DUPONT Jean" },
+  { num: "000013", typeEnr: "Demander une prorogation AFS", stagiaire: "FONTAINE Romain", statut: "Fermé", typeStage: "Stage d'un an / Renouvellement AFS", cycle: "Année 1", nbMois: "5/12", cabinet: "Nexia France", maitre: "GIRAUD Dominique", controleur: "FAURE Hélène", groupe: "Groupe 001", dateSession: "15/03/2026", dateEffet: "01/04/2026", proprietaire: "DUPONT Jean" },
+  { num: "000014", typeEnr: "Inscription au stage", stagiaire: "ROBIN Maxime", statut: "Soumise", typeStage: "Stage classique", cycle: "Année 2", nbMois: "22/36", cabinet: "Baker Tilly France", maitre: "MULLER Patrick", controleur: "LECOMTE Brigitte", groupe: "", dateSession: "10/06/2026", dateEffet: "01/07/2026", proprietaire: "MARTIN Sophie" },
+  { num: "000015", typeEnr: "Déclarer/Modifier un Maître d...", stagiaire: "SIMON Chloé", statut: "Affectée", typeStage: "Stage avec réduction", cycle: "Année 3", nbMois: "12/24", cabinet: "Groupe Y Nexia", maitre: "RENAUD Olivier", controleur: "DAVID Martine", groupe: "Groupe 003", dateSession: "15/09/2026", dateEffet: "01/10/2026", proprietaire: "LEFEVRE Pierre" },
+  { num: "000016", typeEnr: "Déclarer un changement admi...", stagiaire: "GIRARD Nathan", statut: "Prête pour la session", typeStage: "Stage classique", cycle: "Année 1", nbMois: "33/36", cabinet: "Exco France", maitre: "LEFEBVRE Daniel", controleur: "THOMAS Catherine", groupe: "Groupe 001", dateSession: "15/03/2026", dateEffet: "01/04/2026", proprietaire: "DUPONT Jean" },
+  { num: "000017", typeEnr: "Inscription au stage", stagiaire: "ANDRE Manon", statut: "Complète", typeStage: "Stage d'un an / Renouvellement AFS", cycle: "Année 1", nbMois: "8/12", cabinet: "Aca Nexia", maitre: "MOREAU Stéphane", controleur: "PETIT Laurence", groupe: "", dateSession: "10/06/2026", dateEffet: "01/07/2026", proprietaire: "LEFEVRE Pierre" },
+  { num: "000018", typeEnr: "Arrêter un stage (suspension/...", stagiaire: "BLANC Théo", statut: "En attente de pièces", typeStage: "Stage d'un an / Renouvellement AFS", cycle: "Année 1", nbMois: "9/12", cabinet: "TGS France", maitre: "GAUTHIER René", controleur: "DENIS Françoise", groupe: "Groupe 002", dateSession: "15/09/2026", dateEffet: "01/10/2026", proprietaire: "MARTIN Sophie" },
+  { num: "000019", typeEnr: "Demander une prorogation AFS", stagiaire: "FAURE Inès", statut: "Soumise", typeStage: "Stage avec réduction", cycle: "Année 1", nbMois: "4/24", cabinet: "Aplitec", maitre: "RICHARD Claude", controleur: "NICOLAS Sylvie", groupe: "Groupe 003", dateSession: "15/03/2026", dateEffet: "01/05/2026", proprietaire: "LEFEVRE Pierre" },
+  { num: "000020", typeEnr: "Inscription au stage", stagiaire: "HENRY Alexandre", statut: "Affectée", typeStage: "Stage classique", cycle: "Année 2", nbMois: "14/36", cabinet: "Audit France", maitre: "MARTINEZ Luis", controleur: "PICARD Monique", groupe: "", dateSession: "10/06/2026", dateEffet: "01/07/2026", proprietaire: "DUPONT Jean" },
+  { num: "000021", typeEnr: "Déclarer/Modifier un Maître d...", stagiaire: "ROUSSEAU Océane", statut: "Prête pour la commission", typeStage: "Stage d'un an / Renouvellement AFS", cycle: "Année 1", nbMois: "11/12", cabinet: "Cerfrance", maitre: "VINCENT Georges", controleur: "HUBERT Colette", groupe: "Groupe 003", dateSession: "15/09/2026", dateEffet: "01/10/2026", proprietaire: "LEFEVRE Pierre" },
+  { num: "000022", typeEnr: "Inscription au stage", stagiaire: "THOMAS Raphaël", statut: "Fermé", typeStage: "Stage d'un an / Renouvellement AFS", cycle: "Année 1", nbMois: "7/12", cabinet: "Exponens", maitre: "CLEMENT Bernard", controleur: "MARCHAND Agnès", groupe: "", dateSession: "15/03/2026", dateEffet: "01/04/2026", proprietaire: "MARTIN Sophie" },
+  { num: "000023", typeEnr: "Déclarer un changement admi...", stagiaire: "DAVID Lucie", statut: "Soumise", typeStage: "Stage classique", cycle: "Année 2", nbMois: "26/36", cabinet: "Fiteco", maitre: "BERTRAND Paul", controleur: "LEGRAND Odile", groupe: "Groupe 001", dateSession: "10/06/2026", dateEffet: "01/07/2026", proprietaire: "DUPONT Jean" },
+  { num: "000024", typeEnr: "Inscription au stage", stagiaire: "NICOLAS Kevin", statut: "Prête pour la session", typeStage: "Stage avec réduction", cycle: "Année 3", nbMois: "18/24", cabinet: "Soregor", maitre: "RENAULT Henri", controleur: "GUERIN Danielle", groupe: "", dateSession: "15/09/2026", dateEffet: "01/10/2026", proprietaire: "LEFEVRE Pierre" },
+  { num: "000025", typeEnr: "Arrêter un stage (suspension/...", stagiaire: "GUERIN Pauline", statut: "Soumise", typeStage: "Stage classique", cycle: "Année 1", nbMois: "2/36", cabinet: "Groupe Cogesten", maitre: "POIRIER Jean-Marc", controleur: "AUBERT Mireille", groupe: "Groupe 002", dateSession: "15/03/2026", dateEffet: "01/04/2026", proprietaire: "MARTIN Sophie" },
+  { num: "000026", typeEnr: "Demander une prorogation AFS", stagiaire: "PICARD Bastien", statut: "Complète", typeStage: "Stage d'un an / Renouvellement AFS", cycle: "Année 1", nbMois: "10/12", cabinet: "Visiativ", maitre: "BARBIER Christian", controleur: "MEYER Joëlle", groupe: "Groupe 003", dateSession: "10/06/2026", dateEffet: "01/07/2026", proprietaire: "LEFEVRE Pierre" },
+  { num: "000027", typeEnr: "Inscription au stage", stagiaire: "LEMAIRE Amandine", statut: "En attente de pièces", typeStage: "Stage d'un an / Renouvellement AFS", cycle: "Année 1", nbMois: "11/12", cabinet: "Audit Conseil", maitre: "COLLET Éric", controleur: "PERROT Josiane", groupe: "", dateSession: "15/09/2026", dateEffet: "01/10/2026", proprietaire: "DUPONT Jean" },
+  { num: "000028", typeEnr: "Déclarer/Modifier un Maître d...", stagiaire: "GAUTHIER Élodie", statut: "Soumise", typeStage: "Stage avec réduction", cycle: "Année 1", nbMois: "6/24", cabinet: "Strego", maitre: "JACQUET Robert", controleur: "MORIN Geneviève", groupe: "Groupe 002", dateSession: "15/03/2026", dateEffet: "01/05/2026", proprietaire: "MARTIN Sophie" },
+  { num: "000029", typeEnr: "Inscription au stage", stagiaire: "PERRIN Valentin", statut: "Affectée", typeStage: "Stage classique", cycle: "Année 2", nbMois: "11/36", cabinet: "Sofideec Baker Tilly", maitre: "CARPENTIER André", controleur: "CHARLES Michèle", groupe: "", dateSession: "10/06/2026", dateEffet: "01/07/2026", proprietaire: "MARTIN Sophie" },
+  { num: "000030", typeEnr: "Déclarer un changement admi...", stagiaire: "DENIS Charlotte", statut: "Prête pour la commission", typeStage: "Stage d'un an / Renouvellement AFS", cycle: "Année 1", nbMois: "9/12", cabinet: "Fiducial Audit", maitre: "SCHMITT Gilbert", controleur: "FABRE Christiane", groupe: "Groupe 001", dateSession: "15/09/2026", dateEffet: "01/10/2026", proprietaire: "DUPONT Jean" },
+  { num: "000031", typeEnr: "Invalidation partielle", stagiaire: "DUPONT Marie", statut: "Soumise", typeStage: "Stage classique", cycle: "Année 2", nbMois: "12/36", cabinet: "Cabinet Mazars", maitre: "BERNARD Jacques", controleur: "LEROY Sophie", groupe: "", dateSession: "15/03/2026", dateEffet: "01/04/2026", proprietaire: "DUPONT Jean" },
+  { num: "000032", typeEnr: "Délai supplémentaire du stage", stagiaire: "DUPONT Marie", statut: "Affectée", typeStage: "Stage classique", cycle: "Année 2", nbMois: "12/36", cabinet: "Cabinet Mazars", maitre: "BERNARD Jacques", controleur: "LEROY Sophie", groupe: "", dateSession: "10/06/2026", dateEffet: "01/07/2026", proprietaire: "DUPONT Jean" },
+  { num: "000033", typeEnr: "Réintégration", stagiaire: "DUPONT Marie", statut: "Complète", typeStage: "Stage classique", cycle: "Année 2", nbMois: "12/36", cabinet: "Cabinet Mazars", maitre: "BERNARD Jacques", controleur: "LEROY Sophie", groupe: "", dateSession: "15/09/2026", dateEffet: "01/10/2026", proprietaire: "DUPONT Jean" },
+  { num: "000034", typeEnr: "Demande AFS", stagiaire: "ROBERT Julien", statut: "Prête pour la commission", typeStage: "Stage avec réduction", cycle: "Année 2", nbMois: "24/24", cabinet: "Grant Thornton", maitre: "DUBOIS Gérard", controleur: "FONTAINE Cécile", groupe: "Groupe 002", dateSession: "15/09/2026", dateEffet: "01/10/2026", proprietaire: "MARTIN Sophie" },
+  { num: "000035", typeEnr: "Demande AFS", stagiaire: "SIMON Chloé", statut: "Complète", typeStage: "Stage avec réduction", cycle: "Année 2", nbMois: "24/24", cabinet: "Groupe Y Nexia", maitre: "RENAUD Olivier", controleur: "DAVID Martine", groupe: "Groupe 003", dateSession: "15/09/2026", dateEffet: "01/10/2026", proprietaire: "LEFEVRE Pierre" },
+  { num: "000036", typeEnr: "Demande AFS", stagiaire: "GIRARD Nathan", statut: "Prête pour la session", typeStage: "Stage classique", cycle: "Année 3", nbMois: "36/36", cabinet: "Exco France", maitre: "LEFEBVRE Daniel", controleur: "THOMAS Catherine", groupe: "Groupe 001", dateSession: "15/09/2026", dateEffet: "01/10/2026", proprietaire: "DUPONT Jean" },
+  { num: "000037", typeEnr: "Demande AFS", stagiaire: "DUPONT Marie", statut: "Prête pour la commission", typeStage: "Stage classique", cycle: "Année 3", nbMois: "36/36", cabinet: "Cabinet Mazars", maitre: "BERNARD Jacques", controleur: "LEROY Sophie", groupe: "", dateSession: "15/09/2026", dateEffet: "01/10/2026", proprietaire: "DUPONT Jean" },
+  { num: "000038", typeEnr: "Demande AFS", stagiaire: "NICOLAS Kevin", statut: "Affectée", typeStage: "Stage avec réduction", cycle: "Année 2", nbMois: "24/24", cabinet: "Soregor", maitre: "RENAULT Henri", controleur: "GUERIN Danielle", groupe: "", dateSession: "15/09/2026", dateEffet: "01/10/2026", proprietaire: "LEFEVRE Pierre" },
+  { num: "000039", typeEnr: "Demande AFS", stagiaire: "LEMAIRE Amandine", statut: "Soumise", typeStage: "Stage d'un an / Renouvellement AFS", cycle: "Année 1", nbMois: "12/12", cabinet: "Audit Conseil", maitre: "COLLET Éric", controleur: "PERROT Josiane", groupe: "", dateSession: "15/09/2026", dateEffet: "01/10/2026", proprietaire: "DUPONT Jean" }
+];
+const DEMANDES_STAGE_COLS = [
+  { key: "num", label: "N° demande", link: true, width: "100px" },
+  { key: "typeEnr", label: "Type d'enregistrement", width: "180px" },
+  { key: "stagiaire", label: "Nom du stagiaire", link: true, width: "140px" },
+  { key: "statut", label: "Statut demande", width: "150px" },
+  { key: "typeStage", label: "Type de stage", width: "150px" },
+  { key: "cycle", label: "Cycle de stage", width: "100px" },
+  { key: "nbMois", label: "Nb mois de stage", width: "120px" },
+  { key: "cabinet", label: "Nom du cabinet", link: true, width: "150px" },
+  { key: "maitre", label: "Maître de stage", link: true, width: "150px" },
+  { key: "controleur", label: "Contrôleur de stage", link: true, width: "160px" },
+  { key: "groupe", label: "Groupe de stage", width: "120px" },
+  { key: "dateSession", label: "Date session", width: "110px" },
+  { key: "dateEffet", label: "Date d'effet", width: "110px" },
+  { key: "proprietaire", label: "Propriétaire", link: true, width: "130px" }
+];
+function DemandeStageToolIcons({ onFilter, filterActive }) {
+  const circleBtn = (color, paths) => /*#__PURE__*/_jsxDEV("button", {
+    className: "w-8 h-8 rounded-full border border-[#C9C9C9] flex items-center justify-center bg-white hover:bg-[#F3F3F3] shrink-0",
+    children: /*#__PURE__*/_jsxDEV("svg", {
+      viewBox: "0 0 24 24",
+      width: "15",
+      height: "15",
+      fill: "none",
+      stroke: color,
+      strokeWidth: "2",
+      strokeLinecap: "round",
+      strokeLinejoin: "round",
+      children: paths
+    }, void 0, true)
+  }, void 0, false);
+  const gear = [/*#__PURE__*/_jsxDEV("path", {
+    d: "M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"
+  }, "g1", false), /*#__PURE__*/_jsxDEV("circle", {
+    cx: "12",
+    cy: "12",
+    r: "3"
+  }, "g2", false)];
+  const grid = [["3", "3"], ["14", "3"], ["14", "14"], ["3", "14"]].map(([x, y], i) => /*#__PURE__*/_jsxDEV("rect", {
+    width: "7",
+    height: "7",
+    x: x,
+    y: y,
+    rx: "1"
+  }, "r" + i, false));
+  const pencil = [/*#__PURE__*/_jsxDEV("path", {
+    d: "M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+  }, "p1", false), /*#__PURE__*/_jsxDEV("path", {
+    d: "M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"
+  }, "p2", false)];
+  const refresh = [/*#__PURE__*/_jsxDEV("path", {
+    d: "M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"
+  }, "rf1", false), /*#__PURE__*/_jsxDEV("path", {
+    d: "M21 3v5h-5"
+  }, "rf2", false)];
+  const pie = /*#__PURE__*/_jsxDEV("svg", {
+    viewBox: "0 0 24 24",
+    width: "15",
+    height: "15",
+    fill: "none",
+    stroke: "#0250D9",
+    strokeWidth: "2",
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    children: [/*#__PURE__*/_jsxDEV("path", {
+      d: "M21.21 15.89A10 10 0 1 1 8 2.83"
+    }, "pc1", false), /*#__PURE__*/_jsxDEV("path", {
+      d: "M22 12A10 10 0 0 0 12 2v10z"
+    }, "pc2", false)]
+  }, void 0, true);
+  const filterSvg = color => /*#__PURE__*/_jsxDEV("svg", {
+    viewBox: "0 0 24 24",
+    width: "15",
+    height: "15",
+    fill: "none",
+    stroke: color,
+    strokeWidth: "2",
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    children: [/*#__PURE__*/_jsxDEV("line", {
+      x1: "3",
+      y1: "6",
+      x2: "21",
+      y2: "6"
+    }, "f1", false), /*#__PURE__*/_jsxDEV("line", {
+      x1: "6",
+      y1: "12",
+      x2: "18",
+      y2: "12"
+    }, "f2", false), /*#__PURE__*/_jsxDEV("line", {
+      x1: "9",
+      y1: "18",
+      x2: "15",
+      y2: "18"
+    }, "f3", false)]
+  }, void 0, true);
+  return /*#__PURE__*/_jsxDEV("div", {
+    className: "flex items-center gap-1.5",
+    children: [circleBtn("#5C5C5C", gear), circleBtn("#0250D9", grid), circleBtn("#0250D9", pencil), circleBtn("#0250D9", refresh), /*#__PURE__*/_jsxDEV("div", {
+      className: "flex items-center h-8 border border-[#C9C9C9] rounded-full overflow-hidden bg-white shrink-0",
+      children: [/*#__PURE__*/_jsxDEV("button", {
+        className: "px-2.5 h-full flex items-center justify-center hover:bg-[#F3F3F3] border-r border-[#C9C9C9]",
+        children: pie
+      }, void 0, false), /*#__PURE__*/_jsxDEV("button", {
+        onClick: onFilter,
+        title: "Filtres",
+        className: "px-2.5 h-full flex items-center justify-center transition-colors " + (filterActive ? "bg-[#0250D9]" : "hover:bg-[#F3F3F3]"),
+        children: filterSvg(filterActive ? "#FFFFFF" : "#0250D9")
+      }, void 0, false)]
+    }, void 0, true)]
+  }, void 0, true);
+}
+function DemandeStageListViewHeader({ count, total, onToggleFilter, filterActive, search, onSearch }) {
+  return /*#__PURE__*/_jsxDEV("div", {
+    className: "bg-[#F3F3F3] px-4 py-4",
+    children: [/*#__PURE__*/_jsxDEV("div", {
+      className: "flex items-center justify-between",
+      children: [/*#__PURE__*/_jsxDEV("div", {
+        className: "flex items-center gap-3",
+        children: [/*#__PURE__*/_jsxDEV("div", {
+          className: "w-8 h-8 rounded bg-[#E5006D] flex items-center justify-center",
+          children: /*#__PURE__*/_jsxDEV("svg", {
+            viewBox: "0 0 24 24",
+            width: "16",
+            height: "16",
+            fill: "none",
+            stroke: "white",
+            strokeWidth: "2",
+            strokeLinecap: "round",
+            strokeLinejoin: "round",
+            children: [/*#__PURE__*/_jsxDEV("path", {
+              d: "M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"
+            }, void 0, false), /*#__PURE__*/_jsxDEV("path", {
+              d: "M3 6h18"
+            }, void 0, false), /*#__PURE__*/_jsxDEV("path", {
+              d: "M16 10a4 4 0 0 1-8 0"
+            }, void 0, false)]
+          }, void 0, true)
+        }, void 0, false), /*#__PURE__*/_jsxDEV("div", {
+          children: [/*#__PURE__*/_jsxDEV("p", {
+            className: "text-[13px] text-[#5C5C5C] leading-[18px]",
+            children: "Demandes"
+          }, void 0, false), /*#__PURE__*/_jsxDEV("div", {
+            className: "flex items-center gap-2",
+            children: [/*#__PURE__*/_jsxDEV("p", {
+              className: "text-[28px] text-[#03234D] leading-[35px]",
+              children: "Toutes les demandes stage"
+            }, void 0, false), /*#__PURE__*/_jsxDEV(ChevronDown, {
+              size: 16,
+              className: "text-[#5C5C5C]"
+            }, void 0, false)]
+          }, void 0, true)]
+        }, void 0, true)]
+      }, void 0, true), /*#__PURE__*/_jsxDEV("div", {
+        className: "flex items-center gap-2",
+        children: [/*#__PURE__*/_jsxDEV("button", {
+          className: "px-4 h-8 text-[14px] text-[#0250D9] bg-white border border-[#5C5C5C] rounded-full hover:bg-[#F9F9F9]",
+          children: "Nouveau"
+        }, void 0, false), /*#__PURE__*/_jsxDEV("button", {
+          className: "px-4 h-8 text-[14px] text-[#0250D9] bg-white border border-[#5C5C5C] rounded-full hover:bg-[#F9F9F9]",
+          children: "Modifier le propriétaire"
+        }, void 0, false), /*#__PURE__*/_jsxDEV("button", {
+          className: "px-4 h-8 text-[14px] text-[#0250D9] bg-white border border-[#5C5C5C] rounded-full hover:bg-[#F9F9F9]",
+          children: "Changer le statut"
+        }, void 0, false)]
+      }, void 0, true)]
+    }, void 0, true), /*#__PURE__*/_jsxDEV("div", {
+      className: "flex items-center justify-between mt-2",
+      children: [/*#__PURE__*/_jsxDEV("p", {
+        className: "text-[13px] text-[#5C5C5C]",
+        children: [count, count === total ? "+ éléments" : " élément(s) sur " + total, " • Trié(s) par N° demande • Filtré par Toutes les demandes stage • Mis à jour il y a quelques secondes"]
+      }, void 0, true), /*#__PURE__*/_jsxDEV("div", {
+        className: "flex items-center gap-2",
+        children: [/*#__PURE__*/_jsxDEV("div", {
+          className: "flex items-center gap-1.5 border border-[#C9C9C9] rounded px-2 h-8 bg-white",
+          children: [/*#__PURE__*/_jsxDEV("svg", {
+            viewBox: "0 0 24 24",
+            width: "13",
+            height: "13",
+            fill: "none",
+            stroke: "#5C5C5C",
+            strokeWidth: "2",
+            children: [/*#__PURE__*/_jsxDEV("circle", {
+              cx: "11",
+              cy: "11",
+              r: "8"
+            }, void 0, false), /*#__PURE__*/_jsxDEV("line", {
+              x1: "21",
+              y1: "21",
+              x2: "16.65",
+              y2: "16.65"
+            }, void 0, false)]
+          }, void 0, true), /*#__PURE__*/_jsxDEV("input", {
+            className: "text-[13px] outline-none w-[220px] bg-transparent placeholder-[#9A9A9A]",
+            placeholder: "Recherchez dans cette liste...",
+            value: search,
+            onChange: e => onSearch(e.target.value)
+          }, void 0, false), search && /*#__PURE__*/_jsxDEV("button", {
+            onClick: () => onSearch(""),
+            title: "Effacer",
+            className: "text-[#9A9A9A] hover:text-[#5C5C5C] shrink-0",
+            children: /*#__PURE__*/_jsxDEV("svg", {
+              viewBox: "0 0 24 24",
+              width: "13",
+              height: "13",
+              fill: "none",
+              stroke: "currentColor",
+              strokeWidth: "2",
+              strokeLinecap: "round",
+              children: [/*#__PURE__*/_jsxDEV("line", {
+                x1: "18",
+                y1: "6",
+                x2: "6",
+                y2: "18"
+              }, "x1", false), /*#__PURE__*/_jsxDEV("line", {
+                x1: "6",
+                y1: "6",
+                x2: "18",
+                y2: "18"
+              }, "x2", false)]
+            }, void 0, true)
+          }, void 0, false)]
+        }, void 0, true), /*#__PURE__*/_jsxDEV(DemandeStageToolIcons, {
+          onFilter: onToggleFilter,
+          filterActive: filterActive
+        }, void 0, false)]
+      }, void 0, true)]
+    }, void 0, true)]
+  }, void 0, true);
+}
+function DemandeStageDataTable({ data, onOpen }) {
+  const [selected, setSelected] = useState({});
+  const toggle = k => setSelected(prev => {
+    const n = { ...prev };
+    if (n[k]) delete n[k];else n[k] = true;
+    return n;
+  });
+  const toggleAll = () => {
+    const allChecked = data.length > 0 && data.every(r => selected[r.num]);
+    setSelected(allChecked ? {} : Object.fromEntries(data.map(r => [r.num, true])));
+  };
+  return /*#__PURE__*/_jsxDEV("div", {
+    className: "overflow-auto",
+    children: /*#__PURE__*/_jsxDEV("table", {
+      className: "w-full border-collapse text-[13px]",
+      children: [/*#__PURE__*/_jsxDEV("thead", {
+        children: /*#__PURE__*/_jsxDEV("tr", {
+          className: "bg-[#F3F3F3] border-b border-[#C9C9C9]",
+          children: [/*#__PURE__*/_jsxDEV("th", {
+            className: "w-[36px] px-2 py-2",
+            children: /*#__PURE__*/_jsxDEV("input", {
+              type: "checkbox",
+              className: "w-4 h-4 accent-[#0250D9] cursor-pointer",
+              checked: data.length > 0 && data.every(r => selected[r.num]),
+              onChange: toggleAll
+            }, void 0, false)
+          }, void 0, false), DEMANDES_STAGE_COLS.map(c => /*#__PURE__*/_jsxDEV("th", {
+            className: "px-2 py-2 text-left text-[12px] font-semibold text-[#03234D] leading-[16px] whitespace-nowrap",
+            style: { width: c.width },
+            children: /*#__PURE__*/_jsxDEV("div", {
+              className: "flex items-center gap-1",
+              children: [c.label, /*#__PURE__*/_jsxDEV(ChevronDown, {
+                size: 10,
+                className: "text-[#5C5C5C]"
+              }, void 0, false)]
+            }, void 0, true)
+          }, c.key, false)), /*#__PURE__*/_jsxDEV("th", {
+            className: "w-[36px]"
+          }, void 0, false)]
+        }, void 0, true)
+      }, void 0, false), /*#__PURE__*/_jsxDEV("tbody", {
+        children: data.length === 0 ? /*#__PURE__*/_jsxDEV("tr", {
+          children: /*#__PURE__*/_jsxDEV("td", {
+            colSpan: DEMANDES_STAGE_COLS.length + 2,
+            className: "px-4 py-8 text-center text-[13px] text-[#5C5C5C]",
+            children: "Aucune demande ne correspond aux filtres sélectionnés."
+          }, void 0, false)
+        }, "empty", false) : data.map((row, i) => /*#__PURE__*/_jsxDEV("tr", {
+          className: `border-b border-[#E5E5E5] transition-colors ${selected[row.num] ? "bg-[#EEF4FF]" : "hover:bg-[#F9F9F9]"}`,
+          children: [/*#__PURE__*/_jsxDEV("td", {
+            className: "px-2 py-2",
+            children: /*#__PURE__*/_jsxDEV("input", {
+              type: "checkbox",
+              className: "w-4 h-4 accent-[#0250D9] cursor-pointer",
+              checked: !!selected[row.num],
+              onChange: () => toggle(row.num)
+            }, void 0, false)
+          }, void 0, false), DEMANDES_STAGE_COLS.map(c => /*#__PURE__*/_jsxDEV("td", {
+            className: "px-2 py-2 whitespace-nowrap " + (c.link ? "" : "text-[#2E2E2E]"),
+            children: c.link ? /*#__PURE__*/_jsxDEV("a", {
+              href: "javascript:void(0)",
+              onClick: e => {
+                e.preventDefault();
+                if (c.key === "num" && onOpen) onOpen(row);
+              },
+              className: "text-[#0250D9] hover:underline font-medium" + (c.key === "num" ? " cursor-pointer" : ""),
+              children: row[c.key] || "—"
+            }, void 0, false) : row[c.key]
+          }, c.key, false)), /*#__PURE__*/_jsxDEV("td", {
+            className: "px-2 py-2",
+            children: /*#__PURE__*/_jsxDEV("button", {
+              className: "w-5 h-5 rounded-full border border-[#C9C9C9] flex items-center justify-center hover:bg-[#F3F3F3]",
+              children: /*#__PURE__*/_jsxDEV(ChevronDown, {
+                size: 10,
+                className: "text-[#5C5C5C]"
+              }, void 0, false)
+            }, void 0, false)
+          }, void 0, false)]
+        }, row.num, true))
+      }, void 0, false)]
+    }, void 0, true)
+  }, void 0, false);
+}
+const DEMANDE_STAGE_FILTER_FIELDS = [
+  { key: "typeEnr", label: "Type d'enregistrement" },
+  { key: "statut", label: "Statut demande" },
+  { key: "typeStage", label: "Type de stage" },
+  { key: "cycle", label: "Cycle de stage" },
+  { key: "cabinet", label: "Nom du cabinet" },
+  { key: "maitre", label: "Maître de stage" },
+  { key: "controleur", label: "Contrôleur de stage" },
+  { key: "groupe", label: "Groupe de stage" },
+  { key: "proprietaire", label: "Propriétaire" }
+];
+function DemandeStageFilterField({ field, values, selected, onToggle }) {
+  const [open, setOpen] = useState(false);
+  const summary = selected.length === 0 ? "Tous" : selected.join(", ");
+  return /*#__PURE__*/_jsxDEV("div", {
+    className: "border-b border-[#EDEDED]",
+    children: [/*#__PURE__*/_jsxDEV("button", {
+      onClick: () => setOpen(o => !o),
+      className: "w-full flex items-start justify-between gap-2 px-4 py-3 text-left hover:bg-[#FAFAFA] transition-colors",
+      children: [/*#__PURE__*/_jsxDEV("div", {
+        className: "min-w-0",
+        children: [/*#__PURE__*/_jsxDEV("p", {
+          className: "text-[13px] font-semibold text-[#03234D] leading-[17px]",
+          children: field.label
+        }, void 0, false), /*#__PURE__*/_jsxDEV("p", {
+          className: `text-[13px] leading-[17px] truncate ${selected.length ? "text-[#0250D9]" : "text-[#5C5C5C]"}`,
+          children: summary
+        }, void 0, false)]
+      }, void 0, true), /*#__PURE__*/_jsxDEV(ChevronDown, {
+        size: 14,
+        className: `text-[#5C5C5C] mt-0.5 shrink-0 transition-transform ${open ? "rotate-180" : ""}`
+      }, void 0, false)]
+    }, void 0, true), open && /*#__PURE__*/_jsxDEV("div", {
+      className: "px-4 pb-3 pt-0 max-h-[220px] overflow-auto",
+      children: values.map(v => /*#__PURE__*/_jsxDEV("label", {
+        className: "flex items-center gap-2 py-1 cursor-pointer text-[13px] text-[#2E2E2E]",
+        children: [/*#__PURE__*/_jsxDEV("input", {
+          type: "checkbox",
+          className: "w-4 h-4 accent-[#0250D9] cursor-pointer shrink-0",
+          checked: selected.includes(v),
+          onChange: () => onToggle(field.key, v)
+        }, void 0, false), /*#__PURE__*/_jsxDEV("span", {
+          className: "truncate",
+          children: v
+        }, void 0, false)]
+      }, v, true))
+    }, void 0, false)]
+  }, void 0, true);
+}
+function DemandeStageFilterPanel({ filters, onToggleValue, onReset, onClose }) {
+  const distinct = key => [...new Set(DEMANDES_STAGE_LIST.map(r => r[key]).filter(v => v !== ""))].sort((a, b) => a.localeCompare(b, "fr"));
+  const activeCount = DEMANDE_STAGE_FILTER_FIELDS.reduce((n, f) => n + ((filters[f.key] || []).length ? 1 : 0), 0);
+  return /*#__PURE__*/_jsxDEV("div", {
+    className: "w-[290px] shrink-0 bg-white border-l border-[#E5E5E5] flex flex-col mr-4 rounded-t-lg overflow-hidden",
+    children: [/*#__PURE__*/_jsxDEV("div", {
+      className: "flex items-center justify-between px-4 py-3 border-b border-[#E5E5E5]",
+      children: [/*#__PURE__*/_jsxDEV("div", {
+        className: "flex items-center gap-2",
+        children: [/*#__PURE__*/_jsxDEV("span", {
+          className: "text-[15px] font-semibold text-[#03234D]",
+          children: "Filtres"
+        }, void 0, false), activeCount > 0 && /*#__PURE__*/_jsxDEV("span", {
+          className: "text-[11px] font-semibold text-white bg-[#0250D9] rounded-full px-1.5 py-0.5 leading-none",
+          children: activeCount
+        }, void 0, false)]
+      }, void 0, true), /*#__PURE__*/_jsxDEV("div", {
+        className: "flex items-center gap-3",
+        children: [activeCount > 0 && /*#__PURE__*/_jsxDEV("button", {
+          onClick: onReset,
+          className: "text-[12px] text-[#0250D9] hover:underline",
+          children: "Réinitialiser"
+        }, void 0, false), /*#__PURE__*/_jsxDEV("button", {
+          onClick: onClose,
+          title: "Fermer",
+          className: "text-[#5C5C5C] hover:text-[#03234D]",
+          children: /*#__PURE__*/_jsxDEV("svg", {
+            viewBox: "0 0 24 24",
+            width: "16",
+            height: "16",
+            fill: "none",
+            stroke: "currentColor",
+            strokeWidth: "2",
+            strokeLinecap: "round",
+            strokeLinejoin: "round",
+            children: [/*#__PURE__*/_jsxDEV("line", {
+              x1: "5",
+              y1: "12",
+              x2: "19",
+              y2: "12"
+            }, "a1", false), /*#__PURE__*/_jsxDEV("polyline", {
+              points: "12 5 19 12 12 19"
+            }, "a2", false)]
+          }, void 0, true)
+        }, void 0, false)]
+      }, void 0, true)]
+    }, void 0, true), /*#__PURE__*/_jsxDEV("div", {
+      className: "flex-1 overflow-auto",
+      children: DEMANDE_STAGE_FILTER_FIELDS.map(f => /*#__PURE__*/_jsxDEV(DemandeStageFilterField, {
+        field: f,
+        values: distinct(f.key),
+        selected: filters[f.key] || [],
+        onToggle: onToggleValue
+      }, f.key, false))
+    }, void 0, false)]
+  }, void 0, true);
+}
+function DemandeStageListViewPage({ onOpen }) {
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({});
+  const [search, setSearch] = useState("");
+  const onToggleValue = (key, value) => setFilters(prev => {
+    const cur = prev[key] || [];
+    const next = cur.includes(value) ? cur.filter(v => v !== value) : [...cur, value];
+    const out = { ...prev, [key]: next };
+    if (next.length === 0) delete out[key];
+    return out;
+  });
+  const q = search.trim().toLowerCase();
+  const data = DEMANDES_STAGE_LIST.filter(row => Object.entries(filters).every(([k, vals]) => !vals.length || vals.includes(row[k])) && (!q || DEMANDES_STAGE_COLS.some(c => String(row[c.key] || "").toLowerCase().includes(q))));
+  const activeCount = Object.values(filters).filter(v => v.length).length;
+  return /*#__PURE__*/_jsxDEV(_Fragment, {
+    children: [/*#__PURE__*/_jsxDEV(DemandeStageListViewHeader, {
+      count: data.length,
+      total: DEMANDES_STAGE_LIST.length,
+      onToggleFilter: () => setShowFilters(s => !s),
+      filterActive: showFilters || activeCount > 0,
+      search: search,
+      onSearch: setSearch
+    }, void 0, false), /*#__PURE__*/_jsxDEV("div", {
+      className: "flex-1 flex overflow-hidden",
+      children: [/*#__PURE__*/_jsxDEV("div", {
+        className: "flex-1 overflow-auto bg-white mx-4 rounded-t-lg",
+        children: /*#__PURE__*/_jsxDEV(DemandeStageDataTable, {
+          data: data,
+          onOpen: onOpen
+        }, void 0, false)
+      }, void 0, false), showFilters && /*#__PURE__*/_jsxDEV(DemandeStageFilterPanel, {
+        filters: filters,
+        onToggleValue: onToggleValue,
+        onReset: () => setFilters({}),
+        onClose: () => setShowFilters(false)
+      }, void 0, false)]
+    }, void 0, true)]
+  }, void 0, true);
+}
+function DemandeStagePath({ statut }) {
+  const STEPS = [{ key: "Soumise", label: "Soumise" }, { key: "Affectée", label: "Affectée" }, { key: "Incomplète", label: "Incomplète" }, { key: "Complète", label: "Complète" }, { key: "Prête pour la commission", label: "Prête pour la commission" }, { key: "Prête pour la session", label: "Prête pour la session" }, { key: "Fermé", label: "Fermé" }];
+  const ALIAS = { "En attente de pièces": "Incomplète", "Prête pour la session": "Prête pour la session" };
+  const startIdx = Math.max(0, STEPS.findIndex(s => s.key === (ALIAS[statut] || statut)));
+  const [selected, setSelected] = useState(startIdx);
+  const ctaLabel = "Marquer Statut comme terminé(e)";
+  return /*#__PURE__*/_jsxDEV("div", {
+    className: "bg-white px-2 border-b border-[#E5E5E5] flex items-center gap-1",
+    style: { height: 48 },
+    children: [/*#__PURE__*/_jsxDEV("button", {
+      style: { width: 28, height: 28, borderRadius: "50%", border: "1px solid #C9C9C9", background: "white", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, cursor: "pointer" },
+      children: /*#__PURE__*/_jsxDEV("svg", { width: "32", height: "32", viewBox: "0 0 32 32", fill: "none", children: [/*#__PURE__*/_jsxDEV("circle", { cx: "16", cy: "16", r: "15", stroke: "#c9c9c9", strokeWidth: "1.5", fill: "white" }, void 0, false), /*#__PURE__*/_jsxDEV("path", { d: "M13 10L19 16L13 22", stroke: "#5c5c5c", strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round" }, void 0, false)] }, void 0, true)
+    }, void 0, false), /*#__PURE__*/_jsxDEV("div", {
+      style: { display: "flex", alignItems: "center", flex: 1, height: 28, overflow: "visible" },
+      children: STEPS.map((s, i) => /*#__PURE__*/_jsxDEV(DemandePathStep, {
+        step: { label: s.label, done: i < selected, current: i === selected },
+        index: i,
+        total: STEPS.length,
+        onClick: () => setSelected(i)
+      }, s.key, false))
+    }, void 0, false), /*#__PURE__*/_jsxDEV("button", {
+      style: { flexShrink: 0, height: 28, padding: "0 12px", borderRadius: 9999, background: "#066afe", color: "white", fontSize: 11, fontWeight: 600, border: "none", cursor: "pointer", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 5 },
+      children: [/*#__PURE__*/_jsxDEV("svg", { viewBox: "0 0 24 24", width: "13", height: "13", fill: "none", stroke: "white", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round", children: /*#__PURE__*/_jsxDEV("polyline", { points: "20 6 9 17 4 12" }, void 0, false) }, void 0, false), ctaLabel]
+    }, void 0, true)]
+  }, void 0, true);
+}
+function DemandeStageRecordPage({ demande }) {
+  const d = demande;
+  const CHECK_ITEMS = [{ key: "ep", label: "Infos EP (tableau de bord)" }, { key: "istya", label: "Cotisations ISTYA" }, { key: "cncc", label: "CNCC H2A — inscription & habilitation" }, { key: "supex", label: "Supexpertise — formations" }];
+  const [checks, setChecks] = useState({ ep: true, istya: true, cncc: true, supex: true });
+  const [leftTab, setLeftTab] = useState("details");
+  const piecesApiRef = React.useRef(null);
+  const toggle = k => setChecks(p => ({ ...p, [k]: !p[k] }));
+  const MOIS = { "01": "JAN", "02": "FEV", "03": "MAR", "04": "AVR", "05": "MAI", "06": "JUIN", "07": "JUIL", "08": "AOU", "09": "SEP", "10": "OCT", "11": "NOV", "12": "DEC" };
+  const dp = (d.dateSession || "").split("/");
+  const session = dp.length === 3 ? MOIS[dp[1]] + "-" + dp[2].slice(2) : "—";
+  const cp = (d.controleur || "").split(" ");
+  const ctrlEmail = cp.length >= 2 ? (cp[1][0] + cp[0]).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "") + "@gmail.com" : "";
+  const op = (d.proprietaire || "").split(" ");
+  const user = op.length >= 2 ? (op[1][0] + op[0]).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "") : (d.proprietaire || "").toLowerCase();
+  const ficheId = "9Yj" + d.num.slice(-4) + "IREuYKiotx3q7";
+  const dossier = "1400023" + d.num.slice(-4) + "01";
+  const nomStg = (d.stagiaire || "").split(" ")[0];
+  const prenomStg = (d.stagiaire || "").split(" ").slice(1).join(" ");
+  const ck = on => on ? "☑" : "☐";
+  const d3 = d.typeStage === "Stage classique";
+  const d2 = d.typeStage === "Stage avec réduction";
+  const d1 = !d3 && !d2;
+  const ficheSyntheseHTML = "<p style='font-size:11px;letter-spacing:0.5px;color:#333;margin:0 0 2px;font-weight:600;'>STAGE D'EXPERTISE COMPTABLE</p><h1 style='text-align:center;font-size:20px;font-weight:700;letter-spacing:0.5px;margin:6px 0 6px;'>FICHE GÉNÉRALE DE SYNTHÈSE</h1><p style='text-align:center;font-style:italic;font-size:11.5px;color:#555;margin:0 0 14px;'>Ce document doit être intégralement complété, sans rature, ni surcharge et conservé, une fois signé, sans limitation de durée.</p><p style='margin:0 0 10px;'><strong>Conseil régional de l'Ordre de :</strong> Île-de-France &nbsp;&nbsp;&nbsp; <strong>Date :</strong> " + d.dateEffet + "</p><table style='width:100%;border-collapse:collapse;border:1px solid #333;margin:0 0 12px;font-size:13px;'><tbody><tr><td style='border:1px solid #333;padding:8px 10px;'><p style='margin:0 0 6px;font-weight:700;'>Identité du stagiaire</p><p style='margin:0 0 4px;'>&#9744; M<sup>me</sup> &nbsp; &#9745; M. &nbsp; <strong>Nom de naissance :</strong> " + nomStg + " &nbsp;&nbsp; <strong>Prénom :</strong> " + prenomStg + "</p><p style='margin:0 0 4px;'><strong>Date de naissance :</strong> …/…/…… &nbsp;&nbsp; <strong>N° d'inscription :</strong> " + dossier + "</p><p style='margin:0;'><strong>Adresse (domicile) :</strong> ………………………………………………………</p></td></tr><tr><td style='border:1px solid #333;padding:8px 10px;'><strong>Contrôleur du stage, M., M<sup>me</sup> :</strong> " + d.controleur + "</td></tr></tbody></table><p style='text-align:center;margin:10px 0 6px;'><strong>Stage accompli du</strong> ………………… <strong>au</strong> …………………</p><p style='text-align:center;margin:0 0 12px;'><strong>Durée réglementaire du stage :</strong> &nbsp; " + ck(d3) + " 3 ans &nbsp;&nbsp; " + ck(d2) + " 2 ans &nbsp;&nbsp; " + ck(d1) + " 1 an</p><table style='width:100%;border-collapse:collapse;border:1px solid #333;font-size:12px;margin:0 0 12px;'><tbody><tr style='background:#F3F3F3;'><td style='border:1px solid #333;padding:6px;font-weight:600;'>Nom et prénom du maître de stage agréé</td><td style='border:1px solid #333;padding:6px;font-weight:600;text-align:center;'>N° inscription liste CAC</td><td style='border:1px solid #333;padding:6px;font-weight:600;text-align:center;'>du</td><td style='border:1px solid #333;padding:6px;font-weight:600;text-align:center;'>au</td><td style='border:1px solid #333;padding:6px;font-weight:600;text-align:center;'>Date d'habilitation</td></tr><tr><td style='border:1px solid #333;padding:6px;'>" + d.maitre + " — " + d.cabinet + "</td><td style='border:1px solid #333;padding:6px;'></td><td style='border:1px solid #333;padding:6px;'></td><td style='border:1px solid #333;padding:6px;'></td><td style='border:1px solid #333;padding:6px;'></td></tr><tr><td style='border:1px solid #333;padding:6px;height:22px;'></td><td style='border:1px solid #333;'></td><td style='border:1px solid #333;'></td><td style='border:1px solid #333;'></td><td style='border:1px solid #333;'></td></tr><tr><td colspan='5' style='border:1px solid #333;padding:6px;font-weight:600;'>Nom et prénom du second maître de stage CAC habilité :</td></tr><tr><td style='border:1px solid #333;padding:6px;height:22px;'></td><td style='border:1px solid #333;'></td><td style='border:1px solid #333;'></td><td style='border:1px solid #333;'></td><td style='border:1px solid #333;'></td></tr><tr><td colspan='5' style='border:1px solid #333;padding:6px;font-weight:600;'>Nom et prénom du co-maître de stage expert-comptable :</td></tr><tr><td style='border:1px solid #333;padding:6px;height:22px;'></td><td style='border:1px solid #333;'></td><td style='border:1px solid #333;'></td><td style='border:1px solid #333;'></td><td style='border:1px solid #333;'></td></tr></tbody></table><p style='margin:2px 0;'><strong>Suspension(s) de stage</strong> &nbsp; du ……… au ……… &nbsp;&nbsp; du ……… au ………</p><p style='margin:2px 0;'><strong>Suspension(s) de stage</strong> &nbsp; du ……… au ……… &nbsp;&nbsp; du ……… au ………</p><p style='margin:2px 0;'><strong>Délai(s) supplémentaire(s)</strong> &nbsp; du ……… au ………</p><p style='margin:2px 0;'><strong>Invalidation(s) de stage</strong> &nbsp; du ……… au ………</p><p style='margin:2px 0 4px;'><strong>Prolongation(s) de stage</strong> &nbsp; du ……… au ………</p><p style='margin:2px 0 16px;'><strong>Le cas échéant, CAC habilité :</strong> Nom ……………… Prénom ……………… Date d'habilitation ………………</p><p style='font-weight:700;font-style:italic;margin:14px 0 8px;'>Les rubriques ci-dessous sont à compléter obligatoirement</p><p style='margin:0 0 4px;font-weight:600;'>Appréciations du contrôleur de stage, en quantité et en qualité, sur les travaux professionnels s'inscrivant dans le cadre des différentes missions de l'expert-comptable et du commissaire aux comptes :</p><div style='border:1px solid #C9C9C9;background:#F7F8FC;min-height:72px;padding:8px;margin:0 0 14px;'></div><p style='margin:0 0 14px;'>A effectué au moins 200 h de travaux sur des missions de commissariat aux comptes auprès d'un maître de stage habilité, sur deux années au moins &nbsp;&nbsp; &#9744; oui &nbsp; &#9744; non</p><p style='margin:0 0 4px;font-weight:600;'>Appréciation sur les cycles de formation (assiduité e-learning, niveau de participation aux journées de regroupement…) :</p><div style='border:1px solid #C9C9C9;background:#F7F8FC;min-height:64px;padding:8px;margin:0 0 14px;'></div><p style='margin:0 0 4px;font-weight:600;'>Appréciation sur les rapports semestriels (qualité, intérêt des sujets…) :</p><div style='border:1px solid #C9C9C9;background:#F7F8FC;min-height:64px;padding:8px;margin:0 0 14px;'></div><p style='margin:0 0 4px;font-weight:600;'>Appréciation générale :</p><div style='border:1px solid #C9C9C9;background:#F7F8FC;min-height:72px;padding:8px;margin:0 0 16px;'></div><table style='width:100%;margin-top:8px;font-size:13px;border-collapse:collapse;'><tbody><tr><td style='width:50%;vertical-align:top;padding:6px 16px 24px 0;'>Contrôleur du stage :<br/>Nom ……………………<br/><em style='color:#5C5C5C;'>Signature</em></td><td style='width:50%;vertical-align:top;padding:6px 0 24px 0;'>Président du Comité régional du stage :<br/>Nom ……………………<br/><em style='color:#5C5C5C;'>Signature</em></td></tr><tr><td style='vertical-align:top;padding:6px 16px 0 0;'>Président CROEC de ……………<br/>Nom ……………………<br/><em style='color:#5C5C5C;'>Signature</em></td><td style='vertical-align:top;padding:6px 0 0 0;'>Le cas échéant, Président CRCC de ……………<br/>Nom ……………………<br/><em style='color:#5C5C5C;'>Signature</em></td></tr></tbody></table>";
+  const afsHTML = "<div style='color:#1a1a1a;font-size:13px;line-height:1.55;'><div style='display:flex;align-items:center;gap:10px;border-bottom:2px solid #E2001A;padding-bottom:8px;margin-bottom:22px;'><div style='width:34px;height:34px;background:#E2001A;clip-path:polygon(0 0,100% 0,100% 60%,60% 60%,60% 100%,0 100%);'></div><div><div style='font-weight:800;font-size:14px;color:#111;'>ORDRE DES EXPERTS-COMPTABLES</div><div style='font-size:11px;color:#555;'>Région Paris Ile-de-France</div></div></div><p style='text-align:right;margin:0 0 16px;'>Paris, le 17/07/2026</p><p style='margin:0 0 2px;font-weight:600;'>MONSIEUR " + d.stagiaire + "</p><p style='margin:0 0 2px;'>210 AVENUE DE VERSAILLES</p><p style='margin:0 0 18px;'>75016 PARIS</p><p style='font-weight:700;margin:0 0 14px;'>OBJET : DÉLIVRANCE ATTESTATION DE FIN DE STAGE</p><p style='margin:0 0 12px;'>MONSIEUR,</p><p style='margin:0 0 12px;'>Nous sommes heureux de vous annoncer que le Comité Régional du Stage de l'Ordre des Experts-Comptables région Ile-de-France, au cours de sa séance du 30/06/2026 a émis un avis favorable à votre demande de délivrance de l'attestation de fin de stage que vous trouverez sous ce pli, accompagnée de la fiche générale de synthèse.</p><p style='margin:0 0 12px;'>Nous vous invitons à <b>conserver précieusement ces documents ainsi que vos fiches annuelles des travaux professionnels</b> en vue de votre éventuelle inscription sur la liste des commissaires aux comptes auprès du H2A.</p><p style='margin:0 0 12px;'>Nous vous rappelons qu'en application de l'article 75 du décret 2012-432 du 30 mars 2012, <b>vous disposez d'un délai de 6 ans pour obtenir le diplôme d'expertise comptable</b>. Au-delà, cette attestation de fin de stage deviendra caduque.</p><p style='margin:0 0 12px;'>Vous avez la possibilité de maintenir votre accès Elearning en vous inscrivant sur le portail d'inscription de notre Institut Régional de Formation, Sup'Expertise – Jinius (Réf : STA0054).</p><p style='margin:0 0 12px;'>Nous espérons que vous allez très prochainement vous présenter aux épreuves du Diplôme d'Expertise Comptable et que vous capitaliserez au mieux l'ensemble des formations réalisées à l'Ordre des Experts Comptables région Ile-de-France et auprès de Sup'Expertise.</p><p style='margin:24px 0 0;'>Nous vous prions de croire, MONSIEUR, à l'expression de nos sentiments les meilleurs.</p><p style='margin:30px 0 0;font-weight:600;'>Virginie ROITMAN</p><p style='margin:0;'>Présidente de la Commission Stage</p><hr style='border:none;border-top:1px dashed #ccc;margin:40px 0;'/><div style='text-align:center;'><div style='display:inline-block;background:#E2001A;color:white;font-weight:800;padding:6px 14px;margin-bottom:18px;'>ORDRE DES EXPERTS-COMPTABLES</div><p style='font-weight:700;font-size:15px;margin:0;'>DIPLÔME D'EXPERTISE COMPTABLE</p><p style='margin:0 0 16px;'>Décret n° 2012-432 du 30 mars 2012</p><p style='font-weight:700;margin:0;'>STAGE D'EXPERTISE COMPTABLE</p><p style='font-weight:700;margin:0 0 12px;'>RENOUVELLEMENT DE L'ATTESTATION DE FIN DE STAGE</p><p style='font-weight:600;margin:0 0 20px;'>Conseil régional de l'Ordre des Experts-Comptables d'Ile-de-France</p></div><p style='margin:0 0 4px;'>Je soussigné, Gilles BÖSIGER,</p><p style='margin:0 0 18px;'>Président du Conseil régional de l'Ordre des Experts-Comptables d'Ile-de-France</p><p style='text-align:center;font-weight:600;margin:0 0 18px;'>ATTESTE QUE</p><p style='margin:0 0 2px;'><b>MONSIEUR " + d.stagiaire + "</b>, né le 22/09/1975 à PARIS (75)</p><p style='text-align:right;font-weight:600;margin:0 0 14px;'>Dossier n°" + dossier + "</p><p style='margin:0 0 8px;'>A effectué une année de stage d'expertise comptable conformément aux dispositions :</p><ul style='margin:0 0 12px;padding-left:20px;'><li>du décret n° 2012-432 du 30 mars 2012 relatif à l'exercice de l'activité d'expertise comptable, article 67 dernier alinéa,</li><li>de l'arrêté du 6 mars 2024 portant agrément du règlement intérieur de l'Ordre, Titre V Règlement du stage d'expertise comptable, articles 538 et 539,</li></ul><p style='text-align:center;font-weight:700;margin:0 0 14px;'>du 01/10/2023 au 30/09/2024</p><p style='margin:0 0 22px;'>Cette attestation jointe à l'attestation de fin de stage d'origine, lui permet de s'inscrire aux épreuves du diplôme d'expertise comptable.</p><p style='margin:0 0 2px;'>Fait à Paris, le 30/06/2026</p><p style='margin:0 0 26px;'>Le Président</p><p style='font-weight:600;'>Gilles BÖSIGER</p></div>";
+  const afsFile = { id: 90001, name: "Attestation_fin_de_stage.pdf", type: "pdf", date: d.dateEffet, status: "conforme", category: "Attestation de fin de stage", instructions: "AFS générée par le Comité régional du stage", relance: "—", content: afsHTML };
+  const highlights = [{ label: "N° demande", value: d.num }, { label: "Type d'enregistrement", value: d.typeEnr }, { label: "Statut demande", value: d.statut }, { label: "Type de stage", value: d.typeStage }, { label: "Cycle de stage", value: d.cycle }, { label: "Nb mois de stage", value: d.nbMois }, { label: "Nom du cabinet", value: d.cabinet }, { label: "Maître de stage", value: d.maitre }, { label: "Contrôleur de stage", value: d.controleur }, { label: "Propriétaire", value: d.proprietaire }].slice(0, 10);
+  const demandeFields = [[{ label: "N° demande", value: d.num, readOnly: true }, { label: "Type d'enregistrement", value: d.typeEnr, readOnly: true }], [{ label: "Statut demande", value: d.statut, readOnly: true }, { label: "Propriétaire", value: d.proprietaire, readOnly: true }], [{ label: "Date session", value: d.dateSession, readOnly: true }, { label: "Date d'effet", value: d.dateEffet, readOnly: true }]];
+  const stageFields = [[{ label: "Type de stage", value: d.typeStage, readOnly: true }, { label: "Cycle de stage", value: d.cycle, readOnly: true }], [{ label: "Nb mois de stage", value: d.nbMois, readOnly: true }, { label: "Groupe de stage", value: d.groupe || "—", readOnly: true }], [{ label: "Nom du cabinet", value: d.cabinet, readOnly: true }, { label: "Maître de stage", value: d.maitre, readOnly: true }]];
+  const histo = [{ date: "28/07/2026 15:08:40", action: "Envoyé au contrôleur (" + ctrlEmail + ")", par: user }, { date: "28/07/2026 15:02:37", action: "Vérifications mises à jour", par: user }, { date: (d.dateSession || "") + " 09:00:00", action: "Demande créée — " + d.typeEnr, par: user }];
+  const cardIcon = paths => /*#__PURE__*/_jsxDEV("svg", { viewBox: "0 0 24 24", width: "12", height: "12", fill: "none", stroke: "white", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round", children: paths }, void 0, false);
+  return /*#__PURE__*/_jsxDEV(_Fragment, {
+    children: [/*#__PURE__*/_jsxDEV("div", {
+      className: "bg-[#F3F3F3] px-4 py-4",
+      children: /*#__PURE__*/_jsxDEV("div", {
+        className: "flex items-center justify-between",
+        children: [/*#__PURE__*/_jsxDEV("div", {
+          className: "flex items-center gap-3",
+          children: [/*#__PURE__*/_jsxDEV("div", {
+            className: "w-8 h-8 rounded bg-[#E5006D] flex items-center justify-center",
+            children: /*#__PURE__*/_jsxDEV("svg", { viewBox: "0 0 24 24", width: "16", height: "16", fill: "none", stroke: "white", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [/*#__PURE__*/_jsxDEV("path", { d: "M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" }, "b1", false), /*#__PURE__*/_jsxDEV("path", { d: "M3 6h18" }, "b2", false), /*#__PURE__*/_jsxDEV("path", { d: "M16 10a4 4 0 0 1-8 0" }, "b3", false)] }, void 0, true)
+          }, void 0, false), /*#__PURE__*/_jsxDEV("div", {
+            children: [/*#__PURE__*/_jsxDEV("p", { className: "text-[13px] text-[#5C5C5C] leading-[18px]", children: "Demande stage" }, void 0, false), /*#__PURE__*/_jsxDEV("p", { className: "text-[28px] text-[#03234D] leading-[35px] uppercase", children: d.stagiaire }, void 0, false), /*#__PURE__*/_jsxDEV("p", { className: "text-[12px] text-[#5C5C5C] mt-0.5", children: ["N° dossier ", dossier, " · N° demande ", d.num, " · Session ", session] }, void 0, true)]
+          }, void 0, true)]
+        }, void 0, true), /*#__PURE__*/_jsxDEV("div", {
+          className: "flex items-center gap-2",
+          children: /*#__PURE__*/_jsxDEV("div", {
+            className: "flex border border-[#5C5C5C] rounded-full overflow-hidden",
+            children: /*#__PURE__*/_jsxDEV("button", { onClick: () => piecesApiRef.current && piecesApiRef.current.addAndPreview(afsFile), className: "px-4 h-8 text-[14px] text-[#0250D9] bg-white", children: "Générer l'AFS" }, void 0, false)
+          }, void 0, false)
+        }, void 0, false)]
+      }, void 0, true)
+    }, void 0, false), /*#__PURE__*/_jsxDEV(HighlightsPanel, { fields: highlights }, void 0, false), /*#__PURE__*/_jsxDEV(DemandeStagePath, { statut: d.statut }, void 0, false), /*#__PURE__*/_jsxDEV("div", {
+      className: "flex-1 overflow-y-auto overflow-x-hidden px-4 pt-2 pb-4",
+      children: /*#__PURE__*/_jsxDEV("div", {
+        className: "grid grid-cols-2 gap-3 w-full",
+        children: [/*#__PURE__*/_jsxDEV("div", {
+          className: "min-w-0",
+          children: /*#__PURE__*/_jsxDEV("div", {
+            className: "bg-white rounded-[20px] overflow-hidden",
+            children: /*#__PURE__*/_jsxDEV("div", {
+              className: "px-4 pt-3 pb-3",
+              children: [/*#__PURE__*/_jsxDEV("div", { className: "flex w-full mb-2", children: [/*#__PURE__*/_jsxDEV("button", { onClick: () => setLeftTab("details"), className: "px-3 h-10 text-[14px] font-semibold whitespace-nowrap " + (leftTab === "details" ? "text-[#0250D9] border-b-[3px] border-[#0250D9]" : "text-[#5C5C5C] border-b border-[#C9C9C9]"), children: "Détails" }, void 0, false), /*#__PURE__*/_jsxDEV("button", { onClick: () => setLeftTab("verifs"), className: "px-3 h-10 text-[14px] font-semibold whitespace-nowrap " + (leftTab === "verifs" ? "text-[#0250D9] border-b-[3px] border-[#0250D9]" : "text-[#5C5C5C] border-b border-[#C9C9C9]"), children: "Vérifications (Hors PEP)" }, void 0, false), /*#__PURE__*/_jsxDEV("div", { className: "flex-1 border-b border-[#C9C9C9]" }, void 0, false)] }, void 0, true), leftTab === "details" && /*#__PURE__*/_jsxDEV("div", { className: "flex flex-col gap-1", children: [/*#__PURE__*/_jsxDEV(ExpandableSection, { title: "Demande", fields: demandeFields, defaultOpen: true }, void 0, false), /*#__PURE__*/_jsxDEV(ExpandableSection, { title: "Stage", fields: stageFields, defaultOpen: true }, void 0, false), /*#__PURE__*/_jsxDEV(ExpandableSection, {
+                title: "Contrôleur de stage",
+                defaultOpen: true,
+                children: /*#__PURE__*/_jsxDEV("div", {
+                  className: "flex flex-col gap-3 px-1",
+                  children: [/*#__PURE__*/_jsxDEV("div", { className: "flex gap-3", children: [/*#__PURE__*/_jsxDEV(EditableField, { label: "Nom du contrôleur (affichage)", value: d.controleur }, void 0, false), /*#__PURE__*/_jsxDEV(EditableField, { label: "E-mail du contrôleur", value: ctrlEmail }, void 0, false)] }, void 0, true), /*#__PURE__*/_jsxDEV("div", { className: "mt-2", children: [/*#__PURE__*/_jsxDEV("p", { className: "text-[12px] font-bold uppercase tracking-wide text-[#514F4D] mb-2", children: "Appréciations du contrôleur de stage" }, void 0, false), ["Travaux professionnels (missions EC / CAC)", "Appréciation cycles de formation", "Appréciation rapports semestriels", "Appréciation générale"].map((ph, i) => /*#__PURE__*/_jsxDEV("textarea", { placeholder: ph, className: "w-full min-h-[84px] border border-[#C9C9C9] rounded-lg p-3 text-[14px] text-[#2E2E2E] mb-3 outline-none focus:border-[#03234D] bg-[#FAFBFF] resize-y", style: { fontFamily: "inherit" } }, i, false))] }, void 0, true), /*#__PURE__*/_jsxDEV("button", { className: "self-start flex items-center gap-2 px-4 h-9 text-[14px] text-white bg-[#03234D] rounded-md hover:bg-[#022039] mt-1", children: [/*#__PURE__*/_jsxDEV("svg", { viewBox: "0 0 24 24", width: "14", height: "14", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: /*#__PURE__*/_jsxDEV("path", { d: "M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z" }, void 0, false) }, void 0, false), "Envoyer pour observations du contrôleur"] }, void 0, true)]
+                }, void 0, true)
+              }, void 0, false)] }, void 0, true), leftTab === "verifs" && /*#__PURE__*/_jsxDEV("div", { className: "pt-2", children: [/*#__PURE__*/_jsxDEV("div", { className: "flex flex-col gap-3 mb-4", children: CHECK_ITEMS.map(it => /*#__PURE__*/_jsxDEV("label", { className: "flex items-center gap-3 cursor-pointer", children: [/*#__PURE__*/_jsxDEV("span", { onClick: () => toggle(it.key), className: "w-5 h-5 rounded flex items-center justify-center shrink-0 " + (checks[it.key] ? "bg-[#C8102E]" : "bg-white border border-[#C9C9C9]"), children: checks[it.key] && /*#__PURE__*/_jsxDEV("svg", { viewBox: "0 0 24 24", width: "13", height: "13", fill: "none", stroke: "white", strokeWidth: "3", strokeLinecap: "round", strokeLinejoin: "round", children: /*#__PURE__*/_jsxDEV("polyline", { points: "20 6 9 17 4 12" }, void 0, false) }, void 0, false) }, void 0, false), /*#__PURE__*/_jsxDEV("span", { className: "text-[14px] text-[#2E2E2E]", children: it.label }, void 0, false)] }, it.key, true)) }, void 0, false), /*#__PURE__*/_jsxDEV("button", { className: "px-4 h-9 text-[14px] text-[#03234D] bg-white border border-[#C9C9C9] rounded-md hover:bg-[#F3F3F3]", children: "Enregistrer" }, void 0, false)] }, void 0, true)]
+            }, void 0, true)
+          }, void 0, false)
+        }, void 0, false), /*#__PURE__*/_jsxDEV("div", {
+          className: "min-w-0 flex flex-col gap-3",
+          children: [/*#__PURE__*/_jsxDEV(PiecesPanel, {
+            initialFiles: [{ id: 1, name: "Fiche_generale_de_synthese.docx", type: "docx", editable: true, date: d.dateEffet, status: "examiner", category: "Fiche de synthèse", instructions: "Fiche générale de synthèse — ouvrir pour éditer puis convertir en PDF", relance: "—", content: ficheSyntheseHTML }],
+            onReady: api => {
+              piecesApiRef.current = api;
+            }
+          }, void 0, false),/*#__PURE__*/_jsxDEV(CardSection, {
+            iconBg: "bg-[#0250D9]",
+            title: "Historique",
+            defaultOpen: true,
+            icon: cardIcon([/*#__PURE__*/_jsxDEV("path", { d: "M3 3v5h5M3.05 13A9 9 0 1 0 6 5.3L3 8" }, "h1", false), /*#__PURE__*/_jsxDEV("path", { d: "M12 7v5l4 2" }, "h2", false)]),
+            children: /*#__PURE__*/_jsxDEV("table", {
+              className: "w-full text-[13px]",
+              children: [/*#__PURE__*/_jsxDEV("thead", { children: /*#__PURE__*/_jsxDEV("tr", { className: "border-b border-[#EDEDED] text-left text-[#5C5C5C]", children: [/*#__PURE__*/_jsxDEV("th", { className: "py-2 font-semibold", children: "Date / heure" }, void 0, false), /*#__PURE__*/_jsxDEV("th", { className: "py-2 font-semibold", children: "Action" }, void 0, false), /*#__PURE__*/_jsxDEV("th", { className: "py-2 font-semibold", children: "Par" }, void 0, false)] }, void 0, true) }, void 0, false), /*#__PURE__*/_jsxDEV("tbody", { children: histo.map((h, i) => /*#__PURE__*/_jsxDEV("tr", { className: "border-b border-[#F3F3F3] last:border-0", children: [/*#__PURE__*/_jsxDEV("td", { className: "py-2 text-[#0250D9] whitespace-nowrap", children: h.date }, void 0, false), /*#__PURE__*/_jsxDEV("td", { className: "py-2 text-[#2E2E2E]", children: h.action }, void 0, false), /*#__PURE__*/_jsxDEV("td", { className: "py-2 text-[#2E2E2E]", children: h.par }, void 0, false)] }, i, true)) }, void 0, false)]
+            }, void 0, true)
+          }, void 0, false)]
+        }, void 0, true)]
+      }, void 0, true)
+    }, void 0, false)]
+  }, void 0, true);
+}
 function App() {
   const [activePage, setActivePageState] = useState(() => hashToPage(readCurrentHash()));
   const [openTabs, setOpenTabs] = useState(() => initTabsFromHash());
@@ -20896,6 +21726,20 @@ function App() {
     });
     setActivePage(tabId);
   };
+  const handleNavigateToDemandeStage = row => {
+    const tabId = "demandestage-record:" + row.num;
+    setOpenTabs(prev => {
+      const exists = prev.find(t => t.id === tabId);
+      if (!exists) return [...prev, {
+        type: "demandestage-record",
+        id: tabId,
+        label: row.num,
+        data: row
+      }];
+      return prev;
+    });
+    setActivePage(tabId);
+  };
   const handleCloseTab = (e, tabId) => {
     e.stopPropagation();
     setOpenTabs(prev => prev.filter(t => t.id !== tabId));
@@ -20906,6 +21750,7 @@ function App() {
   const isListActive = activePage === "list";
   const isGroupesActive = activePage === "groupes";
   const isDemandesActive = activePage === "demandes";
+  const isDemandeStageActive = activePage === "demandestage";
   const activeTab = openTabs.find(t => t.id === activePage);
   return /*#__PURE__*/_jsxDEV("div", {
     className: "flex flex-col h-screen bg-[#F3F3F3] overflow-hidden",
@@ -20924,6 +21769,12 @@ function App() {
         onClick: () => setActivePage("demandes"),
         className: `flex items-center gap-1 px-3 h-full text-[13px] shrink-0 ${isDemandesActive ? "text-[#0250D9] font-semibold border-b-[3px] border-[#0250D9]" : "text-[#5C5C5C] hover:text-[#03234D]"}`,
         children: ["Demandes tableau ", /*#__PURE__*/_jsxDEV(ChevronDown, {
+          size: 12
+        }, void 0, false)]
+      }, void 0, true), /*#__PURE__*/_jsxDEV("button", {
+        onClick: () => setActivePage("demandestage"),
+        className: `flex items-center gap-1 px-3 h-full text-[13px] shrink-0 ${isDemandeStageActive ? "text-[#0250D9] font-semibold border-b-[3px] border-[#0250D9]" : "text-[#5C5C5C] hover:text-[#03234D]"}`,
+        children: ["Demande stage ", /*#__PURE__*/_jsxDEV(ChevronDown, {
           size: 12
         }, void 0, false)]
       }, void 0, true), /*#__PURE__*/_jsxDEV("button", {
@@ -20961,13 +21812,16 @@ function App() {
     }, void 0, true), isDemandesActive && /*#__PURE__*/_jsxDEV(DemandesListViewPage, {
       onContactClick: handleNavigateToContact,
       onDemandeClick: handleNavigateToDemande
+    }, void 0, false), isDemandeStageActive && /*#__PURE__*/_jsxDEV(DemandeStageListViewPage, {
+      onOpen: handleNavigateToDemandeStage
     }, void 0, false), isListActive && /*#__PURE__*/_jsxDEV(ListViewPage, {
       onNavigateToRecord: handleNavigateToRecord
     }, void 0, false), isGroupesActive && /*#__PURE__*/_jsxDEV(GroupesListViewPage, {
       onNavigateToGroupe: handleNavigateToGroupe
     }, void 0, false), activeTab && activeTab.type === "record" && /*#__PURE__*/_jsxDEV(RecordPage, {
       row: activeTab.data,
-      onNavigateToMotif: handleNavigateToMotif
+      onNavigateToMotif: handleNavigateToMotif,
+      onNavigateToDemandeStage: handleNavigateToDemandeStage
     }, void 0, false), activeTab && activeTab.type === "motif" && /*#__PURE__*/_jsxDEV(MotifDetailPage, {
       motif: activeTab.data
     }, void 0, false), activeTab && activeTab.type === "formations" && /*#__PURE__*/_jsxDEV(FormationsPage, {
@@ -20978,6 +21832,8 @@ function App() {
     }, void 0, false), activeTab && activeTab.type === "demande" && /*#__PURE__*/_jsxDEV(DemandeRecordPage, {
       demande: activeTab.data,
       onContactClick: handleNavigateToContact
+    }, void 0, false), activeTab && activeTab.type === "demandestage-record" && /*#__PURE__*/_jsxDEV(DemandeStageRecordPage, {
+      demande: activeTab.data
     }, void 0, false), activeTab && activeTab.type === "demande-attente-pj" && /*#__PURE__*/_jsxDEV(DemandeAttentePJPage, {}, void 0, false), activeTab && activeTab.type === "contact" && /*#__PURE__*/_jsxDEV(ContactRecordPage, {
       demande: activeTab.data,
       onAccountClick: handleNavigateToAccount,
