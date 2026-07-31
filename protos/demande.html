@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Demande — PEP</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:        #1B324F;
+      --white:       #FFFFFF;
+      --border:      #E4E7EE;
+      --border-light:#EEF0F5;
+      --text-dark:   #1B324F;
+      --label:       #8A93A6;
+      --accordion-bg:#F4F5F8;
+      --font: 'Mark Pro', 'Inter', sans-serif;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--white);
+      color: var(--text-dark);
+      font-size: 15px;
+      line-height: 1.5;
+      padding: 28px 32px 60px;
+    }
+
+    .wrap { max-width: 1560px; margin: 0 auto; }
+
+    /* ── En-tête ── */
+    .dh {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .dh-title {
+      font-size: 34px;
+      font-weight: 700;
+      color: var(--navy);
+      letter-spacing: -0.01em;
+    }
+    .dh-close {
+      background: none; border: none; cursor: pointer;
+      padding: 4px; line-height: 0;
+    }
+    .dh-close svg { width: 22px; height: 22px; stroke: #5A6478; fill: none; stroke-width: 1.6; }
+    .dh-close:hover svg { stroke: var(--navy); }
+
+    /* ── Onglets ── */
+    .dtabs {
+      display: flex;
+      gap: 34px;
+      border-bottom: 1px solid var(--border-light);
+      margin-bottom: 28px;
+    }
+    .dtab {
+      padding: 18px 2px;
+      font-size: 16px;
+      color: #7C8698;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -1px;
+      transition: color .12s;
+      background: none; border-top: none; border-left: none; border-right: none;
+      font-family: var(--font);
+    }
+    .dtab:hover { color: var(--navy); }
+    .dtab.active {
+      color: var(--navy);
+      font-weight: 600;
+      border-bottom-color: var(--navy);
+    }
+
+    .dpanel { display: none; }
+    .dpanel.active { display: block; }
+
+    /* ── Accordéons ── */
+    .acc { margin-bottom: 14px; }
+    .acc-head {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--accordion-bg);
+      border: none;
+      border-radius: 6px;
+      padding: 16px 20px;
+      cursor: pointer;
+      font-family: var(--font);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--navy);
+      text-align: left;
+    }
+    .acc-head svg {
+      width: 16px; height: 16px;
+      stroke: var(--navy); fill: none;
+      stroke-width: 2.4;
+      flex-shrink: 0;
+      transition: transform .15s;
+    }
+    .acc.open .acc-head svg { transform: rotate(90deg); }
+
+    .acc-body { display: none; padding: 26px 22px 10px; }
+    .acc.open .acc-body { display: block; }
+
+    /* ── Grille de champs ── */
+    .fgrid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 60px;
+      row-gap: 30px;
+    }
+    .fitem { min-width: 0; }
+    .flabel {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--label);
+      margin-bottom: 7px;
+    }
+    .fvalue {
+      font-size: 17px;
+      color: var(--text-dark);
+      word-break: break-word;
+    }
+
+    .pj-empty {
+      padding: 40px 4px;
+      color: #7C8698;
+      font-size: 16px;
+    }
+
+    /* ══ Avis et commentaire ══ */
+    .av-wrap { max-width: 1040px; }
+
+    .av-card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 40px;
+    }
+    .av-row {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      align-items: center;
+      gap: 24px;
+      padding: 22px 28px;
+      border-bottom: 1px solid var(--border);
+    }
+    .av-row:last-child { border-bottom: none; }
+    .av-row:nth-child(even) { background: #F7F9FC; }
+    .av-label {
+      font-size: 17px;
+      color: #6E7891;
+    }
+    .av-value {
+      font-size: 17px;
+      color: var(--text-dark);
+    }
+
+    /* Pills d'avis */
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-size: 16px;
+      white-space: nowrap;
+    }
+    .pill svg { width: 15px; height: 15px; fill: none; stroke-width: 2.2; }
+    .pill-fav  { background: #DFF5E6; color: #2E7D4F; }
+    .pill-fav svg  { stroke: #2E7D4F; }
+    .pill-res  { background: #FDEBD9; color: #E07B34; }
+    .pill-res svg  { stroke: #E07B34; }
+    .pill-def  { background: #FCE4E7; color: #D14356; }
+    .pill-def svg  { stroke: #D14356; }
+
+    /* Libellés de champ */
+    .av-field-label {
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 14px;
+    }
+    .av-block { margin-bottom: 36px; }
+
+    /* Select personnalisé */
+    .av-select { position: relative; }
+    .av-placeholder {
+      font-size: 16px;
+      color: #8A93A6;
+    }
+    .av-select-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      background: #FBFCFE;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 18px;
+      cursor: pointer;
+      font-family: var(--font);
+    }
+    .av-select-btn > svg {
+      width: 18px; height: 18px;
+      stroke: var(--navy); fill: none; stroke-width: 2;
+      flex-shrink: 0;
+      transition: transform .15s;
+    }
+    .av-select.open .av-select-btn > svg { transform: rotate(180deg); }
+
+    .av-options {
+      display: none;
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0; right: 0;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 8px 20px rgba(27,50,79,.10);
+      padding: 10px;
+      z-index: 20;
+    }
+    .av-select.open .av-options { display: block; }
+    .av-option {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: none; border: none;
+      padding: 10px 8px;
+      cursor: pointer;
+      border-radius: 6px;
+      font-family: var(--font);
+    }
+    .av-option:hover { background: #F4F6FA; }
+
+    /* Zone de commentaire */
+    .av-textarea {
+      width: 100%;
+      min-height: 190px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px;
+      font-family: var(--font);
+      font-size: 17px;
+      color: var(--text-dark);
+      resize: vertical;
+      outline: none;
+    }
+    .av-textarea:focus { border-color: var(--navy); }
+
+    @media (max-width: 760px) {
+      .av-row { grid-template-columns: 1fr; gap: 8px; }
+    }
+
+    @media (max-width: 900px) {
+      .fgrid { grid-template-columns: 1fr; row-gap: 22px; }
+      .dh-title { font-size: 26px; }
+      body { padding: 20px 18px 40px; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- En-tête -->
+  <div class="dh">
+    <h1 class="dh-title" id="d-title">Demande 00005290</h1>
+    <button class="dh-close" aria-label="Fermer" onclick="window.close()">
+      <svg viewBox="0 0 24 24" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+
+  <!-- Onglets -->
+  <div class="dtabs">
+    <button class="dtab active" onclick="showTab(this,'panel-details')">Détails de la demande</button>
+    <button class="dtab" onclick="showTab(this,'panel-pj')">Pièces justificatives</button>
+    <button class="dtab" onclick="showTab(this,'panel-examen')">Examen</button>
+    <button class="dtab" onclick="showTab(this,'panel-avis')">Avis et commentaire</button>
+  </div>
+
+  <!-- Panneau : Détails de la demande -->
+  <div class="dpanel active" id="panel-details">
+
+    <div class="acc open" id="acc-infos">
+      <button class="acc-head" onclick="toggleAcc('acc-infos')">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+        Informations concernant la demande
+      </button>
+      <div class="acc-body">
+        <div class="fgrid">
+          <div class="fitem">
+            <div class="flabel">Type de demande</div>
+            <div class="fvalue" id="f-type">Inscription Stage</div>
+          </div>
+          <div class="fitem">
+            <div class="flabel">Propriétaire de la requête</div>
+            <div class="fvalue">Île-de-France</div>
+          </div>
+
+          <div class="fitem">
+            <div class="flabel">Demandeur</div>
+            <div class="fvalue" id="f-demandeur">Dupont Nada</div>
+          </div>
+          <div class="fitem">
+            <div class="flabel">Conseil régional de l'ordre</div>
+            <div class="fvalue">Île-de-France</div>
+          </div>
+
+          <div class="fitem">
+            <div class="flabel">Qualité du demandeur</div>
+            <div class="fvalue">EC&nbsp; Stagiaire</div>
+          </div>
+          <div class="fitem">
+            <div class="flabel">Statut</div>
+            <div class="fvalue">Prête pour la commission</div>
+          </div>
+
+          <div class="fitem">
+            <div class="flabel">Date de soumission</div>
+            <div class="fvalue">20/07/2026</div>
+          </div>
+          <div class="fitem">
+            <div class="flabel">Date de commission/comité</div>
+            <div class="fvalue">01/09/2026</div>
+          </div>
+
+          <div class="fitem">
+            <div class="flabel">Date d'effet</div>
+            <div class="fvalue">-</div>
+          </div>
+          <div class="fitem">
+            <div class="flabel">Date de session</div>
+            <div class="fvalue">-</div>
+          </div>
+
+          <div class="fitem">
+            <div class="flabel">Lieu principal d'exercice</div>
+            <div class="fvalue">-</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="acc" id="acc-perso">
+      <button class="acc-head" onclick="toggleAcc('acc-perso')">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+        Renseignements personnels
+      </button>
+      <div class="acc-body"><div class="fgrid"></div></div>
+    </div>
+
+    <div class="acc" id="acc-diplomes">
+      <button class="acc-head" onclick="toggleAcc('acc-diplomes')">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+        Diplômes
+      </button>
+      <div class="acc-body"><div class="fgrid"></div></div>
+    </div>
+
+    <div class="acc" id="acc-stage">
+      <button class="acc-head" onclick="toggleAcc('acc-stage')">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+        Renseignements sur le stage
+      </button>
+      <div class="acc-body"><div class="fgrid"></div></div>
+    </div>
+
+    <div class="acc" id="acc-maitre">
+      <button class="acc-head" onclick="toggleAcc('acc-maitre')">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+        Maître de stage
+      </button>
+      <div class="acc-body"><div class="fgrid"></div></div>
+    </div>
+
+  </div>
+
+  <!-- Panneau : Pièces justificatives -->
+  <div class="dpanel" id="panel-pj">
+    <p class="pj-empty">Aucune pièce justificative à afficher.</p>
+  </div>
+
+  <!-- Panneau : Examen -->
+  <div class="dpanel" id="panel-examen">
+
+    <div class="acc" id="acc-controles">
+      <button class="acc-head" onclick="toggleAcc('acc-controles')">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+        Contrôles
+      </button>
+      <div class="acc-body"><div class="fgrid"></div></div>
+    </div>
+
+    <div class="acc" id="acc-commission">
+      <button class="acc-head" onclick="toggleAcc('acc-commission')">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+        Commission
+      </button>
+      <div class="acc-body"><div class="fgrid"></div></div>
+    </div>
+
+    <div class="acc" id="acc-session">
+      <button class="acc-head" onclick="toggleAcc('acc-session')">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+        Session
+      </button>
+      <div class="acc-body"><div class="fgrid"></div></div>
+    </div>
+
+  </div>
+
+  <!-- Panneau : Avis et commentaire -->
+  <div class="dpanel" id="panel-avis">
+    <div class="av-wrap">
+
+      <div class="av-card">
+        <div class="av-row">
+          <div class="av-label">Nom</div>
+          <div class="av-value" id="av-nom">Dupont Nada</div>
+        </div>
+        <div class="av-row">
+          <div class="av-label">Type de demande</div>
+          <div class="av-value" id="av-type">Inscription Stage</div>
+        </div>
+        <div class="av-row">
+          <div class="av-label">Date de la demande</div>
+          <div class="av-value">20/07/2026</div>
+        </div>
+        <div class="av-row">
+          <div class="av-label">Avis permanent</div>
+          <div class="av-value">
+            <span class="pill pill-fav"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span>
+          </div>
+        </div>
+        <div class="av-row">
+          <div class="av-label">Commentaire permanent</div>
+          <div class="av-value">TEST OK Permanent</div>
+        </div>
+      </div>
+
+      <div class="av-block">
+        <div class="av-field-label">Votre avis</div>
+        <div class="av-select" id="av-select">
+          <button class="av-select-btn" onclick="avToggle()" aria-haspopup="listbox">
+            <span id="av-current">
+              <span class="av-placeholder">Sélectionnez un avis</span>
+            </span>
+            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="av-options" role="listbox">
+            <button class="av-option" onclick="avPick('fav')" role="option">
+              <span class="pill pill-fav"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span>
+            </button>
+            <button class="av-option" onclick="avPick('res')" role="option">
+              <span class="pill pill-res"><svg viewBox="0 0 24 24" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Réservé</span>
+            </button>
+            <button class="av-option" onclick="avPick('def')" role="option">
+              <span class="pill pill-def"><svg viewBox="0 0 24 24" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>Défavorable</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="av-block">
+        <div class="av-field-label">Votre commentaire</div>
+        <textarea class="av-textarea" id="av-comment">Retour Référent</textarea>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+  function showTab(btn, panelId) {
+    document.querySelectorAll('.dtab').forEach(function (t) { t.classList.remove('active'); });
+    document.querySelectorAll('.dpanel').forEach(function (p) { p.classList.remove('active'); });
+    btn.classList.add('active');
+    document.getElementById(panelId).classList.add('active');
+  }
+
+  function toggleAcc(id) {
+    document.getElementById(id).classList.toggle('open');
+  }
+
+  /* ── Select « Votre avis » ── */
+  var AV_PILLS = {
+    fav: '<span class="pill pill-fav"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span>',
+    res: '<span class="pill pill-res"><svg viewBox="0 0 24 24" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Réservé</span>',
+    def: '<span class="pill pill-def"><svg viewBox="0 0 24 24" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>Défavorable</span>'
+  };
+  function avToggle() {
+    document.getElementById('av-select').classList.toggle('open');
+  }
+  function avPick(key) {
+    document.getElementById('av-current').innerHTML = AV_PILLS[key];
+    document.getElementById('av-select').classList.remove('open');
+
+    var id = new URLSearchParams(location.search).get('id');
+    if (!id) return;
+
+    /* Persistance (survit à la fermeture de l'onglet) */
+    try {
+      var raw = localStorage.getItem('pep_avis_commission');
+      var m = raw ? JSON.parse(raw) : {};
+      m[id] = key;
+      localStorage.setItem('pep_avis_commission', JSON.stringify(m));
+    } catch (e) {}
+
+    /* Mise à jour immédiate de l'onglet du portail */
+    try {
+      if (window.opener && typeof window.opener.setAvisCommission === 'function') {
+        window.opener.setAvisCommission(id, key);
+      }
+    } catch (e) {}
+  }
+  document.addEventListener('click', function (e) {
+    var sel = document.getElementById('av-select');
+    if (sel && !sel.contains(e.target)) sel.classList.remove('open');
+  });
+
+  /* Renseigne le n° de demande, le demandeur et le type depuis l'URL
+     (ex. demande.html?id=00005290&nom=Dupont%20Nada&type=Inscription%20Stage) */
+  (function () {
+    var p = new URLSearchParams(location.search);
+    var id = p.get('id');
+    if (id) {
+      document.getElementById('d-title').textContent = 'Demande ' + id;
+      document.title = 'Demande ' + id + ' — PEP';
+    }
+    var nom = p.get('nom');
+    if (nom) {
+      document.getElementById('f-demandeur').textContent = nom;
+      document.getElementById('av-nom').textContent = nom;
+    }
+    var type = p.get('type');
+    if (type) {
+      document.getElementById('f-type').textContent = type;
+      document.getElementById('av-type').textContent = type;
+    }
+
+    /* Aucun avis sélectionné par défaut — on ne réaffiche une pill
+       que si un avis a déjà été enregistré pour cette demande. */
+    if (id) {
+      try {
+        var raw = localStorage.getItem('pep_avis_commission');
+        var m = raw ? JSON.parse(raw) : {};
+        if (m[id] && AV_PILLS[m[id]]) {
+          document.getElementById('av-current').innerHTML = AV_PILLS[m[id]];
+        }
+      } catch (e) {}
+    }
+  })();
+</script>
+</body>
+</html>
