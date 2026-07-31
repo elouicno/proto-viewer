@@ -1260,7 +1260,8 @@ async function loadProto(proto, suffix = null) {
 
   iframe = document.createElement('iframe');
   // Load iframe with the |suffix as its internal hash so the proto's own routing reacts
-  iframe.src = proto.file + (suffix ? '#' + suffix : '');
+  const _cb = '?v=' + Math.floor(Date.now() / 60000); // changes every minute
+  iframe.src = proto.file + _cb + (suffix ? '#' + suffix : '');
   frame.appendChild(iframe);
 
   // When iframe finishes loading, hook into its internal hash changes so we
