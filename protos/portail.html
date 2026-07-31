@@ -3600,7 +3600,20 @@
     var PRENOMS = ["Amina","Clemence","Tristan","Nada","Naya","Nour","Précilia","Lucas","Emma","Léa","Hugo","Jules","Chloé","Nathan","Manon","Louis","Sarah","Gabriel","Inès","Adam","Camille","Yanis","Sofia","Théo","Jade","Rayan","Lina","Noah","Zoé","Elias","Maya","Ethan","Anaïs","Sami","Romane","Malo","Nour","Ilan","Alice","Marius"];
     var NOMS = ["Khalfi","Buysse","Junior","Dupont","Martin","Bernard","Lefèvre","Moreau","Rousseau","Garnier","Petit","Fontaine","Benali","Diallo","Nguyen","Da Silva","Lopez","Roux","Girard","Mercier","Dubois","Lambert","Fabre","Blanc","Faure","Chevalier","Robin","Gauthier","Perrin","Morel","Andre","Guerin","Boyer","Denis","Lemaire","Duval","Marchand","Dumont","Aubert","Renard"];
     var CTRL = "BENECH ERIC"; // contrôleur connecté
-    var GROUPES = ["GROUPE A","GROUPE B","GROUPE C","GROUPE D","GROUPE E","GROUPE F","GROUPE G","GROUPE H","GROUPE I","GROUPE J","GROUPE K","GROUPE L"];
+    var GROUPES = [
+      "26143 / M MIFETOU / RENOUVELLEMENT AFS / AFRIQUE",
+      "26142 / M CHAKER / RENOUVELLEMENT AFS (MAROC)",
+      "26140 / SL / M BRUAND / RENOUVELLEMENT AFS",
+      "26133 / SA / M BRUAND / DSCG INCOMPLET - UE",
+      "26132 / SA / M BRUAND / DSCG COMPLET - UE",
+      "26129 / M CHAKER / REDUCTION (MAROC)",
+      "26127 / SA / MME PECHART / REDUCTION",
+      "26124 / SL / MME CASSART / REDUCTION",
+      "26123 / M MIFETOU / REDUCTION / AFRIQUE",
+      "26122 / SA / M CERF / REDUCTION",
+      "26113 / M MIFETOU / DSCG COMPLET (POLYNESIE)",
+      "26105 / M CHAKER / DSCG INCOMPLET (MAROC)"
+    ];
     // Obligations types : label + statut par défaut (varié par stagiaire) + échéance éventuelle
     var OBL_TEMPLATE = [
       { label: "Entretien - de première année",       st: "ok" },
@@ -3697,7 +3710,7 @@
       var visuBtn = '<button class="obl-visu" onclick="return false;"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Visualiser</button>';
       host.innerHTML = countHtml + rows.map(function (r) {
         var st = r.st;
-        var grpTag = (ctrSelected === 0 ? '<span class="ctr-grouptag">' + r.groupe + '</span>' : '');
+        var grpTag = (ctrSelected === 0 ? '<span class="ctr-grouptag" title="' + r.groupe + '">' + r.groupe.split(" / ")[0] + '</span>' : '');
         var body =
           '<table class="crs-table"><thead><tr>' +
             '<th style="width:40%"><span class="crs-th-inner">OBLIGATION' + sortSvg + '</span></th>' +
