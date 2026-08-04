@@ -1472,7 +1472,11 @@
       display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 10px;
       background: #EEF1F7; color: var(--text-mid); font-size: 11px; font-weight: 600; vertical-align: middle;
     }
-    .ctr-listcount { font-size: 13px; color: var(--text-soft); margin-bottom: 4px; }
+    .ctr-listbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+    .ctr-todo-check { display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 12px; border: 1px solid var(--border); border-radius: 8px; background: #fff; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--navy); white-space: nowrap; user-select: none; flex-shrink: 0; }
+    .ctr-todo-check:hover { border-color: #C4CEDD; }
+    .ctr-todo-check input { width: 16px; height: 16px; accent-color: #C8102E; cursor: pointer; margin: 0; }
+    .ctr-listcount { font-size: 13px; color: var(--text-soft); }
     .ctr-list { display: flex; flex-direction: column; gap: 12px; }
     .ctr-card { border: 1px solid var(--border); border-radius: 8px; background: #fff; overflow: hidden; }
     .ctr-card-head {
@@ -1486,6 +1490,13 @@
     .ctr-card-link:hover { text-decoration: underline; }
     .ctr-card-chev { width: 20px; height: 20px; stroke: var(--text-soft); fill: none; stroke-width: 2; transition: transform .2s; flex-shrink: 0; }
     .ctr-card.open .ctr-card-chev { transform: rotate(180deg); }
+    .ctr-card.needs-action { border-left: 3px solid #C8102E; }
+    .ctr-card-head-right { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+    .ctr-actionpill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px; font-size: 12.5px; font-weight: 700; line-height: 1; white-space: nowrap; }
+    .ctr-actionpill svg { width: 14px; height: 14px; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .ctr-actionpill.warn { background: #FDE8EA; color: #C8102E; }
+    .ctr-actionpill.ok { background: #EFF3F1; color: #5A7A66; }
+    .ctr-count-warn { color: #C8102E; font-weight: 700; }
     .ctr-card-body { display: none; padding: 0 18px 18px; }
     .ctr-card.open .ctr-card-body { display: block; }
     .ctr-body-title { font-size: 13px; font-weight: 600; color: var(--text-mid); margin: 4px 0 10px; }
@@ -1598,7 +1609,7 @@
       </a>
 
       <div class="nav-sub">
-        <a class="nav-sub-item" href="#">Maître de stage</a>
+        <a class="nav-sub-item" id="nav-maitre" href="#" onclick="switchPage('maitre',this);return false;">Maître de stage</a>
         <a class="nav-sub-item" id="nav-controleur" href="#" onclick="switchPage('controleur',this);return false;">Contrôleur de stage</a>
       </div>
 
@@ -2200,6 +2211,12 @@
 
   </main>
 
+  <!-- ══ PAGE: MAÎTRE DE STAGE ══ -->
+  <main class="main" id="page-maitre" style="display:none">
+    <h1 class="page-title">Maître de stage</h1>
+    <div class="ctr-list" id="mds-list" style="margin-top:22px"></div>
+  </main>
+
   <!-- ══ PAGE: CONTRÔLEUR DE STAGE ══ -->
   <main class="main" id="page-controleur" style="display:none">
     <h1 class="page-title">Contrôleur de stage</h1>
@@ -2216,6 +2233,13 @@
         <label class="ctr-field-label" for="ctr-search">Recherche</label>
         <input class="ctr-search" id="ctr-search" type="text" placeholder="Rechercher un stagiaire par nom ou prénom…" oninput="ctrRenderList()" />
       </div>
+    </div>
+    <div class="ctr-listbar">
+      <div class="ctr-listcount" id="ctr-listcount"></div>
+      <label class="ctr-todo-check" for="ctr-todo-only">
+        <input type="checkbox" id="ctr-todo-only" onchange="ctrRenderList()" />
+        <span>À traiter uniquement</span>
+      </label>
     </div>
     <div class="ctr-list" id="ctr-list"></div>
   </main>
@@ -2287,7 +2311,7 @@
     }
 
     function switchPage(page, navEl) {
-      ['page-accueil', 'page-stage', 'page-demandes', 'page-courriers', 'page-notifications', 'page-crs', 'page-controleur'].forEach(function(id) {
+      ['page-accueil', 'page-stage', 'page-demandes', 'page-courriers', 'page-notifications', 'page-crs', 'page-controleur', 'page-maitre'].forEach(function(id) {
         var el = document.getElementById(id);
         if (el) el.style.display = 'none';
       });
@@ -3619,14 +3643,14 @@
       { label: "Entretien - de première année",       st: "ok" },
       { label: "Entretien - de deuxième année",       st: "ok" },
       { label: "Entretien - de troisième année",      st: "todo" },
-      { label: "Fiche annuelle travaux - Année 1",    st: "todo" },
-      { label: "Fiche annuelle travaux - Année 1",    st: "fix",  ech: "01/06/2027" },
+      { label: "Fiche annuelle travaux - Année 1",    st: "ok" },
+      { label: "Fiche annuelle travaux - Année 1",    st: "wait", ech: "01/06/2027" },
       { label: "Fiche annuelle travaux - Année 2",    st: "todo" },
-      { label: "Fiche annuelle travaux - Année 2",    st: "wait", ech: "01/06/2028" },
+      { label: "Fiche annuelle travaux - Année 2",    st: "todo" },
       { label: "Fiche annuelle travaux - Année 3",    st: "todo" },
       { label: "Rapport de fin de stage",             st: "todo" }
     ];
-    var ST_ORDER = ["ok", "todo", "fix", "wait"];
+    var FIX_IDX = [4, 3]; // fiches susceptibles de passer « À corriger »
 
     var ICON = {
       ok:   '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M8 12l3 3 5-5"/></svg>',
@@ -3649,14 +3673,21 @@
         var pi = (g * 7 + s * 3) % PRENOMS.length;
         var ni = (g * 5 + s * 2 + 1) % NOMS.length;
         var nom = NOMS[ni] + " " + PRENOMS[pi];
-        var off = (g + s) % ST_ORDER.length; // décalage de statut par stagiaire
         var obligations = OBL_TEMPLATE.map(function (o, oi) {
           var st = o.st;
-          // fait varier certains statuts d'un stagiaire à l'autre (déterministe)
-          if (oi % 3 === (s % 3)) st = ST_ORDER[(ST_ORDER.indexOf(o.st) + off) % ST_ORDER.length];
-          var ech = o.ech || ((st === "fix" || st === "wait") ? "01/06/202" + (6 + (s % 3)) : "");
+          // légère variation ok/todo→wait selon le stagiaire (jamais de « à corriger » ici)
+          if (st === "todo" && oi % 4 === (s % 4)) st = "wait";
+          var ech = o.ech || (st === "wait" ? "01/06/202" + (6 + (s % 3)) : "");
           return { label: o.label, statut: st, echeance: ech };
         });
+        // Seule une minorité (~20 %) de stagiaires a des obligations « À corriger »
+        var hasAction = ((g * 13 + s) % 5 === 0);
+        var nbFix = hasAction ? (1 + ((g + s) % 2)) : 0;
+        for (var k = 0; k < nbFix; k++) {
+          var idx = FIX_IDX[k];
+          obligations[idx].statut = "fix";
+          obligations[idx].echeance = "01/06/202" + (6 + ((s + k) % 3));
+        }
         stagiaires.push({ nom: nom, obligations: obligations });
       }
       GROUPS.push({ groupe: GROUPES[g], stagiaires: stagiaires });
@@ -3703,12 +3734,27 @@
       } else {
         GROUPS[ctrSelected - 1].stagiaires.forEach(function (st) { pool.push({ st: st, groupe: GROUPS[ctrSelected - 1].groupe }); });
       }
-      var rows = pool.filter(function (r) { return ctrMatch(r.st.nom, q); });
-      var countHtml = '<div class="ctr-listcount">' + rows.length + ' stagiaire' + (rows.length > 1 ? "s" : "") + (q ? ' · résultat' + (rows.length > 1 ? "s" : "") + ' pour « ' + q + ' »' : "") + '</div>';
-      if (rows.length === 0) { host.innerHTML = countHtml + '<div class="ctr-empty">Aucun stagiaire trouvé.</div>'; return; }
+      var base = pool.filter(function (r) { return ctrMatch(r.st.nom, q); });
+      // Actions à réaliser = obligations « À corriger » (visibles sans déplier)
+      base.forEach(function (r) { r.actions = r.st.obligations.filter(function (o) { return o.statut === "fix"; }).length; });
+      var nbToDo = base.filter(function (r) { return r.actions > 0; }).length;
+      // Filtre « À traiter uniquement »
+      var todoCb = document.getElementById("ctr-todo-only");
+      var todoOnly = todoCb && todoCb.checked;
+      var rows = todoOnly ? base.filter(function (r) { return r.actions > 0; }) : base;
+      // Tri alphabétique (les « à traiter » se retrouvent naturellement dispersés)
+      rows.sort(function (a, b) { return a.st.nom.localeCompare(b.st.nom, "fr", { sensitivity: "base" }); });
+      var countText = rows.length + ' stagiaire' + (rows.length > 1 ? "s" : "") +
+        (nbToDo > 0 ? ' · <span class="ctr-count-warn">' + nbToDo + ' à traiter</span>' : '') +
+        (q ? ' · résultat' + (rows.length > 1 ? "s" : "") + ' pour « ' + q + ' »' : "");
+      var countEl = document.getElementById("ctr-listcount");
+      if (countEl) countEl.innerHTML = countText;
+      if (rows.length === 0) { host.innerHTML = '<div class="ctr-empty">Aucun stagiaire trouvé.</div>'; return; }
+      var alertSvg = '<svg viewBox="0 0 24 24"><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>';
+      var checkSvg = '<svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>';
       var sortSvg = '<svg class="crs-sort" viewBox="0 0 12 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5L6 3.5l3 3"/><path d="M3 9.5l3 3 3-3"/></svg>';
       var visuBtn = '<button class="obl-visu" onclick="return false;"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Visualiser</button>';
-      host.innerHTML = countHtml + rows.map(function (r) {
+      host.innerHTML = rows.map(function (r) {
         var st = r.st;
         var grpTag = (ctrSelected === 0 ? '<span class="ctr-grouptag" title="' + r.groupe + '">' + r.groupe.split(" / ")[0] + '</span>' : '');
         var body =
@@ -3727,13 +3773,73 @@
             '</tr>';
           }).join("") +
           '</tbody></table>';
-        return '<div class="ctr-card">' +
+        var pill = r.actions > 0
+          ? '<span class="ctr-actionpill warn">' + alertSvg + r.actions + ' à traiter</span>'
+          : '';
+        return '<div class="ctr-card' + (r.actions > 0 ? " needs-action" : "") + '">' +
                  '<div class="ctr-card-head" onclick="this.parentNode.classList.toggle(\'open\')">' +
                    '<div class="ctr-card-id">' +
                      '<span class="ctr-card-name">' + st.nom + grpTag + '</span>' +
                      '<a class="ctr-card-link" href="#" onclick="event.stopPropagation();return false;">Voir le profil</a>' +
                    '</div>' +
-                   '<svg class="ctr-card-chev" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>' +
+                   '<div class="ctr-card-head-right">' + pill +
+                     '<svg class="ctr-card-chev" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>' +
+                   '</div>' +
+                 '</div>' +
+                 '<div class="ctr-card-body">' + body + '</div>' +
+               '</div>';
+      }).join("");
+    };
+
+    // ── Page Maître de stage : liste simple (pas de groupe / recherche / checkbox)
+    var MDS_NAMES = ["Marie Dubois", "Pierre Martin", "Sophie Leroy", "Thomas Dupont", "Emma Rousseau"];
+    var MDS_TODO = { 1: 2, 3: 1 }; // 2 stagiaires avec des obligations « À corriger »
+    var MDS_STAGIAIRES = MDS_NAMES.map(function (nom, s) {
+      var obligations = OBL_TEMPLATE.map(function (o, oi) {
+        var stt = o.st;
+        if (stt === "todo" && oi % 4 === (s % 4)) stt = "wait";
+        var ech = o.ech || (stt === "wait" ? "01/06/202" + (6 + (s % 3)) : "");
+        return { label: o.label, statut: stt, echeance: ech };
+      });
+      var nbFix = MDS_TODO[s] || 0;
+      for (var k = 0; k < nbFix; k++) { obligations[FIX_IDX[k]].statut = "fix"; obligations[FIX_IDX[k]].echeance = "01/06/202" + (6 + ((s + k) % 3)); }
+      return { nom: nom, obligations: obligations };
+    });
+
+    window.mdsRender = function () {
+      var host = document.getElementById("mds-list");
+      if (!host) return;
+      var sortSvg = '<svg class="crs-sort" viewBox="0 0 12 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5L6 3.5l3 3"/><path d="M3 9.5l3 3 3-3"/></svg>';
+      var visuBtn = '<button class="obl-visu" onclick="return false;"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Visualiser</button>';
+      var alertSvg = '<svg viewBox="0 0 24 24"><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>';
+      host.innerHTML = MDS_STAGIAIRES.map(function (st) {
+        var actions = st.obligations.filter(function (o) { return o.statut === "fix"; }).length;
+        var pill = actions > 0 ? '<span class="ctr-actionpill warn">' + alertSvg + actions + ' à traiter</span>' : '';
+        var body =
+          '<table class="crs-table"><thead><tr>' +
+            '<th style="width:40%"><span class="crs-th-inner">OBLIGATION' + sortSvg + '</span></th>' +
+            '<th style="width:20%"><span class="crs-th-inner">ÉCHÉANCE' + sortSvg + '</span></th>' +
+            '<th style="width:24%"><span class="crs-th-inner">STATUT' + sortSvg + '</span></th>' +
+            '<th style="width:16%">ACTION</th>' +
+          '</tr></thead><tbody>' +
+          st.obligations.map(function (ob) {
+            return '<tr>' +
+              '<td>' + ob.label + '</td>' +
+              '<td>' + (ob.echeance || '') + '</td>' +
+              '<td>' + statutBadge(ob.statut) + '</td>' +
+              '<td>' + (ob.statut === "ok" ? visuBtn : '') + '</td>' +
+            '</tr>';
+          }).join("") +
+          '</tbody></table>';
+        return '<div class="ctr-card' + (actions > 0 ? " needs-action" : "") + '">' +
+                 '<div class="ctr-card-head" onclick="this.parentNode.classList.toggle(\'open\')">' +
+                   '<div class="ctr-card-id">' +
+                     '<span class="ctr-card-name">' + st.nom + '</span>' +
+                     '<a class="ctr-card-link" href="#" onclick="event.stopPropagation();return false;">Voir le profil</a>' +
+                   '</div>' +
+                   '<div class="ctr-card-head-right">' + pill +
+                     '<svg class="ctr-card-chev" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>' +
+                   '</div>' +
                  '</div>' +
                  '<div class="ctr-card-body">' + body + '</div>' +
                '</div>';
@@ -3743,6 +3849,7 @@
     document.addEventListener("DOMContentLoaded", function () {
       ctrRenderSelect();
       ctrRenderList();
+      mdsRender();
     });
   })();
   </script>
