@@ -10101,6 +10101,18 @@ const PIECES_STATUS_META = {
     bg: "#FEF2F2",
     color: "#DC2626",
     dot: "#F87171"
+  },
+  brouillon: {
+    label: "Brouillon",
+    bg: "#F1F5F9",
+    color: "#475569",
+    dot: "#94A3B8"
+  },
+  attente_obs: {
+    label: "En attente observations",
+    bg: "#FEF6E7",
+    color: "#B45309",
+    dot: "#F59E0B"
   }
 };
 const PIECES_TYPE_BG = {
@@ -10267,7 +10279,11 @@ function PiecesStatusBadge({
     }, void 0, false)]
   }, void 0, true);
 }
-function WordEditorPreview({ file, onCancel, onSave }) {
+function WordEditorPreview({ file, onCancel, onSave, onSendObs }) {
+  const [toast, setToast] = React.useState("");
+  const editRef = React.useRef(null);
+  const getHtml = () => editRef.current ? editRef.current.innerHTML : (file.content || "");
+  const fireToast = (msg, after) => { setToast(msg); setTimeout(() => { setToast(""); if (after) after(); }, 1300); };
   const TB = [{ l: "G", cmd: "bold", st: { fontWeight: 800 }, t: "Gras" }, { l: "I", cmd: "italic", st: { fontStyle: "italic" }, t: "Italique" }, { l: "S", cmd: "underline", st: { textDecoration: "underline" }, t: "Souligné" }, { sep: true }, { l: "Titre", cmd: "formatBlock", val: "H2", t: "Titre" }, { l: "Corps", cmd: "formatBlock", val: "P", t: "Paragraphe" }, { sep: true }, { l: "•", cmd: "insertUnorderedList", t: "Liste à puces" }, { l: "1.", cmd: "insertOrderedList", t: "Liste numérotée" }, { sep: true }, { l: "☐←", cmd: "justifyLeft", t: "Aligner à gauche" }, { l: "≡", cmd: "justifyCenter", t: "Centrer" }, { l: "→☐", cmd: "justifyRight", t: "Aligner à droite" }];
   const btnBase = { minWidth: 34, height: 32, padding: "0 8px", border: "1px solid #E1DFDD", background: "white", borderRadius: 5, cursor: "pointer", fontSize: 14, color: "#201F1E", display: "flex", alignItems: "center", justifyContent: "center" };
   return /*#__PURE__*/_jsxDEV("div", {
@@ -10277,7 +10293,7 @@ function WordEditorPreview({ file, onCancel, onSave }) {
     style: { position: "fixed", inset: 0, zIndex: 1000, background: "rgba(15,23,42,0.55)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 },
     children: /*#__PURE__*/_jsxDEV("div", {
       onMouseDown: e => e.stopPropagation(),
-      style: { width: "min(1040px, 95vw)", height: "min(92vh, 940px)", background: "#E7E6E5", borderRadius: 12, display: "flex", flexDirection: "column", overflow: "hidden", boxShadow: "0 24px 60px rgba(0,0,0,0.45)" },
+      style: { position: "relative", width: "min(1040px, 95vw)", height: "min(92vh, 940px)", background: "#E7E6E5", borderRadius: 12, display: "flex", flexDirection: "column", overflow: "hidden", boxShadow: "0 24px 60px rgba(0,0,0,0.45)" },
       children: [/*#__PURE__*/_jsxDEV("div", {
         style: { background: "#2B579A", color: "white", padding: "11px 18px", display: "flex", alignItems: "center", gap: 10, flexShrink: 0 },
         children: [/*#__PURE__*/_jsxDEV("div", { style: { width: 26, height: 26, borderRadius: 5, background: "white", color: "#2B579A", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 15 }, children: "W" }, void 0, false), /*#__PURE__*/_jsxDEV("span", { style: { fontSize: 15, fontWeight: 600 }, children: file.name }, void 0, false), /*#__PURE__*/_jsxDEV("span", { style: { flex: 1 } }, void 0, false), /*#__PURE__*/_jsxDEV("button", { onClick: onCancel, title: "Fermer", "aria-label": "Fermer", style: { background: "rgba(255,255,255,0.12)", border: "none", color: "white", cursor: "pointer", fontSize: 16, width: 32, height: 32, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center" }, children: "✕" }, void 0, false)]
@@ -10286,11 +10302,11 @@ function WordEditorPreview({ file, onCancel, onSave }) {
         children: TB.map((b, i) => b.sep ? /*#__PURE__*/_jsxDEV("span", { style: { width: 1, height: 22, background: "#E1DFDD", margin: "0 5px" } }, "s" + i, false) : /*#__PURE__*/_jsxDEV("button", { title: b.t, "aria-label": b.t, onMouseDown: e => e.preventDefault(), onClick: () => document.execCommand(b.cmd, false, b.val || null), style: { ...btnBase, ...(b.st || {}) }, children: b.l }, i, false))
       }, void 0, false), /*#__PURE__*/_jsxDEV("div", {
         style: { flex: 1, overflow: "auto", padding: "28px 0", display: "flex", justifyContent: "center", alignItems: "flex-start" },
-        children: /*#__PURE__*/_jsxDEV("div", { contentEditable: true, suppressContentEditableWarning: true, dangerouslySetInnerHTML: { __html: file.content || "" }, style: { width: "min(820px, 92%)", minHeight: "100%", background: "white", boxShadow: "0 2px 16px rgba(0,0,0,0.18)", padding: "64px 76px", fontFamily: "Calibri, 'Segoe UI', Arial, sans-serif", fontSize: 15.5, lineHeight: 1.7, color: "#201F1E", outline: "none" } }, void 0, false)
+        children: /*#__PURE__*/_jsxDEV("div", { ref: editRef, contentEditable: true, suppressContentEditableWarning: true, dangerouslySetInnerHTML: { __html: file.content || "" }, style: { width: "min(820px, 92%)", minHeight: "100%", background: "white", boxShadow: "0 2px 16px rgba(0,0,0,0.18)", padding: "64px 76px", fontFamily: "Calibri, 'Segoe UI', Arial, sans-serif", fontSize: 15.5, lineHeight: 1.7, color: "#201F1E", outline: "none" } }, void 0, false)
       }, void 0, false), /*#__PURE__*/_jsxDEV("div", {
         style: { background: "white", borderTop: "1px solid #E1DFDD", padding: "12px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexShrink: 0 },
-        children: [/*#__PURE__*/_jsxDEV("span", { style: { fontSize: 12.5, color: "#6B7280" }, children: "Édition simulée — la mise en forme s'applique à la sélection." }, void 0, false), /*#__PURE__*/_jsxDEV("div", { style: { display: "flex", gap: 10 }, children: [/*#__PURE__*/_jsxDEV("button", { onClick: onCancel, style: { padding: "0 18px", height: 40, border: "1px solid #C9C9C9", background: "white", borderRadius: 7, cursor: "pointer", fontSize: 14.5, color: "#201F1E" }, children: "Annuler" }, void 0, false), /*#__PURE__*/_jsxDEV("button", { onClick: onSave, style: { padding: "0 18px", height: 40, border: "none", background: "#C8102E", color: "white", borderRadius: 7, cursor: "pointer", fontSize: 14.5, fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }, children: [/*#__PURE__*/_jsxDEV("svg", { viewBox: "0 0 24 24", width: "16", height: "16", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [/*#__PURE__*/_jsxDEV("path", { d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" }, "p1", false), /*#__PURE__*/_jsxDEV("path", { d: "M14 2v6h6" }, "p2", false)] }, void 0, true), "Enregistrer et convertir en PDF"] }, void 0, true)] }, void 0, true)]
-      }, void 0, true)]
+        children: [/*#__PURE__*/_jsxDEV("span", { style: { fontSize: 12.5, color: "#6B7280" }, children: "Édition simulée — la mise en forme s'applique à la sélection." }, void 0, false), /*#__PURE__*/_jsxDEV("div", { style: { display: "flex", gap: 10 }, children: [/*#__PURE__*/_jsxDEV("button", { onClick: () => fireToast("Fiche enregistrée en brouillon", () => onSave(getHtml())), style: { padding: "0 18px", height: 40, border: "none", background: "#C8102E", color: "white", borderRadius: 7, cursor: "pointer", fontSize: 14.5, fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }, children: [/*#__PURE__*/_jsxDEV("svg", { viewBox: "0 0 24 24", width: "16", height: "16", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [/*#__PURE__*/_jsxDEV("path", { d: "M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" }, "p1", false), /*#__PURE__*/_jsxDEV("path", { d: "M17 21v-8H7v8M7 3v5h8" }, "p2", false)] }, void 0, true), "Enregistrer"] }, void 0, true), /*#__PURE__*/_jsxDEV("button", { onClick: () => fireToast("Envoyé pour observations du contrôleur de stage", () => onSendObs(getHtml())), style: { padding: "0 18px", height: 40, border: "none", background: "#03234D", color: "white", borderRadius: 7, cursor: "pointer", fontSize: 14.5, fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }, children: [/*#__PURE__*/_jsxDEV("svg", { viewBox: "0 0 24 24", width: "16", height: "16", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: /*#__PURE__*/_jsxDEV("path", { d: "M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z" }, void 0, false) }, void 0, false), "Envoyer pour observations CS"] }, void 0, true)] }, void 0, true)]
+      }, void 0, true), toast && /*#__PURE__*/_jsxDEV("div", { style: { position: "absolute", left: "50%", bottom: 78, transform: "translateX(-50%)", zIndex: 5, display: "flex", alignItems: "center", gap: 8, background: "#E6F4EA", color: "#1B7F37", border: "1px solid #A7D7B4", borderRadius: 8, padding: "10px 16px", fontSize: 14, fontWeight: 600, boxShadow: "0 8px 22px rgba(0,0,0,0.16)" }, children: [/*#__PURE__*/_jsxDEV("svg", { viewBox: "0 0 24 24", width: "16", height: "16", fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round", children: /*#__PURE__*/_jsxDEV("path", { d: "M20 6 9 17l-5-5" }, void 0, false) }, void 0, false), toast] }, void 0, true)]
     }, void 0, false)
   }, void 0, false);
 }
@@ -10352,20 +10368,46 @@ function PiecesPanel({
     }
     setPreviewIdx(i);
   };
-  const convertAndSave = () => {
-    const src = files.find(f => f.editable);
-    const base = src ? src.name.replace(/\.[^.]+$/, "") : "Fiche_generale_de_synthese";
-    setFiles(prev => [{
-      id: Date.now(),
-      name: base + ".pdf",
-      type: "pdf",
-      date: new Date().toLocaleDateString("fr-FR"),
-      status: "conforme",
-      category: src ? src.category : "Fiche de synthèse",
-      instructions: "Généré depuis la fiche Word — converti en PDF",
-      relance: "—"
-    }, ...prev]);
+  // Enregistrer (brouillon) — pas de conversion PDF
+  const saveDraft = html => {
+    setFiles(prev => prev.map(f => f.editable ? {
+      ...f,
+      status: "brouillon",
+      content: html != null ? html : f.content
+    } : f));
     setEditorOpen(false);
+  };
+  // Envoyer pour observations CS — statut « En attente observations »
+  const sendForObs = html => {
+    setFiles(prev => prev.map(f => f.editable ? {
+      ...f,
+      status: "attente_obs",
+      content: html != null ? html : f.content
+    } : f));
+    setEditorOpen(false);
+  };
+  // Convertir en PDF — déclenché depuis le menu ⋮ d'une pièce Word
+  const convertToPdf = id => {
+    setCtxId(null);
+    setFiles(prev => {
+      const src = prev.find(f => f.id === id);
+      if (!src) return prev;
+      const base = src.name.replace(/\.[^.]+$/, "");
+      // La ligne Word source disparaît au profit du PDF
+      const rest = prev.filter(f => f.id !== id);
+      if (rest.some(f => f.name === base + ".pdf")) return rest;
+      return [{
+        id: Date.now(),
+        name: base + ".pdf",
+        type: "pdf",
+        date: new Date().toLocaleDateString("fr-FR"),
+        status: "conforme",
+        category: src.category,
+        instructions: "Généré depuis la fiche Word — converti en PDF",
+        relance: "—",
+        content: src.content
+      }, ...rest];
+    });
   };
   const addStaged = () => {
     const toAdd = stagedFiles.map((name, i) => ({
@@ -10921,6 +10963,36 @@ function PiecesPanel({
                         y2: "16"
                       }, void 0, false)]
                     }, void 0, true), "Détails"]
+                  }, void 0, true), (f.editable || f.type === "docx") && /*#__PURE__*/_jsxDEV("button", {
+                    onClick: () => convertToPdf(f.id),
+                    style: {
+                      width: "100%",
+                      border: "none",
+                      background: "none",
+                      padding: "6px 10px",
+                      cursor: "pointer",
+                      textAlign: "left",
+                      fontSize: 12,
+                      borderRadius: 6,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      fontFamily: "inherit",
+                      color: "#C8102E"
+                    },
+                    children: [/*#__PURE__*/_jsxDEV("svg", {
+                      viewBox: "0 0 24 24",
+                      width: "13",
+                      height: "13",
+                      fill: "none",
+                      stroke: "currentColor",
+                      strokeWidth: "2",
+                      children: [/*#__PURE__*/_jsxDEV("path", {
+                        d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                      }, "a", false), /*#__PURE__*/_jsxDEV("path", {
+                        d: "M14 2v6h6"
+                      }, "b", false)]
+                    }, void 0, true), "Convertir en PDF"]
                   }, void 0, true), /*#__PURE__*/_jsxDEV("div", {
                     style: {
                       height: 1,
@@ -11141,7 +11213,8 @@ function PiecesPanel({
     }, void 0, true), editorOpen && files.find(f => f.editable) && /*#__PURE__*/_jsxDEV(WordEditorPreview, {
       file: files.find(f => f.editable),
       onCancel: () => setEditorOpen(false),
-      onSave: convertAndSave
+      onSave: saveDraft,
+      onSendObs: sendForObs
     }, void 0, false), showImport && /*#__PURE__*/_jsxDEV("div", {
       style: {
         position: "fixed",
@@ -21554,9 +21627,9 @@ function DemandeStageRecordPage({ demande }) {
                 defaultOpen: true,
                 children: /*#__PURE__*/_jsxDEV("div", {
                   className: "flex flex-col gap-3 px-1",
-                  children: [/*#__PURE__*/_jsxDEV("div", { className: "flex gap-3", children: [/*#__PURE__*/_jsxDEV(EditableField, { label: "Nom du contrôleur (affichage)", value: d.controleur }, void 0, false), /*#__PURE__*/_jsxDEV(EditableField, { label: "E-mail du contrôleur", value: ctrlEmail }, void 0, false)] }, void 0, true), /*#__PURE__*/_jsxDEV("div", { className: "mt-2", children: [/*#__PURE__*/_jsxDEV("p", { className: "text-[12px] font-bold uppercase tracking-wide text-[#514F4D] mb-2", children: "Appréciations du contrôleur de stage" }, void 0, false), ["Travaux professionnels (missions EC / CAC)", "Appréciation cycles de formation", "Appréciation rapports semestriels", "Appréciation générale"].map((ph, i) => /*#__PURE__*/_jsxDEV("textarea", { placeholder: ph, className: "w-full min-h-[84px] border border-[#C9C9C9] rounded-lg p-3 text-[14px] text-[#2E2E2E] mb-3 outline-none focus:border-[#03234D] bg-[#FAFBFF] resize-y", style: { fontFamily: "inherit" } }, i, false))] }, void 0, true), /*#__PURE__*/_jsxDEV("button", { className: "self-start flex items-center gap-2 px-4 h-9 text-[14px] text-white bg-[#03234D] rounded-md hover:bg-[#022039] mt-1", children: [/*#__PURE__*/_jsxDEV("svg", { viewBox: "0 0 24 24", width: "14", height: "14", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: /*#__PURE__*/_jsxDEV("path", { d: "M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z" }, void 0, false) }, void 0, false), "Envoyer pour observations du contrôleur"] }, void 0, true)]
+                  children: [/*#__PURE__*/_jsxDEV("div", { className: "flex gap-3", children: [/*#__PURE__*/_jsxDEV(EditableField, { label: "Nom du contrôleur (affichage)", value: d.controleur }, void 0, false), /*#__PURE__*/_jsxDEV(EditableField, { label: "E-mail du contrôleur", value: ctrlEmail }, void 0, false)] }, void 0, true)]
                 }, void 0, true)
-              }, void 0, false)] }, void 0, true), leftTab === "verifs" && /*#__PURE__*/_jsxDEV("div", { className: "pt-2", children: [/*#__PURE__*/_jsxDEV("div", { className: "flex flex-col gap-3 mb-4", children: CHECK_ITEMS.map(it => /*#__PURE__*/_jsxDEV("label", { className: "flex items-center gap-3 cursor-pointer", children: [/*#__PURE__*/_jsxDEV("span", { onClick: () => toggle(it.key), className: "w-5 h-5 rounded flex items-center justify-center shrink-0 " + (checks[it.key] ? "bg-[#C8102E]" : "bg-white border border-[#C9C9C9]"), children: checks[it.key] && /*#__PURE__*/_jsxDEV("svg", { viewBox: "0 0 24 24", width: "13", height: "13", fill: "none", stroke: "white", strokeWidth: "3", strokeLinecap: "round", strokeLinejoin: "round", children: /*#__PURE__*/_jsxDEV("polyline", { points: "20 6 9 17 4 12" }, void 0, false) }, void 0, false) }, void 0, false), /*#__PURE__*/_jsxDEV("span", { className: "text-[14px] text-[#2E2E2E]", children: it.label }, void 0, false)] }, it.key, true)) }, void 0, false), /*#__PURE__*/_jsxDEV("button", { className: "px-4 h-9 text-[14px] text-[#03234D] bg-white border border-[#C9C9C9] rounded-md hover:bg-[#F3F3F3]", children: "Enregistrer" }, void 0, false)] }, void 0, true)]
+              }, void 0, false)] }, void 0, true), leftTab === "verifs" && /*#__PURE__*/_jsxDEV("div", { className: "pt-2", children: [/*#__PURE__*/_jsxDEV("div", { className: "flex flex-col gap-3 mb-4", children: CHECK_ITEMS.map(it => /*#__PURE__*/_jsxDEV("label", { className: "flex items-center gap-3 cursor-pointer", children: [/*#__PURE__*/_jsxDEV("span", { onClick: () => toggle(it.key), className: "w-5 h-5 rounded flex items-center justify-center shrink-0 " + (checks[it.key] ? "bg-[#C8102E]" : "bg-white border border-[#C9C9C9]"), children: checks[it.key] && /*#__PURE__*/_jsxDEV("svg", { viewBox: "0 0 24 24", width: "13", height: "13", fill: "none", stroke: "white", strokeWidth: "3", strokeLinecap: "round", strokeLinejoin: "round", children: /*#__PURE__*/_jsxDEV("polyline", { points: "20 6 9 17 4 12" }, void 0, false) }, void 0, false) }, void 0, false), /*#__PURE__*/_jsxDEV("span", { className: "text-[14px] text-[#2E2E2E]", children: it.label }, void 0, false)] }, it.key, true)) }, void 0, false)] }, void 0, true)]
             }, void 0, true)
           }, void 0, false)
         }, void 0, false), /*#__PURE__*/_jsxDEV("div", {
