@@ -1448,6 +1448,44 @@
     .notif-toggle-read:hover { background: #E9EDF5; color: var(--navy); }
     .notif-toggle-read svg { width: 17px; height: 17px; stroke: currentColor; fill: none; display: block; }
 
+    /* ══════════════════ ACCUEIL — cockpit multi-profil ══════════════════ */
+    .home-hero { background: linear-gradient(135deg,#1B324F,#26456F); border-radius: 14px; padding: 22px 24px; color: #fff; margin-bottom: 20px; }
+    .home-hero-title { font-size: 22px; font-weight: 600; letter-spacing: .2px; }
+    .home-hero-sub { font-size: 14px; color: #C3CDDC; margin-top: 5px; }
+    .home-hero-sub b { color: #fff; font-weight: 700; }
+    .home-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+    .home-chip { display: inline-flex; align-items: center; gap: 7px; height: 34px; padding: 0 14px; border: 1px solid var(--border); border-radius: 999px; background: #fff; cursor: pointer; font-size: 13.5px; font-weight: 600; color: var(--navy); font-family: var(--font); }
+    .home-chip:hover { border-color: #C4CEDD; }
+    .home-chip.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+    .home-chip-count { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: #EEF1F7; color: var(--navy); font-size: 12px; font-weight: 700; }
+    .home-chip.active .home-chip-count { background: rgba(255,255,255,0.22); color: #fff; }
+    .home-sections { display: flex; flex-direction: column; gap: 16px; }
+    .home-card { border: 1px solid var(--border); border-radius: 14px; background: #fff; overflow: hidden; }
+    .home-card-head { display: flex; align-items: center; gap: 12px; padding: 15px 18px; border-bottom: 1px solid var(--border-light); }
+    .home-card-ic { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .home-card-ic svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+    .home-card-title { font-size: 15.5px; font-weight: 600; color: var(--navy); }
+    .home-card-count { font-size: 12.5px; color: var(--text-soft); margin-top: 1px; }
+    .home-card-cta { margin-left: auto; font-size: 13px; font-weight: 600; color: #0250D9; text-decoration: none; white-space: nowrap; }
+    .home-card-cta:hover { text-decoration: underline; }
+    .home-row { display: flex; align-items: center; gap: 12px; padding: 13px 18px; cursor: pointer; border-bottom: 1px solid var(--border-light); transition: background .15s; }
+    .home-row:last-child { border-bottom: none; }
+    .home-row:hover { background: #F8FAFC; }
+    .home-row-body { flex: 1; min-width: 0; }
+    .home-row-t { font-size: 14px; font-weight: 600; color: var(--navy); }
+    .home-row-s { font-size: 12.5px; color: var(--text-soft); margin-top: 2px; }
+    .home-tag { flex-shrink: 0; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+    .home-tag.warn { background: #FDE8EA; color: #C8102E; }
+    .home-tag.info { background: #EAEDFB; color: #4453A6; }
+    .home-tag.neutral { background: #EFF1F5; color: #556072; }
+    .home-empty { text-align: center; color: var(--text-soft); font-style: italic; padding: 40px 0; }
+    /* Tag profil sur notifications */
+    .notif-profile { display: inline-flex; align-items: center; padding: 1px 7px; border-radius: 6px; font-size: 10.5px; font-weight: 700; letter-spacing: .2px; text-transform: uppercase; }
+    .np-controleur { background: #FDECEE; color: #C8102E; }
+    .np-ec { background: #E9F0FC; color: #0250D9; }
+    .np-elu { background: #F0ECFA; color: #6B4FC0; }
+    .np-general { background: #EFF1F5; color: #556072; }
+
     /* ══════════════════ CONTRÔLEUR DE STAGE ══════════════════ */
     .ctr-search {
       width: 100%; box-sizing: border-box; height: 44px; padding: 0 14px;
@@ -1542,6 +1580,12 @@
       <button class="notif-chip active" id="chip-all" onclick="setPanelFilter('all')">Toutes</button>
       <button class="notif-chip" id="chip-unread" onclick="setPanelFilter('unread')">Non lues</button>
     </div>
+    <div class="notif-panel-filters" id="notif-panel-profiles" role="tablist" style="padding-top:0">
+      <button class="notif-chip active" id="pchip-all" onclick="setPanelProfile('all')">Tous profils</button>
+      <button class="notif-chip" id="pchip-controleur" onclick="setPanelProfile('controleur')">Contrôleur</button>
+      <button class="notif-chip" id="pchip-ec" onclick="setPanelProfile('ec')">Expert-comptable</button>
+      <button class="notif-chip" id="pchip-elu" onclick="setPanelProfile('elu')">Élu</button>
+    </div>
     <div class="notif-panel-list" id="notif-panel-list"></div>
   </div>
 
@@ -1633,7 +1677,8 @@
 
   <!-- ══ PAGE: ACCUEIL / DASHBOARD ══ -->
   <main class="main" id="page-accueil">
-    <div class="lp" id="lp-root"></div>
+    <div id="home-root"></div>
+    <div class="lp" id="lp-root" style="display:none"></div>
     <div class="dash" style="display:none">
 
       <!-- Bandeau -->
@@ -2387,26 +2432,78 @@
       }
     };
 
-    function accApply(role) {
-      var d = ACC_DATA[role];
-      if (!d) return;
-      document.getElementById('acc-sub').textContent = d.sub;
-      document.getElementById('acc-triage-title').textContent = d.triageTitle;
-      var triage = d.triage.length
-        ? d.triage.map(function(it) {
-            return '<div class="tri-item ' + (it.p === 'urgent' ? 'urgent' : '') + '">' +
-              '<span class="tri-dot"></span><span class="tri-icon">' + accIc(it.icon) + '</span>' +
-              '<div class="tri-body"><div class="tri-title">' + it.t + '</div><div class="tri-sub">' + it.s + '</div></div>' +
-              '<button class="action-btn">' + it.cta + '</button></div>';
-          }).join('')
-        : '<div class="dash-card" style="font-size:13px;color:var(--text-mid)">Aucun élément à traiter pour le moment.</div>';
-      document.getElementById('acc-triage').innerHTML = triage;
-      document.getElementById('acc-chips').innerHTML = d.chips.map(function(c) {
-        return '<a class="dash-chip" href="#">' + accIc(c[0]) + c[1] + '</a>';
-      }).join('');
-      document.querySelectorAll('#page-accueil .dash-role-btn').forEach(function(b) {
-        b.classList.toggle('active', b.dataset.role === role);
-      });
+    function accApply() {} // remplacé par le cockpit renderHome()
+
+    // ── Accueil : cockpit multi-profil (Contrôleur / Expert-comptable / Élu) ──
+    var HOME_USER = "Eric BENECH";
+    var HOME_ROLES = [
+      {
+        key: "controleur", label: "Contrôleur", title: "Contrôleur de stage", nav: "controleur",
+        cta: "Voir mes stagiaires", color: "#C8102E", bg: "#FDECEE",
+        icon: '<svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>',
+        items: [
+          { t: "Pierre Martin", s: "2 fiches annuelles à corriger", tag: "À corriger", cls: "warn" },
+          { t: "Thomas Dupont", s: "1 fiche annuelle à corriger", tag: "À corriger", cls: "warn" },
+          { t: "Amina Khalfi", s: "Entretien de 2ᵉ année à valider", tag: "À valider", cls: "info" }
+        ]
+      },
+      {
+        key: "ec", label: "Expert-comptable", title: "Expert-comptable — Mes demandes", nav: "demandes",
+        cta: "Voir mes demandes", color: "#0250D9", bg: "#E9F0FC",
+        icon: '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>',
+        items: [
+          { t: "Inscription principale PP", s: "Demande #12345678", tag: "En attente de pièces", cls: "warn" },
+          { t: "Changement de Maître de stage", s: "Demande #12345680", tag: "À compléter", cls: "neutral" }
+        ]
+      },
+      {
+        key: "elu", label: "Élu", title: "Élu — Mes instances (CRS)", nav: "crs",
+        cta: "Voir mes instances", color: "#6B4FC0", bg: "#F0ECFA",
+        icon: '<svg viewBox="0 0 24 24"><path d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z"/></svg>',
+        items: [
+          { t: "Dupont Nada — Inscription Stage", s: "Demande00005290 · avis à rendre", tag: "À examiner", cls: "info" },
+          { t: "Khalfi Nour — Changement Maître de stage", s: "Demande00003392 · avis à rendre", tag: "À examiner", cls: "info" },
+          { t: "Session CRT du 03/07/2026", s: "5 dossiers à préparer", tag: "À préparer", cls: "neutral" }
+        ]
+      }
+    ];
+    var homeFilter = "all";
+
+    window.homeSetFilter = function (k) {
+      homeFilter = k;
+      renderHome();
+    };
+
+    function renderHome() {
+      var root = document.getElementById("home-root");
+      if (!root) return;
+      var total = HOME_ROLES.reduce(function (n, r) { return n + r.items.length; }, 0);
+      var chips = '<button class="home-chip' + (homeFilter === "all" ? " active" : "") + '" onclick="homeSetFilter(\'all\')">Tous <span class="home-chip-count">' + total + '</span></button>' +
+        HOME_ROLES.map(function (r) {
+          return '<button class="home-chip' + (homeFilter === r.key ? " active" : "") + '" onclick="homeSetFilter(\'' + r.key + '\')">' + r.label + ' <span class="home-chip-count">' + r.items.length + '</span></button>';
+        }).join("");
+      var visible = HOME_ROLES.filter(function (r) { return homeFilter === "all" || homeFilter === r.key; });
+      var sections = visible.map(function (r) {
+        var rows = r.items.map(function (it) {
+          return '<div class="home-row" onclick="switchPage(\'' + r.nav + '\', document.getElementById(\'nav-' + r.nav + '\'))">' +
+                   '<div class="home-row-body"><div class="home-row-t">' + it.t + '</div><div class="home-row-s">' + it.s + '</div></div>' +
+                   '<span class="home-tag ' + it.cls + '">' + it.tag + '</span>' +
+                   '<svg class="ctr-card-chev" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;stroke:var(--text-soft);fill:none;stroke-width:2"><path d="M9 6l6 6-6 6"/></svg>' +
+                 '</div>';
+        }).join("");
+        return '<div class="home-card">' +
+                 '<div class="home-card-head">' +
+                   '<div class="home-card-ic" style="background:' + r.bg + ';color:' + r.color + '">' + r.icon + '</div>' +
+                   '<div><div class="home-card-title">' + r.title + '</div><div class="home-card-count">' + r.items.length + ' action' + (r.items.length > 1 ? "s" : "") + ' à réaliser</div></div>' +
+                   '<a class="home-card-cta" href="#" onclick="switchPage(\'' + r.nav + '\', document.getElementById(\'nav-' + r.nav + '\'));return false;">' + r.cta + ' →</a>' +
+                 '</div>' + rows +
+               '</div>';
+      }).join("");
+      root.innerHTML =
+        '<div class="home-hero"><div class="home-hero-title">Bonjour ' + HOME_USER + '</div>' +
+          '<div class="home-hero-sub">Vous avez <b>' + total + ' actions à réaliser</b> réparties sur vos profils.</div></div>' +
+        '<div class="home-filters">' + chips + '</div>' +
+        '<div class="home-sections">' + (sections || '<div class="home-empty">Rien à traiter pour ce profil.</div>') + '</div>';
     }
 
     function switchDemandeTab(el, panelId) {
@@ -2494,6 +2591,17 @@
       ressource: { label: "Ressources", icon: '<svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg>' }
     };
 
+    // Profil concerné par chaque notification (multi-casquettes)
+    var TYPE_PROFILE = { pj: 'ec', courrier: 'ec', stage: 'controleur', instance: 'elu', ressource: 'general' };
+    var PROFILE_META = {
+      controleur: { label: "Contrôleur", cls: "np-controleur" },
+      ec:         { label: "Expert-comptable", cls: "np-ec" },
+      elu:        { label: "Élu", cls: "np-elu" },
+      general:    { label: "Général", cls: "np-general" }
+    };
+    function notifProfile(n) { return n.profile || TYPE_PROFILE[n.type] || 'general'; }
+    var panelProfile = 'all';
+
     var PRIO_META = {
       1: { label: "Urgent",      cls: "p1", icon: '<svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>' },
       2: { label: "Important",   cls: "p2", icon: '<svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v3.75m0 3h.008v.008H12v-.008zM21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>' },
@@ -2537,7 +2645,9 @@
       html += '<div class="notif-item' + (n.read ? '' : ' unread') + '" role="button" tabindex="0" onclick="onNotifClick(' + n.id + ')" onkeydown="if(event.key===\'Enter\')onNotifClick(' + n.id + ')">';
       html +=   '<div class="notif-icon ' + (n.prio === 1 ? 'p1' : '') + '" aria-hidden="true">' + t.icon + '</div>';
       html +=   '<div class="notif-item-content">';
+      var pf = PROFILE_META[notifProfile(n)];
       html +=     '<div class="notif-item-meta">';
+      html +=       '<span class="notif-profile ' + pf.cls + '">' + pf.label + '</span>';
       html +=       '<span class="notif-prio ' + p.cls + '">' + p.icon + p.label + '</span>';
       html +=       '<span class="notif-time">' + relativeTime(n.hours) + '</span>';
       html +=     '</div>';
@@ -2593,9 +2703,19 @@
       renderNotifPanel();
     }
 
+    function setPanelProfile(p) {
+      panelProfile = p;
+      ['all','controleur','ec','elu'].forEach(function(k){
+        var el = document.getElementById('pchip-' + k);
+        if (el) el.classList.toggle('active', p === k);
+      });
+      renderNotifPanel();
+    }
+
     function renderNotifPanel() {
       var list = NOTIFICATIONS.slice().sort(function(a, b){ return a.hours - b.hours; });
       if (panelFilter === 'unread') list = list.filter(function(n){ return !n.read; });
+      if (panelProfile !== 'all') list = list.filter(function(n){ return notifProfile(n) === panelProfile; });
       var recent = list.slice(0, 6);
       document.getElementById('notif-panel-list').innerHTML =
         recent.length
@@ -2981,7 +3101,7 @@
 
     document.addEventListener('DOMContentLoaded', function() {
       // Initialise le dashboard Accueil (profil par défaut : stagiaire)
-      if (document.getElementById('page-accueil')) accApply('ecs');
+      if (document.getElementById('page-accueil')) renderHome();
 
       // Brancher tous les boutons Téléverser (hors dashboard Accueil)
       document.querySelectorAll('.action-btn').forEach(function(btn) {
