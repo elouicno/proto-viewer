@@ -7866,29 +7866,44 @@ function NouveauGroupeModal({
   const mm = String(today.getMonth() + 1).padStart(2, "0");
   const yyyy = today.getFullYear();
   const [form, setForm] = useState({
-    cro: "Île-de-France",
     numero: String(26000 + Math.floor(Math.random() * 999)),
     libelle: "",
-    annee: "",
-    dateConstitution: `${dd}/${mm}/${yyyy}`,
-    dateFin: ""
+    controleur: "",
+    dateEffet: `${dd}/${mm}/${yyyy}`
   });
   const set = (key, val) => setForm(prev => ({
     ...prev,
     [key]: val
   }));
-  const canSave = form.libelle.trim() && form.annee;
+  const [ctrlQuery, setCtrlQuery] = useState("");
+  const [ctrlOpen, setCtrlOpen] = useState(false);
+  const ctrlMatches = CG_CONTROLEURS.filter(c => {
+    const q = ctrlQuery.trim().toLowerCase();
+    if (!q) return true;
+    return (c.nom + " " + c.cab).toLowerCase().includes(q);
+  });
+  const pickCtrl = c => {
+    set("controleur", c.nom);
+    setCtrlQuery(c.nom + " · " + c.cab);
+    setCtrlOpen(false);
+  };
+  const clearCtrl = () => {
+    set("controleur", "");
+    setCtrlQuery("");
+    setCtrlOpen(false);
+  };
+  const canSave = form.libelle.trim();
   const handleSave = () => {
     if (!canSave) return;
     onSave({
-      cro: form.cro,
+      cro: "Île-de-France",
       numero: form.numero,
-      annee: form.annee,
+      annee: "",
       libelle: form.libelle.trim(),
       rattrapage: "N",
-      controleur: "",
-      dateConstitution: form.dateConstitution,
-      dateFin: form.dateFin
+      controleur: form.controleur,
+      dateConstitution: form.dateEffet,
+      dateFin: ""
     });
   };
   const labelCls = "block text-[13px] text-[#03234D] mb-1";
@@ -7930,19 +7945,6 @@ function NouveauGroupeModal({
           children: [/*#__PURE__*/_jsxDEV("div", {
             children: [/*#__PURE__*/_jsxDEV("label", {
               className: labelCls,
-              children: "Conseil régional"
-            }, void 0, false), /*#__PURE__*/_jsxDEV("select", {
-              value: form.cro,
-              onChange: e => set("cro", e.target.value),
-              className: inputCls,
-              children: CRO_OPTIONS.map(c => /*#__PURE__*/_jsxDEV("option", {
-                value: c,
-                children: c
-              }, c, false))
-            }, void 0, false)]
-          }, void 0, true), /*#__PURE__*/_jsxDEV("div", {
-            children: [/*#__PURE__*/_jsxDEV("label", {
-              className: labelCls,
               children: "N° Groupe"
             }, void 0, false), /*#__PURE__*/_jsxDEV("input", {
               type: "text",
@@ -7951,10 +7953,7 @@ function NouveauGroupeModal({
               className: inputCls + " bg-[#F3F3F3]",
               readOnly: true
             }, void 0, false)]
-          }, void 0, true)]
-        }, void 0, true), /*#__PURE__*/_jsxDEV("div", {
-          className: "grid grid-cols-2 gap-6 mb-5",
-          children: [/*#__PURE__*/_jsxDEV("div", {
+          }, void 0, true), /*#__PURE__*/_jsxDEV("div", {
             children: [/*#__PURE__*/_jsxDEV("label", {
               className: labelCls,
               children: [requiredDot, "Libellé"]
@@ -7965,34 +7964,19 @@ function NouveauGroupeModal({
               className: inputCls,
               placeholder: ""
             }, void 0, false)]
-          }, void 0, true), /*#__PURE__*/_jsxDEV("div", {
-            children: [/*#__PURE__*/_jsxDEV("label", {
-              className: labelCls,
-              children: [requiredDot, "Année"]
-            }, void 0, true), /*#__PURE__*/_jsxDEV("select", {
-              value: form.annee,
-              onChange: e => set("annee", e.target.value),
-              className: inputCls,
-              children: [/*#__PURE__*/_jsxDEV("option", {
-                value: ""
-              }, void 0, false), ANNEE_OPTIONS.map(a => /*#__PURE__*/_jsxDEV("option", {
-                value: a,
-                children: a
-              }, a, false))]
-            }, void 0, true)]
           }, void 0, true)]
         }, void 0, true), /*#__PURE__*/_jsxDEV("div", {
           className: "grid grid-cols-2 gap-6 mb-5",
           children: [/*#__PURE__*/_jsxDEV("div", {
             children: [/*#__PURE__*/_jsxDEV("label", {
               className: labelCls,
-              children: "Date de constitution"
+              children: "Date d'effet"
             }, void 0, false), /*#__PURE__*/_jsxDEV("div", {
               className: "relative",
               children: [/*#__PURE__*/_jsxDEV("input", {
                 type: "text",
-                value: form.dateConstitution,
-                onChange: e => set("dateConstitution", e.target.value),
+                value: form.dateEffet,
+                onChange: e => set("dateEffet", e.target.value),
                 className: inputCls + " pr-10",
                 placeholder: "JJ/MM/AAAA"
               }, void 0, false), /*#__PURE__*/_jsxDEV("svg", {
@@ -8032,48 +8016,72 @@ function NouveauGroupeModal({
           }, void 0, true), /*#__PURE__*/_jsxDEV("div", {
             children: [/*#__PURE__*/_jsxDEV("label", {
               className: labelCls,
-              children: "Date de fin"
+              children: "Contrôleur de stage"
             }, void 0, false), /*#__PURE__*/_jsxDEV("div", {
               className: "relative",
               children: [/*#__PURE__*/_jsxDEV("input", {
                 type: "text",
-                value: form.dateFin,
-                onChange: e => set("dateFin", e.target.value),
-                className: inputCls + " pr-10",
-                placeholder: "JJ/MM/AAAA"
-              }, void 0, false), /*#__PURE__*/_jsxDEV("svg", {
+                value: ctrlQuery,
+                onChange: e => {
+                  setCtrlQuery(e.target.value);
+                  setCtrlOpen(true);
+                  if (form.controleur) set("controleur", "");
+                },
+                onFocus: () => setCtrlOpen(true),
+                onBlur: () => setTimeout(() => setCtrlOpen(false), 120),
+                className: inputCls + " pr-9",
+                placeholder: "Rechercher un contrôleur…",
+                autoComplete: "off"
+              }, void 0, false), form.controleur || ctrlQuery ? /*#__PURE__*/_jsxDEV("button", {
+                type: "button",
+                onMouseDown: e => {
+                  e.preventDefault();
+                  clearCtrl();
+                },
+                className: "absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center text-[#5C5C5C] hover:bg-[#F3F3F3]",
+                children: /*#__PURE__*/_jsxDEV(XIcon, {
+                  size: 12
+                }, void 0, false)
+              }, void 0, false) : /*#__PURE__*/_jsxDEV("svg", {
                 className: "absolute right-3 top-1/2 -translate-y-1/2 text-[#5C5C5C] pointer-events-none",
-                width: "16",
-                height: "16",
+                width: "15",
+                height: "15",
                 viewBox: "0 0 24 24",
                 fill: "none",
                 stroke: "currentColor",
                 strokeWidth: "2",
                 strokeLinecap: "round",
                 strokeLinejoin: "round",
-                children: [/*#__PURE__*/_jsxDEV("rect", {
-                  x: "3",
-                  y: "4",
-                  width: "18",
-                  height: "18",
-                  rx: "2"
+                children: [/*#__PURE__*/_jsxDEV("circle", {
+                  cx: "11",
+                  cy: "11",
+                  r: "8"
                 }, void 0, false), /*#__PURE__*/_jsxDEV("line", {
-                  x1: "16",
-                  y1: "2",
-                  x2: "16",
-                  y2: "6"
-                }, void 0, false), /*#__PURE__*/_jsxDEV("line", {
-                  x1: "8",
-                  y1: "2",
-                  x2: "8",
-                  y2: "6"
-                }, void 0, false), /*#__PURE__*/_jsxDEV("line", {
-                  x1: "3",
-                  y1: "10",
-                  x2: "21",
-                  y2: "10"
+                  x1: "21",
+                  y1: "21",
+                  x2: "16.65",
+                  y2: "16.65"
                 }, void 0, false)]
-              }, void 0, true)]
+              }, void 0, true), ctrlOpen && /*#__PURE__*/_jsxDEV("ul", {
+                className: "absolute left-0 right-0 top-full mt-1 z-20 bg-white border border-[#C9C9C9] rounded shadow-lg max-h-44 overflow-auto py-1",
+                children: ctrlMatches.length ? ctrlMatches.map(c => /*#__PURE__*/_jsxDEV("li", {
+                  onMouseDown: e => {
+                    e.preventDefault();
+                    pickCtrl(c);
+                  },
+                  className: "px-3 py-2 cursor-pointer hover:bg-[#F3F3F3] " + (form.controleur === c.nom ? "bg-[#EEF4FF]" : ""),
+                  children: [/*#__PURE__*/_jsxDEV("div", {
+                    className: "text-[13px] text-[#2E2E2E] leading-[16px]",
+                    children: c.nom
+                  }, void 0, false), /*#__PURE__*/_jsxDEV("div", {
+                    className: "text-[11px] text-[#5C5C5C] leading-[14px]",
+                    children: c.cab
+                  }, void 0, false)]
+                }, c.nom, true)) : /*#__PURE__*/_jsxDEV("li", {
+                  className: "px-3 py-2 text-[13px] text-[#5C5C5C]",
+                  children: "Aucun résultat"
+                }, void 0, false)
+              }, void 0, false)]
             }, void 0, true)]
           }, void 0, true)]
         }, void 0, true)]
@@ -8087,7 +8095,7 @@ function NouveauGroupeModal({
           onClick: handleSave,
           disabled: !canSave,
           className: `px-6 h-9 rounded text-[14px] text-white ${canSave ? "bg-[#8B1A1A] hover:bg-[#6F1515] cursor-pointer" : "bg-[#C9C9C9] cursor-not-allowed"}`,
-          children: "Enregistrer"
+          children: "Ajouter"
         }, void 0, false)]
       }, void 0, true)]
     }, void 0, true)
@@ -8098,9 +8106,9 @@ function GroupesListViewPage({
 }) {
   const [showNewModal, setShowNewModal] = useState(false);
   const [addedGroupes, setAddedGroupes] = useState([]);
-  const allGroupes = [...GROUPES_LIST, ...addedGroupes];
+  const allGroupes = [...addedGroupes, ...GROUPES_LIST];
   const handleSaveGroupe = groupe => {
-    setAddedGroupes(prev => [...prev, groupe]);
+    setAddedGroupes(prev => [groupe, ...prev]);
     setShowNewModal(false);
   };
   return /*#__PURE__*/_jsxDEV(_Fragment, {
@@ -8160,6 +8168,248 @@ function GroupesListViewPage({
       onSave: handleSaveGroupe
     }, void 0, false)]
   }, void 0, true);
+}
+
+// ══════════════════════════════════════════════════════════════
+// CONSTITUTION ASSISTÉE D'UN GROUPE (brief UX : file → filtres → moteur → ajustement → validation)
+// ══════════════════════════════════════════════════════════════
+// Tokens SLDS v2 (Salesforce Lightning Design System 2)
+const CG = { navy:"#03234d", body:"#2e2e2e", soft:"#5c5c5c", blue:"#0250d9", brand:"#066afe", inverse:"#032d60", red:"#b60554", bd:"#c9c9c9", bd2:"#e5e5e5", bg:"#f3f3f3", amber:"#8a5a0b", amberBg:"#fef6e7", green:"#056764", greenBg:"#acf3e4", auto:"#0250d9", autoBg:"#e9f0fc", man:"#7526e3", manBg:"#ece1f9" };
+const CG_FONT = '"SF Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';
+const CG_SHADOW = "0 0 1.49px rgba(0,0,0,0.09), 0 1.4px 1.5px rgba(0,0,0,0.09), 0 -1px 1px rgba(0,0,0,0.04)";
+const CG_GROS = ["KPMG","Deloitte","EY","PwC","Forvis Mazars","Grant Thornton"];
+const CG_PETIT = ["Cabinet Durand","Fiduciaire Léman","Audit Conseil","Cabinet Perrot","Expertise Nord","AGC Bretagne"];
+const CP_REF = ["75001","75008","75017","92100","92200","93100","94200","78000","59000","59800","62100","69002","69003","38000","44000","44600","49000","35000","35700","56000","56100","29200","22000","33000","33200","31000","34000","13001","06000","67000","44300","35760"];
+// Enrichissement partagé d'un stagiaire (pop-in + onglet Stagiaires) — déterministe
+function augStagiaire(ind, i) {
+  var prenom = ind.prenom, nom = ind.nom;
+  if (!prenom && ind.stagiaire) {
+    var parts = ind.stagiaire.trim().split(/\s+/);
+    nom = parts[0];
+    prenom = parts.slice(1).join(" ") || parts[0];
+  }
+  var femU = CG_FEM.map(function (x) { return x.toUpperCase(); });
+  var isFem = femU.indexOf((prenom || "").toUpperCase()) > -1;
+  var h = String(ind.numInscription || prenom || i).split("").reduce(function (a, c) { return a + c.charCodeAt(0); }, 0);
+  var genre = ind.genre || (isFem ? "F" : h % 2 ? "F" : "H");
+  var gros = i % 5 !== 0 && i % 7 !== 0;
+  return Object.assign({}, ind, {
+    prenom: prenom,
+    nom: nom,
+    genre: genre,
+    cycle: ind.cycle || ["3 ans", "3 ans", "2 ans", "Renouvellement AFS", "3 ans", "2 ans"][i % 6],
+    annee: ind.annee || ["1", "2", "3"][i % 3],
+    dscg: ind.dscg || (i % 3 === 0 ? "Incomplet" : "Complet"),
+    avecCtrl: ind.avecCtrl !== undefined ? ind.avecCtrl : i % 4 !== 0,
+    cabinet: ind.cabinet || (gros ? CG_GROS[i % CG_GROS.length] : CG_PETIT[i % CG_PETIT.length]),
+    taille: ind.taille || (gros ? "1 000 et +" : ["1–9", "10–49", "50–249", "250–999"][i % 4]),
+    maitre: ind.maitre || ["M. DURAND", "MME LEROY", "M. BERNARD", "MME MOREAU", "M. PETIT"][i % 5],
+    cp: ind.cp || CP_REF[i % CP_REF.length],
+    cro: ind.cro || CRO_OPTIONS[i % CRO_OPTIONS.length],
+    session: ind.session || ["25/06/2026", "18/03/2026", "10/12/2025"][i % 3],
+    franco: ind.franco || (i % 6 !== 0 ? "Oui" : "Non")
+  });
+}
+const CG_FEM = ["Marie","Camille","Elena","Sophie","Julie","Sarah","Emma","Léa","Chloé","Manon","Inès","Jade","Nour","Amandine","Christelle","Josiane","Aurelie","Anaïs","Romane","Alice","Maya","Zoé","Lina","Clara","Louise","Jeanne"];
+const CG_CONTROLEURS = [ {nom:"M PIAUD FABRICE",cab:"Forvis Mazars"}, {nom:"MME MARCHAND SOPHIE",cab:"KPMG"}, {nom:"M LECONTE VINCENT",cab:"Deloitte"}, {nom:"MME MIEL AMANDINE",cab:"Cabinet Perrot"}, {nom:"M MAJOU JEAN-MAURICE",cab:"Expertise Nord"} ];
+function cgAugment(list){
+  return list.map(function(s,i){
+    var sexe = CG_FEM.indexOf(s.prenom) > -1 ? "F" : "H";
+    var cycle = ["3 ans","3 ans","2 ans","2 ans","1 an","3 ans"][i%6];
+    var dcg = (i%3===0) ? "DCG incomplet" : "DCG complet";
+    var gros = (i%5!==0 && i%7!==0);
+    var cab = { name: gros ? CG_GROS[i%CG_GROS.length] : CG_PETIT[i%CG_PETIT.length], size: gros ? "gros" : "petit" };
+    var mvt = (i%9===4) ? ["Transfert de région","Reprise","Suspension"][i%3] : null;
+    return { id:s.numInscription, prenom:s.prenom, nom:s.nom, sexe:sexe, cycle:cycle, dcg:dcg, cab:cab, ville:s.ville, dep:s.dep, mvt:mvt, session: mvt ? null : ((i%11===7) ? "alt" : "session") };
+  });
+}
+function GroupeConstitutionPage({ onBack }) {
+  const h = React.createElement;
+  const POOL = cgAugment(INDIVIDUS_POOL);
+  const [assigned, setAssigned] = React.useState({});
+  const [members, setMembers] = React.useState([]);
+  const [ctrl, setCtrl] = React.useState(null);
+  const [gname, setGname] = React.useState("");
+  const [target, setTarget] = React.useState(18);
+  const [subrule, setSubrule] = React.useState(true);
+  const [baseMode, setBaseMode] = React.useState("session");
+  const [search, setSearch] = React.useState("");
+  const [fCycle, setFCycle] = React.useState([]);
+  const [fSexe, setFSexe] = React.useState([]);
+  const [fCab, setFCab] = React.useState([]);
+  const [nbValid, setNbValid] = React.useState(0);
+  const [toast, setToast] = React.useState("");
+  const toastRef = React.useRef(null);
+  const fireToast = (m) => { setToast(m); if(toastRef.current) clearTimeout(toastRef.current); toastRef.current = setTimeout(()=>setToast(""), 2600); };
+
+  const inGroup = (id) => members.some(m=>m.id===id);
+  const toggle = (arr,set,v) => set(arr.indexOf(v)>-1 ? arr.filter(x=>x!==v) : arr.concat([v]));
+  const scope = (s) => !assigned[s.id] && (baseMode==="session" ? s.session==="session" : true);
+  const pass = (s) => {
+    if(search && (s.prenom+" "+s.nom).toLowerCase().indexOf(search.toLowerCase())===-1) return false;
+    if(fCycle.length && fCycle.indexOf(s.cycle)===-1 && fCycle.indexOf(s.dcg)===-1) return false;
+    if(fSexe.length && fSexe.indexOf(s.sexe)===-1) return false;
+    if(fCab.length && fCab.indexOf(s.cab.size)===-1) return false;
+    return true;
+  };
+  const queue = POOL.filter(s=>scope(s)&&pass(s)&&!inGroup(s.id));
+  const mem = members.map(m=>{ var s=POOL.find(x=>x.id===m.id); return { s:s, src:m.src }; }).filter(x=>x.s);
+  const totalAttr = POOL.filter(s=>!assigned[s.id] && s.session==="session").length;
+  const majCycle = (list)=>{ if(!list.length) return "3 ans"; var c={}; list.forEach(s=>{c[s.cycle]=(c[s.cycle]||0)+1;}); return Object.keys(c).sort((a,b)=>c[b]-c[a])[0]; };
+
+  const addMember = (id, src) => { if(!ctrl){fireToast("Sélectionnez d'abord un contrôleur");return;} if(inGroup(id))return; setMembers(prev=>prev.concat([{id:id,src:src||"manuel"}])); };
+  const removeMember = (id) => setMembers(prev=>prev.filter(m=>m.id!==id));
+  const runAuto = () => {
+    if(!ctrl){fireToast("Sélectionnez d'abord un contrôleur");return;}
+    var pool = POOL.filter(s=>scope(s)&&pass(s)&&!inGroup(s.id));
+    var cyc = (fCycle.filter(v=>["3 ans","2 ans","1 an"].indexOf(v)>-1)[0]) || majCycle(pool.length?pool:POOL);
+    pool = pool.filter(s=>s.cycle===cyc);
+    if(subrule) pool = pool.filter(s=>s.cab.name!==ctrl.cab);
+    if(!pool.length){ fireToast("Aucun stagiaire éligible avec ces filtres"); return; }
+    var picked=[];
+    while(picked.length<target && pool.length){
+      var hh=picked.filter(s=>s.sexe==="H").length, ff=picked.length-hh;
+      var wS = hh<=ff ? "H":"F";
+      var gg=picked.filter(s=>s.cab.size==="gros").length, pp=picked.length-gg;
+      var wZ = gg<=pp ? "gros":"petit";
+      var cand = pool.find(s=>s.sexe===wS&&s.cab.size===wZ) || pool.find(s=>s.sexe===wS) || pool.find(s=>s.cab.size===wZ) || pool[0];
+      picked.push(cand); pool=pool.filter(s=>s.id!==cand.id);
+    }
+    var manuels = members.filter(m=>m.src==="manuel");
+    setMembers(manuels.concat(picked.filter(s=>!manuels.some(m=>m.id===s.id)).map(s=>({id:s.id,src:"auto"}))));
+    fireToast("Présélection : "+picked.length+" stagiaires — parité et mix optimisés");
+  };
+  const validateGroup = () => {
+    if(!ctrl || !members.length) return;
+    var name = gname || ("G-"+(3000+nbValid));
+    setAssigned(prev=>{ var n=Object.assign({},prev); members.forEach(m=>{n[m.id]=name;}); return n; });
+    setMembers([]); setCtrl(null); setGname(""); setTarget(18); setNbValid(n=>n+1);
+    fireToast("Groupe « "+name+" » validé — "+members.length+" stagiaires attribués");
+  };
+
+  // ── styles inline ──
+  const card = {background:"#fff",border:"none",borderRadius:20,boxShadow:CG_SHADOW,overflow:"hidden",display:"flex",flexDirection:"column"};
+  const chip = (label,active,onClick)=>h("button",{key:label,onClick:onClick,style:{border:"1px solid "+(active?CG.navy:CG.bd),background:active?CG.navy:"#fff",color:active?"#fff":CG.navy,borderRadius:999,padding:"4px 11px",fontSize:12,fontWeight:600,cursor:"pointer",marginRight:6,marginBottom:6}},label);
+  const miniChip = (txt,bg,col)=>h("span",{style:{background:bg,color:col,fontSize:11,fontWeight:700,padding:"2px 7px",borderRadius:6,whiteSpace:"nowrap",marginRight:5}},txt);
+  const avatar = (s,sz)=>h("div",{style:{width:sz||32,height:sz||32,borderRadius:"50%",background:"#EEF1F7",color:CG.navy,fontSize:sz?11:12,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}},(s.prenom[0]+s.nom[0]).toUpperCase());
+
+  // KPIs
+  const H = mem.filter(x=>x.s.sexe==="H").length, F = mem.length-H;
+  const gros = mem.filter(x=>x.s.cab.size==="gros").length, petit = mem.length-gros;
+  const pH = mem.length?Math.round(H/mem.length*100):50;
+  const gc = majCycle(mem.map(x=>x.s));
+  const warns = [];
+  if(mem.length){
+    var mm = mem.filter(x=>x.s.cycle!==gc);
+    if(mm.length) warns.push(mm.length+" stagiaire(s) en cycle différent du groupe (majoritairement "+gc+"). Ne pas mélanger 3 ans et 2 ans.");
+    if(mem.length>=4 && (gros===0||petit===0)) warns.push("Aucun mix cabinet : uniquement des "+(gros===0?"petits":"gros")+" cabinets.");
+    if(subrule && ctrl){ var sc=mem.filter(x=>x.s.cab.name===ctrl.cab); if(sc.length) warns.push(sc.length+" stagiaire(s) du cabinet du contrôleur ("+ctrl.cab+")."); }
+    if(mem.length>20) warns.push("Effectif "+mem.length+" : dépasse le maximum souple de 20.");
+  }
+  const gated = !ctrl;
+
+  // ── header ──
+  const header = h("div",{style:{background:"#fff",borderBottom:"1px solid "+CG.bd,padding:"14px 20px",display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}},[
+    h("button",{key:"b",onClick:onBack,style:{border:"1px solid "+CG.bd,background:"#fff",borderRadius:8,height:34,padding:"0 12px",fontSize:13,fontWeight:600,color:CG.navy,cursor:"pointer",display:"flex",alignItems:"center",gap:6}},["← Retour"]),
+    h("div",{key:"t",style:{flex:1,minWidth:180}},[
+      h("div",{key:"1",style:{fontSize:19,fontWeight:700,color:CG.navy}},"Constituer un groupe — présélection assistée"),
+      h("div",{key:"2",style:{fontSize:12.5,color:CG.soft,marginTop:2}},"Session du 25/06/2026 · le moteur propose, vous décidez.")
+    ]),
+    h("div",{key:"k",style:{display:"flex",gap:10}},[
+      h("div",{key:"a",style:{background:"linear-gradient(135deg,#03234D,#123258)",borderRadius:12,padding:"9px 16px",color:"#fff",minWidth:96}},[h("div",{key:"n",style:{fontSize:22,fontWeight:800,lineHeight:1}},String(totalAttr)),h("div",{key:"l",style:{fontSize:10.5,color:"#AEBBD0",marginTop:4,fontWeight:600,textTransform:"uppercase",letterSpacing:.4}},"à attribuer")]),
+      h("div",{key:"g",style:{background:"#fff",border:"1px solid "+CG.bd,borderRadius:12,padding:"9px 16px",minWidth:96}},[h("div",{key:"n",style:{fontSize:22,fontWeight:800,lineHeight:1,color:CG.green}},String(nbValid)),h("div",{key:"l",style:{fontSize:10.5,color:CG.soft,marginTop:4,fontWeight:600,textTransform:"uppercase",letterSpacing:.4}},"groupes validés")])
+    ])
+  ]);
+
+  // ── colonne file d'attente ──
+  const left = h("div",{style:card},[
+    h("div",{key:"h",style:{padding:"13px 16px",borderBottom:"1px solid "+CG.bd2,display:"flex",alignItems:"center",gap:9}},[
+      h("span",{key:"t",style:{fontSize:14.5,fontWeight:700,color:CG.navy}},"File d'attente"),
+      h("span",{key:"c",style:{fontSize:12,fontWeight:700,color:CG.soft,background:"#EEF1F7",borderRadius:999,padding:"2px 9px"}},String(queue.length))
+    ]),
+    h("div",{key:"seg",style:{padding:"12px 16px 0"}},[
+      h("div",{style:{display:"inline-flex",border:"1px solid "+CG.bd,borderRadius:9,overflow:"hidden"}},[
+        h("button",{key:"s",onClick:()=>setBaseMode("session"),style:{border:"none",borderRight:"1px solid "+CG.bd,background:baseMode==="session"?CG.navy:"#fff",color:baseMode==="session"?"#fff":CG.soft,padding:"7px 12px",fontSize:12.5,fontWeight:600,cursor:"pointer"}},"Session 25/06 · validés"),
+        h("button",{key:"a",onClick:()=>setBaseMode("all"),style:{border:"none",background:baseMode==="all"?CG.navy:"#fff",color:baseMode==="all"?"#fff":CG.soft,padding:"7px 12px",fontSize:12.5,fontWeight:600,cursor:"pointer"}},"Tous sans contrôleur")
+      ]),
+      h("div",{key:"hint",style:{fontSize:11.5,color:"#9AA3B2",marginTop:6}}, baseMode==="session" ? "Stagiaires validés en session, non assignés." : "Inclut transferts, reprises et suspensions (hors date de session).")
+    ]),
+    h("div",{key:"tools",style:{padding:"12px 16px",display:"flex",flexDirection:"column",gap:10}},[
+      h("input",{key:"s",value:search,onChange:e=>setSearch(e.target.value),placeholder:"Rechercher un stagiaire…",style:{height:38,border:"1px solid "+CG.bd,borderRadius:9,padding:"0 12px",fontSize:13.5,fontFamily:"inherit",outline:"none"}}),
+      h("div",{key:"f"},[
+        h("div",{key:"c",style:{marginBottom:2}},[h("span",{style:{fontSize:11,fontWeight:700,color:CG.soft,textTransform:"uppercase",letterSpacing:.4,marginRight:6}},"Cycle / DCG"),["3 ans","2 ans","1 an","DCG complet","DCG incomplet"].map(v=>chip(v,fCycle.indexOf(v)>-1,()=>toggle(fCycle,setFCycle,v)))]),
+        h("div",{key:"s",style:{marginTop:4}},[h("span",{style:{fontSize:11,fontWeight:700,color:CG.soft,textTransform:"uppercase",letterSpacing:.4,marginRight:6}},"Parité"),[["H","Hommes"],["F","Femmes"]].map(v=>chip(v[1],fSexe.indexOf(v[0])>-1,()=>toggle(fSexe,setFSexe,v[0])))]),
+        h("div",{key:"b",style:{marginTop:4}},[h("span",{style:{fontSize:11,fontWeight:700,color:CG.soft,textTransform:"uppercase",letterSpacing:.4,marginRight:6}},"Cabinet"),[["gros","Gros (>1000)"],["petit","Petit"]].map(v=>chip(v[1],fCab.indexOf(v[0])>-1,()=>toggle(fCab,setFCab,v[0])))]),
+        h("div",{key:"cfg",style:{marginTop:6}},h("span",{style:{fontSize:11,color:"#9AA3B2",fontStyle:"italic"}},"Filtres en inclusion, cumulables · paramétrables par région"))
+      ])
+    ]),
+    h("div",{key:"list",style:{borderTop:"1px solid "+CG.bd2,maxHeight:520,overflow:"auto"}}, queue.length ? queue.map(s=>h("div",{key:s.id,style:{display:"flex",alignItems:"center",gap:11,padding:"10px 16px",borderBottom:"1px solid "+CG.bd2,cursor:"pointer"},onClick:()=>addMember(s.id,"manuel")},[
+        avatar(s),
+        h("div",{key:"b",style:{flex:1,minWidth:0}},[
+          h("div",{key:"n",style:{fontSize:13.5,fontWeight:600,color:CG.navy}},[s.prenom+" "+s.nom, s.mvt?h("span",{key:"m",style:{marginLeft:6}},miniChip(s.mvt,CG.amberBg,CG.amber)):null]),
+          h("div",{key:"m",style:{marginTop:3}},[miniChip(s.sexe,s.sexe==="H"?"#E8F1FE":"#FCEAF1",s.sexe==="H"?"#0B63CE":"#C01865"),miniChip(s.cycle+" · "+s.dcg.replace("DCG ",""),"#EEF1F7","#3B4B66"),miniChip(s.cab.name,s.cab.size==="gros"?"#F3EEFB":"#E9F7F1",s.cab.size==="gros"?"#6B4FC0":"#0F7A56"),miniChip(s.dep+" "+s.ville,"#F1F4F8",CG.soft)])
+        ]),
+        h("button",{key:"add",disabled:!ctrl,onClick:e=>{e.stopPropagation();addMember(s.id,"manuel");},style:{width:30,height:30,borderRadius:8,border:"1px solid "+CG.bd,background:"#fff",color:ctrl?CG.navy:"#C9C9C9",fontSize:17,cursor:ctrl?"pointer":"not-allowed",flexShrink:0,lineHeight:1}},"+")
+      ])) : h("div",{style:{padding:40,textAlign:"center",color:"#9AA3B2",fontStyle:"italic"}},"Aucun stagiaire ne correspond."))
+  ]);
+
+  // ── colonne builder ──
+  const secT = (n,txt,req)=>h("div",{style:{fontSize:11.5,fontWeight:700,color:CG.soft,textTransform:"uppercase",letterSpacing:.4,marginBottom:9}},[n+" · "+txt, req?h("span",{key:"r",style:{color:CG.red}}," *"):null]);
+  const ind = (lbl,body)=>h("div",{style:{background:"#fff",border:"1px solid "+CG.bd,borderRadius:10,padding:"11px 13px",flex:1}},[h("div",{key:"l",style:{fontSize:10.5,fontWeight:700,color:"#9AA3B2",textTransform:"uppercase",marginBottom:8}},lbl),body]);
+  const effOk = mem.length>=16&&mem.length<=20;
+  const right = h("div",{style:card},[
+    h("div",{key:"h",style:{padding:"13px 16px",borderBottom:"1px solid "+CG.bd2,fontSize:14.5,fontWeight:700,color:CG.navy}},"Groupe en constitution"),
+    // 1 contrôleur
+    h("div",{key:"c",style:{padding:"14px 16px",borderBottom:"1px solid "+CG.bd2}},[
+      secT("1","Contrôleur de stage — obligatoire",true),
+      h("div",{key:"row",style:{display:"flex",gap:10,flexWrap:"wrap",alignItems:"center"}},[
+        h("select",{key:"sel",value:ctrl?ctrl.nom:"",onChange:e=>setCtrl(CG_CONTROLEURS.find(c=>c.nom===e.target.value)||null),style:{flex:1,minWidth:200,height:38,border:"1px solid "+CG.bd,borderRadius:9,padding:"0 10px",fontSize:13.5,color:CG.navy,background:"#fff"}},[h("option",{key:"0",value:""},"— Sélectionner un contrôleur —")].concat(CG_CONTROLEURS.map(c=>h("option",{key:c.nom,value:c.nom},c.nom+" · "+c.cab)))),
+        h("input",{key:"n",value:gname,onChange:e=>setGname(e.target.value),placeholder:"Nomenclature (ex. 30000)",style:{width:150,height:38,border:"1px solid "+CG.bd,borderRadius:9,padding:"0 10px",fontSize:13.5}}),
+        h("div",{key:"t",style:{display:"flex",alignItems:"center",gap:6}},[h("span",{key:"l",style:{fontSize:12.5,color:CG.soft}},"Cible"),h("input",{key:"i",type:"number",min:1,max:20,value:target,onChange:e=>setTarget(+e.target.value||18),style:{width:60,height:38,border:"1px solid "+CG.bd,borderRadius:9,textAlign:"center",fontSize:13.5}})])
+      ]),
+      h("label",{key:"sr",style:{display:"flex",alignItems:"center",gap:8,fontSize:12.5,color:CG.soft,marginTop:10,cursor:"pointer"}},[h("input",{key:"cb",type:"checkbox",checked:subrule,onChange:e=>setSubrule(e.target.checked),style:{width:15,height:15}}),"Exclure les stagiaires du cabinet du contrôleur (règle région, désactivable)"])
+    ]),
+    // 2 moteur
+    h("div",{key:"m",style:{padding:"14px 16px",borderBottom:"1px solid "+CG.bd2,opacity:gated?.45:1,pointerEvents:gated?"none":"auto"}},[
+      secT("2","Moteur d'auto-attribution"),
+      h("div",{key:"z",style:{background:"linear-gradient(135deg,#EEF3FB,#F4F7FC)",border:"1px dashed #C3D2EA",borderRadius:12,padding:14,display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}},[
+        h("div",{key:"t",style:{flex:1,minWidth:170}},[h("b",{key:"b",style:{color:CG.navy}},"Présélection optimisée"),h("div",{key:"s",style:{fontSize:12,color:CG.soft,marginTop:2}},"Groupe équilibré depuis la file filtrée : parité H/F, mix petit/gros cabinet, cycle homogène.")]),
+        h("button",{key:"b",onClick:runAuto,style:{background:CG.blue,color:"#fff",border:"none",borderRadius:9,height:40,padding:"0 18px",fontSize:14,fontWeight:600,cursor:"pointer"}},"⚡ Lancer l'auto-attribution")
+      ])
+    ]),
+    // 3 résultat
+    h("div",{key:"r",style:{padding:"14px 16px",opacity:gated?.45:1,pointerEvents:gated?"none":"auto"}},[
+      secT("3","Résultat & ajustement manuel"),
+      h("div",{key:"inds",style:{display:"flex",gap:12,flexWrap:"wrap"}},[
+        ind("Parité H / F",h("div",{},[h("div",{key:"bar",style:{height:9,borderRadius:5,overflow:"hidden",display:"flex",background:"#EEF1F7"}},[h("div",{key:"h",style:{width:(mem.length?pH:50)+"%",background:"#0B63CE"}}),h("div",{key:"f",style:{width:(mem.length?100-pH:50)+"%",background:"#C01865"}})]),h("div",{key:"lg",style:{display:"flex",justifyContent:"space-between",fontSize:12,fontWeight:700,marginTop:6}},[h("span",{key:"h",style:{color:"#0B63CE"}},H+" H"),h("span",{key:"f",style:{color:"#C01865"}},F+" F")])])),
+        ind("Mix cabinet",h("div",{},[h("div",{key:"r",style:{display:"flex",gap:8}},[h("div",{key:"g",style:{flex:1,textAlign:"center",borderRadius:8,padding:"6px 0",fontSize:12,fontWeight:700,background:"#F3EEFB",color:"#6B4FC0"}},gros+" gros"),h("div",{key:"p",style:{flex:1,textAlign:"center",borderRadius:8,padding:"6px 0",fontSize:12,fontWeight:700,background:"#E9F7F1",color:"#0F7A56"}},petit+" petit")]),h("div",{key:"n",style:{fontSize:11,color:"#9AA3B2",marginTop:7,textAlign:"center"}},(gros>0&&petit>0)?"Mix respecté":"⚠ pas de mix")])),
+        ind("Effectif",h("div",{},[h("div",{key:"e",style:{fontSize:24,fontWeight:800,color:mem.length===0?CG.navy:(effOk?CG.green:CG.amber)}},[String(mem.length),h("span",{key:"t",style:{fontSize:13,fontWeight:600,color:"#9AA3B2"}}," / "+target)]),h("div",{key:"s",style:{fontSize:11,color:"#9AA3B2",marginTop:6}},"cible "+target+" · max souple 20")]))
+      ]),
+      h("div",{key:"leg",style:{display:"flex",gap:12,alignItems:"center",fontSize:11.5,color:CG.soft,margin:"14px 0 10px"}},["Composition —",miniChip("AUTO",CG.autoBg,CG.auto),"moteur",miniChip("MANUEL",CG.manBg,CG.man),"à la main"]),
+      h("div",{key:"ml",style:{display:"flex",flexDirection:"column",gap:7,maxHeight:280,overflow:"auto"}}, mem.length ? mem.map(x=>{
+        var s=x.s; var w=(s.cycle!==gc)||(subrule&&ctrl&&s.cab.name===ctrl.cab);
+        return h("div",{key:s.id,style:{display:"flex",alignItems:"center",gap:10,border:"1px solid "+(w?"#F1D9A8":CG.bd),background:w?"#FFFCF5":"#fff",borderRadius:10,padding:"8px 11px"}},[
+          avatar(s,28),
+          h("div",{key:"b",style:{flex:1,minWidth:0}},[h("div",{key:"n",style:{fontSize:13,fontWeight:600,color:CG.navy}},[s.prenom+" "+s.nom,h("span",{key:"t",style:{marginLeft:7}},miniChip(x.src==="auto"?"AUTO":"MANUEL",x.src==="auto"?CG.autoBg:CG.manBg,x.src==="auto"?CG.auto:CG.man))]),h("div",{key:"m",style:{marginTop:3}},[miniChip(s.sexe,s.sexe==="H"?"#E8F1FE":"#FCEAF1",s.sexe==="H"?"#0B63CE":"#C01865"),miniChip(s.cycle,"#EEF1F7","#3B4B66"),miniChip(s.cab.name,s.cab.size==="gros"?"#F3EEFB":"#E9F7F1",s.cab.size==="gros"?"#6B4FC0":"#0F7A56")])]),
+          h("button",{key:"rm",onClick:()=>removeMember(s.id),style:{width:26,height:26,borderRadius:7,border:"1px solid "+CG.bd,background:"#fff",color:CG.soft,cursor:"pointer",flexShrink:0}},"✕")
+        ]);
+      }) : h("div",{style:{padding:26,textAlign:"center",color:"#9AA3B2",fontStyle:"italic"}},"Aucun membre. Lancez l'auto-attribution ou ajoutez depuis la file.")),
+      warns.length ? h("div",{key:"w",style:{marginTop:12,display:"flex",flexDirection:"column",gap:7}}, warns.map((w,i)=>h("div",{key:i,style:{display:"flex",gap:9,alignItems:"flex-start",background:CG.amberBg,border:"1px solid #F1D9A8",borderRadius:9,padding:"9px 11px",fontSize:12.5,color:"#7A4E0A"}},["⚠",w]))) : null,
+      h("div",{key:"note",style:{fontSize:11.5,color:"#9AA3B2",marginTop:8,fontStyle:"italic"}},"Alertes non bloquantes : le permanent garde la main, la validation reste possible.")
+    ]),
+    // footer
+    h("div",{key:"f",style:{padding:"14px 16px",display:"flex",alignItems:"center",gap:10,background:"#FAFBFD",borderTop:"1px solid "+CG.bd2}},[
+      h("div",{key:"c",style:{fontSize:13,color:CG.soft}},["Effectif : ",h("b",{key:"b",style:{color:CG.navy}},String(mem.length))," / "+target]),
+      h("div",{key:"sp",style:{flex:1}}),
+      h("button",{key:"v",onClick:validateGroup,disabled:!(ctrl&&mem.length),style:{background:(ctrl&&mem.length)?CG.red:"#C9C9C9",color:"#fff",border:"none",borderRadius:9,height:40,padding:"0 18px",fontSize:14,fontWeight:600,cursor:(ctrl&&mem.length)?"pointer":"not-allowed"}},"Valider le groupe")
+    ])
+  ]);
+
+  return h("div",{style:{background:CG.bg,minHeight:"100%"}},[
+    header,
+    h("div",{key:"work",style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1.05fr)",gap:18,padding:"18px 20px 28px",alignItems:"start"}},[left,right]),
+    toast ? h("div",{key:"toast",style:{position:"fixed",bottom:24,left:"50%",transform:"translateX(-50%)",background:CG.navy,color:"#fff",padding:"12px 18px",borderRadius:10,fontSize:13.5,fontWeight:600,boxShadow:"0 10px 30px rgba(16,30,54,.2)",zIndex:1000}},toast) : null
+  ]);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -8256,205 +8506,2005 @@ function EmptyStateIllustration() {
 // ══════════════════════════════════════════════════════════════
 
 const INDIVIDUS_POOL = [{
-  numInscription: "16-00004835-01",
+  numInscription: "16-00005200-01",
   prenom: "Marie",
   nom: "DUPONT",
   qualite: "STA",
   statut: "EN EXERC…",
-  dateNaiss: "14/03/1995",
+  dateNaiss: "01/01/1978",
   ville: "RENNES",
   dep: "35",
   departement: "Ille-et-Vilaine"
 }, {
-  numInscription: "16-00004639-01",
+  numInscription: "16-00005201-01",
   prenom: "Lucas",
   nom: "MARTIN",
   qualite: "STA",
   statut: "EN EXERC…",
-  dateNaiss: "22/07/1993",
+  dateNaiss: "18/08/1991",
   ville: "NANTES",
   dep: "44",
   departement: "Loire-Atlantique"
 }, {
-  numInscription: "16-00004640-01",
+  numInscription: "16-00005202-01",
   prenom: "Camille",
   nom: "PETIT",
   qualite: "STA",
   statut: "EN EXERC…",
-  dateNaiss: "05/11/1990",
+  dateNaiss: "07/03/1979",
   ville: "VANNES",
   dep: "56",
   departement: "Morbihan"
 }, {
-  numInscription: "16-00004608-01",
+  numInscription: "16-00005203-01",
   prenom: "Thomas",
   nom: "LEFEVRE",
   qualite: "STA",
   statut: "EN EXERC…",
-  dateNaiss: "29/01/1980",
-  ville: "SAINT-MALO",
-  dep: "35",
-  departement: "Ille-et-Vilaine"
+  dateNaiss: "24/10/1992",
+  ville: "BREST",
+  dep: "29",
+  departement: "Finistère"
 }, {
-  numInscription: "16-00004966-01",
+  numInscription: "16-00005204-01",
   prenom: "Elena",
   nom: "GARCIA",
   qualite: "STA",
   statut: "EN EXERC…",
-  dateNaiss: "14/06/2000",
-  ville: "RENNES",
+  dateNaiss: "13/05/1980",
+  ville: "SAINT-MALO",
   dep: "35",
   departement: "Ille-et-Vilaine"
 }, {
-  numInscription: "16-00004609-01",
+  numInscription: "16-00005205-01",
   prenom: "Julien",
   nom: "ROBERT",
   qualite: "STA",
   statut: "EN EXERC…",
-  dateNaiss: "05/11/1992",
-  ville: "CESSON-SÉVIGNÉ",
-  dep: "35",
-  departement: "Ille-et-Vilaine"
-}, {
-  numInscription: "16-00005066-01",
-  prenom: "Claire",
-  nom: "MOREL",
-  qualite: "STA",
-  statut: "EN EXERC…",
-  dateNaiss: "27/11/1980",
-  ville: "GOUESNOU",
-  dep: "29",
-  departement: "Finistère"
-}, {
-  numInscription: "16-00005077-01",
-  prenom: "Hugo",
-  nom: "LAMBERT",
-  qualite: "STA",
-  statut: "EN EXERC…",
-  dateNaiss: "28/03/1997",
-  ville: "SAINT-GRÉGOIRE",
-  dep: "35",
-  departement: "Ille-et-Vilaine"
-}, {
-  numInscription: "16-00004807-01",
-  prenom: "Léa",
-  nom: "BONNET",
-  qualite: "STA",
-  statut: "EN EXERC…",
-  dateNaiss: "22/04/1998",
-  ville: "SAINT-GRÉGOIRE",
-  dep: "35",
-  departement: "Ille-et-Vilaine"
-}, {
-  numInscription: "16-00004641-01",
-  prenom: "Antoine",
-  nom: "MERCIER",
-  qualite: "STA",
-  statut: "EN EXERC…",
-  dateNaiss: "21/09/1998",
-  ville: "PACÉ",
-  dep: "35",
-  departement: "Ille-et-Vilaine"
-}, {
-  numInscription: "16-00004837-01",
-  prenom: "Sarah",
-  nom: "CHEVALIER",
-  qualite: "STA",
-  statut: "EN EXERC…",
-  dateNaiss: "31/01/1995",
-  ville: "AURAY",
-  dep: "56",
-  departement: "Morbihan"
-}, {
-  numInscription: "16-00005068-01",
-  prenom: "Émilie",
-  nom: "DURAND",
-  qualite: "STA",
-  statut: "EN EXERC…",
-  dateNaiss: "26/04/1995",
-  ville: "RENNES",
-  dep: "35",
-  departement: "Ille-et-Vilaine"
-}, {
-  numInscription: "16-00004997-01",
-  prenom: "Romain",
-  nom: "FONTAINE",
-  qualite: "STA",
-  statut: "EN EXERC…",
-  dateNaiss: "08/11/1978",
-  ville: "LA RICHARDAIS",
-  dep: "35",
-  departement: "Ille-et-Vilaine"
-}, {
-  numInscription: "16-00004970-01",
-  prenom: "Maxime",
-  nom: "ROBIN",
-  qualite: "STA",
-  statut: "EN EXERC…",
-  dateNaiss: "01/12/1999",
-  ville: "SAINT-JACQUES",
-  dep: "35",
-  departement: "Ille-et-Vilaine"
-}, {
-  numInscription: "16-00004838-01",
-  prenom: "Chloé",
-  nom: "SIMON",
-  qualite: "STA",
-  statut: "EN EXERC…",
-  dateNaiss: "16/07/1999",
-  ville: "SAINT-GRÉGOIRE",
-  dep: "35",
-  departement: "Ille-et-Vilaine"
-}, {
-  numInscription: "16-00004780-01",
-  prenom: "Nathan",
-  nom: "GIRARD",
-  qualite: "STA",
-  statut: "EN EXERC…",
-  dateNaiss: "26/07/1996",
-  ville: "VANNES",
-  dep: "56",
-  departement: "Morbihan"
-}, {
-  numInscription: "16-00005030-01",
-  prenom: "Manon",
-  nom: "ANDRE",
-  qualite: "STA",
-  statut: "EN EXERC…",
-  dateNaiss: "24/06/1997",
-  ville: "LE RHEU",
-  dep: "35",
-  departement: "Ille-et-Vilaine"
-}, {
-  numInscription: "16-00004808-01",
-  prenom: "Théo",
-  nom: "BLANC",
-  qualite: "STA",
-  statut: "EN EXERC…",
-  dateNaiss: "15/05/1995",
-  ville: "RENNES",
-  dep: "35",
-  departement: "Ille-et-Vilaine"
-}, {
-  numInscription: "16-00004755-01",
-  prenom: "Inès",
-  nom: "FAURE",
-  qualite: "STA",
-  statut: "EN EXERC…",
-  dateNaiss: "03/02/1994",
+  dateNaiss: "02/12/1993",
   ville: "LORIENT",
   dep: "56",
   departement: "Morbihan"
 }, {
-  numInscription: "16-00004912-01",
+  numInscription: "16-00005206-01",
+  prenom: "Sophie",
+  nom: "MOREL",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "19/07/1981",
+  ville: "QUIMPER",
+  dep: "29",
+  departement: "Finistère"
+}, {
+  numInscription: "16-00005207-01",
+  prenom: "Hugo",
+  nom: "LAMBERT",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "08/02/1994",
+  ville: "SAINT-BRIEUC",
+  dep: "22",
+  departement: "Côtes-d'Armor"
+}, {
+  numInscription: "16-00005208-01",
+  prenom: "Julie",
+  nom: "BONNET",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "25/09/1982",
+  ville: "SAINT-NAZAIRE",
+  dep: "44",
+  departement: "Loire-Atlantique"
+}, {
+  numInscription: "16-00005209-01",
+  prenom: "Antoine",
+  nom: "MERCIER",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "14/04/1995",
+  ville: "LANNION",
+  dep: "22",
+  departement: "Côtes-d'Armor"
+}, {
+  numInscription: "16-00005210-01",
+  prenom: "Sarah",
+  nom: "CHEVALIER",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "03/11/1983",
+  ville: "CESSON-SÉVIGNÉ",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005211-01",
+  prenom: "Maxime",
+  nom: "DURAND",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "20/06/1996",
+  ville: "PACÉ",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005212-01",
+  prenom: "Emma",
+  nom: "FONTAINE",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "09/01/1984",
+  ville: "AURAY",
+  dep: "56",
+  departement: "Morbihan"
+}, {
+  numInscription: "16-00005213-01",
+  prenom: "Nathan",
+  nom: "ROBIN",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "26/08/1997",
+  ville: "GOUESNOU",
+  dep: "29",
+  departement: "Finistère"
+}, {
+  numInscription: "16-00005214-01",
+  prenom: "Léa",
+  nom: "SIMON",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "15/03/1985",
+  ville: "DINAN",
+  dep: "22",
+  departement: "Côtes-d'Armor"
+}, {
+  numInscription: "16-00005215-01",
+  prenom: "Théo",
+  nom: "GIRARD",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "04/10/1998",
+  ville: "RENNES",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005216-01",
+  prenom: "Chloé",
+  nom: "ANDRE",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "21/05/1986",
+  ville: "NANTES",
+  dep: "44",
+  departement: "Loire-Atlantique"
+}, {
+  numInscription: "16-00005217-01",
+  prenom: "Paul",
+  nom: "BLANC",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "10/12/1999",
+  ville: "VANNES",
+  dep: "56",
+  departement: "Morbihan"
+}, {
+  numInscription: "16-00005218-01",
+  prenom: "Manon",
+  nom: "FAURE",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "27/07/1987",
+  ville: "BREST",
+  dep: "29",
+  departement: "Finistère"
+}, {
+  numInscription: "16-00005219-01",
+  prenom: "Quentin",
+  nom: "RENAUD",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "16/02/2000",
+  ville: "SAINT-MALO",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005220-01",
+  prenom: "Inès",
+  nom: "GARNIER",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "05/09/1988",
+  ville: "LORIENT",
+  dep: "56",
+  departement: "Morbihan"
+}, {
+  numInscription: "16-00005221-01",
+  prenom: "Adrien",
+  nom: "ROUSSEAU",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "22/04/2001",
+  ville: "QUIMPER",
+  dep: "29",
+  departement: "Finistère"
+}, {
+  numInscription: "16-00005222-01",
+  prenom: "Jade",
+  nom: "MULLER",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "11/11/1989",
+  ville: "SAINT-BRIEUC",
+  dep: "22",
+  departement: "Côtes-d'Armor"
+}, {
+  numInscription: "16-00005223-01",
+  prenom: "Baptiste",
+  nom: "LEFEBVRE",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "28/06/2002",
+  ville: "SAINT-NAZAIRE",
+  dep: "44",
+  departement: "Loire-Atlantique"
+}, {
+  numInscription: "16-00005224-01",
+  prenom: "Nour",
+  nom: "FAVRE",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "17/01/1990",
+  ville: "LANNION",
+  dep: "22",
+  departement: "Côtes-d'Armor"
+}, {
+  numInscription: "16-00005225-01",
+  prenom: "Mathis",
+  nom: "GIRAUD",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "06/08/1978",
+  ville: "CESSON-SÉVIGNÉ",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005226-01",
+  prenom: "Amandine",
+  nom: "BLANCHARD",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "23/03/1991",
+  ville: "PACÉ",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005227-01",
+  prenom: "Nicolas",
+  nom: "GUILLOT",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "12/10/1979",
+  ville: "AURAY",
+  dep: "56",
+  departement: "Morbihan"
+}, {
+  numInscription: "16-00005228-01",
+  prenom: "Christelle",
+  nom: "ROUSSEL",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "01/05/1992",
+  ville: "GOUESNOU",
+  dep: "29",
+  departement: "Finistère"
+}, {
+  numInscription: "16-00005229-01",
+  prenom: "Alexandre",
+  nom: "MARCHAND",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "18/12/1980",
+  ville: "DINAN",
+  dep: "22",
+  departement: "Côtes-d'Armor"
+}, {
+  numInscription: "16-00005230-01",
+  prenom: "Josiane",
+  nom: "DENIS",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "07/07/1993",
+  ville: "RENNES",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005231-01",
+  prenom: "Valentin",
+  nom: "PERROT",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "24/02/1981",
+  ville: "NANTES",
+  dep: "44",
+  departement: "Loire-Atlantique"
+}, {
+  numInscription: "16-00005232-01",
+  prenom: "Aurelie",
+  nom: "BARBIER",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "13/09/1994",
+  ville: "VANNES",
+  dep: "56",
+  departement: "Morbihan"
+}, {
+  numInscription: "16-00005233-01",
+  prenom: "Gabriel",
+  nom: "ROY",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "02/04/1982",
+  ville: "BREST",
+  dep: "29",
+  departement: "Finistère"
+}, {
+  numInscription: "16-00005234-01",
+  prenom: "Anaïs",
+  nom: "NOEL",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "19/11/1995",
+  ville: "SAINT-MALO",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005235-01",
+  prenom: "Enzo",
+  nom: "SCHMITT",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "08/06/1983",
+  ville: "LORIENT",
+  dep: "56",
+  departement: "Morbihan"
+}, {
+  numInscription: "16-00005236-01",
+  prenom: "Romane",
+  nom: "COLIN",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "25/01/1996",
+  ville: "QUIMPER",
+  dep: "29",
+  departement: "Finistère"
+}, {
+  numInscription: "16-00005237-01",
+  prenom: "Raphaël",
+  nom: "MEUNIER",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "14/08/1984",
+  ville: "SAINT-BRIEUC",
+  dep: "22",
+  departement: "Côtes-d'Armor"
+}, {
+  numInscription: "16-00005238-01",
+  prenom: "Alice",
+  nom: "BRUN",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "03/03/1997",
+  ville: "SAINT-NAZAIRE",
+  dep: "44",
+  departement: "Loire-Atlantique"
+}, {
+  numInscription: "16-00005239-01",
+  prenom: "Tom",
+  nom: "GAUTIER",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "20/10/1985",
+  ville: "LANNION",
+  dep: "22",
+  departement: "Côtes-d'Armor"
+}, {
+  numInscription: "16-00005240-01",
+  prenom: "Maya",
+  nom: "MASSON",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "09/05/1998",
+  ville: "CESSON-SÉVIGNÉ",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005241-01",
+  prenom: "Romain",
+  nom: "DUMONT",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "26/12/1986",
+  ville: "PACÉ",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005242-01",
+  prenom: "Zoé",
+  nom: "LEMAIRE",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "15/07/1999",
+  ville: "AURAY",
+  dep: "56",
+  departement: "Morbihan"
+}, {
+  numInscription: "16-00005243-01",
+  prenom: "Louis",
+  nom: "FERNANDEZ",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "04/02/1987",
+  ville: "GOUESNOU",
+  dep: "29",
+  departement: "Finistère"
+}, {
+  numInscription: "16-00005244-01",
+  prenom: "Lina",
+  nom: "GAUTHIER",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "21/09/2000",
+  ville: "DINAN",
+  dep: "22",
+  departement: "Côtes-d'Armor"
+}, {
+  numInscription: "16-00005245-01",
+  prenom: "Léo",
+  nom: "PERRIN",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "10/04/1988",
+  ville: "RENNES",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005246-01",
+  prenom: "Clara",
+  nom: "MOREAU",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "27/11/2001",
+  ville: "NANTES",
+  dep: "44",
+  departement: "Loire-Atlantique"
+}, {
+  numInscription: "16-00005247-01",
+  prenom: "Arthur",
+  nom: "GUERIN",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "16/06/1989",
+  ville: "VANNES",
+  dep: "56",
+  departement: "Morbihan"
+}, {
+  numInscription: "16-00005248-01",
+  prenom: "Louise",
+  nom: "LEROY",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "05/01/2002",
+  ville: "BREST",
+  dep: "29",
+  departement: "Finistère"
+}, {
+  numInscription: "16-00005249-01",
+  prenom: "Jules",
+  nom: "BERTRAND",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "22/08/1990",
+  ville: "SAINT-MALO",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005250-01",
+  prenom: "Jeanne",
+  nom: "DUPONT",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "11/03/1978",
+  ville: "LORIENT",
+  dep: "56",
+  departement: "Morbihan"
+}, {
+  numInscription: "16-00005251-01",
+  prenom: "Noah",
+  nom: "MARTIN",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "28/10/1991",
+  ville: "QUIMPER",
+  dep: "29",
+  departement: "Finistère"
+}, {
+  numInscription: "16-00005252-01",
+  prenom: "Marie",
+  nom: "PETIT",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "17/05/1979",
+  ville: "SAINT-BRIEUC",
+  dep: "22",
+  departement: "Côtes-d'Armor"
+}, {
+  numInscription: "16-00005253-01",
+  prenom: "Lucas",
+  nom: "LEFEVRE",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "06/12/1992",
+  ville: "SAINT-NAZAIRE",
+  dep: "44",
+  departement: "Loire-Atlantique"
+}, {
+  numInscription: "16-00005254-01",
+  prenom: "Camille",
+  nom: "GARCIA",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "23/07/1980",
+  ville: "LANNION",
+  dep: "22",
+  departement: "Côtes-d'Armor"
+}, {
+  numInscription: "16-00005255-01",
+  prenom: "Thomas",
+  nom: "ROBERT",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "12/02/1993",
+  ville: "CESSON-SÉVIGNÉ",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005256-01",
+  prenom: "Elena",
+  nom: "MOREL",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "01/09/1981",
+  ville: "PACÉ",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005257-01",
+  prenom: "Julien",
+  nom: "LAMBERT",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "18/04/1994",
+  ville: "AURAY",
+  dep: "56",
+  departement: "Morbihan"
+}, {
+  numInscription: "16-00005258-01",
+  prenom: "Sophie",
+  nom: "BONNET",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "07/11/1982",
+  ville: "GOUESNOU",
+  dep: "29",
+  departement: "Finistère"
+}, {
+  numInscription: "16-00005259-01",
+  prenom: "Hugo",
+  nom: "MERCIER",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "24/06/1995",
+  ville: "DINAN",
+  dep: "22",
+  departement: "Côtes-d'Armor"
+}, {
+  numInscription: "16-00005260-01",
+  prenom: "Julie",
+  nom: "CHEVALIER",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "13/01/1983",
+  ville: "RENNES",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005261-01",
+  prenom: "Antoine",
+  nom: "DURAND",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "02/08/1996",
+  ville: "NANTES",
+  dep: "44",
+  departement: "Loire-Atlantique"
+}, {
+  numInscription: "16-00005262-01",
+  prenom: "Sarah",
+  nom: "FONTAINE",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "19/03/1984",
+  ville: "VANNES",
+  dep: "56",
+  departement: "Morbihan"
+}, {
+  numInscription: "16-00005263-01",
+  prenom: "Maxime",
+  nom: "ROBIN",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "08/10/1997",
+  ville: "BREST",
+  dep: "29",
+  departement: "Finistère"
+}, {
+  numInscription: "16-00005264-01",
+  prenom: "Emma",
+  nom: "SIMON",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "25/05/1985",
+  ville: "SAINT-MALO",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005265-01",
+  prenom: "Nathan",
+  nom: "GIRARD",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "14/12/1998",
+  ville: "LORIENT",
+  dep: "56",
+  departement: "Morbihan"
+}, {
+  numInscription: "16-00005266-01",
+  prenom: "Léa",
+  nom: "ANDRE",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "03/07/1986",
+  ville: "QUIMPER",
+  dep: "29",
+  departement: "Finistère"
+}, {
+  numInscription: "16-00005267-01",
+  prenom: "Théo",
+  nom: "BLANC",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "20/02/1999",
+  ville: "SAINT-BRIEUC",
+  dep: "22",
+  departement: "Côtes-d'Armor"
+}, {
+  numInscription: "16-00005268-01",
+  prenom: "Chloé",
+  nom: "FAURE",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "09/09/1987",
+  ville: "SAINT-NAZAIRE",
+  dep: "44",
+  departement: "Loire-Atlantique"
+}, {
+  numInscription: "16-00005269-01",
   prenom: "Paul",
   nom: "RENAUD",
   qualite: "STA",
   statut: "EN EXERC…",
-  dateNaiss: "17/09/1996",
+  dateNaiss: "26/04/2000",
+  ville: "LANNION",
+  dep: "22",
+  departement: "Côtes-d'Armor"
+}, {
+  numInscription: "16-00005270-01",
+  prenom: "Manon",
+  nom: "GARNIER",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "15/11/1988",
+  ville: "CESSON-SÉVIGNÉ",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005271-01",
+  prenom: "Quentin",
+  nom: "ROUSSEAU",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "04/06/2001",
+  ville: "PACÉ",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005272-01",
+  prenom: "Inès",
+  nom: "MULLER",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "21/01/1989",
+  ville: "AURAY",
+  dep: "56",
+  departement: "Morbihan"
+}, {
+  numInscription: "16-00005273-01",
+  prenom: "Adrien",
+  nom: "LEFEBVRE",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "10/08/2002",
+  ville: "GOUESNOU",
+  dep: "29",
+  departement: "Finistère"
+}, {
+  numInscription: "16-00005274-01",
+  prenom: "Jade",
+  nom: "FAVRE",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "27/03/1990",
+  ville: "DINAN",
+  dep: "22",
+  departement: "Côtes-d'Armor"
+}, {
+  numInscription: "16-00005275-01",
+  prenom: "Baptiste",
+  nom: "GIRAUD",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "16/10/1978",
+  ville: "RENNES",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005276-01",
+  prenom: "Nour",
+  nom: "BLANCHARD",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "05/05/1991",
+  ville: "NANTES",
+  dep: "44",
+  departement: "Loire-Atlantique"
+}, {
+  numInscription: "16-00005277-01",
+  prenom: "Mathis",
+  nom: "GUILLOT",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "22/12/1979",
+  ville: "VANNES",
+  dep: "56",
+  departement: "Morbihan"
+}, {
+  numInscription: "16-00005278-01",
+  prenom: "Amandine",
+  nom: "ROUSSEL",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "11/07/1992",
   ville: "BREST",
   dep: "29",
   departement: "Finistère"
+}, {
+  numInscription: "16-00005279-01",
+  prenom: "Nicolas",
+  nom: "MARCHAND",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "28/02/1980",
+  ville: "SAINT-MALO",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005280-01",
+  prenom: "Christelle",
+  nom: "DENIS",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "17/09/1993",
+  ville: "LORIENT",
+  dep: "56",
+  departement: "Morbihan"
+}, {
+  numInscription: "16-00005281-01",
+  prenom: "Alexandre",
+  nom: "PERROT",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "06/04/1981",
+  ville: "QUIMPER",
+  dep: "29",
+  departement: "Finistère"
+}, {
+  numInscription: "16-00005282-01",
+  prenom: "Josiane",
+  nom: "BARBIER",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "23/11/1994",
+  ville: "SAINT-BRIEUC",
+  dep: "22",
+  departement: "Côtes-d'Armor"
+}, {
+  numInscription: "16-00005283-01",
+  prenom: "Valentin",
+  nom: "ROY",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "12/06/1982",
+  ville: "SAINT-NAZAIRE",
+  dep: "44",
+  departement: "Loire-Atlantique"
+}, {
+  numInscription: "16-00005284-01",
+  prenom: "Aurelie",
+  nom: "NOEL",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "01/01/1995",
+  ville: "LANNION",
+  dep: "22",
+  departement: "Côtes-d'Armor"
+}, {
+  numInscription: "16-00005285-01",
+  prenom: "Gabriel",
+  nom: "SCHMITT",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "18/08/1983",
+  ville: "CESSON-SÉVIGNÉ",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005286-01",
+  prenom: "Anaïs",
+  nom: "COLIN",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "07/03/1996",
+  ville: "PACÉ",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005287-01",
+  prenom: "Enzo",
+  nom: "MEUNIER",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "24/10/1984",
+  ville: "AURAY",
+  dep: "56",
+  departement: "Morbihan"
+}, {
+  numInscription: "16-00005288-01",
+  prenom: "Romane",
+  nom: "BRUN",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "13/05/1997",
+  ville: "GOUESNOU",
+  dep: "29",
+  departement: "Finistère"
+}, {
+  numInscription: "16-00005289-01",
+  prenom: "Raphaël",
+  nom: "GAUTIER",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "02/12/1985",
+  ville: "DINAN",
+  dep: "22",
+  departement: "Côtes-d'Armor"
+}, {
+  numInscription: "16-00005290-01",
+  prenom: "Alice",
+  nom: "MASSON",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "19/07/1998",
+  ville: "RENNES",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005291-01",
+  prenom: "Tom",
+  nom: "DUMONT",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "08/02/1986",
+  ville: "NANTES",
+  dep: "44",
+  departement: "Loire-Atlantique"
+}, {
+  numInscription: "16-00005292-01",
+  prenom: "Maya",
+  nom: "LEMAIRE",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "25/09/1999",
+  ville: "VANNES",
+  dep: "56",
+  departement: "Morbihan"
+}, {
+  numInscription: "16-00005293-01",
+  prenom: "Romain",
+  nom: "FERNANDEZ",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "14/04/1987",
+  ville: "BREST",
+  dep: "29",
+  departement: "Finistère"
+}, {
+  numInscription: "16-00005294-01",
+  prenom: "Zoé",
+  nom: "GAUTHIER",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "03/11/2000",
+  ville: "SAINT-MALO",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005295-01",
+  prenom: "Louis",
+  nom: "PERRIN",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "20/06/1988",
+  ville: "LORIENT",
+  dep: "56",
+  departement: "Morbihan"
+}, {
+  numInscription: "16-00005296-01",
+  prenom: "Lina",
+  nom: "MOREAU",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "09/01/2001",
+  ville: "QUIMPER",
+  dep: "29",
+  departement: "Finistère"
+}, {
+  numInscription: "16-00005297-01",
+  prenom: "Léo",
+  nom: "GUERIN",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "26/08/1989",
+  ville: "SAINT-BRIEUC",
+  dep: "22",
+  departement: "Côtes-d'Armor"
+}, {
+  numInscription: "16-00005298-01",
+  prenom: "Clara",
+  nom: "LEROY",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "15/03/2002",
+  ville: "SAINT-NAZAIRE",
+  dep: "44",
+  departement: "Loire-Atlantique"
+}, {
+  numInscription: "16-00005299-01",
+  prenom: "Arthur",
+  nom: "BERTRAND",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "04/10/1990",
+  ville: "LANNION",
+  dep: "22",
+  departement: "Côtes-d'Armor"
+}, {
+  numInscription: "16-00005300-01",
+  prenom: "Louise",
+  nom: "DUPONT",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "21/05/1978",
+  ville: "CESSON-SÉVIGNÉ",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005301-01",
+  prenom: "Jules",
+  nom: "MARTIN",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "10/12/1991",
+  ville: "PACÉ",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005302-01",
+  prenom: "Jeanne",
+  nom: "PETIT",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "27/07/1979",
+  ville: "AURAY",
+  dep: "56",
+  departement: "Morbihan"
+}, {
+  numInscription: "16-00005303-01",
+  prenom: "Noah",
+  nom: "LEFEVRE",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "16/02/1992",
+  ville: "GOUESNOU",
+  dep: "29",
+  departement: "Finistère"
+}, {
+  numInscription: "16-00005304-01",
+  prenom: "Marie",
+  nom: "GARCIA",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "05/09/1980",
+  ville: "DINAN",
+  dep: "22",
+  departement: "Côtes-d'Armor"
+}, {
+  numInscription: "16-00005305-01",
+  prenom: "Lucas",
+  nom: "ROBERT",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "22/04/1993",
+  ville: "RENNES",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005306-01",
+  prenom: "Camille",
+  nom: "MOREL",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "11/11/1981",
+  ville: "NANTES",
+  dep: "44",
+  departement: "Loire-Atlantique"
+}, {
+  numInscription: "16-00005307-01",
+  prenom: "Thomas",
+  nom: "LAMBERT",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "28/06/1994",
+  ville: "VANNES",
+  dep: "56",
+  departement: "Morbihan"
+}, {
+  numInscription: "16-00005308-01",
+  prenom: "Elena",
+  nom: "BONNET",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "17/01/1982",
+  ville: "BREST",
+  dep: "29",
+  departement: "Finistère"
+}, {
+  numInscription: "16-00005309-01",
+  prenom: "Julien",
+  nom: "MERCIER",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "06/08/1995",
+  ville: "SAINT-MALO",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005310-01",
+  prenom: "Sophie",
+  nom: "CHEVALIER",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "23/03/1983",
+  ville: "LORIENT",
+  dep: "56",
+  departement: "Morbihan"
+}, {
+  numInscription: "16-00005311-01",
+  prenom: "Hugo",
+  nom: "DURAND",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "12/10/1996",
+  ville: "QUIMPER",
+  dep: "29",
+  departement: "Finistère"
+}, {
+  numInscription: "16-00005312-01",
+  prenom: "Julie",
+  nom: "FONTAINE",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "01/05/1984",
+  ville: "SAINT-BRIEUC",
+  dep: "22",
+  departement: "Côtes-d'Armor"
+}, {
+  numInscription: "16-00005313-01",
+  prenom: "Antoine",
+  nom: "ROBIN",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "18/12/1997",
+  ville: "SAINT-NAZAIRE",
+  dep: "44",
+  departement: "Loire-Atlantique"
+}, {
+  numInscription: "16-00005314-01",
+  prenom: "Sarah",
+  nom: "SIMON",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "07/07/1985",
+  ville: "LANNION",
+  dep: "22",
+  departement: "Côtes-d'Armor"
+}, {
+  numInscription: "16-00005315-01",
+  prenom: "Maxime",
+  nom: "GIRARD",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "24/02/1998",
+  ville: "CESSON-SÉVIGNÉ",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005316-01",
+  prenom: "Emma",
+  nom: "ANDRE",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "13/09/1986",
+  ville: "PACÉ",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005317-01",
+  prenom: "Nathan",
+  nom: "BLANC",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "02/04/1999",
+  ville: "AURAY",
+  dep: "56",
+  departement: "Morbihan"
+}, {
+  numInscription: "16-00005318-01",
+  prenom: "Léa",
+  nom: "FAURE",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "19/11/1987",
+  ville: "GOUESNOU",
+  dep: "29",
+  departement: "Finistère"
+}, {
+  numInscription: "16-00005319-01",
+  prenom: "Théo",
+  nom: "RENAUD",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "08/06/2000",
+  ville: "DINAN",
+  dep: "22",
+  departement: "Côtes-d'Armor"
+}, {
+  numInscription: "16-00005320-01",
+  prenom: "Chloé",
+  nom: "GARNIER",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "25/01/1988",
+  ville: "RENNES",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005321-01",
+  prenom: "Paul",
+  nom: "ROUSSEAU",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "14/08/2001",
+  ville: "NANTES",
+  dep: "44",
+  departement: "Loire-Atlantique"
+}, {
+  numInscription: "16-00005322-01",
+  prenom: "Manon",
+  nom: "MULLER",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "03/03/1989",
+  ville: "VANNES",
+  dep: "56",
+  departement: "Morbihan"
+}, {
+  numInscription: "16-00005323-01",
+  prenom: "Quentin",
+  nom: "LEFEBVRE",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "20/10/2002",
+  ville: "BREST",
+  dep: "29",
+  departement: "Finistère"
+}, {
+  numInscription: "16-00005324-01",
+  prenom: "Inès",
+  nom: "FAVRE",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "09/05/1990",
+  ville: "SAINT-MALO",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005325-01",
+  prenom: "Adrien",
+  nom: "GIRAUD",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "26/12/1978",
+  ville: "LORIENT",
+  dep: "56",
+  departement: "Morbihan"
+}, {
+  numInscription: "16-00005326-01",
+  prenom: "Jade",
+  nom: "BLANCHARD",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "15/07/1991",
+  ville: "QUIMPER",
+  dep: "29",
+  departement: "Finistère"
+}, {
+  numInscription: "16-00005327-01",
+  prenom: "Baptiste",
+  nom: "GUILLOT",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "04/02/1979",
+  ville: "SAINT-BRIEUC",
+  dep: "22",
+  departement: "Côtes-d'Armor"
+}, {
+  numInscription: "16-00005328-01",
+  prenom: "Nour",
+  nom: "ROUSSEL",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "21/09/1992",
+  ville: "SAINT-NAZAIRE",
+  dep: "44",
+  departement: "Loire-Atlantique"
+}, {
+  numInscription: "16-00005329-01",
+  prenom: "Mathis",
+  nom: "MARCHAND",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "10/04/1980",
+  ville: "LANNION",
+  dep: "22",
+  departement: "Côtes-d'Armor"
+}, {
+  numInscription: "16-00005330-01",
+  prenom: "Amandine",
+  nom: "DENIS",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "27/11/1993",
+  ville: "CESSON-SÉVIGNÉ",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005331-01",
+  prenom: "Nicolas",
+  nom: "PERROT",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "16/06/1981",
+  ville: "PACÉ",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005332-01",
+  prenom: "Christelle",
+  nom: "BARBIER",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "05/01/1994",
+  ville: "AURAY",
+  dep: "56",
+  departement: "Morbihan"
+}, {
+  numInscription: "16-00005333-01",
+  prenom: "Alexandre",
+  nom: "ROY",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "22/08/1982",
+  ville: "GOUESNOU",
+  dep: "29",
+  departement: "Finistère"
+}, {
+  numInscription: "16-00005334-01",
+  prenom: "Josiane",
+  nom: "NOEL",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "11/03/1995",
+  ville: "DINAN",
+  dep: "22",
+  departement: "Côtes-d'Armor"
+}, {
+  numInscription: "16-00005335-01",
+  prenom: "Valentin",
+  nom: "SCHMITT",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "28/10/1983",
+  ville: "RENNES",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005336-01",
+  prenom: "Aurelie",
+  nom: "COLIN",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "17/05/1996",
+  ville: "NANTES",
+  dep: "44",
+  departement: "Loire-Atlantique"
+}, {
+  numInscription: "16-00005337-01",
+  prenom: "Gabriel",
+  nom: "MEUNIER",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "06/12/1984",
+  ville: "VANNES",
+  dep: "56",
+  departement: "Morbihan"
+}, {
+  numInscription: "16-00005338-01",
+  prenom: "Anaïs",
+  nom: "BRUN",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "23/07/1997",
+  ville: "BREST",
+  dep: "29",
+  departement: "Finistère"
+}, {
+  numInscription: "16-00005339-01",
+  prenom: "Enzo",
+  nom: "GAUTIER",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "12/02/1985",
+  ville: "SAINT-MALO",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005340-01",
+  prenom: "Romane",
+  nom: "MASSON",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "01/09/1998",
+  ville: "LORIENT",
+  dep: "56",
+  departement: "Morbihan"
+}, {
+  numInscription: "16-00005341-01",
+  prenom: "Raphaël",
+  nom: "DUMONT",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "18/04/1986",
+  ville: "QUIMPER",
+  dep: "29",
+  departement: "Finistère"
+}, {
+  numInscription: "16-00005342-01",
+  prenom: "Alice",
+  nom: "LEMAIRE",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "07/11/1999",
+  ville: "SAINT-BRIEUC",
+  dep: "22",
+  departement: "Côtes-d'Armor"
+}, {
+  numInscription: "16-00005343-01",
+  prenom: "Tom",
+  nom: "FERNANDEZ",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "24/06/1987",
+  ville: "SAINT-NAZAIRE",
+  dep: "44",
+  departement: "Loire-Atlantique"
+}, {
+  numInscription: "16-00005344-01",
+  prenom: "Maya",
+  nom: "GAUTHIER",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "13/01/2000",
+  ville: "LANNION",
+  dep: "22",
+  departement: "Côtes-d'Armor"
+}, {
+  numInscription: "16-00005345-01",
+  prenom: "Romain",
+  nom: "PERRIN",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "02/08/1988",
+  ville: "CESSON-SÉVIGNÉ",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005346-01",
+  prenom: "Zoé",
+  nom: "MOREAU",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "19/03/2001",
+  ville: "PACÉ",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005347-01",
+  prenom: "Louis",
+  nom: "GUERIN",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "08/10/1989",
+  ville: "AURAY",
+  dep: "56",
+  departement: "Morbihan"
+}, {
+  numInscription: "16-00005348-01",
+  prenom: "Lina",
+  nom: "LEROY",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "25/05/2002",
+  ville: "GOUESNOU",
+  dep: "29",
+  departement: "Finistère"
+}, {
+  numInscription: "16-00005349-01",
+  prenom: "Léo",
+  nom: "BERTRAND",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "14/12/1990",
+  ville: "DINAN",
+  dep: "22",
+  departement: "Côtes-d'Armor"
+}, {
+  numInscription: "16-00005350-01",
+  prenom: "Clara",
+  nom: "DUPONT",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "03/07/1978",
+  ville: "RENNES",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005351-01",
+  prenom: "Arthur",
+  nom: "MARTIN",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "20/02/1991",
+  ville: "NANTES",
+  dep: "44",
+  departement: "Loire-Atlantique"
+}, {
+  numInscription: "16-00005352-01",
+  prenom: "Louise",
+  nom: "PETIT",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "09/09/1979",
+  ville: "VANNES",
+  dep: "56",
+  departement: "Morbihan"
+}, {
+  numInscription: "16-00005353-01",
+  prenom: "Jules",
+  nom: "LEFEVRE",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "26/04/1992",
+  ville: "BREST",
+  dep: "29",
+  departement: "Finistère"
+}, {
+  numInscription: "16-00005354-01",
+  prenom: "Jeanne",
+  nom: "GARCIA",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "15/11/1980",
+  ville: "SAINT-MALO",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005355-01",
+  prenom: "Noah",
+  nom: "ROBERT",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "04/06/1993",
+  ville: "LORIENT",
+  dep: "56",
+  departement: "Morbihan"
+}, {
+  numInscription: "16-00005356-01",
+  prenom: "Marie",
+  nom: "MOREL",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "21/01/1981",
+  ville: "QUIMPER",
+  dep: "29",
+  departement: "Finistère"
+}, {
+  numInscription: "16-00005357-01",
+  prenom: "Lucas",
+  nom: "LAMBERT",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "10/08/1994",
+  ville: "SAINT-BRIEUC",
+  dep: "22",
+  departement: "Côtes-d'Armor"
+}, {
+  numInscription: "16-00005358-01",
+  prenom: "Camille",
+  nom: "BONNET",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "27/03/1982",
+  ville: "SAINT-NAZAIRE",
+  dep: "44",
+  departement: "Loire-Atlantique"
+}, {
+  numInscription: "16-00005359-01",
+  prenom: "Thomas",
+  nom: "MERCIER",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "16/10/1995",
+  ville: "LANNION",
+  dep: "22",
+  departement: "Côtes-d'Armor"
+}, {
+  numInscription: "16-00005360-01",
+  prenom: "Elena",
+  nom: "CHEVALIER",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "05/05/1983",
+  ville: "CESSON-SÉVIGNÉ",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005361-01",
+  prenom: "Julien",
+  nom: "DURAND",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "22/12/1996",
+  ville: "PACÉ",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005362-01",
+  prenom: "Sophie",
+  nom: "FONTAINE",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "11/07/1984",
+  ville: "AURAY",
+  dep: "56",
+  departement: "Morbihan"
+}, {
+  numInscription: "16-00005363-01",
+  prenom: "Hugo",
+  nom: "ROBIN",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "28/02/1997",
+  ville: "GOUESNOU",
+  dep: "29",
+  departement: "Finistère"
+}, {
+  numInscription: "16-00005364-01",
+  prenom: "Julie",
+  nom: "SIMON",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "17/09/1985",
+  ville: "DINAN",
+  dep: "22",
+  departement: "Côtes-d'Armor"
+}, {
+  numInscription: "16-00005365-01",
+  prenom: "Antoine",
+  nom: "GIRARD",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "06/04/1998",
+  ville: "RENNES",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005366-01",
+  prenom: "Sarah",
+  nom: "ANDRE",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "23/11/1986",
+  ville: "NANTES",
+  dep: "44",
+  departement: "Loire-Atlantique"
+}, {
+  numInscription: "16-00005367-01",
+  prenom: "Maxime",
+  nom: "BLANC",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "12/06/1999",
+  ville: "VANNES",
+  dep: "56",
+  departement: "Morbihan"
+}, {
+  numInscription: "16-00005368-01",
+  prenom: "Emma",
+  nom: "FAURE",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "01/01/1987",
+  ville: "BREST",
+  dep: "29",
+  departement: "Finistère"
+}, {
+  numInscription: "16-00005369-01",
+  prenom: "Nathan",
+  nom: "RENAUD",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "18/08/2000",
+  ville: "SAINT-MALO",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005370-01",
+  prenom: "Léa",
+  nom: "GARNIER",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "07/03/1988",
+  ville: "LORIENT",
+  dep: "56",
+  departement: "Morbihan"
+}, {
+  numInscription: "16-00005371-01",
+  prenom: "Théo",
+  nom: "ROUSSEAU",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "24/10/2001",
+  ville: "QUIMPER",
+  dep: "29",
+  departement: "Finistère"
+}, {
+  numInscription: "16-00005372-01",
+  prenom: "Chloé",
+  nom: "MULLER",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "13/05/1989",
+  ville: "SAINT-BRIEUC",
+  dep: "22",
+  departement: "Côtes-d'Armor"
+}, {
+  numInscription: "16-00005373-01",
+  prenom: "Paul",
+  nom: "LEFEBVRE",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "02/12/2002",
+  ville: "SAINT-NAZAIRE",
+  dep: "44",
+  departement: "Loire-Atlantique"
+}, {
+  numInscription: "16-00005374-01",
+  prenom: "Manon",
+  nom: "FAVRE",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "19/07/1990",
+  ville: "LANNION",
+  dep: "22",
+  departement: "Côtes-d'Armor"
+}, {
+  numInscription: "16-00005375-01",
+  prenom: "Quentin",
+  nom: "GIRAUD",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "08/02/1978",
+  ville: "CESSON-SÉVIGNÉ",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005376-01",
+  prenom: "Inès",
+  nom: "BLANCHARD",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "25/09/1991",
+  ville: "PACÉ",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005377-01",
+  prenom: "Adrien",
+  nom: "GUILLOT",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "14/04/1979",
+  ville: "AURAY",
+  dep: "56",
+  departement: "Morbihan"
+}, {
+  numInscription: "16-00005378-01",
+  prenom: "Jade",
+  nom: "ROUSSEL",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "03/11/1992",
+  ville: "GOUESNOU",
+  dep: "29",
+  departement: "Finistère"
+}, {
+  numInscription: "16-00005379-01",
+  prenom: "Baptiste",
+  nom: "MARCHAND",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "20/06/1980",
+  ville: "DINAN",
+  dep: "22",
+  departement: "Côtes-d'Armor"
+}, {
+  numInscription: "16-00005380-01",
+  prenom: "Nour",
+  nom: "DENIS",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "09/01/1993",
+  ville: "RENNES",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005381-01",
+  prenom: "Mathis",
+  nom: "PERROT",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "26/08/1981",
+  ville: "NANTES",
+  dep: "44",
+  departement: "Loire-Atlantique"
+}, {
+  numInscription: "16-00005382-01",
+  prenom: "Amandine",
+  nom: "BARBIER",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "15/03/1994",
+  ville: "VANNES",
+  dep: "56",
+  departement: "Morbihan"
+}, {
+  numInscription: "16-00005383-01",
+  prenom: "Nicolas",
+  nom: "ROY",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "04/10/1982",
+  ville: "BREST",
+  dep: "29",
+  departement: "Finistère"
+}, {
+  numInscription: "16-00005384-01",
+  prenom: "Christelle",
+  nom: "NOEL",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "21/05/1995",
+  ville: "SAINT-MALO",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005385-01",
+  prenom: "Alexandre",
+  nom: "SCHMITT",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "10/12/1983",
+  ville: "LORIENT",
+  dep: "56",
+  departement: "Morbihan"
+}, {
+  numInscription: "16-00005386-01",
+  prenom: "Josiane",
+  nom: "COLIN",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "27/07/1996",
+  ville: "QUIMPER",
+  dep: "29",
+  departement: "Finistère"
+}, {
+  numInscription: "16-00005387-01",
+  prenom: "Valentin",
+  nom: "MEUNIER",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "16/02/1984",
+  ville: "SAINT-BRIEUC",
+  dep: "22",
+  departement: "Côtes-d'Armor"
+}, {
+  numInscription: "16-00005388-01",
+  prenom: "Aurelie",
+  nom: "BRUN",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "05/09/1997",
+  ville: "SAINT-NAZAIRE",
+  dep: "44",
+  departement: "Loire-Atlantique"
+}, {
+  numInscription: "16-00005389-01",
+  prenom: "Gabriel",
+  nom: "GAUTIER",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "22/04/1985",
+  ville: "LANNION",
+  dep: "22",
+  departement: "Côtes-d'Armor"
+}, {
+  numInscription: "16-00005390-01",
+  prenom: "Anaïs",
+  nom: "MASSON",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "11/11/1998",
+  ville: "CESSON-SÉVIGNÉ",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005391-01",
+  prenom: "Enzo",
+  nom: "DUMONT",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "28/06/1986",
+  ville: "PACÉ",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005392-01",
+  prenom: "Romane",
+  nom: "LEMAIRE",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "17/01/1999",
+  ville: "AURAY",
+  dep: "56",
+  departement: "Morbihan"
+}, {
+  numInscription: "16-00005393-01",
+  prenom: "Raphaël",
+  nom: "FERNANDEZ",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "06/08/1987",
+  ville: "GOUESNOU",
+  dep: "29",
+  departement: "Finistère"
+}, {
+  numInscription: "16-00005394-01",
+  prenom: "Alice",
+  nom: "GAUTHIER",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "23/03/2000",
+  ville: "DINAN",
+  dep: "22",
+  departement: "Côtes-d'Armor"
+}, {
+  numInscription: "16-00005395-01",
+  prenom: "Tom",
+  nom: "PERRIN",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "12/10/1988",
+  ville: "RENNES",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
+}, {
+  numInscription: "16-00005396-01",
+  prenom: "Maya",
+  nom: "MOREAU",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "01/05/2001",
+  ville: "NANTES",
+  dep: "44",
+  departement: "Loire-Atlantique"
+}, {
+  numInscription: "16-00005397-01",
+  prenom: "Romain",
+  nom: "GUERIN",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "18/12/1989",
+  ville: "VANNES",
+  dep: "56",
+  departement: "Morbihan"
+}, {
+  numInscription: "16-00005398-01",
+  prenom: "Zoé",
+  nom: "LEROY",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "07/07/2002",
+  ville: "BREST",
+  dep: "29",
+  departement: "Finistère"
+}, {
+  numInscription: "16-00005399-01",
+  prenom: "Louis",
+  nom: "BERTRAND",
+  qualite: "STA",
+  statut: "EN EXERC…",
+  dateNaiss: "24/02/1990",
+  ville: "SAINT-MALO",
+  dep: "35",
+  departement: "Ille-et-Vilaine"
 }];
 
 // ══════════════════════════════════════════════════════════════
@@ -8591,23 +10641,105 @@ function AddStagiairesModal({
   onClose,
   onAdd,
   excludeIds,
-  mode = "stagiaire"
+  mode = "stagiaire",
+  ctrlName = ""
 }) {
   const isCtr = mode === "controleur";
   const pool = isCtr ? EC_POOL : INDIVIDUS_POOL;
-  const modalTitle = isCtr ? "Recherche d'un expert-comptable (contrôleur)" : "Recherche d'un stagiaire / mémorialiste / diplômé non inscrit";
-  const modalSubtitle = isCtr ? "Sélectionnez le contrôleur à assigner au groupe" : "Sélectionnez les stagiaires à ajouter au groupe";
+  const modalTitle = isCtr ? "Recherche d'un expert-comptable (contrôleur)" : "Liste des stagiaires NON assignés";
+  const modalSubtitle = isCtr ? "Sélectionnez le contrôleur à assigner au groupe" : "Sélectionnez puis ajoutez les stagiaires au groupe";
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState({});
-
-  // Filter out already-excluded and apply search
-  const filtered = pool.filter(ind => {
+  const [showFilters, setShowFilters] = useState(false);
+  const [F, setF] = useState({});
+  const [cabQuery, setCabQuery] = useState("");
+  const [cabOpen, setCabOpen] = useState(false);
+  const [cpQuery, setCpQuery] = useState("");
+  const [cpOpen, setCpOpen] = useState(false);
+  const [maitreQuery, setMaitreQuery] = useState("");
+  const [maitreOpen, setMaitreOpen] = useState(false);
+  const [autoOpen, setAutoOpen] = useState(false);
+  const setFilter = (k, v) => setF(prev => { const n = { ...prev }; if (v === "" || v == null) delete n[k]; else n[k] = v; return n; });
+  const toggleCabinet = (v) => setF(prev => { const cur = prev.cabinet || []; const next = cur.indexOf(v) > -1 ? cur.filter(x => x !== v) : cur.concat([v]); const n = { ...prev }; if (next.length) n.cabinet = next; else delete n.cabinet; return n; });
+  const resetFilters = () => { setF({}); setSearch(""); };
+  // Enrichissement des stagiaires avec les critères de sélection (déterministe)
+  const augStg = augStagiaire;
+  const augPool = isCtr ? pool : pool.map(augStg);
+  // Cabinet du contrôleur du groupe (pour la règle « employeur ≠ cabinet du CS »)
+  const ctrlHash = (ctrlName || "").split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+  const ctrlCabinet = ctrlName ? [].concat(CG_GROS, CG_PETIT)[ctrlHash % (CG_GROS.length + CG_PETIT.length)] : "";
+  // Options de filtres (dérivées du pool)
+  const uniq = (arr) => arr.filter((v, i) => v && arr.indexOf(v) === i);
+  const OPTS = isCtr ? {} : {
+    session: uniq(augPool.map(s => s.session)).sort(),
+    maitre: uniq(augPool.map(s => s.maitre)).sort(),
+    cabinet: uniq(augPool.map(s => s.cabinet)).sort(),
+    cp: uniq(augPool.map(s => s.cp)).sort(),
+    cro: uniq(augPool.map(s => s.cro)).sort()
+  };
+  // Prédicat de base : tous les filtres SAUF la règle d'indépendance (diffCtrl)
+  const passBase = ind => {
     if (excludeIds && excludeIds.includes(ind.numInscription)) return false;
-    if (!search) return true;
-    const q = search.toLowerCase();
-    return ind.nom.toLowerCase().includes(q) || ind.prenom.toLowerCase().includes(q) || ind.ville.toLowerCase().includes(q) || ind.numInscription.toLowerCase().includes(q) || ind.departement.toLowerCase().includes(q);
-  });
+    if (search) {
+      const q = search.toLowerCase();
+      if (!(ind.nom.toLowerCase().includes(q) || ind.prenom.toLowerCase().includes(q) || ind.numInscription.toLowerCase().includes(q) || String(ind.dep).includes(q) || (ind.ville || "").toLowerCase().includes(q))) return false;
+    }
+    if (!isCtr) {
+      if (F.genre && ind.genre !== F.genre) return false;
+      if (F.session && ind.session !== F.session) return false;
+      if (F.cycle && ind.cycle !== F.cycle) return false;
+      if (F.annee && ind.annee !== F.annee) return false;
+      if (F.ctrl && ((F.ctrl === "avec") !== ind.avecCtrl)) return false;
+      if (F.dscg && ind.dscg !== F.dscg) return false;
+      if (F.maitre && ind.maitre !== F.maitre) return false;
+      if (F.cabinet && F.cabinet.length && F.cabinet.indexOf(ind.cabinet) === -1) return false;
+      if (F.taille && ind.taille !== F.taille) return false;
+      if (F.cp && ind.cp !== F.cp) return false;
+      if (F.cro && ind.cro !== F.cro) return false;
+      if (F.franco && ind.franco !== F.franco) return false;
+    }
+    return true;
+  };
+  const rIsActive = !isCtr && F.diffCtrl === "1" && !!ctrlCabinet;
+  const filteredAll = augPool.filter(ind => passBase(ind) && !(rIsActive && ind.cabinet === ctrlCabinet));
+  // Règle métier : un maître de stage encadre 5 stagiaires maximum
+  const MAX_MAITRE = 5;
+  const maitreCapped = !isCtr && !!F.maitre && filteredAll.length > MAX_MAITRE;
+  const filtered = maitreCapped ? filteredAll.slice(0, MAX_MAITRE) : filteredAll;
+  // Nombre de stagiaires que la règle d'indépendance masque (parmi ceux qui passent les autres filtres)
+  const hiddenByRule = !isCtr && ctrlCabinet ? augPool.filter(ind => passBase(ind) && ind.cabinet === ctrlCabinet).length : 0;
+  const activeFilterCount = Object.keys(F).length;
   const selectedCount = Object.values(selected).filter(Boolean).length;
+  // Règle métier : 20 stagiaires maximum par groupe
+  const MAX_GROUP = 20;
+  const alreadyIn = !isCtr && excludeIds ? excludeIds.length : 0;
+  const remaining = Math.max(0, MAX_GROUP - alreadyIn);
+  const overCap = !isCtr && selectedCount > remaining;
+  // Répartition par genre du jeu affiché
+  const femCount = !isCtr ? filtered.filter(s => s.genre === "F").length : 0;
+  const homCount = !isCtr ? filtered.filter(s => s.genre === "H").length : 0;
+  // Attribution automatique : proposée uniquement quand il y a plus de candidats que de places restantes
+  const overThreshold = !isCtr && remaining > 0 && filteredAll.length > remaining;
+  const computeAuto = () => {
+    const target = Math.min(remaining, filteredAll.length);
+    const Fs = filteredAll.filter(s => s.genre === "F");
+    const Hs = filteredAll.filter(s => s.genre === "H");
+    let nF = Math.min(Math.ceil(target / 2), Fs.length);
+    let nH = Math.min(target - nF, Hs.length);
+    nF = Math.min(target - nH, Fs.length);
+    return { target, nF, nH, Fs, Hs };
+  };
+  const autoPreview = overThreshold ? computeAuto() : { target: 0, nF: 0, nH: 0 };
+  const applyAuto = () => {
+    const { nF, nH, Fs, Hs } = computeAuto();
+    const chosen = Fs.slice(0, nF).concat(Hs.slice(0, nH));
+    const sel = {};
+    chosen.forEach(s => {
+      sel[s.numInscription] = true;
+    });
+    setSelected(sel);
+    setAutoOpen(false);
+  };
   const toggleAll = () => {
     if (isCtr) return; // no select-all in contrôleur mode
     if (selectedCount === filtered.length) {
@@ -8634,10 +10766,27 @@ function AddStagiairesModal({
     }
   };
   const handleAdd = () => {
-    const toAdd = pool.filter(ind => selected[ind.numInscription]);
+    if (overCap) return;
+    const toAdd = augPool.filter(ind => selected[ind.numInscription]);
     if (toAdd.length > 0) onAdd(toAdd);
   };
   const thCls = "px-2 py-2 text-left text-[12px] font-semibold text-[#03234D] leading-[16px] whitespace-nowrap";
+  const flabelCls = "block text-[11px] font-semibold text-[#5C5C5C] mb-1 uppercase tracking-wide";
+  const fselCls = "border border-[#C9C9C9] rounded h-8 px-2 text-[13px] bg-white text-[#2E2E2E] outline-none focus:border-[#0250D9] min-w-[130px]";
+  const FILTER_DEFS = [
+    { k: "genre", label: "Genre", opts: [["H", "Homme"], ["F", "Femme"]] },
+    { k: "session", label: "Session de conseil", opts: (OPTS.session || []).map(v => [v, v]) },
+    { k: "cycle", label: "Cycle de stage", opts: [["3 ans", "3 ans"], ["2 ans", "2 ans"], ["Renouvellement AFS", "Renouvellement AFS"]] },
+    { k: "annee", label: "Année de stage", opts: [["1", "1"], ["2", "2"], ["3", "3"]] },
+    { k: "ctrl", label: "Contrôleur", opts: [["avec", "Avec contrôleur"], ["sans", "Sans contrôleur"]] },
+    { k: "dscg", label: "DSCG", opts: [["Complet", "Complet"], ["Incomplet", "Incomplet"]] },
+    { k: "maitre", label: "Maître de stage", opts: (OPTS.maitre || []).map(v => [v, v]) },
+    { k: "cp", label: "Lieu de stage (CP employeur)", opts: (OPTS.cp || []).map(v => [v, v]) },
+    { k: "cabinet", label: "Cabinet", opts: (OPTS.cabinet || []).map(v => [v, v]) },
+    { k: "taille", label: "Taille du cabinet (effectif)", opts: [["1–9", "1–9 salariés"], ["10–49", "10–49 salariés"], ["50–249", "50–249 salariés"], ["250–999", "250–999 salariés"], ["1 000 et +", "1 000 et + (gros)"]] },
+    { k: "cro", label: "CRO employeur", opts: CRO_OPTIONS.map(v => [v, v]) },
+    { k: "franco", label: "Stagiaire francophone", opts: [["Oui", "Oui"], ["Non", "Non"]] }
+  ];
   return /*#__PURE__*/_jsxDEV("div", {
     className: "fixed inset-0 z-50 flex items-center justify-center",
     style: {
@@ -8698,17 +10847,80 @@ function AddStagiairesModal({
             className: "text-[#5C5C5C] mr-2 shrink-0"
           }, void 0, false), /*#__PURE__*/_jsxDEV("input", {
             type: "text",
-            placeholder: "Rechercher par nom, ville...",
+            placeholder: isCtr ? "Rechercher par nom, ville..." : "Rechercher par stagiaire, n° d'inscription ou n° de département…",
             className: "flex-1 text-[13px] outline-none bg-transparent",
             value: search,
             onChange: e => setSearch(e.target.value)
           }, void 0, false)]
+        }, void 0, true), !isCtr && /*#__PURE__*/_jsxDEV("button", {
+          onClick: () => setShowFilters(v => !v),
+          className: `flex items-center gap-1.5 h-9 px-3 border rounded text-[13px] whitespace-nowrap ${showFilters || activeFilterCount > 0 ? "border-[#0250D9] text-[#0250D9] bg-[#F0F6FF]" : "border-[#C9C9C9] text-[#03234D] bg-white hover:bg-[#F3F3F3]"}`,
+          children: [/*#__PURE__*/_jsxDEV("svg", { width: 14, height: 14, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", children: /*#__PURE__*/_jsxDEV("path", { d: "M22 3H2l8 9.46V19l4 2v-8.54L22 3z" }, void 0, false) }, void 0, false), "Filtres", activeFilterCount > 0 && /*#__PURE__*/_jsxDEV("span", { className: "ml-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-[#0250D9] text-white text-[11px] font-bold flex items-center justify-center", children: activeFilterCount }, void 0, false)]
         }, void 0, true), /*#__PURE__*/_jsxDEV("span", {
           className: "text-[13px] text-[#5C5C5C] whitespace-nowrap",
-          children: [filtered.length, " résultat(s)"]
-        }, void 0, true)]
-      }, void 0, true), /*#__PURE__*/_jsxDEV("div", {
-        className: "flex-1 overflow-auto px-6",
+          children: [!isCtr ? filtered.length + " stagiaires dont " + femCount + " femme(s) et " + homCount + " homme(s)" : filtered.length + " résultat(s)", maitreCapped ? /*#__PURE__*/_jsxDEV("span", { className: "ml-1 text-[#0250D9] font-medium", children: "· plafonné à 5" }, void 0, false) : null]
+        }, void 0, true), overThreshold ? /*#__PURE__*/_jsxDEV("div", {
+          className: "relative shrink-0",
+          children: [/*#__PURE__*/_jsxDEV("button", {
+            onClick: () => setAutoOpen(v => !v),
+            className: "flex items-center gap-1.5 h-9 px-3 rounded text-[13px] font-semibold text-white whitespace-nowrap shadow-sm",
+            style: { background: "linear-gradient(135deg,#066afe,#7b3fe4)" },
+            children: [/*#__PURE__*/_jsxDEV("svg", { width: 15, height: 15, viewBox: "0 0 24 24", fill: "currentColor", children: [/*#__PURE__*/_jsxDEV("path", { d: "M12 2l1.9 5.1L19 9l-5.1 1.9L12 16l-1.9-5.1L5 9l5.1-1.9L12 2z" }, void 0, false), /*#__PURE__*/_jsxDEV("path", { d: "M19 14l.7 2.3L22 17l-2.3.7L19 20l-.7-2.3L16 17l2.3-.7L19 14z" }, void 0, false)] }, void 0, true), "Attribution auto"]
+          }, void 0, true), autoOpen ? /*#__PURE__*/_jsxDEV(_Fragment, {
+            children: [/*#__PURE__*/_jsxDEV("div", { className: "fixed inset-0 z-30", onClick: () => setAutoOpen(false) }, void 0, false), /*#__PURE__*/_jsxDEV("div", {
+              className: "absolute right-0 top-full mt-2 z-40 w-[340px] bg-white border border-[#C9C9C9] rounded-lg shadow-xl p-4 text-left",
+              children: [/*#__PURE__*/_jsxDEV("div", { className: "flex items-center gap-2 mb-2", children: [/*#__PURE__*/_jsxDEV("div", { className: "w-7 h-7 rounded-full flex items-center justify-center text-white shrink-0", style: { background: "linear-gradient(135deg,#066afe,#7b3fe4)" }, children: /*#__PURE__*/_jsxDEV("svg", { width: 14, height: 14, viewBox: "0 0 24 24", fill: "currentColor", children: /*#__PURE__*/_jsxDEV("path", { d: "M12 2l1.9 5.1L19 9l-5.1 1.9L12 16l-1.9-5.1L5 9l5.1-1.9L12 2z" }, void 0, false) }, void 0, false) }, void 0, false), /*#__PURE__*/_jsxDEV("span", { className: "text-[14px] font-semibold text-[#03234D]", children: "Attribution automatique" }, void 0, false)] }, void 0, true), /*#__PURE__*/_jsxDEV("p", { className: "text-[12px] text-[#5C5C5C] leading-[17px] mb-2", children: [filteredAll.length, " candidats pour ", remaining, " place(s) restante(s). L'assistant constitue une sélection équilibrée :"] }, void 0, true), /*#__PURE__*/_jsxDEV("ul", { className: "space-y-1.5 mb-3", children: [["Jusqu'à " + autoPreview.target + " stagiaires — le maximum du groupe"], ["Parité femmes-hommes visée (~50/50)"], ["Dans l'ordre de la liste filtrée, sans tirage aléatoire"]].map((t, i) => /*#__PURE__*/_jsxDEV("li", { className: "flex items-start gap-2 text-[12px] text-[#2E2E2E] leading-[16px]", children: [/*#__PURE__*/_jsxDEV("span", { className: "mt-[3px] w-1.5 h-1.5 rounded-full bg-[#066afe] shrink-0" }, void 0, false), t[0]] }, i, true)) }, void 0, false), /*#__PURE__*/_jsxDEV("div", { className: "rounded-md bg-[#F0F6FF] border border-[#D6E4FF] px-3 py-2 mb-1", children: [/*#__PURE__*/_jsxDEV("p", { className: "text-[12px] text-[#03234D]", children: ["Proposition : ", /*#__PURE__*/_jsxDEV("span", { className: "font-semibold", children: [autoPreview.nF, " femme(s)"] }, void 0, true), " · ", /*#__PURE__*/_jsxDEV("span", { className: "font-semibold", children: [autoPreview.nH, " homme(s)"] }, void 0, true)] }, void 0, true), autoPreview.nF !== autoPreview.nH ? /*#__PURE__*/_jsxDEV("p", { className: "text-[11px] text-[#B95C00] mt-0.5", children: "Parité au mieux selon le vivier disponible." }, void 0, false) : null] }, void 0, true), /*#__PURE__*/_jsxDEV("p", { className: "text-[11px] text-[#5C5C5C] mb-3", children: "Vous pourrez ajuster la sélection avant de l'ajouter." }, void 0, false), /*#__PURE__*/_jsxDEV("div", { className: "flex items-center justify-end gap-2", children: [/*#__PURE__*/_jsxDEV("button", { onClick: () => setAutoOpen(false), className: "px-3 h-8 border border-[#5C5C5C] rounded-full text-[13px] text-[#03234D] bg-white hover:bg-[#F3F3F3]", children: "Annuler" }, void 0, false), /*#__PURE__*/_jsxDEV("button", { onClick: applyAuto, className: "px-4 h-8 rounded-full text-[13px] font-semibold text-white", style: { background: "linear-gradient(135deg,#066afe,#7b3fe4)" }, children: "Confirmer" }, void 0, false)] }, void 0, true)]
+            }, void 0, true)]
+          }, void 0, true) : null]
+        }, void 0, true) : null]
+      }, void 0, true), !isCtr && showFilters && /*#__PURE__*/_jsxDEV("div", {
+        className: "px-6 pb-3 shrink-0",
+        children: /*#__PURE__*/_jsxDEV("div", {
+          className: "border border-[#C9C9C9] rounded-lg bg-[#F3F3F3] p-3 max-h-[40vh] overflow-y-auto",
+          children: [/*#__PURE__*/_jsxDEV("div", {
+            className: "flex flex-wrap gap-3",
+            children: FILTER_DEFS.map(fd => fd.k === "cabinet" ? (() => {
+              const sel = F.cabinet || [];
+              const MAX_CHIPS = 2;
+              const visible = sel.slice(0, MAX_CHIPS);
+              const overflow = sel.length - visible.length;
+              const q = cabQuery.trim().toLowerCase();
+              const matches = (OPTS.cabinet || []).filter(c => !q || c.toLowerCase().includes(q));
+              const chip = (c) => /*#__PURE__*/_jsxDEV("span", { className: "inline-flex items-center gap-1 shrink-0 bg-[#E5E5E5] text-[#2E2E2E] text-[12px] font-semibold pl-2 pr-1 h-6 rounded-full whitespace-nowrap max-w-[120px]", children: [/*#__PURE__*/_jsxDEV("span", { className: "truncate", children: c }, void 0, false), /*#__PURE__*/_jsxDEV("button", { onMouseDown: e => { e.preventDefault(); e.stopPropagation(); toggleCabinet(c); }, title: "Retirer", className: "w-4 h-4 shrink-0 rounded-full flex items-center justify-center text-white bg-[#9AA3B2] hover:bg-[#C8102E] text-[10px] leading-none", children: "✕" }, void 0, false)] }, c, true);
+              return /*#__PURE__*/_jsxDEV("div", {
+                style: { minWidth: 260 },
+                children: [/*#__PURE__*/_jsxDEV("label", { className: flabelCls, children: [fd.label, sel.length ? /*#__PURE__*/_jsxDEV("span", { className: "ml-1 text-[#0250D9]", children: ["(", sel.length, ")"] }, void 0, true) : null] }, void 0, true), /*#__PURE__*/_jsxDEV("div", { className: "relative", children: [/*#__PURE__*/_jsxDEV("div", { className: `flex items-center gap-1 flex-nowrap overflow-hidden bg-white border rounded h-8 pl-1.5 pr-2 cursor-text ${cabOpen ? "border-[#0250D9]" : "border-[#C9C9C9]"}`, onMouseDown: e => { if (e.target.tagName !== "BUTTON") { setCabOpen(true); } }, children: [visible.map(chip), overflow > 0 ? /*#__PURE__*/_jsxDEV("span", { className: "inline-flex items-center shrink-0 bg-[#D8DDE6] text-[#03234D] text-[12px] font-bold px-1.5 h-6 rounded-full whitespace-nowrap", title: sel.slice(MAX_CHIPS).join(", "), children: ["+", overflow] }, void 0, true) : null, /*#__PURE__*/_jsxDEV("input", { type: "text", value: cabQuery, onChange: e => { setCabQuery(e.target.value); setCabOpen(true); }, onFocus: () => setCabOpen(true), onBlur: () => setTimeout(() => setCabOpen(false), 130), placeholder: sel.length ? "" : "Rechercher un cabinet…", className: "flex-1 min-w-[60px] text-[13px] outline-none bg-transparent h-full", autoComplete: "off" }, void 0, false)] }, void 0, true), cabOpen ? /*#__PURE__*/_jsxDEV("ul", { className: "absolute left-0 right-0 top-full mt-1 z-30 bg-white border border-[#C9C9C9] rounded shadow-lg max-h-44 overflow-auto py-1", children: matches.length ? matches.map(c => { const on = sel.indexOf(c) > -1; return /*#__PURE__*/_jsxDEV("li", { onMouseDown: e => { e.preventDefault(); toggleCabinet(c); setCabQuery(""); }, className: "flex items-center gap-2 px-3 h-8 cursor-pointer hover:bg-[#F3F3F3] text-[13px] " + (on ? "text-[#0250D9] font-semibold" : "text-[#2E2E2E]"), children: [/*#__PURE__*/_jsxDEV("span", { className: `w-4 h-4 shrink-0 rounded border flex items-center justify-center ${on ? "bg-[#0250D9] border-[#0250D9] text-white" : "border-[#C9C9C9] bg-white"}`, children: on ? "✓" : "" }, void 0, false), c] }, c, true); }) : /*#__PURE__*/_jsxDEV("li", { className: "px-3 h-8 flex items-center text-[13px] text-[#5C5C5C]", children: "Aucun cabinet" }, void 0, false) }, void 0, false) : null] }, void 0, true)]
+              }, fd.k, true);
+            })() : fd.k === "cp" ? (() => {
+              const q = cpQuery.trim().toLowerCase();
+              const matches = CP_REF.filter(c => !q || c.indexOf(q) > -1);
+              return /*#__PURE__*/_jsxDEV("div", {
+                style: { minWidth: 200 },
+                children: [/*#__PURE__*/_jsxDEV("label", { className: flabelCls, children: [fd.label, F.cp ? /*#__PURE__*/_jsxDEV("span", { className: "ml-1 text-[#0250D9]", children: "(1)" }, void 0, false) : null] }, void 0, true), /*#__PURE__*/_jsxDEV("div", { className: "relative", children: [/*#__PURE__*/_jsxDEV("input", { type: "text", value: cpQuery, onChange: e => { setCpQuery(e.target.value); setCpOpen(true); if (F.cp) setFilter("cp", ""); }, onFocus: () => setCpOpen(true), onBlur: () => setTimeout(() => setCpOpen(false), 130), placeholder: "Rechercher un CP…", autoComplete: "off", className: fselCls + " w-full pr-8" }, void 0, false), (F.cp || cpQuery) ? /*#__PURE__*/_jsxDEV("button", { type: "button", onMouseDown: e => { e.preventDefault(); setFilter("cp", ""); setCpQuery(""); setCpOpen(false); }, className: "absolute right-1.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center text-[#5C5C5C] hover:bg-[#F3F3F3]", children: /*#__PURE__*/_jsxDEV(XIcon, { size: 12 }, void 0, false) }, void 0, false) : /*#__PURE__*/_jsxDEV("svg", { className: "absolute right-2 top-1/2 -translate-y-1/2 text-[#5C5C5C] pointer-events-none", width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [/*#__PURE__*/_jsxDEV("circle", { cx: "11", cy: "11", r: "8" }, void 0, false), /*#__PURE__*/_jsxDEV("line", { x1: "21", y1: "21", x2: "16.65", y2: "16.65" }, void 0, false)] }, void 0, true), cpOpen ? /*#__PURE__*/_jsxDEV("ul", { className: "absolute left-0 right-0 top-full mt-1 z-30 bg-white border border-[#C9C9C9] rounded shadow-lg max-h-44 overflow-auto py-1", children: matches.length ? matches.map(c => { const on = F.cp === c; return /*#__PURE__*/_jsxDEV("li", { onMouseDown: e => { e.preventDefault(); setFilter("cp", c); setCpQuery(c); setCpOpen(false); }, className: "flex items-center justify-between px-3 h-8 cursor-pointer hover:bg-[#F3F3F3] text-[13px] " + (on ? "bg-[#EEF4FF] text-[#0250D9] font-semibold" : "text-[#2E2E2E]"), children: [/*#__PURE__*/_jsxDEV("span", { children: c }, void 0, false), on ? /*#__PURE__*/_jsxDEV("span", { className: "text-[#0250D9] text-[12px]", children: "✓" }, void 0, false) : null] }, c, true); }) : /*#__PURE__*/_jsxDEV("li", { className: "px-3 h-8 flex items-center text-[13px] text-[#5C5C5C]", children: "Aucun CP" }, void 0, false) }, void 0, false) : null] }, void 0, true)]
+              }, fd.k, true);
+            })() : fd.k === "maitre" ? (() => {
+              const q = maitreQuery.trim().toLowerCase();
+              const list = OPTS.maitre || [];
+              const matches = list.filter(m => !q || m.toLowerCase().indexOf(q) > -1);
+              return /*#__PURE__*/_jsxDEV("div", {
+                style: { minWidth: 200 },
+                children: [/*#__PURE__*/_jsxDEV("label", { className: flabelCls, children: [fd.label, F.maitre ? /*#__PURE__*/_jsxDEV("span", { className: "ml-1 text-[#0250D9]", children: "(1)" }, void 0, false) : null] }, void 0, true), /*#__PURE__*/_jsxDEV("div", { className: "relative", children: [/*#__PURE__*/_jsxDEV("input", { type: "text", value: maitreQuery, onChange: e => { setMaitreQuery(e.target.value); setMaitreOpen(true); if (F.maitre) setFilter("maitre", ""); }, onFocus: () => setMaitreOpen(true), onBlur: () => setTimeout(() => setMaitreOpen(false), 130), placeholder: "Rechercher un maître…", autoComplete: "off", className: fselCls + " w-full pr-8" }, void 0, false), (F.maitre || maitreQuery) ? /*#__PURE__*/_jsxDEV("button", { type: "button", onMouseDown: e => { e.preventDefault(); setFilter("maitre", ""); setMaitreQuery(""); setMaitreOpen(false); }, className: "absolute right-1.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center text-[#5C5C5C] hover:bg-[#F3F3F3]", children: /*#__PURE__*/_jsxDEV(XIcon, { size: 12 }, void 0, false) }, void 0, false) : /*#__PURE__*/_jsxDEV("svg", { className: "absolute right-2 top-1/2 -translate-y-1/2 text-[#5C5C5C] pointer-events-none", width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [/*#__PURE__*/_jsxDEV("circle", { cx: "11", cy: "11", r: "8" }, void 0, false), /*#__PURE__*/_jsxDEV("line", { x1: "21", y1: "21", x2: "16.65", y2: "16.65" }, void 0, false)] }, void 0, true), maitreOpen ? /*#__PURE__*/_jsxDEV("ul", { className: "absolute left-0 right-0 top-full mt-1 z-30 bg-white border border-[#C9C9C9] rounded shadow-lg max-h-44 overflow-auto py-1", children: matches.length ? matches.map(m => { const on = F.maitre === m; return /*#__PURE__*/_jsxDEV("li", { onMouseDown: e => { e.preventDefault(); setFilter("maitre", m); setMaitreQuery(m); setMaitreOpen(false); }, className: "flex items-center justify-between px-3 h-8 cursor-pointer hover:bg-[#F3F3F3] text-[13px] " + (on ? "bg-[#EEF4FF] text-[#0250D9] font-semibold" : "text-[#2E2E2E]"), children: [/*#__PURE__*/_jsxDEV("span", { children: m }, void 0, false), on ? /*#__PURE__*/_jsxDEV("span", { className: "text-[#0250D9] text-[12px]", children: "✓" }, void 0, false) : null] }, m, true); }) : /*#__PURE__*/_jsxDEV("li", { className: "px-3 h-8 flex items-center text-[13px] text-[#5C5C5C]", children: "Aucun maître" }, void 0, false) }, void 0, false) : null] }, void 0, true), /*#__PURE__*/_jsxDEV("p", { className: "text-[11px] text-[#5C5C5C] mt-1 leading-[14px]", children: "Un maître de stage encadre 5 stagiaires max." }, void 0, false)]
+              }, fd.k, true);
+            })() : /*#__PURE__*/_jsxDEV("div", {
+              children: [/*#__PURE__*/_jsxDEV("label", { className: flabelCls, children: fd.label }, void 0, false), /*#__PURE__*/_jsxDEV("select", { value: F[fd.k] || "", onChange: e => setFilter(fd.k, e.target.value), className: fselCls, children: [/*#__PURE__*/_jsxDEV("option", { value: "", children: fd.allLabel || "Tous" }, void 0, false), ...fd.opts.map(o => /*#__PURE__*/_jsxDEV("option", { value: o[0], children: o[1] }, o[0], false))] }, void 0, true)]
+            }, fd.k, true))
+          }, void 0, false), /*#__PURE__*/_jsxDEV("div", {
+            className: "flex items-start justify-between gap-4 mt-3 pt-3 border-t border-[#D9D9D9] flex-wrap",
+            children: [(() => {
+              const on = F.diffCtrl === "1";
+              const has = !!ctrlCabinet;
+              const cardCls = "flex items-start gap-3 rounded-lg border p-3 flex-1 min-w-[360px] " + (!has ? "bg-[#F3F3F3] border-dashed border-[#C9C9C9]" : on ? "bg-[#EEF4FF] border-[#0250D9]" : "bg-white border-[#C9C9C9]");
+              return /*#__PURE__*/_jsxDEV("div", { className: cardCls, children: [/*#__PURE__*/_jsxDEV("div", { className: "w-8 h-8 rounded-full flex items-center justify-center shrink-0 " + (has ? "bg-[#0250D9]" : "bg-[#C9C9C9]"), children: /*#__PURE__*/_jsxDEV("svg", { width: 16, height: 16, viewBox: "0 0 24 24", fill: "none", stroke: "white", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", children: [/*#__PURE__*/_jsxDEV("path", { d: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" }, void 0, false), /*#__PURE__*/_jsxDEV("path", { d: "M9 12l2 2 4-4" }, void 0, false)] }, void 0, true) }, void 0, false), /*#__PURE__*/_jsxDEV("div", { className: "flex-1 min-w-0", children: [/*#__PURE__*/_jsxDEV("div", { className: "flex items-center gap-2 flex-wrap", children: [/*#__PURE__*/_jsxDEV("span", { className: "text-[13px] font-semibold text-[#03234D]", children: "Règle d'indépendance" }, void 0, false), has ? /*#__PURE__*/_jsxDEV("span", { className: "inline-flex items-center text-[11px] font-semibold text-white bg-[#03234D] px-2 py-0.5 rounded-full", children: ["Contrôleur : ", ctrlCabinet] }, void 0, true) : null] }, void 0, true), /*#__PURE__*/_jsxDEV("p", { className: "text-[12px] text-[#5C5C5C] leading-[16px] mt-0.5", children: "Un contrôleur ne peut pas contrôler un stagiaire employé dans son propre cabinet." }, void 0, false), has ? /*#__PURE__*/_jsxDEV("button", { type: "button", role: "switch", "aria-checked": on, onClick: () => setFilter("diffCtrl", on ? "" : "1"), className: "flex items-center gap-2 mt-2 text-left", children: [/*#__PURE__*/_jsxDEV("span", { className: "relative w-9 h-5 rounded-full transition-colors shrink-0 " + (on ? "bg-[#0250D9]" : "bg-[#C9C9C9]"), children: /*#__PURE__*/_jsxDEV("span", { className: "absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all " + (on ? "left-[18px]" : "left-0.5") }, void 0, false) }, void 0, false), /*#__PURE__*/_jsxDEV("span", { className: "text-[13px] text-[#03234D]", children: ["Masquer les stagiaires employés chez ", /*#__PURE__*/_jsxDEV("span", { className: "font-semibold", children: ctrlCabinet }, void 0, false), on && hiddenByRule > 0 ? /*#__PURE__*/_jsxDEV("span", { className: "text-[#0250D9] font-semibold", children: [" · ", hiddenByRule, " masqué", hiddenByRule > 1 ? "s" : ""] }, void 0, true) : null] }, void 0, true)] }, void 0, true) : /*#__PURE__*/_jsxDEV("p", { className: "text-[12px] text-[#B95C00] mt-2", children: "Aucun contrôleur assigné à ce groupe — règle non applicable." }, void 0, false)] }, void 0, true)] }, void 0, true);
+            })(), /*#__PURE__*/_jsxDEV("button", { onClick: resetFilters, className: "text-[13px] text-[#0250D9] hover:underline font-medium shrink-0 pt-1", children: "Réinitialiser les filtres" }, void 0, false)]
+          }, void 0, true)]
+        }, void 0, true)
+      }, void 0, false), /*#__PURE__*/_jsxDEV("div", {
+        className: "flex-1 min-h-0 overflow-auto px-6",
         children: /*#__PURE__*/_jsxDEV("table", {
           className: "w-full border-collapse text-[13px]",
           children: [/*#__PURE__*/_jsxDEV("thead", {
@@ -8732,31 +10944,7 @@ function AddStagiairesModal({
               }, void 0, false), /*#__PURE__*/_jsxDEV("th", {
                 className: thCls,
                 children: "Nom"
-              }, void 0, false), /*#__PURE__*/_jsxDEV("th", {
-                className: thCls,
-                style: {
-                  width: "60px"
-                },
-                children: "Qualité"
-              }, void 0, false), /*#__PURE__*/_jsxDEV("th", {
-                className: thCls,
-                children: "Statut"
-              }, void 0, false), /*#__PURE__*/_jsxDEV("th", {
-                className: thCls,
-                children: "Date Naiss."
-              }, void 0, false), /*#__PURE__*/_jsxDEV("th", {
-                className: thCls,
-                children: "Ville d'exercice"
-              }, void 0, false), /*#__PURE__*/_jsxDEV("th", {
-                className: thCls,
-                style: {
-                  width: "40px"
-                },
-                children: "Dép"
-              }, void 0, false), /*#__PURE__*/_jsxDEV("th", {
-                className: thCls,
-                children: "Département"
-              }, void 0, false)]
+              }, void 0, false), isCtr && /*#__PURE__*/_jsxDEV("th", { className: thCls, style: { width: "60px" }, children: "Qualité" }, void 0, false), isCtr && /*#__PURE__*/_jsxDEV("th", { className: thCls, children: "Statut" }, void 0, false), isCtr && /*#__PURE__*/_jsxDEV("th", { className: thCls, children: "Date Naiss." }, void 0, false), isCtr && /*#__PURE__*/_jsxDEV("th", { className: thCls, children: "Ville d'exercice" }, void 0, false), isCtr && /*#__PURE__*/_jsxDEV("th", { className: thCls, style: { width: "40px" }, children: "Dép" }, void 0, false), isCtr && /*#__PURE__*/_jsxDEV("th", { className: thCls, children: "Département" }, void 0, false), !isCtr && /*#__PURE__*/_jsxDEV("th", { className: thCls, children: "Genre" }, void 0, false), !isCtr && /*#__PURE__*/_jsxDEV("th", { className: thCls, children: "Session conseil" }, void 0, false), !isCtr && /*#__PURE__*/_jsxDEV("th", { className: thCls, children: "Cycle" }, void 0, false), !isCtr && /*#__PURE__*/_jsxDEV("th", { className: thCls, children: "Année" }, void 0, false), !isCtr && /*#__PURE__*/_jsxDEV("th", { className: thCls, children: "Contrôleur" }, void 0, false), !isCtr && /*#__PURE__*/_jsxDEV("th", { className: thCls, children: "DSCG" }, void 0, false), !isCtr && /*#__PURE__*/_jsxDEV("th", { className: thCls, children: "Maître de stage" }, void 0, false), !isCtr && /*#__PURE__*/_jsxDEV("th", { className: thCls, children: "Cabinet" }, void 0, false), !isCtr && /*#__PURE__*/_jsxDEV("th", { className: thCls, children: "Taille" }, void 0, false), !isCtr && /*#__PURE__*/_jsxDEV("th", { className: thCls, children: "CP empl." }, void 0, false), !isCtr && /*#__PURE__*/_jsxDEV("th", { className: thCls, children: "CRO empl." }, void 0, false), !isCtr && /*#__PURE__*/_jsxDEV("th", { className: thCls, children: "Franco." }, void 0, false)]
             }, void 0, true)
           }, void 0, false), /*#__PURE__*/_jsxDEV("tbody", {
             children: filtered.map((ind, i) => {
@@ -8782,34 +10970,22 @@ function AddStagiairesModal({
                 }, void 0, false), /*#__PURE__*/_jsxDEV("td", {
                   className: "px-2 py-1.5 font-semibold text-[#03234D]",
                   children: ind.nom
-                }, void 0, false), /*#__PURE__*/_jsxDEV("td", {
-                  className: "px-2 py-1.5 text-[#2E2E2E]",
-                  children: ind.qualite
-                }, void 0, false), /*#__PURE__*/_jsxDEV("td", {
-                  className: "px-2 py-1.5 text-[#2E2E2E]",
-                  children: ind.statut
-                }, void 0, false), /*#__PURE__*/_jsxDEV("td", {
-                  className: "px-2 py-1.5 text-[#2E2E2E]",
-                  children: ind.dateNaiss
-                }, void 0, false), /*#__PURE__*/_jsxDEV("td", {
-                  className: "px-2 py-1.5 text-[#2E2E2E]",
-                  children: ind.ville
-                }, void 0, false), /*#__PURE__*/_jsxDEV("td", {
-                  className: "px-2 py-1.5 text-[#2E2E2E]",
-                  children: ind.dep
-                }, void 0, false), /*#__PURE__*/_jsxDEV("td", {
-                  className: "px-2 py-1.5 text-[#2E2E2E]",
-                  children: ind.departement
-                }, void 0, false)]
+                }, void 0, false), isCtr && /*#__PURE__*/_jsxDEV("td", { className: "px-2 py-1.5 text-[#2E2E2E]", children: ind.qualite }, void 0, false), isCtr && /*#__PURE__*/_jsxDEV("td", { className: "px-2 py-1.5 text-[#2E2E2E]", children: ind.statut }, void 0, false), isCtr && /*#__PURE__*/_jsxDEV("td", { className: "px-2 py-1.5 text-[#2E2E2E]", children: ind.dateNaiss }, void 0, false), isCtr && /*#__PURE__*/_jsxDEV("td", { className: "px-2 py-1.5 text-[#2E2E2E]", children: ind.ville }, void 0, false), isCtr && /*#__PURE__*/_jsxDEV("td", { className: "px-2 py-1.5 text-[#2E2E2E]", children: ind.dep }, void 0, false), isCtr && /*#__PURE__*/_jsxDEV("td", { className: "px-2 py-1.5 text-[#2E2E2E]", children: ind.departement }, void 0, false), !isCtr && /*#__PURE__*/_jsxDEV("td", { className: "px-2 py-1.5", children: /*#__PURE__*/_jsxDEV("span", { className: "text-[11px] font-semibold px-1.5 py-0.5 rounded " + (ind.genre === "F" ? "bg-[#FCEAF1] text-[#C01865]" : "bg-[#E8F1FE] text-[#0B63CE]"), children: ind.genre }, void 0, false) }, void 0, false), !isCtr && /*#__PURE__*/_jsxDEV("td", { className: "px-2 py-1.5 text-[#2E2E2E] whitespace-nowrap", children: ind.session }, void 0, false), !isCtr && /*#__PURE__*/_jsxDEV("td", { className: "px-2 py-1.5 text-[#2E2E2E] whitespace-nowrap", children: ind.cycle }, void 0, false), !isCtr && /*#__PURE__*/_jsxDEV("td", { className: "px-2 py-1.5 text-[#2E2E2E]", children: ind.annee }, void 0, false), !isCtr && /*#__PURE__*/_jsxDEV("td", { className: "px-2 py-1.5", children: /*#__PURE__*/_jsxDEV("span", { className: ind.avecCtrl ? "text-[#1B7F37] font-semibold" : "text-[#B95C00]", children: ind.avecCtrl ? "Oui" : "Non" }, void 0, false) }, void 0, false), !isCtr && /*#__PURE__*/_jsxDEV("td", { className: "px-2 py-1.5 text-[#2E2E2E]", children: ind.dscg }, void 0, false), !isCtr && /*#__PURE__*/_jsxDEV("td", { className: "px-2 py-1.5 text-[#2E2E2E] whitespace-nowrap", children: ind.maitre }, void 0, false), !isCtr && /*#__PURE__*/_jsxDEV("td", { className: "px-2 py-1.5 text-[#2E2E2E] whitespace-nowrap", children: ind.cabinet }, void 0, false), !isCtr && /*#__PURE__*/_jsxDEV("td", { className: "px-2 py-1.5", children: /*#__PURE__*/_jsxDEV("span", { className: "text-[11px] font-semibold px-1.5 py-0.5 rounded whitespace-nowrap " + (ind.taille === "1 000 et +" ? "bg-[#F3EEFB] text-[#6B4FC0]" : "bg-[#E9F7F1] text-[#0F7A56]"), children: ind.taille }, void 0, false) }, void 0, false), !isCtr && /*#__PURE__*/_jsxDEV("td", { className: "px-2 py-1.5 text-[#2E2E2E]", children: ind.cp }, void 0, false), !isCtr && /*#__PURE__*/_jsxDEV("td", { className: "px-2 py-1.5 text-[#2E2E2E] whitespace-nowrap", children: ind.cro }, void 0, false), !isCtr && /*#__PURE__*/_jsxDEV("td", { className: "px-2 py-1.5 text-[#2E2E2E]", children: ind.franco }, void 0, false)]
               }, ind.numInscription, true);
             })
           }, void 0, false)]
         }, void 0, true)
       }, void 0, false), /*#__PURE__*/_jsxDEV("div", {
         className: "flex items-center justify-between px-6 py-4 border-t border-[#E5E5E5]",
-        children: [/*#__PURE__*/_jsxDEV("span", {
-          className: "text-[13px] text-[#5C5C5C]",
-          children: ["Affichage individu 1 – ", filtered.length, " sur ", filtered.length]
+        children: [/*#__PURE__*/_jsxDEV("div", {
+          className: "flex flex-col gap-0.5",
+          children: [/*#__PURE__*/_jsxDEV("span", {
+            className: "text-[13px] text-[#5C5C5C]",
+            children: ["Affichage individu 1 – ", filtered.length, " sur ", filtered.length]
+          }, void 0, true), !isCtr && /*#__PURE__*/_jsxDEV("span", {
+            className: `text-[12px] ${overCap ? "text-[#B60554] font-semibold" : "text-[#5C5C5C]"}`,
+            children: overCap ? `Maximum ${MAX_GROUP} stagiaires par groupe — ${selectedCount} sélectionné(s) pour ${remaining} place(s) restante(s)` : `Maximum ${MAX_GROUP} stagiaires par groupe · ${alreadyIn} déjà dans le groupe · ${remaining} place(s) restante(s)`
+          }, void 0, false)]
         }, void 0, true), /*#__PURE__*/_jsxDEV("div", {
           className: "flex items-center gap-3",
           children: [/*#__PURE__*/_jsxDEV("button", {
@@ -8818,9 +10994,9 @@ function AddStagiairesModal({
             children: "Fermer"
           }, void 0, false), /*#__PURE__*/_jsxDEV("button", {
             onClick: handleAdd,
-            disabled: selectedCount === 0,
-            className: `px-4 h-8 rounded-full text-[14px] text-white ${selectedCount > 0 ? "bg-[#0250D9] hover:bg-[#013DA6] cursor-pointer" : "bg-[#C9C9C9] cursor-not-allowed"}`,
-            children: isCtr ? selectedCount > 0 ? "Assigner le contrôleur" : "Assigner le contrôleur" : `Ajouter la sélection${selectedCount > 0 ? ` (${selectedCount})` : ""}`
+            disabled: selectedCount === 0 || overCap,
+            className: `px-4 h-8 rounded-full text-[14px] text-white ${selectedCount > 0 && !overCap ? "bg-[#0250D9] hover:bg-[#013DA6] cursor-pointer" : "bg-[#C9C9C9] cursor-not-allowed"}`,
+            children: isCtr ? "Assigner le contrôleur" : `Ajouter la sélection${selectedCount > 0 ? ` (${selectedCount})` : ""}`
           }, void 0, false)]
         }, void 0, true)]
       }, void 0, true)]
@@ -9252,14 +11428,8 @@ function GroupeRecordPage({
           label: "Conseil régional",
           value: groupe.cro
         }, {
-          label: "Année",
-          value: groupe.annee
-        }, {
-          label: "Date de constitution",
+          label: "Date d'effet",
           value: groupe.dateConstitution
-        }, {
-          label: "Date de fin",
-          value: groupe.dateFin || "\u00A0"
         }, {
           label: "Contrôleur",
           value: groupe.controleur || "\u00A0"
@@ -9308,35 +11478,50 @@ function GroupeRecordPage({
                   children: /*#__PURE__*/_jsxDEV("tr", {
                     className: "bg-[#F3F3F3] border-b border-[#C9C9C9]",
                     children: [[{
-                      label: "Conseil régional",
-                      w: "140px"
-                    }, {
                       label: "N° Inscription",
                       w: "130px"
                     }, {
-                      label: "Groupe principal",
-                      w: "110px"
-                    }, {
-                      label: "Stagiaire",
+                      label: "Prénom",
                       w: "auto"
                     }, {
-                      label: "Statut",
+                      label: "Nom",
+                      w: "auto"
+                    }, {
+                      label: "Genre",
+                      w: "60px"
+                    }, {
+                      label: "Session conseil",
                       w: "120px"
                     }, {
+                      label: "Cycle",
+                      w: "auto"
+                    }, {
+                      label: "Année",
+                      w: "60px"
+                    }, {
+                      label: "Contrôleur",
+                      w: "90px"
+                    }, {
                       label: "DSCG",
+                      w: "90px"
+                    }, {
+                      label: "Maître de stage",
+                      w: "auto"
+                    }, {
+                      label: "Cabinet",
+                      w: "auto"
+                    }, {
+                      label: "Taille",
+                      w: "90px"
+                    }, {
+                      label: "CP empl.",
                       w: "80px"
                     }, {
-                      label: "Cursus de formation",
-                      w: "130px"
+                      label: "CRO empl.",
+                      w: "auto"
                     }, {
-                      label: "Date d'effet",
-                      w: "100px"
-                    }, {
-                      label: "Date de fin",
-                      w: "100px"
-                    }, {
-                      label: "Année de stage",
-                      w: "100px"
+                      label: "Franco.",
+                      w: "70px"
                     }].map((c, ci) => /*#__PURE__*/_jsxDEV("th", {
                       className: "px-2 py-2 text-left text-[12px] font-semibold text-[#03234D] leading-[16px] whitespace-nowrap",
                       style: {
@@ -9354,71 +11539,14 @@ function GroupeRecordPage({
                     }, void 0, false)]
                   }, void 0, true)
                 }, void 0, false), /*#__PURE__*/_jsxDEV("tbody", {
-                  children: visibleStagiaires.map((s, i) => /*#__PURE__*/_jsxDEV("tr", {
-                    className: "border-b border-[#E5E5E5] hover:bg-[#F9F9F9] cursor-pointer transition-colors group",
-                    children: [/*#__PURE__*/_jsxDEV("td", {
-                      className: "px-2 py-2 text-[#2E2E2E]",
-                      children: s.cr
-                    }, void 0, false), /*#__PURE__*/_jsxDEV("td", {
-                      className: "px-2 py-2",
-                      children: /*#__PURE__*/_jsxDEV("a", {
-                        href: "javascript:void(0)",
-                        onClick: e => {
-                          e.preventDefault();
-                          if (onNavigateToRecord) onNavigateToRecord(s);
-                        },
-                        className: "text-[#0250D9] underline font-medium",
-                        children: s.numInscription
-                      }, void 0, false)
-                    }, void 0, false), /*#__PURE__*/_jsxDEV("td", {
-                      className: "px-2 py-2 text-[#2E2E2E]",
-                      children: s.groupePrincipal
-                    }, void 0, false), /*#__PURE__*/_jsxDEV("td", {
-                      className: "px-2 py-2",
-                      children: /*#__PURE__*/_jsxDEV("a", {
-                        href: "javascript:void(0)",
-                        onClick: e => {
-                          e.preventDefault();
-                          if (onNavigateToRecord) onNavigateToRecord(s);
-                        },
-                        className: "text-[#0250D9] underline font-medium",
-                        children: s.stagiaire
-                      }, void 0, false)
-                    }, void 0, false), /*#__PURE__*/_jsxDEV("td", {
-                      className: "px-2 py-2",
-                      children: /*#__PURE__*/_jsxDEV(StatusBadge, {
-                        statut: s.statut
-                      }, void 0, false)
-                    }, void 0, false), /*#__PURE__*/_jsxDEV("td", {
-                      className: "px-2 py-2 text-[#2E2E2E]",
-                      children: s.dscg
-                    }, void 0, false), /*#__PURE__*/_jsxDEV("td", {
-                      className: "px-2 py-2 text-[#2E2E2E]",
-                      children: s.cursusFormation
-                    }, void 0, false), /*#__PURE__*/_jsxDEV("td", {
-                      className: "px-2 py-2 text-[#2E2E2E]",
-                      children: s.dateEffet
-                    }, void 0, false), /*#__PURE__*/_jsxDEV("td", {
-                      className: "px-2 py-2 text-[#2E2E2E]",
-                      children: s.dateFin
-                    }, void 0, false), /*#__PURE__*/_jsxDEV("td", {
-                      className: "px-2 py-2 text-[#2E2E2E]",
-                      children: s.anneeStage
-                    }, void 0, false), /*#__PURE__*/_jsxDEV("td", {
-                      className: "px-1 py-2 text-center",
-                      children: /*#__PURE__*/_jsxDEV("button", {
-                        onClick: e => {
-                          e.stopPropagation();
-                          handleDeleteStagiaire(s);
-                        },
-                        className: "w-7 h-7 rounded flex items-center justify-center text-[#5C5C5C] opacity-0 group-hover:opacity-100 hover:bg-[#FEE2E2] hover:text-[#D1242F] transition-all",
-                        title: "Retirer du groupe",
-                        children: /*#__PURE__*/_jsxDEV(TrashIcon, {
-                          size: 14
-                        }, void 0, false)
-                      }, void 0, false)
-                    }, void 0, false)]
-                  }, i, true))
+                  children: visibleStagiaires.map((s0, i) => {
+                    const s = augStagiaire(s0, i);
+                    const cellCls = "px-2 py-2 text-[#2E2E2E]";
+                    return /*#__PURE__*/_jsxDEV("tr", {
+                      className: "border-b border-[#E5E5E5] hover:bg-[#F9F9F9] cursor-pointer transition-colors group",
+                      children: [/*#__PURE__*/_jsxDEV("td", { className: "px-2 py-2", children: /*#__PURE__*/_jsxDEV("a", { href: "javascript:void(0)", onClick: e => { e.preventDefault(); if (onNavigateToRecord) onNavigateToRecord(s0); }, className: "text-[#0250D9] underline font-medium whitespace-nowrap", children: s.numInscription }, void 0, false) }, void 0, false), /*#__PURE__*/_jsxDEV("td", { className: cellCls, children: s.prenom }, void 0, false), /*#__PURE__*/_jsxDEV("td", { className: "px-2 py-2 font-semibold text-[#03234D]", children: s.nom }, void 0, false), /*#__PURE__*/_jsxDEV("td", { className: "px-2 py-2", children: /*#__PURE__*/_jsxDEV("span", { className: "text-[11px] font-semibold px-1.5 py-0.5 rounded " + (s.genre === "F" ? "bg-[#FCEAF1] text-[#C01865]" : "bg-[#E8F1FE] text-[#0B63CE]"), children: s.genre }, void 0, false) }, void 0, false), /*#__PURE__*/_jsxDEV("td", { className: cellCls + " whitespace-nowrap", children: s.session }, void 0, false), /*#__PURE__*/_jsxDEV("td", { className: cellCls + " whitespace-nowrap", children: s.cycle }, void 0, false), /*#__PURE__*/_jsxDEV("td", { className: cellCls, children: s.annee }, void 0, false), /*#__PURE__*/_jsxDEV("td", { className: "px-2 py-2", children: /*#__PURE__*/_jsxDEV("span", { className: s.avecCtrl ? "text-[#1B7F37] font-semibold" : "text-[#B95C00]", children: s.avecCtrl ? "Oui" : "Non" }, void 0, false) }, void 0, false), /*#__PURE__*/_jsxDEV("td", { className: cellCls, children: s.dscg }, void 0, false), /*#__PURE__*/_jsxDEV("td", { className: cellCls + " whitespace-nowrap", children: s.maitre }, void 0, false), /*#__PURE__*/_jsxDEV("td", { className: cellCls + " whitespace-nowrap", children: s.cabinet }, void 0, false), /*#__PURE__*/_jsxDEV("td", { className: "px-2 py-2", children: /*#__PURE__*/_jsxDEV("span", { className: "text-[11px] font-semibold px-1.5 py-0.5 rounded whitespace-nowrap " + (s.taille === "1 000 et +" ? "bg-[#F3EEFB] text-[#6B4FC0]" : "bg-[#E9F7F1] text-[#0F7A56]"), children: s.taille }, void 0, false) }, void 0, false), /*#__PURE__*/_jsxDEV("td", { className: cellCls, children: s.cp }, void 0, false), /*#__PURE__*/_jsxDEV("td", { className: cellCls + " whitespace-nowrap", children: s.cro }, void 0, false), /*#__PURE__*/_jsxDEV("td", { className: cellCls, children: s.franco }, void 0, false), /*#__PURE__*/_jsxDEV("td", { className: "px-1 py-2 text-center", children: /*#__PURE__*/_jsxDEV("button", { onClick: e => { e.stopPropagation(); handleDeleteStagiaire(s0); }, className: "w-7 h-7 rounded flex items-center justify-center text-[#5C5C5C] opacity-0 group-hover:opacity-100 hover:bg-[#FEE2E2] hover:text-[#D1242F] transition-all", title: "Retirer du groupe", children: /*#__PURE__*/_jsxDEV(TrashIcon, { size: 14 }, void 0, false) }, void 0, false) }, void 0, false)]
+                    }, i, true);
+                  })
                 }, void 0, false)]
               }, void 0, true)
             }, void 0, false)
@@ -9521,7 +11649,8 @@ function GroupeRecordPage({
     }, void 0, false), showAddModal && /*#__PURE__*/_jsxDEV(AddStagiairesModal, {
       onClose: () => setShowAddModal(false),
       onAdd: handleAddStagiaires,
-      excludeIds: excludeIds
+      excludeIds: excludeIds,
+      ctrlName: activeControleur ? activeControleur.controleur : ""
     }, void 0, false), showClotureModal && activeControleur && /*#__PURE__*/_jsxDEV(ClotureControleurModal, {
       controleurName: activeControleur.controleur,
       onConfirm: handleClotureConfirm,
@@ -10113,8 +12242,28 @@ const PIECES_STATUS_META = {
     bg: "#FEF6E7",
     color: "#B45309",
     dot: "#F59E0B"
+  },
+  attente_cro: {
+    label: "En attente validation CRO",
+    bg: "#EAEDFB",
+    color: "#4453A6",
+    dot: "#6B7FE0"
+  },
+  attente_signatures: {
+    label: "En attente des signatures",
+    bg: "#E8F1FE",
+    color: "#0B63CE",
+    dot: "#3B9BFF"
+  },
+  signe_afs: {
+    label: "Signé en attente dépôt AFS",
+    bg: "#E9F7F1",
+    color: "#0F7A56",
+    dot: "#34C08A"
   }
 };
+// Statuts proposés dans le menu de sélection (cycle de vie) — Demandée/Conforme/Non conforme exclus
+const PIECES_STATUS_OPTIONS = ["examiner", "brouillon", "attente_obs", "attente_cro", "attente_signatures", "signe_afs"];
 const PIECES_TYPE_BG = {
   pdf: "#DC2626",
   docx: "#2563EB",
@@ -10245,7 +12394,7 @@ function PiecesStatusBadge({
         gap: 2,
         minWidth: 148
       },
-      children: Object.entries(PIECES_STATUS_META).map(([k, sm]) => /*#__PURE__*/_jsxDEV("button", {
+      children: PIECES_STATUS_OPTIONS.map(k => [k, PIECES_STATUS_META[k]]).map(([k, sm]) => /*#__PURE__*/_jsxDEV("button", {
         onClick: () => onSelect(fileId, k),
         style: {
           background: k === status ? sm.bg : "transparent",
@@ -10401,7 +12550,7 @@ function PiecesPanel({
         name: base + ".pdf",
         type: "pdf",
         date: new Date().toLocaleDateString("fr-FR"),
-        status: "conforme",
+        status: "attente_signatures",
         category: src.category,
         instructions: "Généré depuis la fiche Word — converti en PDF",
         relance: "—",
