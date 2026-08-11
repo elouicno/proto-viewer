@@ -582,23 +582,24 @@
     }
     .crs-table {
       width: 100%;
-      border-collapse: separate;
-      border-spacing: 0 8px;
+      border-collapse: collapse;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
     }
     .crs-table thead tr { background: var(--navy); }
     .crs-table th {
-      padding: 16px 20px;
-      font-size: 12px;
-      font-weight: 700;
+      padding: 12px 20px;
+      font-size: 11px;
+      font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.07em;
       color: #fff;
       text-align: left;
       vertical-align: middle;
       background: var(--navy);
     }
-    .crs-table th:first-child { border-radius: 8px 0 0 8px; }
-    .crs-table th:last-child  { border-radius: 0 8px 8px 0; }
     .crs-th-inner {
       display: flex;
       align-items: center;
@@ -611,26 +612,78 @@
       stroke: #fff; fill: none;
       opacity: .85;
     }
-    .crs-table tbody tr { background: #fff; }
-    .crs-table tbody tr:hover td { background: #F8FAFC; }
     .crs-table td {
-      padding: 18px 20px;
-      font-size: 15px;
+      padding: 14px 20px;
+      font-size: 14px;
       color: var(--text-dark);
       background: #fff;
-      border-top: 1px solid var(--border-light);
       border-bottom: 1px solid var(--border-light);
       vertical-align: middle;
       transition: background .12s;
     }
-    .crs-table td:first-child {
-      border-left: 1px solid var(--border-light);
-      border-radius: 8px 0 0 8px;
+    .crs-table tbody tr:last-child td { border-bottom: none; }
+    .crs-table tbody tr:hover td { background: #F8FAFC; }
+    .crs-table tbody tr.crs-row-sel td { background: #EEF4FF; }
+    /* Colonne cases à cocher */
+    .crs-check-col { width: 44px; text-align: center; padding-left: 16px; padding-right: 0; }
+    .crs-check { width: 16px; height: 16px; accent-color: #2B5BA8; cursor: pointer; vertical-align: middle; }
+    /* Barre d'action de masse */
+    .crs-bulkbar {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      background: #EEF4FF;
+      border: 1px solid #C9DBFB;
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-bottom: 12px;
     }
-    .crs-table td:last-child {
-      border-right: 1px solid var(--border-light);
-      border-radius: 0 8px 8px 0;
+    .crs-bulkbar.show { display: flex; }
+    .crs-bulk-count { font-size: 14px; font-weight: 700; color: var(--navy); }
+    .crs-bulk-actions { display: flex; align-items: center; gap: 14px; }
+    .crs-bulk-clear { background: none; border: none; color: #2B5BA8; font-size: 13px; cursor: pointer; padding: 0; }
+    .crs-bulk-clear:hover { text-decoration: underline; }
+    .crs-bulk-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--navy); color: #fff; border: none;
+      border-radius: 8px; padding: 9px 16px;
+      font-size: 14px; font-weight: 600; cursor: pointer;
     }
+    .crs-bulk-btn:hover { filter: brightness(1.1); }
+    .crs-bulk-btn svg { width: 16px; height: 16px; stroke: #fff; fill: none; stroke-width: 2; }
+    /* Modale avis en masse */
+    .crs-modal-ov { position: fixed; inset: 0; background: rgba(15,23,42,.45); display: none; align-items: center; justify-content: center; z-index: 300; }
+    .crs-modal-ov.show { display: flex; }
+    .crs-modal { background: #fff; border-radius: 14px; width: 560px; max-width: 92vw; box-shadow: 0 24px 64px rgba(0,0,0,.28); overflow: hidden; }
+    .crs-modal-head { padding: 20px 24px 16px; border-bottom: 1px solid var(--border-light); position: relative; }
+    .crs-modal-title { font-size: 18px; font-weight: 700; color: var(--navy); }
+    .crs-modal-sub { font-size: 13px; color: #64748B; margin-top: 4px; }
+    .crs-modal-x { position: absolute; top: 16px; right: 18px; background: none; border: none; cursor: pointer; color: #94A3B8; font-size: 22px; line-height: 1; }
+    .crs-modal-body { padding: 20px 24px; }
+    .crs-modal-body .crs-field-label { display: block; font-size: 14px; font-weight: 700; color: var(--navy); margin: 0 0 8px; }
+    .crs-modal-body .crs-field-label + .crs-field-label,
+    .crs-field-group + .crs-field-group { margin-top: 18px; }
+    .crs-avis-wrap { position: relative; }
+    .crs-avis-wrap svg { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; stroke: #64748B; fill: none; stroke-width: 2; pointer-events: none; }
+    .crs-avis-select {
+      width: 100%; height: 48px; padding: 0 40px 0 14px;
+      border: 1px solid var(--border); border-radius: 10px; background: #F8FAFC;
+      font-size: 14px; color: var(--text-dark); font-family: inherit;
+      appearance: none; -webkit-appearance: none; cursor: pointer;
+    }
+    .crs-comment-area {
+      width: 100%; min-height: 120px; padding: 12px 14px;
+      border: 1px solid var(--border); border-radius: 10px;
+      font-size: 14px; color: var(--text-dark); font-family: inherit; resize: vertical;
+    }
+    .crs-modal-foot { padding: 16px 24px; border-top: 1px solid var(--border-light); display: flex; justify-content: flex-end; gap: 12px; }
+    .crs-btn-cancel { background: #fff; border: 1px solid var(--border); border-radius: 999px; padding: 9px 18px; font-size: 14px; color: var(--navy); cursor: pointer; }
+    .crs-btn-submit { background: var(--navy); border: none; border-radius: 999px; padding: 9px 20px; font-size: 14px; font-weight: 600; color: #fff; cursor: pointer; }
+    .crs-btn-submit:disabled { background: #C9CBD1; cursor: not-allowed; }
+    /* Toast confirmation */
+    .crs-toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px); background: #14532D; color: #fff; padding: 12px 20px; border-radius: 10px; font-size: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.25); opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 400; }
+    .crs-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     .crs-stagiaire { font-size: 15px; color: var(--text-dark); display: block; }
     .crs-demande-link {
       font-size: 14px;
@@ -2159,100 +2212,964 @@
 
     <h2 class="crs-section-title">Demandes Stage</h2>
 
+        <div class="crs-bulkbar" id="crs-bulkbar">
+      <span class="crs-bulk-count" id="crs-bulk-count">0 sélectionné</span>
+      <div class="crs-bulk-actions">
+        <button class="crs-bulk-clear" onclick="crsClearSel()">Tout désélectionner</button>
+        <button class="crs-bulk-btn" onclick="crsOpenBulk()"><svg viewBox="0 0 24 24"><path d="M11 5h10M11 12h10M11 19h10M4 5l1.5 1.5L8 4M4 12l1.5 1.5L8 11M4 19l1.5 1.5L8 18"/></svg>Émettre un avis en masse</button>
+      </div>
+    </div>
+
     <table class="crs-table">
       <thead>
         <tr>
-          <th style="width:19%">
-            <span class="crs-th-inner">Stagiaire
-              <svg class="crs-sort" viewBox="0 0 12 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5L6 3.5l3 3"/><path d="M3 9.5l3 3 3-3"/></svg>
-            </span>
-          </th>
-          <th style="width:17%">
-            <span class="crs-th-inner">Type de demande
-              <svg class="crs-sort" viewBox="0 0 12 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5L6 3.5l3 3"/><path d="M3 9.5l3 3 3-3"/></svg>
-            </span>
-          </th>
-          <th style="width:18%">
-            <span class="crs-th-inner">Date d'effet
-              <svg class="crs-sort" viewBox="0 0 12 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5L6 3.5l3 3"/><path d="M3 9.5l3 3 3-3"/></svg>
-            </span>
-          </th>
-          <th style="width:17%">
-            <span class="crs-th-inner">Référent
-              <svg class="crs-sort" viewBox="0 0 12 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5L6 3.5l3 3"/><path d="M3 9.5l3 3 3-3"/></svg>
-            </span>
-          </th>
-          <th style="width:17%">
-            <span class="crs-th-inner">Avis permanent
-              <svg class="crs-sort" viewBox="0 0 12 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5L6 3.5l3 3"/><path d="M3 9.5l3 3 3-3"/></svg>
-            </span>
-          </th>
-          <th style="width:17%">
-            <span class="crs-th-inner">Avis commission
-              <svg class="crs-sort" viewBox="0 0 12 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5L6 3.5l3 3"/><path d="M3 9.5l3 3 3-3"/></svg>
-            </span>
-          </th>
+          <th class="crs-check-col"><input type="checkbox" class="crs-check" id="crs-check-all" onchange="crsToggleAll(this)" aria-label="Tout sélectionner"></th>
+          <th style="width:19%"><span class="crs-th-inner">Stagiaire<svg class="crs-sort" viewBox="0 0 12 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5L6 3.5l3 3"/><path d="M3 9.5l3 3 3-3"/></svg></span></th>
+          <th style="width:17%"><span class="crs-th-inner">Type de demande<svg class="crs-sort" viewBox="0 0 12 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5L6 3.5l3 3"/><path d="M3 9.5l3 3 3-3"/></svg></span></th>
+          <th style="width:14%"><span class="crs-th-inner">Date d'effet<svg class="crs-sort" viewBox="0 0 12 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5L6 3.5l3 3"/><path d="M3 9.5l3 3 3-3"/></svg></span></th>
+          <th style="width:16%"><span class="crs-th-inner">Référent<svg class="crs-sort" viewBox="0 0 12 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5L6 3.5l3 3"/><path d="M3 9.5l3 3 3-3"/></svg></span></th>
+          <th style="width:15%"><span class="crs-th-inner">Avis permanent<svg class="crs-sort" viewBox="0 0 12 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5L6 3.5l3 3"/><path d="M3 9.5l3 3 3-3"/></svg></span></th>
+          <th style="width:15%"><span class="crs-th-inner">Avis commission<svg class="crs-sort" viewBox="0 0 12 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5L6 3.5l3 3"/><path d="M3 9.5l3 3 3-3"/></svg></span></th>
         </tr>
       </thead>
       <tbody>
         <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Dupont Nada"></td>
           <td><span class="crs-stagiaire">Dupont Nada</span><a class="crs-demande-link" href="demande.html?id=00005290&nom=Dupont%20Nada&type=Inscription%20Stage" target="_blank">Demande00005290</a></td>
+          <td>Inscription Stage</td>
+          <td>01/09/2025</td>
+          <td>Sophie Bernard</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Bernard Nour"></td>
+          <td><span class="crs-stagiaire">Bernard Nour</span><a class="crs-demande-link" href="demande.html?id=00005291&nom=Bernard%20Nour&type=D%C3%A9claration/Chang%20Maitre%20de%20Stage" target="_blank">Demande00005291</a></td>
+          <td>Déclaration/Chang…<br />Maitre de Stage</td>
+          <td></td>
+          <td>Marc Lefèvre</td>
+          <td><span class="crs-reco crs-reco-res"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Réservé</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Moreau Lucas"></td>
+          <td><span class="crs-stagiaire">Moreau Lucas</span><a class="crs-demande-link" href="demande.html?id=00005292&nom=Moreau%20Lucas&type=Suspension%20de%20stage" target="_blank">Demande00005292</a></td>
+          <td>Suspension de stage</td>
+          <td></td>
+          <td>Claire Moreau</td>
+          <td><span class="crs-reco-empty"></span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Petit Léa"></td>
+          <td><span class="crs-stagiaire">Petit Léa</span><a class="crs-demande-link" href="demande.html?id=00005293&nom=Petit%20L%C3%A9a&type=Reprise%20de%20stage" target="_blank">Demande00005293</a></td>
+          <td>Reprise de stage</td>
+          <td>01/09/2025</td>
+          <td>Antoine Rousseau</td>
+          <td><span class="crs-reco crs-reco-def"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Défavorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Garnier Julien"></td>
+          <td><span class="crs-stagiaire">Garnier Julien</span><a class="crs-demande-link" href="demande.html?id=00005294&nom=Garnier%20Julien&type=Inscription%20Stage" target="_blank">Demande00005294</a></td>
+          <td>Inscription Stage</td>
+          <td></td>
+          <td>Julie Garnier</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Rousseau Manon"></td>
+          <td><span class="crs-stagiaire">Rousseau Manon</span><a class="crs-demande-link" href="demande.html?id=00005295&nom=Rousseau%20Manon&type=D%C3%A9claration/Chang%20Maitre%20de%20Stage" target="_blank">Demande00005295</a></td>
+          <td>Déclaration/Chang…<br />Maitre de Stage</td>
+          <td></td>
+          <td>Thomas Petit</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Fontaine Paul"></td>
+          <td><span class="crs-stagiaire">Fontaine Paul</span><a class="crs-demande-link" href="demande.html?id=00005296&nom=Fontaine%20Paul&type=Suspension%20de%20stage" target="_blank">Demande00005296</a></td>
+          <td>Suspension de stage</td>
+          <td>01/09/2025</td>
+          <td>Laura Fontaine</td>
+          <td><span class="crs-reco crs-reco-res"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Réservé</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Lefèvre Sarah"></td>
+          <td><span class="crs-stagiaire">Lefèvre Sarah</span><a class="crs-demande-link" href="demande.html?id=00005297&nom=Lef%C3%A8vre%20Sarah&type=Reprise%20de%20stage" target="_blank">Demande00005297</a></td>
+          <td>Reprise de stage</td>
+          <td></td>
+          <td>Nicolas Girard</td>
+          <td><span class="crs-reco-empty"></span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Girard Valentin"></td>
+          <td><span class="crs-stagiaire">Girard Valentin</span><a class="crs-demande-link" href="demande.html?id=00005298&nom=Girard%20Valentin&type=Inscription%20Stage" target="_blank">Demande00005298</a></td>
+          <td>Inscription Stage</td>
+          <td></td>
+          <td>Camille André</td>
+          <td><span class="crs-reco crs-reco-def"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Défavorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner André Zoé"></td>
+          <td><span class="crs-stagiaire">André Zoé</span><a class="crs-demande-link" href="demande.html?id=00005299&nom=Andr%C3%A9%20Zo%C3%A9&type=D%C3%A9claration/Chang%20Maitre%20de%20Stage" target="_blank">Demande00005299</a></td>
+          <td>Déclaration/Chang…<br />Maitre de Stage</td>
+          <td>01/09/2025</td>
+          <td>Paul Blanc</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Blanc Tom"></td>
+          <td><span class="crs-stagiaire">Blanc Tom</span><a class="crs-demande-link" href="demande.html?id=00005300&nom=Blanc%20Tom&type=Suspension%20de%20stage" target="_blank">Demande00005300</a></td>
+          <td>Suspension de stage</td>
+          <td></td>
+          <td>Sophie Bernard</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Faure Naya"></td>
+          <td><span class="crs-stagiaire">Faure Naya</span><a class="crs-demande-link" href="demande.html?id=00005301&nom=Faure%20Naya&type=Reprise%20de%20stage" target="_blank">Demande00005301</a></td>
+          <td>Reprise de stage</td>
+          <td></td>
+          <td>Marc Lefèvre</td>
+          <td><span class="crs-reco crs-reco-res"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Réservé</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Renaud Précilia"></td>
+          <td><span class="crs-stagiaire">Renaud Précilia</span><a class="crs-demande-link" href="demande.html?id=00005302&nom=Renaud%20Pr%C3%A9cilia&type=Inscription%20Stage" target="_blank">Demande00005302</a></td>
+          <td>Inscription Stage</td>
+          <td>01/09/2025</td>
+          <td>Claire Moreau</td>
+          <td><span class="crs-reco-empty"></span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Noel Camille"></td>
+          <td><span class="crs-stagiaire">Noel Camille</span><a class="crs-demande-link" href="demande.html?id=00005303&nom=Noel%20Camille&type=D%C3%A9claration/Chang%20Maitre%20de%20Stage" target="_blank">Demande00005303</a></td>
+          <td>Déclaration/Chang…<br />Maitre de Stage</td>
+          <td></td>
+          <td>Antoine Rousseau</td>
+          <td><span class="crs-reco crs-reco-def"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Défavorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Colin Thomas"></td>
+          <td><span class="crs-stagiaire">Colin Thomas</span><a class="crs-demande-link" href="demande.html?id=00005304&nom=Colin%20Thomas&type=Suspension%20de%20stage" target="_blank">Demande00005304</a></td>
+          <td>Suspension de stage</td>
+          <td></td>
+          <td>Julie Garnier</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Meunier Chloé"></td>
+          <td><span class="crs-stagiaire">Meunier Chloé</span><a class="crs-demande-link" href="demande.html?id=00005305&nom=Meunier%20Chlo%C3%A9&type=Reprise%20de%20stage" target="_blank">Demande00005305</a></td>
+          <td>Reprise de stage</td>
+          <td>01/09/2025</td>
+          <td>Thomas Petit</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Brun Nathan"></td>
+          <td><span class="crs-stagiaire">Brun Nathan</span><a class="crs-demande-link" href="demande.html?id=00005306&nom=Brun%20Nathan&type=Inscription%20Stage" target="_blank">Demande00005306</a></td>
+          <td>Inscription Stage</td>
+          <td></td>
+          <td>Laura Fontaine</td>
+          <td><span class="crs-reco crs-reco-res"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Réservé</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Gautier Jade"></td>
+          <td><span class="crs-stagiaire">Gautier Jade</span><a class="crs-demande-link" href="demande.html?id=00005307&nom=Gautier%20Jade&type=D%C3%A9claration/Chang%20Maitre%20de%20Stage" target="_blank">Demande00005307</a></td>
+          <td>Déclaration/Chang…<br />Maitre de Stage</td>
+          <td></td>
+          <td>Nicolas Girard</td>
+          <td><span class="crs-reco-empty"></span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Masson Adrien"></td>
+          <td><span class="crs-stagiaire">Masson Adrien</span><a class="crs-demande-link" href="demande.html?id=00005308&nom=Masson%20Adrien&type=Suspension%20de%20stage" target="_blank">Demande00005308</a></td>
+          <td>Suspension de stage</td>
+          <td>01/09/2025</td>
+          <td>Camille André</td>
+          <td><span class="crs-reco crs-reco-def"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Défavorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Dumont Louise"></td>
+          <td><span class="crs-stagiaire">Dumont Louise</span><a class="crs-demande-link" href="demande.html?id=00005309&nom=Dumont%20Louise&type=Reprise%20de%20stage" target="_blank">Demande00005309</a></td>
+          <td>Reprise de stage</td>
+          <td></td>
+          <td>Paul Blanc</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Lemaire Raphaël"></td>
+          <td><span class="crs-stagiaire">Lemaire Raphaël</span><a class="crs-demande-link" href="demande.html?id=00005310&nom=Lemaire%20Rapha%C3%ABl&type=Inscription%20Stage" target="_blank">Demande00005310</a></td>
           <td>Inscription Stage</td>
           <td></td>
           <td>Sophie Bernard</td>
           <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
-          <td></td>
+          <td class="crs-avis-commission"></td>
         </tr>
         <tr>
-          <td><span class="crs-stagiaire">Dupont naya</span><a class="crs-demande-link" href="demande.html?id=00005198&nom=Dupont%20naya&type=Inscription%20Stage" target="_blank">Demande00005198</a></td>
-          <td>Inscription Stage</td>
-          <td></td>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Fernandez Romane"></td>
+          <td><span class="crs-stagiaire">Fernandez Romane</span><a class="crs-demande-link" href="demande.html?id=00005311&nom=Fernandez%20Romane&type=D%C3%A9claration/Chang%20Maitre%20de%20Stage" target="_blank">Demande00005311</a></td>
+          <td>Déclaration/Chang…<br />Maitre de Stage</td>
+          <td>01/09/2025</td>
           <td>Marc Lefèvre</td>
-          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
-          <td></td>
+          <td><span class="crs-reco crs-reco-res"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Réservé</span></td>
+          <td class="crs-avis-commission"></td>
         </tr>
         <tr>
-          <td><span class="crs-stagiaire">Junior Tristan</span><a class="crs-demande-link" href="demande.html?id=00005218&nom=Junior%20Tristan&type=Inscription%20Stage" target="_blank">Demande00005218</a></td>
-          <td>Inscription Stage</td>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Perrin Tristan"></td>
+          <td><span class="crs-stagiaire">Perrin Tristan</span><a class="crs-demande-link" href="demande.html?id=00005312&nom=Perrin%20Tristan&type=Suspension%20de%20stage" target="_blank">Demande00005312</a></td>
+          <td>Suspension de stage</td>
           <td></td>
           <td>Claire Moreau</td>
-          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
-          <td></td>
+          <td><span class="crs-reco-empty"></span></td>
+          <td class="crs-avis-commission"></td>
         </tr>
         <tr>
-          <td><span class="crs-stagiaire">Khalfi Nour</span><a class="crs-demande-link" href="demande.html?id=00003392&nom=Khalfi%20Nour&type=D%C3%A9claration%2FChangement%20Maitre%20de%20Stage" target="_blank">Demande00003392</a></td>
-          <td>Déclaration/Chang…<br />Maitre de Stage</td>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Roux Martin"></td>
+          <td><span class="crs-stagiaire">Roux Martin</span><a class="crs-demande-link" href="demande.html?id=00005313&nom=Roux%20Martin&type=Reprise%20de%20stage" target="_blank">Demande00005313</a></td>
+          <td>Reprise de stage</td>
           <td></td>
           <td>Antoine Rousseau</td>
-          <td><span class="crs-reco-empty"></span></td>
-          <td></td>
+          <td><span class="crs-reco crs-reco-def"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Défavorable</span></td>
+          <td class="crs-avis-commission"></td>
         </tr>
         <tr>
-          <td><span class="crs-stagiaire">Khalfi Nour</span><a class="crs-demande-link" href="demande.html?id=00003395&nom=Khalfi%20Nour&type=D%C3%A9claration%2FChangement%20Maitre%20de%20Stage" target="_blank">Demande00003395</a></td>
-          <td>Déclaration/Chang…<br />Maitre de Stage</td>
-          <td></td>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Fournier Hugo"></td>
+          <td><span class="crs-stagiaire">Fournier Hugo</span><a class="crs-demande-link" href="demande.html?id=00005314&nom=Fournier%20Hugo&type=Inscription%20Stage" target="_blank">Demande00005314</a></td>
+          <td>Inscription Stage</td>
+          <td>01/09/2025</td>
           <td>Julie Garnier</td>
-          <td><span class="crs-reco-empty"></span></td>
-          <td></td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td class="crs-avis-commission"></td>
         </tr>
         <tr>
-          <td><span class="crs-stagiaire">Martin Précilia</span><a class="crs-demande-link" href="demande.html?id=00005113&nom=Martin%20Pr%C3%A9cilia&type=D%C3%A9claration%2FChangement%20Maitre%20de%20Stage" target="_blank">Demande00005113</a></td>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Clément Emma"></td>
+          <td><span class="crs-stagiaire">Clément Emma</span><a class="crs-demande-link" href="demande.html?id=00005315&nom=Cl%C3%A9ment%20Emma&type=D%C3%A9claration/Chang%20Maitre%20de%20Stage" target="_blank">Demande00005315</a></td>
           <td>Déclaration/Chang…<br />Maitre de Stage</td>
           <td></td>
           <td>Thomas Petit</td>
-          <td><span class="crs-reco-empty"></span></td>
-          <td></td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td class="crs-avis-commission"></td>
         </tr>
         <tr>
-          <td><span class="crs-stagiaire">Test Martin</span><a class="crs-demande-link" href="demande.html?id=00001977&nom=Test%20Martin&type=Inscription%20Stage" target="_blank">Demande00001977</a></td>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Martin Maxime"></td>
+          <td><span class="crs-stagiaire">Martin Maxime</span><a class="crs-demande-link" href="demande.html?id=00005316&nom=Martin%20Maxime&type=Suspension%20de%20stage" target="_blank">Demande00005316</a></td>
+          <td>Suspension de stage</td>
+          <td></td>
+          <td>Laura Fontaine</td>
+          <td><span class="crs-reco crs-reco-res"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Réservé</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Robert Inès"></td>
+          <td><span class="crs-stagiaire">Robert Inès</span><a class="crs-demande-link" href="demande.html?id=00005317&nom=Robert%20In%C3%A8s&type=Reprise%20de%20stage" target="_blank">Demande00005317</a></td>
+          <td>Reprise de stage</td>
+          <td>01/09/2025</td>
+          <td>Nicolas Girard</td>
+          <td><span class="crs-reco-empty"></span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Richard Enzo"></td>
+          <td><span class="crs-stagiaire">Richard Enzo</span><a class="crs-demande-link" href="demande.html?id=00005318&nom=Richard%20Enzo&type=Inscription%20Stage" target="_blank">Demande00005318</a></td>
+          <td>Inscription Stage</td>
+          <td></td>
+          <td>Camille André</td>
+          <td><span class="crs-reco crs-reco-def"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Défavorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Durand Alice"></td>
+          <td><span class="crs-stagiaire">Durand Alice</span><a class="crs-demande-link" href="demande.html?id=00005319&nom=Durand%20Alice&type=D%C3%A9claration/Chang%20Maitre%20de%20Stage" target="_blank">Demande00005319</a></td>
+          <td>Déclaration/Chang…<br />Maitre de Stage</td>
+          <td></td>
+          <td>Paul Blanc</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Simon Gabriel"></td>
+          <td><span class="crs-stagiaire">Simon Gabriel</span><a class="crs-demande-link" href="demande.html?id=00005320&nom=Simon%20Gabriel&type=Suspension%20de%20stage" target="_blank">Demande00005320</a></td>
+          <td>Suspension de stage</td>
+          <td>01/09/2025</td>
+          <td>Sophie Bernard</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Laurent Anaïs"></td>
+          <td><span class="crs-stagiaire">Laurent Anaïs</span><a class="crs-demande-link" href="demande.html?id=00005321&nom=Laurent%20Ana%C3%AFs&type=Reprise%20de%20stage" target="_blank">Demande00005321</a></td>
+          <td>Reprise de stage</td>
+          <td></td>
+          <td>Marc Lefèvre</td>
+          <td><span class="crs-reco crs-reco-res"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Réservé</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Dupont Nada"></td>
+          <td><span class="crs-stagiaire">Dupont Nada</span><a class="crs-demande-link" href="demande.html?id=00005322&nom=Dupont%20Nada&type=Inscription%20Stage" target="_blank">Demande00005322</a></td>
+          <td>Inscription Stage</td>
+          <td></td>
+          <td>Claire Moreau</td>
+          <td><span class="crs-reco-empty"></span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Bernard Nour"></td>
+          <td><span class="crs-stagiaire">Bernard Nour</span><a class="crs-demande-link" href="demande.html?id=00005323&nom=Bernard%20Nour&type=D%C3%A9claration/Chang%20Maitre%20de%20Stage" target="_blank">Demande00005323</a></td>
+          <td>Déclaration/Chang…<br />Maitre de Stage</td>
+          <td>01/09/2025</td>
+          <td>Antoine Rousseau</td>
+          <td><span class="crs-reco crs-reco-def"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Défavorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Moreau Lucas"></td>
+          <td><span class="crs-stagiaire">Moreau Lucas</span><a class="crs-demande-link" href="demande.html?id=00005324&nom=Moreau%20Lucas&type=Suspension%20de%20stage" target="_blank">Demande00005324</a></td>
+          <td>Suspension de stage</td>
+          <td></td>
+          <td>Julie Garnier</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Petit Léa"></td>
+          <td><span class="crs-stagiaire">Petit Léa</span><a class="crs-demande-link" href="demande.html?id=00005325&nom=Petit%20L%C3%A9a&type=Reprise%20de%20stage" target="_blank">Demande00005325</a></td>
+          <td>Reprise de stage</td>
+          <td></td>
+          <td>Thomas Petit</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Garnier Julien"></td>
+          <td><span class="crs-stagiaire">Garnier Julien</span><a class="crs-demande-link" href="demande.html?id=00005326&nom=Garnier%20Julien&type=Inscription%20Stage" target="_blank">Demande00005326</a></td>
+          <td>Inscription Stage</td>
+          <td>01/09/2025</td>
+          <td>Laura Fontaine</td>
+          <td><span class="crs-reco crs-reco-res"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Réservé</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Rousseau Manon"></td>
+          <td><span class="crs-stagiaire">Rousseau Manon</span><a class="crs-demande-link" href="demande.html?id=00005327&nom=Rousseau%20Manon&type=D%C3%A9claration/Chang%20Maitre%20de%20Stage" target="_blank">Demande00005327</a></td>
+          <td>Déclaration/Chang…<br />Maitre de Stage</td>
+          <td></td>
+          <td>Nicolas Girard</td>
+          <td><span class="crs-reco-empty"></span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Fontaine Paul"></td>
+          <td><span class="crs-stagiaire">Fontaine Paul</span><a class="crs-demande-link" href="demande.html?id=00005328&nom=Fontaine%20Paul&type=Suspension%20de%20stage" target="_blank">Demande00005328</a></td>
+          <td>Suspension de stage</td>
+          <td></td>
+          <td>Camille André</td>
+          <td><span class="crs-reco crs-reco-def"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Défavorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Lefèvre Sarah"></td>
+          <td><span class="crs-stagiaire">Lefèvre Sarah</span><a class="crs-demande-link" href="demande.html?id=00005329&nom=Lef%C3%A8vre%20Sarah&type=Reprise%20de%20stage" target="_blank">Demande00005329</a></td>
+          <td>Reprise de stage</td>
+          <td>01/09/2025</td>
+          <td>Paul Blanc</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Girard Valentin"></td>
+          <td><span class="crs-stagiaire">Girard Valentin</span><a class="crs-demande-link" href="demande.html?id=00005330&nom=Girard%20Valentin&type=Inscription%20Stage" target="_blank">Demande00005330</a></td>
+          <td>Inscription Stage</td>
+          <td></td>
+          <td>Sophie Bernard</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner André Zoé"></td>
+          <td><span class="crs-stagiaire">André Zoé</span><a class="crs-demande-link" href="demande.html?id=00005331&nom=Andr%C3%A9%20Zo%C3%A9&type=D%C3%A9claration/Chang%20Maitre%20de%20Stage" target="_blank">Demande00005331</a></td>
+          <td>Déclaration/Chang…<br />Maitre de Stage</td>
+          <td></td>
+          <td>Marc Lefèvre</td>
+          <td><span class="crs-reco crs-reco-res"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Réservé</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Blanc Tom"></td>
+          <td><span class="crs-stagiaire">Blanc Tom</span><a class="crs-demande-link" href="demande.html?id=00005332&nom=Blanc%20Tom&type=Suspension%20de%20stage" target="_blank">Demande00005332</a></td>
+          <td>Suspension de stage</td>
+          <td>01/09/2025</td>
+          <td>Claire Moreau</td>
+          <td><span class="crs-reco-empty"></span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Faure Naya"></td>
+          <td><span class="crs-stagiaire">Faure Naya</span><a class="crs-demande-link" href="demande.html?id=00005333&nom=Faure%20Naya&type=Reprise%20de%20stage" target="_blank">Demande00005333</a></td>
+          <td>Reprise de stage</td>
+          <td></td>
+          <td>Antoine Rousseau</td>
+          <td><span class="crs-reco crs-reco-def"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Défavorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Renaud Précilia"></td>
+          <td><span class="crs-stagiaire">Renaud Précilia</span><a class="crs-demande-link" href="demande.html?id=00005334&nom=Renaud%20Pr%C3%A9cilia&type=Inscription%20Stage" target="_blank">Demande00005334</a></td>
+          <td>Inscription Stage</td>
+          <td></td>
+          <td>Julie Garnier</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Noel Camille"></td>
+          <td><span class="crs-stagiaire">Noel Camille</span><a class="crs-demande-link" href="demande.html?id=00005335&nom=Noel%20Camille&type=D%C3%A9claration/Chang%20Maitre%20de%20Stage" target="_blank">Demande00005335</a></td>
+          <td>Déclaration/Chang…<br />Maitre de Stage</td>
+          <td>01/09/2025</td>
+          <td>Thomas Petit</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Colin Thomas"></td>
+          <td><span class="crs-stagiaire">Colin Thomas</span><a class="crs-demande-link" href="demande.html?id=00005336&nom=Colin%20Thomas&type=Suspension%20de%20stage" target="_blank">Demande00005336</a></td>
+          <td>Suspension de stage</td>
+          <td></td>
+          <td>Laura Fontaine</td>
+          <td><span class="crs-reco crs-reco-res"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Réservé</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Meunier Chloé"></td>
+          <td><span class="crs-stagiaire">Meunier Chloé</span><a class="crs-demande-link" href="demande.html?id=00005337&nom=Meunier%20Chlo%C3%A9&type=Reprise%20de%20stage" target="_blank">Demande00005337</a></td>
+          <td>Reprise de stage</td>
+          <td></td>
+          <td>Nicolas Girard</td>
+          <td><span class="crs-reco-empty"></span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Brun Nathan"></td>
+          <td><span class="crs-stagiaire">Brun Nathan</span><a class="crs-demande-link" href="demande.html?id=00005338&nom=Brun%20Nathan&type=Inscription%20Stage" target="_blank">Demande00005338</a></td>
+          <td>Inscription Stage</td>
+          <td>01/09/2025</td>
+          <td>Camille André</td>
+          <td><span class="crs-reco crs-reco-def"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Défavorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Gautier Jade"></td>
+          <td><span class="crs-stagiaire">Gautier Jade</span><a class="crs-demande-link" href="demande.html?id=00005339&nom=Gautier%20Jade&type=D%C3%A9claration/Chang%20Maitre%20de%20Stage" target="_blank">Demande00005339</a></td>
+          <td>Déclaration/Chang…<br />Maitre de Stage</td>
+          <td></td>
+          <td>Paul Blanc</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Masson Adrien"></td>
+          <td><span class="crs-stagiaire">Masson Adrien</span><a class="crs-demande-link" href="demande.html?id=00005340&nom=Masson%20Adrien&type=Suspension%20de%20stage" target="_blank">Demande00005340</a></td>
+          <td>Suspension de stage</td>
+          <td></td>
+          <td>Sophie Bernard</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Dumont Louise"></td>
+          <td><span class="crs-stagiaire">Dumont Louise</span><a class="crs-demande-link" href="demande.html?id=00005341&nom=Dumont%20Louise&type=Reprise%20de%20stage" target="_blank">Demande00005341</a></td>
+          <td>Reprise de stage</td>
+          <td>01/09/2025</td>
+          <td>Marc Lefèvre</td>
+          <td><span class="crs-reco crs-reco-res"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Réservé</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Lemaire Raphaël"></td>
+          <td><span class="crs-stagiaire">Lemaire Raphaël</span><a class="crs-demande-link" href="demande.html?id=00005342&nom=Lemaire%20Rapha%C3%ABl&type=Inscription%20Stage" target="_blank">Demande00005342</a></td>
+          <td>Inscription Stage</td>
+          <td></td>
+          <td>Claire Moreau</td>
+          <td><span class="crs-reco-empty"></span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Fernandez Romane"></td>
+          <td><span class="crs-stagiaire">Fernandez Romane</span><a class="crs-demande-link" href="demande.html?id=00005343&nom=Fernandez%20Romane&type=D%C3%A9claration/Chang%20Maitre%20de%20Stage" target="_blank">Demande00005343</a></td>
+          <td>Déclaration/Chang…<br />Maitre de Stage</td>
+          <td></td>
+          <td>Antoine Rousseau</td>
+          <td><span class="crs-reco crs-reco-def"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Défavorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Perrin Tristan"></td>
+          <td><span class="crs-stagiaire">Perrin Tristan</span><a class="crs-demande-link" href="demande.html?id=00005344&nom=Perrin%20Tristan&type=Suspension%20de%20stage" target="_blank">Demande00005344</a></td>
+          <td>Suspension de stage</td>
+          <td>01/09/2025</td>
+          <td>Julie Garnier</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Roux Martin"></td>
+          <td><span class="crs-stagiaire">Roux Martin</span><a class="crs-demande-link" href="demande.html?id=00005345&nom=Roux%20Martin&type=Reprise%20de%20stage" target="_blank">Demande00005345</a></td>
+          <td>Reprise de stage</td>
+          <td></td>
+          <td>Thomas Petit</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Fournier Hugo"></td>
+          <td><span class="crs-stagiaire">Fournier Hugo</span><a class="crs-demande-link" href="demande.html?id=00005346&nom=Fournier%20Hugo&type=Inscription%20Stage" target="_blank">Demande00005346</a></td>
           <td>Inscription Stage</td>
           <td></td>
           <td>Laura Fontaine</td>
-          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td><span class="crs-reco crs-reco-res"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Réservé</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Clément Emma"></td>
+          <td><span class="crs-stagiaire">Clément Emma</span><a class="crs-demande-link" href="demande.html?id=00005347&nom=Cl%C3%A9ment%20Emma&type=D%C3%A9claration/Chang%20Maitre%20de%20Stage" target="_blank">Demande00005347</a></td>
+          <td>Déclaration/Chang…<br />Maitre de Stage</td>
+          <td>01/09/2025</td>
+          <td>Nicolas Girard</td>
+          <td><span class="crs-reco-empty"></span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Martin Maxime"></td>
+          <td><span class="crs-stagiaire">Martin Maxime</span><a class="crs-demande-link" href="demande.html?id=00005348&nom=Martin%20Maxime&type=Suspension%20de%20stage" target="_blank">Demande00005348</a></td>
+          <td>Suspension de stage</td>
           <td></td>
+          <td>Camille André</td>
+          <td><span class="crs-reco crs-reco-def"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Défavorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Robert Inès"></td>
+          <td><span class="crs-stagiaire">Robert Inès</span><a class="crs-demande-link" href="demande.html?id=00005349&nom=Robert%20In%C3%A8s&type=Reprise%20de%20stage" target="_blank">Demande00005349</a></td>
+          <td>Reprise de stage</td>
+          <td></td>
+          <td>Paul Blanc</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Richard Enzo"></td>
+          <td><span class="crs-stagiaire">Richard Enzo</span><a class="crs-demande-link" href="demande.html?id=00005350&nom=Richard%20Enzo&type=Inscription%20Stage" target="_blank">Demande00005350</a></td>
+          <td>Inscription Stage</td>
+          <td>01/09/2025</td>
+          <td>Sophie Bernard</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Durand Alice"></td>
+          <td><span class="crs-stagiaire">Durand Alice</span><a class="crs-demande-link" href="demande.html?id=00005351&nom=Durand%20Alice&type=D%C3%A9claration/Chang%20Maitre%20de%20Stage" target="_blank">Demande00005351</a></td>
+          <td>Déclaration/Chang…<br />Maitre de Stage</td>
+          <td></td>
+          <td>Marc Lefèvre</td>
+          <td><span class="crs-reco crs-reco-res"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Réservé</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Simon Gabriel"></td>
+          <td><span class="crs-stagiaire">Simon Gabriel</span><a class="crs-demande-link" href="demande.html?id=00005352&nom=Simon%20Gabriel&type=Suspension%20de%20stage" target="_blank">Demande00005352</a></td>
+          <td>Suspension de stage</td>
+          <td></td>
+          <td>Claire Moreau</td>
+          <td><span class="crs-reco-empty"></span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Laurent Anaïs"></td>
+          <td><span class="crs-stagiaire">Laurent Anaïs</span><a class="crs-demande-link" href="demande.html?id=00005353&nom=Laurent%20Ana%C3%AFs&type=Reprise%20de%20stage" target="_blank">Demande00005353</a></td>
+          <td>Reprise de stage</td>
+          <td>01/09/2025</td>
+          <td>Antoine Rousseau</td>
+          <td><span class="crs-reco crs-reco-def"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Défavorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Dupont Nada"></td>
+          <td><span class="crs-stagiaire">Dupont Nada</span><a class="crs-demande-link" href="demande.html?id=00005354&nom=Dupont%20Nada&type=Inscription%20Stage" target="_blank">Demande00005354</a></td>
+          <td>Inscription Stage</td>
+          <td></td>
+          <td>Julie Garnier</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Bernard Nour"></td>
+          <td><span class="crs-stagiaire">Bernard Nour</span><a class="crs-demande-link" href="demande.html?id=00005355&nom=Bernard%20Nour&type=D%C3%A9claration/Chang%20Maitre%20de%20Stage" target="_blank">Demande00005355</a></td>
+          <td>Déclaration/Chang…<br />Maitre de Stage</td>
+          <td></td>
+          <td>Thomas Petit</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Moreau Lucas"></td>
+          <td><span class="crs-stagiaire">Moreau Lucas</span><a class="crs-demande-link" href="demande.html?id=00005356&nom=Moreau%20Lucas&type=Suspension%20de%20stage" target="_blank">Demande00005356</a></td>
+          <td>Suspension de stage</td>
+          <td>01/09/2025</td>
+          <td>Laura Fontaine</td>
+          <td><span class="crs-reco crs-reco-res"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Réservé</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Petit Léa"></td>
+          <td><span class="crs-stagiaire">Petit Léa</span><a class="crs-demande-link" href="demande.html?id=00005357&nom=Petit%20L%C3%A9a&type=Reprise%20de%20stage" target="_blank">Demande00005357</a></td>
+          <td>Reprise de stage</td>
+          <td></td>
+          <td>Nicolas Girard</td>
+          <td><span class="crs-reco-empty"></span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Garnier Julien"></td>
+          <td><span class="crs-stagiaire">Garnier Julien</span><a class="crs-demande-link" href="demande.html?id=00005358&nom=Garnier%20Julien&type=Inscription%20Stage" target="_blank">Demande00005358</a></td>
+          <td>Inscription Stage</td>
+          <td></td>
+          <td>Camille André</td>
+          <td><span class="crs-reco crs-reco-def"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Défavorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Rousseau Manon"></td>
+          <td><span class="crs-stagiaire">Rousseau Manon</span><a class="crs-demande-link" href="demande.html?id=00005359&nom=Rousseau%20Manon&type=D%C3%A9claration/Chang%20Maitre%20de%20Stage" target="_blank">Demande00005359</a></td>
+          <td>Déclaration/Chang…<br />Maitre de Stage</td>
+          <td>01/09/2025</td>
+          <td>Paul Blanc</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Fontaine Paul"></td>
+          <td><span class="crs-stagiaire">Fontaine Paul</span><a class="crs-demande-link" href="demande.html?id=00005360&nom=Fontaine%20Paul&type=Suspension%20de%20stage" target="_blank">Demande00005360</a></td>
+          <td>Suspension de stage</td>
+          <td></td>
+          <td>Sophie Bernard</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Lefèvre Sarah"></td>
+          <td><span class="crs-stagiaire">Lefèvre Sarah</span><a class="crs-demande-link" href="demande.html?id=00005361&nom=Lef%C3%A8vre%20Sarah&type=Reprise%20de%20stage" target="_blank">Demande00005361</a></td>
+          <td>Reprise de stage</td>
+          <td></td>
+          <td>Marc Lefèvre</td>
+          <td><span class="crs-reco crs-reco-res"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Réservé</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Girard Valentin"></td>
+          <td><span class="crs-stagiaire">Girard Valentin</span><a class="crs-demande-link" href="demande.html?id=00005362&nom=Girard%20Valentin&type=Inscription%20Stage" target="_blank">Demande00005362</a></td>
+          <td>Inscription Stage</td>
+          <td>01/09/2025</td>
+          <td>Claire Moreau</td>
+          <td><span class="crs-reco-empty"></span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner André Zoé"></td>
+          <td><span class="crs-stagiaire">André Zoé</span><a class="crs-demande-link" href="demande.html?id=00005363&nom=Andr%C3%A9%20Zo%C3%A9&type=D%C3%A9claration/Chang%20Maitre%20de%20Stage" target="_blank">Demande00005363</a></td>
+          <td>Déclaration/Chang…<br />Maitre de Stage</td>
+          <td></td>
+          <td>Antoine Rousseau</td>
+          <td><span class="crs-reco crs-reco-def"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Défavorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Blanc Tom"></td>
+          <td><span class="crs-stagiaire">Blanc Tom</span><a class="crs-demande-link" href="demande.html?id=00005364&nom=Blanc%20Tom&type=Suspension%20de%20stage" target="_blank">Demande00005364</a></td>
+          <td>Suspension de stage</td>
+          <td></td>
+          <td>Julie Garnier</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Faure Naya"></td>
+          <td><span class="crs-stagiaire">Faure Naya</span><a class="crs-demande-link" href="demande.html?id=00005365&nom=Faure%20Naya&type=Reprise%20de%20stage" target="_blank">Demande00005365</a></td>
+          <td>Reprise de stage</td>
+          <td>01/09/2025</td>
+          <td>Thomas Petit</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Renaud Précilia"></td>
+          <td><span class="crs-stagiaire">Renaud Précilia</span><a class="crs-demande-link" href="demande.html?id=00005366&nom=Renaud%20Pr%C3%A9cilia&type=Inscription%20Stage" target="_blank">Demande00005366</a></td>
+          <td>Inscription Stage</td>
+          <td></td>
+          <td>Laura Fontaine</td>
+          <td><span class="crs-reco crs-reco-res"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Réservé</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Noel Camille"></td>
+          <td><span class="crs-stagiaire">Noel Camille</span><a class="crs-demande-link" href="demande.html?id=00005367&nom=Noel%20Camille&type=D%C3%A9claration/Chang%20Maitre%20de%20Stage" target="_blank">Demande00005367</a></td>
+          <td>Déclaration/Chang…<br />Maitre de Stage</td>
+          <td></td>
+          <td>Nicolas Girard</td>
+          <td><span class="crs-reco-empty"></span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Colin Thomas"></td>
+          <td><span class="crs-stagiaire">Colin Thomas</span><a class="crs-demande-link" href="demande.html?id=00005368&nom=Colin%20Thomas&type=Suspension%20de%20stage" target="_blank">Demande00005368</a></td>
+          <td>Suspension de stage</td>
+          <td>01/09/2025</td>
+          <td>Camille André</td>
+          <td><span class="crs-reco crs-reco-def"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Défavorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Meunier Chloé"></td>
+          <td><span class="crs-stagiaire">Meunier Chloé</span><a class="crs-demande-link" href="demande.html?id=00005369&nom=Meunier%20Chlo%C3%A9&type=Reprise%20de%20stage" target="_blank">Demande00005369</a></td>
+          <td>Reprise de stage</td>
+          <td></td>
+          <td>Paul Blanc</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Brun Nathan"></td>
+          <td><span class="crs-stagiaire">Brun Nathan</span><a class="crs-demande-link" href="demande.html?id=00005370&nom=Brun%20Nathan&type=Inscription%20Stage" target="_blank">Demande00005370</a></td>
+          <td>Inscription Stage</td>
+          <td></td>
+          <td>Sophie Bernard</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Gautier Jade"></td>
+          <td><span class="crs-stagiaire">Gautier Jade</span><a class="crs-demande-link" href="demande.html?id=00005371&nom=Gautier%20Jade&type=D%C3%A9claration/Chang%20Maitre%20de%20Stage" target="_blank">Demande00005371</a></td>
+          <td>Déclaration/Chang…<br />Maitre de Stage</td>
+          <td>01/09/2025</td>
+          <td>Marc Lefèvre</td>
+          <td><span class="crs-reco crs-reco-res"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Réservé</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Masson Adrien"></td>
+          <td><span class="crs-stagiaire">Masson Adrien</span><a class="crs-demande-link" href="demande.html?id=00005372&nom=Masson%20Adrien&type=Suspension%20de%20stage" target="_blank">Demande00005372</a></td>
+          <td>Suspension de stage</td>
+          <td></td>
+          <td>Claire Moreau</td>
+          <td><span class="crs-reco-empty"></span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Dumont Louise"></td>
+          <td><span class="crs-stagiaire">Dumont Louise</span><a class="crs-demande-link" href="demande.html?id=00005373&nom=Dumont%20Louise&type=Reprise%20de%20stage" target="_blank">Demande00005373</a></td>
+          <td>Reprise de stage</td>
+          <td></td>
+          <td>Antoine Rousseau</td>
+          <td><span class="crs-reco crs-reco-def"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Défavorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Lemaire Raphaël"></td>
+          <td><span class="crs-stagiaire">Lemaire Raphaël</span><a class="crs-demande-link" href="demande.html?id=00005374&nom=Lemaire%20Rapha%C3%ABl&type=Inscription%20Stage" target="_blank">Demande00005374</a></td>
+          <td>Inscription Stage</td>
+          <td>01/09/2025</td>
+          <td>Julie Garnier</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Fernandez Romane"></td>
+          <td><span class="crs-stagiaire">Fernandez Romane</span><a class="crs-demande-link" href="demande.html?id=00005375&nom=Fernandez%20Romane&type=D%C3%A9claration/Chang%20Maitre%20de%20Stage" target="_blank">Demande00005375</a></td>
+          <td>Déclaration/Chang…<br />Maitre de Stage</td>
+          <td></td>
+          <td>Thomas Petit</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Perrin Tristan"></td>
+          <td><span class="crs-stagiaire">Perrin Tristan</span><a class="crs-demande-link" href="demande.html?id=00005376&nom=Perrin%20Tristan&type=Suspension%20de%20stage" target="_blank">Demande00005376</a></td>
+          <td>Suspension de stage</td>
+          <td></td>
+          <td>Laura Fontaine</td>
+          <td><span class="crs-reco crs-reco-res"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Réservé</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Roux Martin"></td>
+          <td><span class="crs-stagiaire">Roux Martin</span><a class="crs-demande-link" href="demande.html?id=00005377&nom=Roux%20Martin&type=Reprise%20de%20stage" target="_blank">Demande00005377</a></td>
+          <td>Reprise de stage</td>
+          <td>01/09/2025</td>
+          <td>Nicolas Girard</td>
+          <td><span class="crs-reco-empty"></span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Fournier Hugo"></td>
+          <td><span class="crs-stagiaire">Fournier Hugo</span><a class="crs-demande-link" href="demande.html?id=00005378&nom=Fournier%20Hugo&type=Inscription%20Stage" target="_blank">Demande00005378</a></td>
+          <td>Inscription Stage</td>
+          <td></td>
+          <td>Camille André</td>
+          <td><span class="crs-reco crs-reco-def"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Défavorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Clément Emma"></td>
+          <td><span class="crs-stagiaire">Clément Emma</span><a class="crs-demande-link" href="demande.html?id=00005379&nom=Cl%C3%A9ment%20Emma&type=D%C3%A9claration/Chang%20Maitre%20de%20Stage" target="_blank">Demande00005379</a></td>
+          <td>Déclaration/Chang…<br />Maitre de Stage</td>
+          <td></td>
+          <td>Paul Blanc</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Martin Maxime"></td>
+          <td><span class="crs-stagiaire">Martin Maxime</span><a class="crs-demande-link" href="demande.html?id=00005380&nom=Martin%20Maxime&type=Suspension%20de%20stage" target="_blank">Demande00005380</a></td>
+          <td>Suspension de stage</td>
+          <td>01/09/2025</td>
+          <td>Sophie Bernard</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Robert Inès"></td>
+          <td><span class="crs-stagiaire">Robert Inès</span><a class="crs-demande-link" href="demande.html?id=00005381&nom=Robert%20In%C3%A8s&type=Reprise%20de%20stage" target="_blank">Demande00005381</a></td>
+          <td>Reprise de stage</td>
+          <td></td>
+          <td>Marc Lefèvre</td>
+          <td><span class="crs-reco crs-reco-res"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Réservé</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Richard Enzo"></td>
+          <td><span class="crs-stagiaire">Richard Enzo</span><a class="crs-demande-link" href="demande.html?id=00005382&nom=Richard%20Enzo&type=Inscription%20Stage" target="_blank">Demande00005382</a></td>
+          <td>Inscription Stage</td>
+          <td></td>
+          <td>Claire Moreau</td>
+          <td><span class="crs-reco-empty"></span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Durand Alice"></td>
+          <td><span class="crs-stagiaire">Durand Alice</span><a class="crs-demande-link" href="demande.html?id=00005383&nom=Durand%20Alice&type=D%C3%A9claration/Chang%20Maitre%20de%20Stage" target="_blank">Demande00005383</a></td>
+          <td>Déclaration/Chang…<br />Maitre de Stage</td>
+          <td>01/09/2025</td>
+          <td>Antoine Rousseau</td>
+          <td><span class="crs-reco crs-reco-def"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Défavorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Simon Gabriel"></td>
+          <td><span class="crs-stagiaire">Simon Gabriel</span><a class="crs-demande-link" href="demande.html?id=00005384&nom=Simon%20Gabriel&type=Suspension%20de%20stage" target="_blank">Demande00005384</a></td>
+          <td>Suspension de stage</td>
+          <td></td>
+          <td>Julie Garnier</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Laurent Anaïs"></td>
+          <td><span class="crs-stagiaire">Laurent Anaïs</span><a class="crs-demande-link" href="demande.html?id=00005385&nom=Laurent%20Ana%C3%AFs&type=Reprise%20de%20stage" target="_blank">Demande00005385</a></td>
+          <td>Reprise de stage</td>
+          <td></td>
+          <td>Thomas Petit</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Dupont Nada"></td>
+          <td><span class="crs-stagiaire">Dupont Nada</span><a class="crs-demande-link" href="demande.html?id=00005386&nom=Dupont%20Nada&type=Inscription%20Stage" target="_blank">Demande00005386</a></td>
+          <td>Inscription Stage</td>
+          <td>01/09/2025</td>
+          <td>Laura Fontaine</td>
+          <td><span class="crs-reco crs-reco-res"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Réservé</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Bernard Nour"></td>
+          <td><span class="crs-stagiaire">Bernard Nour</span><a class="crs-demande-link" href="demande.html?id=00005387&nom=Bernard%20Nour&type=D%C3%A9claration/Chang%20Maitre%20de%20Stage" target="_blank">Demande00005387</a></td>
+          <td>Déclaration/Chang…<br />Maitre de Stage</td>
+          <td></td>
+          <td>Nicolas Girard</td>
+          <td><span class="crs-reco-empty"></span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Moreau Lucas"></td>
+          <td><span class="crs-stagiaire">Moreau Lucas</span><a class="crs-demande-link" href="demande.html?id=00005388&nom=Moreau%20Lucas&type=Suspension%20de%20stage" target="_blank">Demande00005388</a></td>
+          <td>Suspension de stage</td>
+          <td></td>
+          <td>Camille André</td>
+          <td><span class="crs-reco crs-reco-def"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Défavorable</span></td>
+          <td class="crs-avis-commission"></td>
+        </tr>
+        <tr>
+          <td class="crs-check-col"><input type="checkbox" class="crs-check crs-row-check" onchange="crsToggleRow()" aria-label="Sélectionner Petit Léa"></td>
+          <td><span class="crs-stagiaire">Petit Léa</span><a class="crs-demande-link" href="demande.html?id=00005389&nom=Petit%20L%C3%A9a&type=Reprise%20de%20stage" target="_blank">Demande00005389</a></td>
+          <td>Reprise de stage</td>
+          <td>01/09/2025</td>
+          <td>Paul Blanc</td>
+          <td><span class="crs-reco"><svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Favorable</span></td>
+          <td class="crs-avis-commission"></td>
         </tr>
       </tbody>
     </table>
+
+    <!-- Modale : Émettre un avis en masse -->
+    <div class="crs-modal-ov" id="crs-modal-ov" onclick="if(event.target===this)crsCloseBulk()">
+      <div class="crs-modal" role="dialog" aria-modal="true" aria-labelledby="crs-modal-title">
+        <div class="crs-modal-head">
+          <div class="crs-modal-title" id="crs-modal-title">Émettre un avis en masse</div>
+          <div class="crs-modal-sub" id="crs-modal-sub"></div>
+          <button class="crs-modal-x" onclick="crsCloseBulk()" aria-label="Fermer">&times;</button>
+        </div>
+        <div class="crs-modal-body">
+          <div class="crs-field-group">
+            <label class="crs-field-label" for="crs-avis-select">Votre avis</label>
+            <div class="crs-avis-wrap">
+              <select class="crs-avis-select" id="crs-avis-select" onchange="crsSyncSubmit()">
+                <option value="">Sélectionnez un avis</option>
+                <option value="Favorable">Favorable</option>
+                <option value="Réservé">Réservé</option>
+                <option value="Défavorable">Défavorable</option>
+                <option value="Retour Référent">Retour Référent</option>
+              </select>
+              <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+            </div>
+          </div>
+          <div class="crs-field-group">
+            <label class="crs-field-label" for="crs-comment-area">Votre commentaire</label>
+            <textarea class="crs-comment-area" id="crs-comment-area" placeholder="Ajoutez un commentaire (facultatif)…"></textarea>
+          </div>
+        </div>
+        <div class="crs-modal-foot">
+          <button class="crs-btn-cancel" onclick="crsCloseBulk()">Annuler</button>
+          <button class="crs-btn-submit" id="crs-submit" onclick="crsApplyBulk()" disabled>Émettre l'avis</button>
+        </div>
+      </div>
+    </div>
+    <div class="crs-toast" id="crs-toast"></div>
 
   </main>
 
@@ -3736,6 +4653,85 @@
   window.addEventListener('focus', restore);
   window.addEventListener('storage', restore);
 })();
+</script>
+
+<!-- ══ CRS : sélection multiple + avis en masse ══ -->
+<script>
+  function crsRowChecks() {
+    return Array.prototype.slice.call(document.querySelectorAll('#page-crs .crs-row-check'));
+  }
+  function crsSelected() { return crsRowChecks().filter(function (c) { return c.checked; }); }
+  function crsUpdateBar() {
+    var checks = crsRowChecks();
+    var sel = checks.filter(function (c) { return c.checked; });
+    var bar = document.getElementById('crs-bulkbar');
+    var cnt = document.getElementById('crs-bulk-count');
+    var n = sel.length;
+    if (cnt) cnt.textContent = n + ' stagiaire' + (n > 1 ? 's' : '') + ' sélectionné' + (n > 1 ? 's' : '');
+    if (bar) bar.classList.toggle('show', n > 0);
+    var all = document.getElementById('crs-check-all');
+    if (all) {
+      all.checked = n === checks.length && checks.length > 0;
+      all.indeterminate = n > 0 && n < checks.length;
+    }
+    checks.forEach(function (c) {
+      var tr = c.closest('tr');
+      if (tr) tr.classList.toggle('crs-row-sel', c.checked);
+    });
+  }
+  function crsToggleAll(cb) {
+    crsRowChecks().forEach(function (c) { c.checked = cb.checked; });
+    crsUpdateBar();
+  }
+  function crsToggleRow() { crsUpdateBar(); }
+  function crsClearSel() {
+    crsRowChecks().forEach(function (c) { c.checked = false; });
+    var all = document.getElementById('crs-check-all');
+    if (all) { all.checked = false; all.indeterminate = false; }
+    crsUpdateBar();
+  }
+  function crsOpenBulk() {
+    var n = crsSelected().length;
+    if (!n) return;
+    document.getElementById('crs-modal-sub').textContent =
+      'Cet avis sera appliqué à ' + n + ' stagiaire' + (n > 1 ? 's' : '') + ' sélectionné' + (n > 1 ? 's' : '') + '.';
+    document.getElementById('crs-avis-select').value = '';
+    document.getElementById('crs-comment-area').value = '';
+    crsSyncSubmit();
+    document.getElementById('crs-modal-ov').classList.add('show');
+  }
+  function crsCloseBulk() {
+    document.getElementById('crs-modal-ov').classList.remove('show');
+  }
+  function crsSyncSubmit() {
+    var v = document.getElementById('crs-avis-select').value;
+    document.getElementById('crs-submit').disabled = !v;
+  }
+  function crsApplyBulk() {
+    var v = document.getElementById('crs-avis-select').value;
+    if (!v) return;
+    var CHECK = '<svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
+    var cls = { 'Favorable': 'crs-reco', 'Réservé': 'crs-reco crs-reco-res', 'Défavorable': 'crs-reco crs-reco-def', 'Retour Référent': 'crs-reco crs-reco-res' };
+    var sel = crsSelected();
+    sel.forEach(function (c) {
+      var tr = c.closest('tr');
+      var cell = tr ? tr.querySelector('.crs-avis-commission') : null;
+      if (cell) cell.innerHTML = '<span class="' + (cls[v] || 'crs-reco') + '">' + CHECK + v + '</span>';
+    });
+    var n = sel.length;
+    crsCloseBulk();
+    crsClearSel();
+    crsToast('Avis « ' + v + ' » appliqué à ' + n + ' stagiaire' + (n > 1 ? 's' : '') + '.');
+  }
+  var _crsToastT;
+  function crsToast(msg) {
+    var t = document.getElementById('crs-toast');
+    if (!t) return;
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(_crsToastT);
+    _crsToastT = setTimeout(function () { t.classList.remove('show'); }, 3200);
+  }
 </script>
 
   <!-- ══ SCRIPT: CONTRÔLEUR DE STAGE (12 groupes × 13 stagiaires) ══ -->
